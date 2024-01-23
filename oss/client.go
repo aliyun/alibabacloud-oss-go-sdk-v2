@@ -907,6 +907,8 @@ func unmarshalBodyDefault(result any, output *OperationOutput) error {
 			err = xml.Unmarshal(body, result)
 		case "application/json":
 			err = json.Unmarshal(body, result)
+		case "application/json;charset=utf-8":
+			err = json.Unmarshal(body, result)
 		default:
 			err = fmt.Errorf("unsupport contentType:%s", contentType)
 		}
@@ -1130,6 +1132,27 @@ func addProgress(request any, input *OperationInput) error {
 		return nil
 	}
 	input.OpMetadata.Add(OpMetaKeyRequestBodyTracker, w)
+	return nil
+}
+
+func addProcess(request any, input *OperationInput) error {
+	switch req := request.(type) {
+	case *ProcessObjectRequest:
+		if req.Process == nil {
+			return nil
+		}
+		processData := fmt.Sprintf("%v=%v", "x-oss-process", ToString(req.Process))
+		input.Body = strings.NewReader(processData)
+	case *AsyncProcessObjectRequest:
+		if req.AsyncProcess == nil {
+			return nil
+		}
+		processData := fmt.Sprintf("%v=%v", "x-oss-async-process", ToString(req.AsyncProcess))
+		input.Body = strings.NewReader(processData)
+	default:
+		return nil
+	}
+
 	return nil
 }
 
