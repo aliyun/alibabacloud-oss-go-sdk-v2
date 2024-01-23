@@ -253,6 +253,9 @@ type GetObjectRequest struct {
 	// Progress callback function
 	ProgressFn ProgressFunc
 
+	// Image processing parameters
+	Process *string `input:"query,x-oss-process"`
+
 	RequestCommon
 }
 
@@ -2230,6 +2233,109 @@ func (c *Client) DeleteObjectTagging(ctx context.Context, request *DeleteObjectT
 
 	result := &DeleteObjectTaggingResult{}
 	if err = c.unmarshalOutput(result, output, discardBody, unmarshalHeader); err != nil {
+		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
+	}
+
+	return result, err
+}
+
+type ProcessObjectRequest struct {
+	// The name of the bucket.
+	Bucket *string `input:"host,bucket,required"`
+
+	// The name of the object.
+	Key *string `input:"path,key,required"`
+
+	// Image processing parameters
+	Process *string `input:"x-oss-process,nop,required"`
+
+	RequestCommon
+}
+
+type ProcessObjectResult struct {
+	Bucket        string `json:"bucket"`
+	FileSize      int    `json:"fileSize"`
+	Object        string `json:"object"`
+	ProcessStatus string `json:"status"`
+	ResultCommon
+}
+
+// ProcessObject apply process on the specified image file.
+func (c *Client) ProcessObject(ctx context.Context, request *ProcessObjectRequest, optFns ...func(*Options)) (*ProcessObjectResult, error) {
+	var err error
+	if request == nil {
+		request = &ProcessObjectRequest{}
+	}
+	input := &OperationInput{
+		OpName: "ProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-process": "",
+		},
+	}
+	if err = c.marshalInput(request, input, addProcess, updateContentMd5); err != nil {
+		return nil, err
+	}
+	output, err := c.invokeOperation(ctx, input, optFns)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &ProcessObjectResult{}
+	if err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader); err != nil {
+		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
+	}
+
+	return result, err
+}
+
+type AsyncProcessObjectRequest struct {
+	// The name of the bucket.
+	Bucket *string `input:"host,bucket,required"`
+
+	// The name of the object.
+	Key *string `input:"path,key,required"`
+
+	// Image async processing parameters
+	AsyncProcess *string `input:"x-async-oss-process,nop,required"`
+
+	RequestCommon
+}
+
+type AsyncProcessObjectResult struct {
+	EventId   string `json:"EventId"`
+	RequestId string `json:"RequestId"`
+	TaskId    string `json:"TaskId"`
+	ResultCommon
+}
+
+// AsyncProcessObject apply async process on the specified image file.
+func (c *Client) AsyncProcessObject(ctx context.Context, request *AsyncProcessObjectRequest, optFns ...func(*Options)) (*AsyncProcessObjectResult, error) {
+	var err error
+	if request == nil {
+		request = &AsyncProcessObjectRequest{}
+	}
+	input := &OperationInput{
+		OpName: "AsyncProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-async-process": "",
+		},
+	}
+	if err = c.marshalInput(request, input, addProcess, updateContentMd5); err != nil {
+		return nil, err
+	}
+	output, err := c.invokeOperation(ctx, input, optFns)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &AsyncProcessObjectResult{}
+	if err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 

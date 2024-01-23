@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -5123,4 +5124,364 @@ func TestMarshalInput_InitiateMultipartUploadRequest_ContentType(t *testing.T) {
 	err = c.marshalInput(request, input, updateContentType)
 	assert.Nil(t, err)
 	assert.Equal(t, "set-by-user", input.Headers[HTTPHeaderContentType])
+}
+
+func TestMarshalInput_ProcessObject(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var request *ProcessObjectRequest
+	var input *OperationInput
+	var err error
+
+	request = &ProcessObjectRequest{}
+	input = &OperationInput{
+		OpName: "ProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-process": "",
+		},
+	}
+	err = c.marshalInput(request, input, addProcess, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field")
+
+	request = &ProcessObjectRequest{
+		Bucket: Ptr("oss-demo"),
+	}
+	input = &OperationInput{
+		OpName: "ProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-process": "",
+		},
+	}
+	err = c.marshalInput(request, input, addProcess, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field")
+
+	request = &ProcessObjectRequest{
+		Bucket: Ptr("oss-bucket"),
+		Key:    Ptr("oss-key"),
+	}
+	input = &OperationInput{
+		OpName: "ProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-process": "",
+		},
+	}
+	err = c.marshalInput(request, input, addProcess, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field")
+
+	destObjName := "dest.jpg"
+	process := fmt.Sprintf("image/resize,w_100|sys/saveas,o_%v", base64.URLEncoding.EncodeToString([]byte(destObjName)))
+	request = &ProcessObjectRequest{
+		Bucket:  Ptr("oss-bucket"),
+		Key:     Ptr("oss-key"),
+		Process: Ptr(process),
+	}
+	input = &OperationInput{
+		OpName: "ProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-process": "",
+		},
+	}
+	err = c.marshalInput(request, input, addProcess, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.NotEmpty(t, input.Body)
+	assert.Empty(t, input.Parameters["x-oss-process"])
+	data, _ := io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "x-oss-process=image/resize,w_100|sys/saveas,o_ZGVzdC5qcGc=")
+}
+
+func TestUnmarshalOutput_ProcessObject(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var output *OperationOutput
+	var err error
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"5C06A3B67B8B5A3DA422****"},
+			"Date":             {"Tue, 04 Dec 2018 15:56:38 GMT"},
+			"Content-Type":     {"application/json"},
+		},
+		Body: io.NopCloser(strings.NewReader(`{
+    "bucket": "",
+    "fileSize": 3267,
+    "object": "dest.jpg",
+    "status": "OK"}`)),
+	}
+	result := &ProcessObjectResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "5C06A3B67B8B5A3DA422****")
+	assert.Equal(t, result.Headers.Get("Date"), "Tue, 04 Dec 2018 15:56:38 GMT")
+	assert.Equal(t, result.Bucket, "")
+	assert.Equal(t, result.FileSize, 3267)
+	assert.Equal(t, result.Object, "dest.jpg")
+	assert.Equal(t, result.ProcessStatus, "OK")
+
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"5C06A3B67B8B5A3DA422****"},
+			"Date":             {"Tue, 04 Dec 2018 15:56:38 GMT"},
+			"Content-Type":     {"application/json"},
+			"x-oss-version-id": {"CAEQNhiBgMDJgZCA0BYiIDc4MGZjZGI2OTBjOTRmNTE5NmU5NmFhZjhjYmY0****"},
+		},
+		Body: io.NopCloser(strings.NewReader(`{
+    "bucket": "desct-bucket",
+    "fileSize": 3267,
+    "object": "dest.jpg",
+    "status": "OK"}`)),
+	}
+	result = &ProcessObjectResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "5C06A3B67B8B5A3DA422****")
+	assert.Equal(t, result.Headers.Get("Date"), "Tue, 04 Dec 2018 15:56:38 GMT")
+
+	assert.Equal(t, result.Bucket, "desct-bucket")
+	assert.Equal(t, result.FileSize, 3267)
+	assert.Equal(t, result.Object, "dest.jpg")
+	assert.Equal(t, result.ProcessStatus, "OK")
+
+	output = &OperationOutput{
+		StatusCode: 404,
+		Status:     "NoSuchBucket",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 404)
+	assert.Equal(t, result.Status, "NoSuchBucket")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+
+	output = &OperationOutput{
+		StatusCode: 403,
+		Status:     "AccessDenied",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 403)
+	assert.Equal(t, result.Status, "AccessDenied")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+
+	output = &OperationOutput{
+		StatusCode: 203,
+		Status:     "Non-Authoritative Information",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 203)
+	assert.Equal(t, result.Status, "Non-Authoritative Information")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+}
+
+func TestMarshalInput_AsyncProcessObject(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var request *AsyncProcessObjectRequest
+	var input *OperationInput
+	var err error
+
+	request = &AsyncProcessObjectRequest{}
+	input = &OperationInput{
+		OpName: "AsyncProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-async-process": "",
+		},
+	}
+	err = c.marshalInput(request, input, addProcess, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field")
+
+	request = &AsyncProcessObjectRequest{
+		Bucket: Ptr("oss-demo"),
+	}
+	input = &OperationInput{
+		OpName: "AsyncProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-async-process": "",
+		},
+	}
+	err = c.marshalInput(request, input, addProcess, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field")
+
+	request = &AsyncProcessObjectRequest{
+		Bucket: Ptr("oss-bucket"),
+		Key:    Ptr("oss-key"),
+	}
+	input = &OperationInput{
+		OpName: "AsyncProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-async-process": "",
+		},
+	}
+	err = c.marshalInput(request, input, addProcess, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field")
+	process := fmt.Sprintf("%s|sys/saveas,b_%v,o_%v", "video/convert,f_avi,vcodec_h265,s_1920x1080,vb_2000000,fps_30,acodec_aac,ab_100000,sn_1", strings.TrimRight(base64.URLEncoding.EncodeToString([]byte("desct-bucket")), "="), strings.TrimRight(base64.URLEncoding.EncodeToString([]byte("demo.mp4")), "="))
+	request = &AsyncProcessObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		AsyncProcess: Ptr(process),
+	}
+	input = &OperationInput{
+		OpName: "AsyncProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-async-process": "",
+		},
+	}
+	err = c.marshalInput(request, input, addProcess, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.NotEmpty(t, input.Body)
+	assert.Empty(t, input.Parameters["x-oss-async-process"])
+	data, _ := io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "x-oss-async-process=video/convert,f_avi,vcodec_h265,s_1920x1080,vb_2000000,fps_30,acodec_aac,ab_100000,sn_1|sys/saveas,b_ZGVzY3QtYnVja2V0,o_ZGVtby5tcDQ")
+}
+
+func TestUnmarshalOutput_AsyncProcessObject(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var output *OperationOutput
+	var err error
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"5C06A3B67B8B5A3DA422****"},
+			"Date":             {"Tue, 04 Dec 2018 15:56:38 GMT"},
+			"Content-Type":     {"application/json;charset=utf-8"},
+		},
+		Body: io.NopCloser(strings.NewReader(`{"EventId":"181-1kZUlN60OH4fWOcOjZEnGnG****","RequestId":"1D99637F-F59E-5B41-9200-C4892F52****","TaskId":"MediaConvert-e4a737df-69e9-4fca-8d9b-17c40ea3****"}`)),
+	}
+	result := &AsyncProcessObjectResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "5C06A3B67B8B5A3DA422****")
+	assert.Equal(t, result.Headers.Get("Date"), "Tue, 04 Dec 2018 15:56:38 GMT")
+	assert.Equal(t, result.EventId, "181-1kZUlN60OH4fWOcOjZEnGnG****")
+	assert.Equal(t, result.RequestId, "1D99637F-F59E-5B41-9200-C4892F52****")
+	assert.Equal(t, result.TaskId, "MediaConvert-e4a737df-69e9-4fca-8d9b-17c40ea3****")
+
+	output = &OperationOutput{
+		StatusCode: 404,
+		Status:     "NoSuchBucket",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 404)
+	assert.Equal(t, result.Status, "NoSuchBucket")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+
+	output = &OperationOutput{
+		StatusCode: 403,
+		Status:     "AccessDenied",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 403)
+	assert.Equal(t, result.Status, "AccessDenied")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+
+	output = &OperationOutput{
+		StatusCode: 203,
+		Status:     "Non-Authoritative Information",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 203)
+	assert.Equal(t, result.Status, "Non-Authoritative Information")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+}
+
+func TestMarshalInput_GetObjectRequest_Process(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var request *GetObjectRequest
+	var input *OperationInput
+	var err error
+
+	request = &GetObjectRequest{
+		Bucket:  Ptr("oss-bucket"),
+		Key:     Ptr("oss-key"),
+		Process: Ptr("image/resize,m_fixed,w_100,h_100"),
+	}
+	input = &OperationInput{
+		OpName: "GetObject",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Parameters["x-oss-process"], "image/resize,m_fixed,w_100,h_100")
 }
