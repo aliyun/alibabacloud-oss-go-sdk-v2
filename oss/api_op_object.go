@@ -81,6 +81,9 @@ type PutObjectRequest struct {
 	// Progress callback function
 	ProgressFn ProgressFunc
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -255,6 +258,9 @@ type GetObjectRequest struct {
 
 	// Image processing parameters
 	Process *string `input:"query,x-oss-process"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -445,6 +451,9 @@ type CopyObjectRequest struct {
 	// Specify the speed limit value. The speed limit value ranges from  245760 to 838860800, with a unit of bit/s.
 	TrafficLimit int64 `input:"header,x-oss-traffic-limit"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -586,6 +595,9 @@ type AppendObjectRequest struct {
 	// Progress callback function
 	ProgressFn ProgressFunc
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -683,6 +695,9 @@ type DeleteObjectRequest struct {
 	// The version ID of the source object.
 	VersionId *string `input:"query,versionId"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -740,6 +755,9 @@ type DeleteMultipleObjectsRequest struct {
 	// Specifies whether to enable the Quiet return mode.
 	// The DeleteMultipleObjects operation provides the following return modes: Valid value: true,false
 	Quiet bool
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -837,6 +855,9 @@ type HeadObjectRequest struct {
 	// the object and 200 OK are returned. Otherwise, 412 Precondition Failed is returned.
 	// The time must be in GMT. Example: Fri, 13 Nov 2015 14:47:53 GMT.
 	IfUnmodifiedSince *string `input:"header,If-Unmodified-Since"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -973,6 +994,9 @@ type GetObjectMetaRequest struct {
 	// The version ID of the source object.
 	VersionId *string `input:"query,versionId"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -1044,6 +1068,9 @@ type RestoreObjectRequest struct {
 	// The container that stores information about the RestoreObject request.
 	RestoreRequest *RestoreRequest `input:"body,RestoreRequest,xml"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -1113,6 +1140,9 @@ type PutObjectAclRequest struct {
 	// The version ID of the source object.
 	VersionId *string `input:"query,versionId"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -1163,6 +1193,9 @@ type GetObjectAclRequest struct {
 
 	// The version ID of the source object.
 	VersionId *string `input:"query,versionId"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -1269,6 +1302,9 @@ type InitiateMultipartUploadRequest struct {
 	// CSEPartSize must aligned to the secret iv length
 	CSEPartSize *int64
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -1362,6 +1398,9 @@ type UploadPartRequest struct {
 
 	// The encryption context for multipart upload when using client side encryption, only valid in EncryptionClient
 	CSEMultiPartContext *EncryptionMultiPartContext
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -1463,6 +1502,9 @@ type UploadPartCopyRequest struct {
 	// Specify the speed limit value. The speed limit value ranges from  245760 to 838860800, with a unit of bit/s.
 	TrafficLimit int64 `input:"header,x-oss-traffic-limit"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -1541,6 +1583,9 @@ type CompleteMultipartUploadRequest struct {
 
 	// Configure custom parameters by using the callback-var parameter.
 	CallbackVar *string `input:"header,x-oss-callback-var"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -1658,6 +1703,9 @@ type AbortMultipartUploadRequest struct {
 	// The ID of the multipart upload task.
 	UploadId *string `input:"query,uploadId,required"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -1719,6 +1767,9 @@ type ListMultipartUploadsRequest struct {
 	// The upload ID of the multipart upload task after which the list begins.
 	// This parameter is used together with the key-marker parameter.
 	UploadIdMarker *string `input:"query,upload-id-marker"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -1826,6 +1877,9 @@ type ListPartsRequest struct {
 	// The position from which the list starts.
 	// All parts whose part numbers are greater than the value of this parameter are listed.
 	PartNumberMarker int32 `input:"query,part-number-marker"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -1967,6 +2021,9 @@ type PutSymlinkRequest struct {
 	// The metadata of the object that you want to symlink.
 	Metadata map[string]string `input:"header,x-oss-meta-,usermeta"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -2017,6 +2074,9 @@ type GetSymlinkRequest struct {
 
 	// Version of the object.
 	VersionId *string `input:"query,versionId"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -2079,6 +2139,9 @@ type PutObjectTaggingRequest struct {
 	VersionId *string `input:"query,versionId"`
 
 	Tagging *Tagging `input:"body,Tagging,xml,required"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -2144,6 +2207,9 @@ type GetObjectTaggingRequest struct {
 	// Version of the object.
 	VersionId *string `input:"query,versionId"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -2198,6 +2264,9 @@ type DeleteObjectTaggingRequest struct {
 	// Version of the object.
 	VersionId *string `input:"query,versionId"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -2248,6 +2317,9 @@ type ProcessObjectRequest struct {
 
 	// Image processing parameters
 	Process *string `input:"x-oss-process,nop,required"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -2300,6 +2372,9 @@ type AsyncProcessObjectRequest struct {
 
 	// Image async processing parameters
 	AsyncProcess *string `input:"x-async-oss-process,nop,required"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }

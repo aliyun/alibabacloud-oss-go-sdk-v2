@@ -23,6 +23,7 @@ type OpenOptions struct {
 	ChunkSize      int64
 
 	PrefetchThreshold int64
+	RequestPayer      *string
 }
 
 type ReadOnlyFile struct {
@@ -30,9 +31,10 @@ type ReadOnlyFile struct {
 	context context.Context
 
 	// object info
-	bucket    string
-	key       string
-	versionId *string
+	bucket       string
+	key          string
+	versionId    *string
+	requestPayer *string
 
 	// file info
 	sizeInBytes int64
@@ -60,7 +62,7 @@ type ReadOnlyFile struct {
 	closed bool // whether we have closed the file
 }
 
-// OpenFile opens the named file for reading.
+// NewReadOnlyFile OpenFile opens the named file for reading.
 // If successful, methods on the returned file can be used for reading.
 func NewReadOnlyFile(ctx context.Context, c OpenFileAPIClient, bucket string, key string, optFns ...func(*OpenOptions)) (*ReadOnlyFile, error) {
 	options := OpenOptions{
@@ -93,11 +95,10 @@ func NewReadOnlyFile(ctx context.Context, c OpenFileAPIClient, bucket string, ke
 		client:  c,
 		context: ctx,
 
-		bucket:    bucket,
-		key:       key,
-		versionId: options.VersionId,
-
-		offset: options.Offset,
+		bucket:       bucket,
+		key:          key,
+		versionId:    options.VersionId,
+		requestPayer: options.RequestPayer,
 
 		enablePrefetch:    options.EnablePrefetch,
 		prefetchNum:       options.PrefetchNum,
@@ -106,9 +107,10 @@ func NewReadOnlyFile(ctx context.Context, c OpenFileAPIClient, bucket string, ke
 	}
 
 	result, err := f.client.HeadObject(f.context, &HeadObjectRequest{
-		Bucket:    &f.bucket,
-		Key:       &f.key,
-		VersionId: f.versionId,
+		Bucket:       &f.bucket,
+		Key:          &f.key,
+		VersionId:    f.versionId,
+		RequestPayer: f.requestPayer,
 	})
 
 	if err != nil {
@@ -350,6 +352,7 @@ func (f *ReadOnlyFile) readDirect(offset int64, buf []byte) (bytesRead int, err 
 			VersionId:     f.versionId,
 			Range:         Ptr(fmt.Sprintf("bytes=%d-", offset)),
 			RangeBehavior: Ptr("standard"),
+			RequestPayer:  f.requestPayer,
 		})
 		if err != nil {
 			return bytesRead, err
@@ -433,9 +436,10 @@ func (f *ReadOnlyFile) prefetch(offset int64, needAtLeast int) (err error) {
 		if size != 0 {
 			getFn := func(ctx context.Context, httpRange HTTPRange) (output *ReaderRangeGetOutput, err error) {
 				request := &GetObjectRequest{
-					Bucket:    Ptr(f.bucket),
-					Key:       Ptr(f.key),
-					VersionId: f.versionId,
+					Bucket:       Ptr(f.bucket),
+					Key:          Ptr(f.key),
+					VersionId:    f.versionId,
+					RequestPayer: f.requestPayer,
 				}
 				rangeStr := httpRange.FormatHTTPRange()
 				if rangeStr != nil {
@@ -472,6 +476,8 @@ func (f *ReadOnlyFile) prefetch(offset int64, needAtLeast int) (err error) {
 }
 
 type AppendOptions struct {
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string
 }
 
 type AppendOnlyFile struct {
@@ -479,8 +485,9 @@ type AppendOnlyFile struct {
 	context context.Context
 
 	// object info
-	bucket string
-	key    string
+	bucket       string
+	key          string
+	requestPayer *string
 
 	info os.FileInfo
 
@@ -491,7 +498,7 @@ type AppendOnlyFile struct {
 	closed bool
 }
 
-// AppendFile opens or creates the named file for appending.
+// NewAppendFile AppendFile opens or creates the named file for appending.
 // If successful, methods on the returned file can be used for appending.
 func NewAppendFile(ctx context.Context, c AppendFileAPIClient, bucket string, key string, optFns ...func(*AppendOptions)) (*AppendOnlyFile, error) {
 	options := AppendOptions{}
@@ -504,11 +511,12 @@ func NewAppendFile(ctx context.Context, c AppendFileAPIClient, bucket string, ke
 		client:  c,
 		context: ctx,
 
-		bucket: bucket,
-		key:    key,
+		bucket:       bucket,
+		key:          key,
+		requestPayer: options.RequestPayer,
 	}
 
-	result, err := f.client.HeadObject(f.context, &HeadObjectRequest{Bucket: &f.bucket, Key: &f.key})
+	result, err := f.client.HeadObject(f.context, &HeadObjectRequest{Bucket: &f.bucket, Key: &f.key, RequestPayer: f.requestPayer})
 	if err != nil {
 		var serr *ServiceError
 		if errors.As(err, &serr) && serr.StatusCode == 404 {
@@ -562,6 +570,7 @@ func (f *AppendOnlyFile) write(b []byte) (n int, err error) {
 		Position:      Ptr(f.offset),
 		Body:          bytes.NewReader(b),
 		InitHashCRC64: f.hashCRC64,
+		RequestPayer:  f.requestPayer,
 	}
 
 	if f.offset == 0 {
@@ -608,10 +617,11 @@ func (f *AppendOnlyFile) writeFrom(r io.Reader) (n int64, err error) {
 	offset := f.offset
 
 	request := &AppendObjectRequest{
-		Bucket:   &f.bucket,
-		Key:      &f.key,
-		Position: Ptr(f.offset),
-		Body:     r,
+		Bucket:       &f.bucket,
+		Key:          &f.key,
+		Position:     Ptr(f.offset),
+		Body:         r,
+		RequestPayer: f.requestPayer,
 	}
 
 	var roffset int64
@@ -646,7 +656,7 @@ func (f *AppendOnlyFile) writeFrom(r io.Reader) (n int64, err error) {
 }
 
 func (f *AppendOnlyFile) nextAppendPosition() (int64, *string, bool) {
-	if h, e := f.client.HeadObject(f.context, &HeadObjectRequest{Bucket: &f.bucket, Key: &f.key}); e == nil {
+	if h, e := f.client.HeadObject(f.context, &HeadObjectRequest{Bucket: &f.bucket, Key: &f.key, RequestPayer: f.requestPayer}); e == nil {
 		return h.ContentLength, h.HashCRC64, true
 	}
 	return 0, nil, false
@@ -694,7 +704,7 @@ func (f *AppendOnlyFile) stat() (os.FileInfo, error) {
 	var err error
 	if f.info == nil || f.info.Size() != f.offset {
 		f.info = nil
-		if result, err := f.client.HeadObject(f.context, &HeadObjectRequest{Bucket: &f.bucket, Key: &f.key}); err == nil {
+		if result, err := f.client.HeadObject(f.context, &HeadObjectRequest{Bucket: &f.bucket, Key: &f.key, RequestPayer: f.requestPayer}); err == nil {
 			f.info = &fileInfo{
 				name:    f.name(),
 				size:    result.ContentLength,

@@ -40,6 +40,11 @@ var (
 	ramRoleArn_       = os.Getenv("OSS_TEST_RAM_ROLE_ARN")
 	signatureVersion_ = os.Getenv("OSS_TEST_SIGNATURE_VERSION")
 
+	// Credential
+	credentialAccessID_  = os.Getenv("OSS_CREDENTIAL_KEY_ID")
+	credentialAccessKey_ = os.Getenv("OSS_CREDENTIAL_KEY_SECRET")
+	credentialUID_       = os.Getenv("OSS_CREDENTIAL_UID")
+
 	instance_ *Client
 	testOnce_ sync.Once
 
@@ -4738,4 +4743,689 @@ func TestGetObjectWithProcess(t *testing.T) {
 	assert.Equal(t, content3, content)
 
 	os.Remove(downloadFile)
+}
+
+func TestPutBucketRequestPayment(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	request := &PutBucketRequestPaymentRequest{
+		Bucket: Ptr(bucketName),
+		PaymentConfiguration: &RequestPaymentConfiguration{
+			Payer: Requester,
+		},
+	}
+
+	result, err := client.PutBucketRequestPayment(context.TODO(), request)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	assert.Nil(t, err)
+	assert.Equal(t, 200, result.StatusCode)
+	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
+
+	var serr *ServiceError
+	bucketNameNotExist := bucketName + "-not-exist"
+	request = &PutBucketRequestPaymentRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		PaymentConfiguration: &RequestPaymentConfiguration{
+			Payer: Requester,
+		},
+	}
+	result, err = client.PutBucketRequestPayment(context.TODO(), request)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+}
+
+func TestGetBucketRequestPayment(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	request := &GetBucketRequestPaymentRequest{
+		Bucket: Ptr(bucketName),
+	}
+	result, err := client.GetBucketRequestPayment(context.TODO(), request)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	assert.Nil(t, err)
+	assert.Equal(t, 200, result.StatusCode)
+	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
+	assert.Equal(t, *result.Payer, "BucketOwner")
+
+	var serr *ServiceError
+	bucketNameNotExist := bucketName + "-not-exist"
+	request = &GetBucketRequestPaymentRequest{
+		Bucket: Ptr(bucketNameNotExist),
+	}
+	result, err = client.GetBucketRequestPayment(context.TODO(), request)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+}
+
+func TestPaymentWithRequester(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	policyInfo := `
+	{
+		"Version":"1",
+		"Statement":[
+			{
+				"Action":[
+					"oss:*"
+				],
+				"Effect":"Allow",
+				"Principal":["` + credentialUID_ + `"],
+				"Resource":["acs:oss:*:*:` + bucketName + `", "acs:oss:*:*:` + bucketName + `/*"]
+			}
+		]
+	}`
+	input := &OperationInput{
+		OpName: "PutBucketPolicy",
+		Bucket: Ptr(bucketName),
+		Method: "PUT",
+		Parameters: map[string]string{
+			"policy": "",
+		},
+		Body: strings.NewReader(policyInfo),
+	}
+	_, err = client.InvokeOperation(context.TODO(), input)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	request := &PutBucketRequestPaymentRequest{
+		Bucket: Ptr(bucketName),
+		PaymentConfiguration: &RequestPaymentConfiguration{
+			Payer: Requester,
+		},
+	}
+	_, err = client.PutBucketRequestPayment(context.TODO(), request)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	body := randStr(100)
+	creClient := getClientWithCredentialsProvider(region_, endpoint_,
+		credentials.NewStaticCredentialsProvider(credentialAccessID_, credentialAccessKey_))
+
+	objectName := objectNamePrefix + randStr(6)
+
+	putObjReq := &PutObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		Body:         strings.NewReader(body),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.PutObject(context.TODO(), putObjReq)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	getObjReq := &GetObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		RequestPayer: Ptr("requester"),
+	}
+	getObjResult, err := creClient.GetObject(context.TODO(), getObjReq)
+	assert.Nil(t, err)
+	getObjData, _ := io.ReadAll(getObjResult.Body)
+	assert.Equal(t, string(getObjData), body)
+	time.Sleep(1 * time.Second)
+
+	objectCopyName := objectName + "-copy"
+	copyRequest := &CopyObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectCopyName),
+		SourceKey:    Ptr(objectName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.CopyObject(context.TODO(), copyRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	objectAppendName := objectName + "-append"
+	appendRequest := &AppendObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectAppendName),
+		Body:         strings.NewReader(body),
+		Position:     Ptr(int64(0)),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.AppendObject(context.TODO(), appendRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	delRequest := &DeleteObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.DeleteObject(context.TODO(), delRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	delObjsRequest := &DeleteMultipleObjectsRequest{
+		Bucket:       Ptr(bucketName),
+		Objects:      []DeleteObject{{Key: Ptr(objectAppendName)}},
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.DeleteMultipleObjects(context.TODO(), delObjsRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	headRequest := &HeadObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectCopyName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.HeadObject(context.TODO(), headRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	metaRequest := &GetObjectMetaRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectCopyName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.GetObjectMeta(context.TODO(), metaRequest)
+	assert.Nil(t, err)
+
+	objectRestoreName := objectName + "-restore"
+	putObjReq = &PutObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectRestoreName),
+		Body:         strings.NewReader(body),
+		StorageClass: StorageClassColdArchive,
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.PutObject(context.TODO(), putObjReq)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	restoreRequest := &RestoreObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectRestoreName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.RestoreObject(context.TODO(), restoreRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	putObjReq = &PutObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		Body:         strings.NewReader(body),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.PutObject(context.TODO(), putObjReq)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	putAclRequest := &PutObjectAclRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		Acl:          ObjectACLPublicRead,
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.PutObjectAcl(context.TODO(), putAclRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	getAclRequest := &GetObjectAclRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.GetObjectAcl(context.TODO(), getAclRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	objectMultiName := objectName + "-multi"
+	body = randLowStr(360000)
+	reader := strings.NewReader(body)
+	bufReader := bufio.NewReader(reader)
+	content, err := io.ReadAll(bufReader)
+	assert.Nil(t, err)
+	count := 3
+	partSize := len(content) / count
+	part1 := content[:partSize]
+	part2 := content[partSize : 2*partSize]
+	part3 := content[2*partSize:]
+	initRequest := &InitiateMultipartUploadRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectMultiName),
+		RequestPayer: Ptr("requester"),
+	}
+	initResult, err := creClient.InitiateMultipartUpload(context.TODO(), initRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	contents := []string{string(part1), string(part2), string(part3)}
+	var parts []UploadPart
+	var wg sync.WaitGroup
+	wg.Add(len(contents))
+	for i, content1 := range contents {
+		partRequest := &UploadPartRequest{
+			Bucket:       Ptr(bucketName),
+			Key:          Ptr(objectMultiName),
+			PartNumber:   int32(i + 1),
+			UploadId:     Ptr(*initResult.UploadId),
+			Body:         strings.NewReader(content1),
+			RequestPayer: Ptr("requester"),
+		}
+		partResult, err := creClient.UploadPart(context.TODO(), partRequest)
+		assert.Nil(t, err)
+
+		part := UploadPart{
+			PartNumber: partRequest.PartNumber,
+			ETag:       partResult.ETag,
+		}
+		parts = append(parts, part)
+		wg.Done()
+	}
+
+	comRequest := &CompleteMultipartUploadRequest{
+		Bucket:   Ptr(bucketName),
+		Key:      Ptr(objectMultiName),
+		UploadId: Ptr(*initResult.UploadId),
+		CompleteMultipartUpload: &CompleteMultipartUpload{
+			Parts: parts,
+		},
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.CompleteMultipartUpload(context.TODO(), comRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	initRequest = &InitiateMultipartUploadRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectMultiName),
+		RequestPayer: Ptr("requester"),
+	}
+	initResult, err = creClient.InitiateMultipartUpload(context.TODO(), initRequest)
+	assert.Nil(t, err)
+	copyMultiRequest := &UploadPartCopyRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectMultiName),
+		PartNumber:   int32(1),
+		UploadId:     Ptr(*initResult.UploadId),
+		SourceKey:    Ptr(objectName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.UploadPartCopy(context.TODO(), copyMultiRequest)
+	assert.Nil(t, err)
+
+	listMultiRequest := &ListMultipartUploadsRequest{
+		Bucket:       Ptr(bucketName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.ListMultipartUploads(context.TODO(), listMultiRequest)
+
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	listRequest := &ListPartsRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectMultiName),
+		UploadId:     Ptr(*initResult.UploadId),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.ListParts(context.TODO(), listRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	abortRequest := &AbortMultipartUploadRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectMultiName),
+		UploadId:     Ptr(*initResult.UploadId),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.AbortMultipartUpload(context.TODO(), abortRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	symlinkName := objectName + "-symlink"
+	putSymRequest := &PutSymlinkRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(symlinkName),
+		Target:       Ptr(objectName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.PutSymlink(context.TODO(), putSymRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	getSymRequest := &GetSymlinkRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(symlinkName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.GetSymlink(context.TODO(), getSymRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	putTagRequest := &PutObjectTaggingRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Tagging: &Tagging{
+			TagSet{
+				Tags: []Tag{
+					{
+						Key:   Ptr("k1"),
+						Value: Ptr("v1"),
+					},
+					{
+						Key:   Ptr("k2"),
+						Value: Ptr("v2"),
+					},
+				},
+			},
+		},
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.PutObjectTagging(context.TODO(), putTagRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	getTagRequest := &GetObjectTaggingRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.GetObjectTagging(context.TODO(), getTagRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	delTagRequest := &DeleteObjectTaggingRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.DeleteObjectTagging(context.TODO(), delTagRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	listObjReq := &ListObjectsRequest{
+		Bucket:       Ptr(bucketName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.ListObjects(context.TODO(), listObjReq)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	listObjReqV2 := &ListObjectsRequestV2{
+		Bucket:       Ptr(bucketName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.ListObjectsV2(context.TODO(), listObjReqV2)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	listObjVersionReq := &ListObjectVersionsRequest{
+		Bucket:       Ptr(bucketName),
+		RequestPayer: Ptr("requester"),
+	}
+	_, err = creClient.ListObjectVersions(context.TODO(), listObjVersionReq)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	var serr *ServiceError
+	putObjReq = &PutObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		Body:         strings.NewReader(body),
+		RequestPayer: Ptr("bucketOwner"),
+	}
+	_, err = creClient.PutObject(context.TODO(), putObjReq)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Access denied for requester pay bucket")
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "AccessDenied", serr.Code)
+	assert.Equal(t, "Access denied for requester pay bucket", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+}
+
+func TestClientExtensionWithPayer(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	objectName := objectNamePrefix + randLowStr(6)
+	client := getDefaultClient()
+	assert.NotNil(t, client)
+
+	_, err := client.PutBucket(context.TODO(), &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+
+	policyInfo := `
+	{
+		"Version":"1",
+		"Statement":[
+			{
+				"Action":[
+					"oss:*"
+				],
+				"Effect":"Allow",
+				"Principal":["` + credentialUID_ + `"],
+				"Resource":["acs:oss:*:*:` + bucketName + `", "acs:oss:*:*:` + bucketName + `/*"]
+			}
+		]
+	}`
+	input := &OperationInput{
+		OpName: "PutBucketPolicy",
+		Bucket: Ptr(bucketName),
+		Method: "PUT",
+		Parameters: map[string]string{
+			"policy": "",
+		},
+		Body: strings.NewReader(policyInfo),
+	}
+	_, err = client.InvokeOperation(context.TODO(), input)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	request := &PutBucketRequestPaymentRequest{
+		Bucket: Ptr(bucketName),
+		PaymentConfiguration: &RequestPaymentConfiguration{
+			Payer: Requester,
+		},
+	}
+	_, err = client.PutBucketRequestPayment(context.TODO(), request)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	creClient := getClientWithCredentialsProvider(region_, endpoint_,
+		credentials.NewStaticCredentialsProvider(credentialAccessID_, credentialAccessKey_))
+
+	_, err = client.PutObject(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+
+	// IsObjectExist
+	exist, err := creClient.IsObjectExist(context.TODO(), bucketName, objectName, func(op *IsObjectExistOptions) {
+		op.RequestPayer = Ptr("requester")
+	})
+	assert.Nil(t, err)
+	assert.True(t, exist)
+
+	//PutObjectFromFile
+	objectNameFromFile := objectName + "-from-file"
+	var localFile = randStr(8) + ".txt"
+	length := 1234
+	content := randStr(length)
+	hashContent := NewCRC64(0)
+	hashContent.Write([]byte(content))
+	createFile(t, localFile, content)
+	defer func() { os.Remove(localFile) }()
+
+	result, err := creClient.PutObjectFromFile(context.TODO(), &PutObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectNameFromFile),
+		RequestPayer: Ptr("requester"),
+	}, localFile)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	// Use Uploader, set meta and acl
+	objectNameBig := objectName + "-big"
+	bigLength := 5*100*1024 + 1234
+	bigContent := randStr(bigLength)
+	bigHash := NewCRC64(0)
+	bigHash.Write([]byte(bigContent))
+	u := creClient.NewUploader()
+	assert.NotNil(t, u)
+	urResult, err := u.UploadFrom(context.TODO(),
+		&PutObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectNameBig),
+			Metadata: map[string]string{
+				"author": "test",
+				"magic":  "123",
+			},
+			Acl:          ObjectACLPublicRead,
+			RequestPayer: Ptr("requester"),
+		},
+		bytes.NewReader([]byte(bigContent)),
+		func(uo *UploaderOptions) {
+			uo.ParallelNum = 3
+			uo.PartSize = 100 * 1024
+		},
+	)
+	dumpErrIfNotNil(err)
+	assert.Nil(t, err)
+	assert.NotNil(t, urResult)
+
+	exist, err = creClient.IsObjectExist(context.TODO(), bucketName, objectNameBig, func(op *IsObjectExistOptions) {
+		op.RequestPayer = Ptr("requester")
+	})
+	assert.Nil(t, err)
+	assert.True(t, exist)
+
+	// Downloader with not align partSize
+	d := creClient.NewDownloader(func(do *DownloaderOptions) {
+		do.ParallelNum = 3
+		do.PartSize = 100*1024 + 123
+	})
+	assert.NotNil(t, d)
+	assert.Equal(t, int64(100*1024+123), d.options.PartSize)
+	assert.Equal(t, 3, d.options.ParallelNum)
+	localFileBig := randStr(8) + "-downloader"
+	dResult, err := d.DownloadFile(context.TODO(),
+		&GetObjectRequest{
+			Bucket:       Ptr(bucketName),
+			Key:          Ptr(objectNameBig),
+			RequestPayer: Ptr("requester"),
+		},
+		localFileBig)
+
+	dumpErrIfNotNil(err)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(bigLength), dResult.Written)
+
+	hash := NewCRC64(0)
+	rfile, err := os.Open(localFileBig)
+	assert.Nil(t, err)
+	defer func() {
+		rfile.Close()
+		os.Remove(localFileBig)
+	}()
+	io.Copy(hash, rfile)
+	assert.Equal(t, bigHash.Sum64(), hash.Sum64())
+
+	//Use ReadOnlyFile
+	f, err := creClient.OpenFile(context.TODO(), bucketName, objectNameBig, func(op *OpenOptions) {
+		op.RequestPayer = Ptr("requester")
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, f)
+	for i := 13; i < 42; i++ {
+		for len := 100*1024 + 123; len < 100*1024+123+17; len++ {
+			_, err := f.Seek(int64(i), io.SeekStart)
+			assert.Nil(t, err)
+			gData, err := io.ReadAll(io.LimitReader(f, int64(len)))
+			assert.Nil(t, err)
+			assert.EqualValues(t, []byte(bigContent)[i:i+len], gData)
+		}
+	}
+	f.Close()
+
+	// AppenableFile
+	objectNameAppend := objectName + "-append"
+	dataa3 := []byte(randStr(100*1024*5 + 13))
+	var localFileData3 = randStr(8) + ".txt"
+	createFile(t, localFileData3, string(dataa3))
+	defer func() {
+		os.Remove(localFileData3)
+	}()
+
+	af, err := creClient.AppendFile(context.TODO(), bucketName, objectNameAppend, func(op *AppendOptions) {
+		op.RequestPayer = Ptr("requester")
+	})
+	assert.Nil(t, err)
+	_, err = af.Write([]byte(content))
+	assert.Nil(t, err)
+	_, err = af.WriteFrom(strings.NewReader(content))
+	assert.Nil(t, err)
+	_, err = af.Stat()
+	assert.Nil(t, err)
+	//GetObjectToFile
+	var localFileToFile = randStr(8) + "-to-file"
+	defer func() {
+		os.Remove(localFileToFile)
+	}()
+	_, err = creClient.GetObjectToFile(context.TODO(), &GetObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectNameAppend),
+		RequestPayer: Ptr("requester"),
+	},
+		localFileToFile,
+	)
+	assert.Nil(t, err)
+	_, err = creClient.GetObjectToFile(context.TODO(), &GetObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectNameAppend),
+	},
+		localFileToFile,
+	)
+	assert.NotNil(t, err)
 }

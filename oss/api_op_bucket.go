@@ -3,6 +3,7 @@ package oss
 import (
 	"context"
 	"encoding/xml"
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"net/url"
 	"strings"
 	"time"
@@ -135,6 +136,9 @@ type ListObjectsRequest struct {
 
 	// The prefix that the names of the returned objects must contain.
 	Prefix *string `input:"query,prefix"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -422,6 +426,9 @@ type ListObjectsRequestV2 struct {
 
 	// Specifies whether to include information about the object owner in the response.
 	FetchOwner bool `input:"query,fetch-owner"`
+
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
 
 	RequestCommon
 }
@@ -979,6 +986,9 @@ type ListObjectVersionsRequest struct {
 	// The encoding type of the content in the response. Valid value: url
 	EncodingType *string `input:"query,encoding-type"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
@@ -1107,5 +1117,104 @@ func (c *Client) ListObjectVersions(ctx context.Context, request *ListObjectVers
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 
+	return result, err
+}
+
+type PutBucketRequestPaymentRequest struct {
+	// The name of the bucket containing the objects
+	Bucket *string `input:"host,bucket,required"`
+
+	// The request payment configuration information for the bucket.
+	PaymentConfiguration *RequestPaymentConfiguration `input:"body,RequestPaymentConfiguration,xml,required"`
+
+	RequestCommon
+}
+
+type RequestPaymentConfiguration struct {
+	XMLName xml.Name `xml:"RequestPaymentConfiguration"`
+
+	// The payer of the request and traffic fees.
+	Payer PayerType `xml:"Payer"`
+}
+
+type PutBucketRequestPaymentResult struct {
+	ResultCommon
+}
+
+// PutBucketRequestPayment You can call this operation to enable pay-by-requester for a bucket.
+func (c *Client) PutBucketRequestPayment(ctx context.Context, request *PutBucketRequestPaymentRequest, optFns ...func(*Options)) (*PutBucketRequestPaymentResult, error) {
+	var err error
+	if request == nil {
+		request = &PutBucketRequestPaymentRequest{}
+	}
+	input := &OperationInput{
+		OpName: "PutBucketRequestPayment",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeDefault,
+		},
+		Parameters: map[string]string{
+			"requestPayment": "",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"requestPayment"})
+	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
+		return nil, err
+	}
+	output, err := c.invokeOperation(ctx, input, optFns)
+	if err != nil {
+		return nil, err
+	}
+	result := &PutBucketRequestPaymentResult{}
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXml); err != nil {
+		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
+	}
+	return result, err
+}
+
+type GetBucketRequestPaymentRequest struct {
+	// The name of the bucket containing the objects
+	Bucket *string `input:"host,bucket,required"`
+
+	RequestCommon
+}
+
+type GetBucketRequestPaymentResult struct {
+	// Indicates who pays the download and request fees.
+	Payer *string `xml:"Payer"`
+
+	ResultCommon
+}
+
+// GetBucketRequestPayment You can call this operation to obtain pay-by-requester configurations for a bucket.
+func (c *Client) GetBucketRequestPayment(ctx context.Context, request *GetBucketRequestPaymentRequest, optFns ...func(*Options)) (*GetBucketRequestPaymentResult, error) {
+	var err error
+	if request == nil {
+		request = &GetBucketRequestPaymentRequest{}
+	}
+	input := &OperationInput{
+		OpName: "GetBucketRequestPayment",
+		Method: "GET",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeDefault,
+		},
+		Parameters: map[string]string{
+			"requestPayment": "",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"requestPayment"})
+	if err = c.marshalInput(request, input); err != nil {
+		return nil, err
+	}
+	output, err := c.invokeOperation(ctx, input, optFns)
+	if err != nil {
+		return nil, err
+	}
+	result := &GetBucketRequestPaymentResult{}
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXml); err != nil {
+		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
+	}
 	return result, err
 }
