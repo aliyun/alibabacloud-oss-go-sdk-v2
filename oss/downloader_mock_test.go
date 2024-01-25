@@ -1233,3 +1233,43 @@ func TestMockDownloaderDownloadFileProcess(t *testing.T) {
 		})
 	assert.Nil(t, err)
 }
+
+func TestMockDownloaderDownloadFilePayer(t *testing.T) {
+	partSize := 128
+	length := 1234
+	data := []byte(randStr(length))
+	gmtTime := getNowGMT()
+
+	tracker := &downloaderMockTracker{
+		lastModified: gmtTime,
+		data:         data,
+	}
+	server := testSetupDownloaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+	d := NewDownloader(client)
+	assert.NotNil(t, d)
+	assert.NotNil(t, d.client)
+
+	localFile := randStr(8) + "-no-surfix"
+	defer func() {
+		os.Remove(localFile)
+	}()
+
+	_, err := d.DownloadFile(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key"), RequestPayer: Ptr("requester")}, localFile,
+		func(do *DownloaderOptions) {
+			do.PartSize = int64(partSize)
+			do.ParallelNum = 3
+			do.CheckpointDir = "."
+			do.EnableCheckpoint = true
+		})
+	assert.Nil(t, err)
+}

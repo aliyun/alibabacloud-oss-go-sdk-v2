@@ -507,7 +507,7 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 		parts     UploadParts
 		errValue  atomic.Value
 		crcParts  uploadPartCRCs
-		enableCRC = ((u.base.featureFlags & FeatureEnableCRC64CheckUpload) > 0)
+		enableCRC = (u.base.featureFlags & FeatureEnableCRC64CheckUpload) > 0
 	)
 
 	// Init the multipart
@@ -557,6 +557,7 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 						PartNumber:          data.partNum,
 						Body:                data.body,
 						CSEMultiPartContext: uploadIdInfo.cseContext,
+						RequestPayer:        u.request.RequestPayer,
 					},
 					u.options.ClientOptions...)
 				//fmt.Printf("UploadPart result: %#v, %#v\n", upResult, err)

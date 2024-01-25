@@ -29,9 +29,18 @@ func (c *Client) AppendFile(ctx context.Context, bucket string, key string, optF
 	return NewAppendFile(ctx, c, bucket, key, optFns...)
 }
 
+type IsObjectExistOptions struct {
+	VersionId    *string
+	RequestPayer *string
+}
+
 // IsObjectExist checks if the object exists.
-func (c *Client) IsObjectExist(ctx context.Context, bucket string, key string, optFns ...func(*Options)) (bool, error) {
-	_, err := c.GetObjectMeta(ctx, &GetObjectMetaRequest{Bucket: Ptr(bucket), Key: Ptr(key)}, optFns...)
+func (c *Client) IsObjectExist(ctx context.Context, bucket string, key string, optFns ...func(*IsObjectExistOptions)) (bool, error) {
+	options := IsObjectExistOptions{}
+	for _, fn := range optFns {
+		fn(&options)
+	}
+	_, err := c.GetObjectMeta(ctx, &GetObjectMetaRequest{Bucket: Ptr(bucket), Key: Ptr(key), VersionId: options.VersionId, RequestPayer: options.RequestPayer})
 	if err == nil {
 		return true, nil
 	}

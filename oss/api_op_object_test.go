@@ -207,7 +207,12 @@ func TestMarshalInput_PutObject(t *testing.T) {
 		Body:         strings.NewReader(body),
 		TrafficLimit: int64(100 * 1024 * 8),
 	}
-
+	input = &OperationInput{
+		OpName: "PutObject",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
 	err = c.marshalInput(request, input)
 	assert.Nil(t, err)
 
@@ -215,6 +220,28 @@ func TestMarshalInput_PutObject(t *testing.T) {
 	assert.Equal(t, *input.Key, "oss-key")
 	assert.Equal(t, input.Body, strings.NewReader(body))
 	assert.Equal(t, input.Headers["x-oss-traffic-limit"], strconv.FormatInt(100*1024*8, 10))
+	assert.Nil(t, input.Parameters)
+	assert.Nil(t, input.OpMetadata.values)
+
+	request = &PutObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		Body:         strings.NewReader(body),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "PutObject",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input)
+	assert.Nil(t, err)
+
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Body, strings.NewReader(body))
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 	assert.Nil(t, input.Parameters)
 	assert.Nil(t, input.OpMetadata.values)
 }
@@ -406,6 +433,12 @@ func TestMarshalInput_GetObject(t *testing.T) {
 		Key:          Ptr("oss-key"),
 		TrafficLimit: int64(100 * 1024 * 8),
 	}
+	input = &OperationInput{
+		OpName: "GetObject",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, *input.Bucket, "oss-bucket")
@@ -451,6 +484,23 @@ func TestMarshalInput_GetObject(t *testing.T) {
 	assert.Equal(t, input.Parameters["response-expires"], "Fri, 24 Feb 2012 17:00:00 GMT")
 	assert.Equal(t, input.Parameters["versionId"], "CAEQNhiBgM0BYiIDc4MGZjZGI2OTBjOTRmNTE5NmU5NmFhZjhjYmY*****")
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &GetObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "GetObject",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_GetObject(t *testing.T) {
@@ -827,6 +877,29 @@ func TestMarshalInput_CopyObject(t *testing.T) {
 	assert.Equal(t, input.Headers["x-oss-tagging-directive"], "Replace")
 	assert.Equal(t, input.Headers["x-oss-metadata-directive"], "REPLACE")
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &CopyObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-copy-key"),
+		SourceKey:    Ptr("oss-key"),
+		RequestPayer: Ptr("requester"),
+	}
+	source = encodeSourceObject(request)
+	input = &OperationInput{
+		OpName: "CopyObject",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Headers: map[string]string{
+			"x-oss-copy-source": source,
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-copy-key")
+	assert.Equal(t, input.Headers["x-oss-copy-source"], "/oss-bucket/oss-key")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_CopyObject(t *testing.T) {
@@ -1137,6 +1210,32 @@ func TestMarshalInput_AppendObject(t *testing.T) {
 	assert.Equal(t, input.Parameters["position"], strconv.FormatInt(p, 10))
 	assert.Nil(t, input.OpMetadata.values)
 	assert.Equal(t, input.Headers["x-oss-traffic-limit"], strconv.FormatInt(100*1024*8, 10))
+
+	request = &AppendObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		Position:     Ptr(int64(0)),
+		Body:         strings.NewReader(body),
+		RequestPayer: Ptr("requester"),
+	}
+
+	input = &OperationInput{
+		OpName:     "AppendObject",
+		Method:     "POST",
+		Parameters: map[string]string{"append": ""},
+		Bucket:     request.Bucket,
+		Key:        request.Key,
+	}
+	err = c.marshalInput(request, input)
+	assert.Nil(t, err)
+
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Body, strings.NewReader(body))
+	assert.Empty(t, input.Parameters["append"])
+	assert.Equal(t, input.Parameters["position"], strconv.FormatInt(p, 10))
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_AppendObject(t *testing.T) {
@@ -1343,6 +1442,24 @@ func TestMarshalInput_DeleteObject(t *testing.T) {
 	assert.Equal(t, *input.Key, "oss-key")
 	assert.Equal(t, input.Parameters["versionId"], "CAEQNhiBgM0BYiIDc4MGZjZGI2OTBjOTRmNTE5NmU5NmFhZjhjYmY****")
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &DeleteObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "DeleteObject",
+		Method: "DELETE",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+	assert.Nil(t, input.OpMetadata.values)
 }
 
 func TestUnmarshalOutput_DeleteObject(t *testing.T) {
@@ -1492,6 +1609,31 @@ func TestMarshalInput_DeleteMultipleObjects(t *testing.T) {
 	assert.Nil(t, input.OpMetadata.values)
 	assert.Empty(t, input.Parameters["delete"])
 	assert.Equal(t, input.Parameters["encoding-type"], "url")
+
+	request = &DeleteMultipleObjectsRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Objects:      []DeleteObject{{Key: Ptr("key1.txt"), VersionId: Ptr("CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****")}, {Key: Ptr("key2.txt"), VersionId: Ptr("CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****")}},
+		EncodingType: Ptr("url"),
+		Quiet:        true,
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "DeleteMultipleObjects",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{"delete": ""},
+		Bucket:     request.Bucket,
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, input.Body, strings.NewReader("<Delete><Quiet>true</Quiet><Object><Key>key1.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****</VersionId></Object><Object><Key>key2.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****</VersionId></Object></Delete>"))
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["delete"])
+	assert.Equal(t, input.Parameters["encoding-type"], "url")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_DeleteMultipleObjects(t *testing.T) {
@@ -1734,6 +1876,23 @@ func TestMarshalInput_HeadObject(t *testing.T) {
 	assert.Equal(t, *input.Key, "oss-key")
 	assert.Nil(t, input.OpMetadata.values)
 	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****")
+
+	request = &HeadObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "HeadObject",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_HeadObject(t *testing.T) {
@@ -1972,6 +2131,27 @@ func TestMarshalInput_GetObjectMeta(t *testing.T) {
 	assert.Nil(t, input.OpMetadata.values)
 	assert.Empty(t, input.Parameters["objectMeta"])
 	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****")
+
+	request = &GetObjectMetaRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "GetObjectMeta",
+		Method: "HEAD",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"objectMeta": "",
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["objectMeta"])
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_GetObjectMeta(t *testing.T) {
@@ -2198,6 +2378,36 @@ func TestMarshalInput_RestoreObject(t *testing.T) {
 	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****")
 	data, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days><JobParameters><Tier>Standard</Tier></JobParameters></RestoreRequest>")
+
+	request = &RestoreObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		RequestPayer: Ptr("requester"),
+		RestoreRequest: &RestoreRequest{
+			Days: int32(2),
+			Tier: Ptr("Standard"),
+		},
+	}
+	input = &OperationInput{
+		OpName: "RestoreObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"restore": "",
+		},
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["restore"])
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+	data, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days><JobParameters><Tier>Standard</Tier></JobParameters></RestoreRequest>")
 }
 
 func TestUnmarshalOutput_RestoreObject(t *testing.T) {
@@ -2348,6 +2558,22 @@ func TestMarshalInput_PutObjectAcl(t *testing.T) {
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
+
+	request = &PutObjectAclRequest{
+		Bucket:       Ptr("oss-demo"),
+		Key:          Ptr("oss-object"),
+		Acl:          ObjectACLPrivate,
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "PutObjectAcl",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_PutObjectAcl(t *testing.T) {
@@ -2498,6 +2724,20 @@ func TestMarshalInput_GetObjectAcl(t *testing.T) {
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
+	request = &GetObjectAclRequest{
+		Bucket:       Ptr("oss-demo"),
+		Key:          Ptr("oss-object"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "PutObjectAcl",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_GetObjectAcl(t *testing.T) {
@@ -2720,6 +2960,24 @@ func TestMarshalInput_InitiateMultipartUpload(t *testing.T) {
 	assert.Equal(t, input.Headers["x-oss-tagging"], "TagA=B&TagC=D")
 	assert.Empty(t, input.Parameters["uploads"])
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &InitiateMultipartUploadRequest{
+		Bucket:       Ptr("oss-demo"),
+		Key:          Ptr("oss-object"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "InitiateMultipartUpload",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"uploads": "",
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_InitiateMultipartUpload(t *testing.T) {
@@ -2899,6 +3157,26 @@ func TestMarshalInput_UploadPart(t *testing.T) {
 	assert.Equal(t, input.Parameters["uploadId"], "0004B9895DBBB6EC9****")
 	assert.Equal(t, input.Headers["x-oss-traffic-limit"], strconv.FormatInt(100*1024*8, 10))
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &UploadPartRequest{
+		Bucket:       Ptr("oss-demo"),
+		Key:          Ptr("oss-object"),
+		PartNumber:   int32(1),
+		UploadId:     Ptr("0004B9895DBBB6EC9****"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "UploadPart",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["partNumber"], "1")
+	assert.Equal(t, input.Parameters["uploadId"], "0004B9895DBBB6EC9****")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_UploadPart(t *testing.T) {
@@ -3179,6 +3457,33 @@ func TestMarshalInput_UploadPartCopy(t *testing.T) {
 	assert.Equal(t, input.Headers["x-oss-copy-source"], "/oss-src-bucket/oss-src-dir/oss-src-obj")
 	assert.Equal(t, input.Headers["x-oss-traffic-limit"], strconv.FormatInt(100*1024*8, 10))
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &UploadPartCopyRequest{
+		Bucket:       Ptr("oss-dest-bucket"),
+		Key:          Ptr("oss-dest-object"),
+		PartNumber:   int32(1),
+		UploadId:     Ptr("0004B9895DBBB6EC9****"),
+		SourceKey:    Ptr("oss-src-dir/oss-src-obj+123"),
+		SourceBucket: Ptr("oss-src-bucket"),
+		RequestPayer: Ptr("requester"),
+	}
+	source = encodeSourceObject(request)
+	input = &OperationInput{
+		OpName: "UploadPartCopy",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Headers: map[string]string{
+			"x-oss-copy-source": source,
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["partNumber"], "1")
+	assert.Equal(t, input.Parameters["uploadId"], "0004B9895DBBB6EC9****")
+	assert.Equal(t, input.Headers["x-oss-copy-source"], "/oss-src-bucket/oss-src-dir/oss-src-obj%2B123")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_UploadPartCopy(t *testing.T) {
@@ -3372,6 +3677,27 @@ func TestMarshalInput_CompleteMultipartUpload(t *testing.T) {
 	assert.Equal(t, input.Headers["x-oss-callback"], callbackVal)
 	assert.Equal(t, input.Headers["x-oss-callback-var"], callbackVar)
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &CompleteMultipartUploadRequest{
+		Bucket:          Ptr("oss-dest-bucket"),
+		Key:             Ptr("oss-dest-object"),
+		UploadId:        Ptr("0004B9895DBBB6EC9****"),
+		ForbidOverwrite: Ptr("false"),
+		CompleteAll:     Ptr("yes"),
+		RequestPayer:    Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "CompleteMultipartUpload",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["uploadId"], "0004B9895DBBB6EC9****")
+	assert.Equal(t, input.Headers["x-oss-forbid-overwrite"], "false")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_CompleteMultipartUpload(t *testing.T) {
@@ -3550,6 +3876,24 @@ func TestMarshalInput_AbortMultipartUpload(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["uploadId"], uploadId)
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &AbortMultipartUploadRequest{
+		Bucket:       Ptr("oss-demo"),
+		Key:          Ptr("oss-object"),
+		UploadId:     Ptr(uploadId),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "AbortMultipartUpload",
+		Method: "DELETE",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["uploadId"], uploadId)
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_AbortMultipartUpload(t *testing.T) {
@@ -3690,6 +4034,23 @@ func TestMarshalInput_ListMultipartUploads(t *testing.T) {
 	assert.Equal(t, input.Parameters["max-uploads"], "10")
 	assert.Equal(t, input.Parameters["upload-id-marker"], "89F0105AA66942638E35300618DF5EE7")
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &ListMultipartUploadsRequest{
+		Bucket:       Ptr("oss-demo"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "ListMultipartUploads",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Parameters: map[string]string{
+			"encoding-type": "url",
+			"uploads":       "",
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_ListMultipartUploads(t *testing.T) {
@@ -4000,6 +4361,29 @@ func TestMarshalInput_ListParts(t *testing.T) {
 	assert.Equal(t, input.Parameters["uploadId"], "89F0105AA66942638E35300618DF5EE7")
 	assert.Empty(t, input.Parameters["part-number-marker"])
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &ListPartsRequest{
+		Bucket:       Ptr("oss-demo"),
+		Key:          Ptr("oss-object"),
+		UploadId:     Ptr("89F0105AA66942638E35300618DF5EE7"),
+		MaxParts:     int32(10),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "ListParts",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Parameters: map[string]string{
+			"encoding-type": "url",
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["max-parts"], "10")
+	assert.Equal(t, input.Parameters["uploadId"], "89F0105AA66942638E35300618DF5EE7")
+	assert.Empty(t, input.Parameters["part-number-marker"])
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_ListParts(t *testing.T) {
@@ -4188,6 +4572,15 @@ func TestMarshalInput_PutSymlink(t *testing.T) {
 	request = &PutSymlinkRequest{
 		Bucket: Ptr("oss-demo"),
 	}
+	input = &OperationInput{
+		OpName: "PutSymlink",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Key")
@@ -4195,6 +4588,15 @@ func TestMarshalInput_PutSymlink(t *testing.T) {
 	request = &PutSymlinkRequest{
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
+	}
+	input = &OperationInput{
+		OpName: "PutSymlink",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
@@ -4204,6 +4606,15 @@ func TestMarshalInput_PutSymlink(t *testing.T) {
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
 		Target: Ptr("oss-target-object"),
+	}
+	input = &OperationInput{
+		OpName: "PutSymlink",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
@@ -4221,6 +4632,15 @@ func TestMarshalInput_PutSymlink(t *testing.T) {
 			"email": "demo@aliyun.com",
 		},
 	}
+	input = &OperationInput{
+		OpName: "PutSymlink",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["x-oss-symlink-target"], "oss-target-object")
@@ -4230,6 +4650,26 @@ func TestMarshalInput_PutSymlink(t *testing.T) {
 	assert.Equal(t, input.Headers["x-oss-meta-name"], "demo")
 	assert.Equal(t, input.Headers["x-oss-meta-email"], "demo@aliyun.com")
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &PutSymlinkRequest{
+		Bucket:       Ptr("oss-demo"),
+		Key:          Ptr("oss-object"),
+		Target:       Ptr("oss-target-object"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "PutSymlink",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-symlink-target"], "oss-target-object")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_PutSymlink(t *testing.T) {
@@ -4346,6 +4786,15 @@ func TestMarshalInput_GetSymlink(t *testing.T) {
 	request = &GetSymlinkRequest{
 		Bucket: Ptr("oss-demo"),
 	}
+	input = &OperationInput{
+		OpName: "GetSymlink",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Key")
@@ -4353,6 +4802,15 @@ func TestMarshalInput_GetSymlink(t *testing.T) {
 	request = &GetSymlinkRequest{
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
+	}
+	input = &OperationInput{
+		OpName: "GetSymlink",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
@@ -4362,9 +4820,36 @@ func TestMarshalInput_GetSymlink(t *testing.T) {
 		Key:       Ptr("oss-object"),
 		VersionId: Ptr("CAEQNRiBgMClj7qD0BYiIDQ5Y2QyMjc3NGZkODRlMTU5M2VkY2U3MWRiNGRh****"),
 	}
+	input = &OperationInput{
+		OpName: "GetSymlink",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgMClj7qD0BYiIDQ5Y2QyMjc3NGZkODRlMTU5M2VkY2U3MWRiNGRh****")
+
+	request = &GetSymlinkRequest{
+		Bucket:       Ptr("oss-demo"),
+		Key:          Ptr("oss-object"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "GetSymlink",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_GetSymlink(t *testing.T) {
@@ -4489,6 +4974,15 @@ func TestMarshalInput_PutObjectTagging(t *testing.T) {
 	request = &PutObjectTaggingRequest{
 		Bucket: Ptr("oss-demo"),
 	}
+	input = &OperationInput{
+		OpName: "PutObjectTagging",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Key")
@@ -4496,6 +4990,15 @@ func TestMarshalInput_PutObjectTagging(t *testing.T) {
 	request = &PutObjectTaggingRequest{
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
+	}
+	input = &OperationInput{
+		OpName: "PutObjectTagging",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
@@ -4515,10 +5018,49 @@ func TestMarshalInput_PutObjectTagging(t *testing.T) {
 			},
 		},
 	}
+	input = &OperationInput{
+		OpName: "PutObjectTagging",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	data, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(data), `<Tagging><TagSet><Tag><Key>k1</Key><Value>v1</Value></Tag></TagSet></Tagging>`)
+
+	request = &PutObjectTaggingRequest{
+		Bucket: Ptr("oss-demo"),
+		Key:    Ptr("oss-object"),
+		Tagging: &Tagging{
+			TagSet{
+				Tags: []Tag{
+					{
+						Key:   Ptr("k1"),
+						Value: Ptr("v1"),
+					},
+				},
+			},
+		},
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "PutObjectTagging",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	data, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(data), `<Tagging><TagSet><Tag><Key>k1</Key><Value>v1</Value></Tag></TagSet></Tagging>`)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_PutObjectTagging(t *testing.T) {
@@ -4637,6 +5179,15 @@ func TestMarshalInput_GetObjectTagging(t *testing.T) {
 	request = &GetObjectTaggingRequest{
 		Bucket: Ptr("oss-demo"),
 	}
+	input = &OperationInput{
+		OpName: "GetObjectTagging",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Key")
@@ -4644,6 +5195,15 @@ func TestMarshalInput_GetObjectTagging(t *testing.T) {
 	request = &GetObjectTaggingRequest{
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
+	}
+	input = &OperationInput{
+		OpName: "GetObjectTagging",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
@@ -4653,9 +5213,38 @@ func TestMarshalInput_GetObjectTagging(t *testing.T) {
 		Key:       Ptr("oss-object"),
 		VersionId: Ptr("CAEQNRiBgMClj7qD0BYiIDQ5Y2QyMjc3NGZkODRlMTU5M2VkY2U3MWRiNGRh****"),
 	}
+	input = &OperationInput{
+		OpName: "GetObjectTagging",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgMClj7qD0BYiIDQ5Y2QyMjc3NGZkODRlMTU5M2VkY2U3MWRiNGRh****")
+
+	request = &GetObjectTaggingRequest{
+		Bucket:       Ptr("oss-demo"),
+		Key:          Ptr("oss-object"),
+		VersionId:    Ptr("CAEQNRiBgMClj7qD0BYiIDQ5Y2QyMjc3NGZkODRlMTU5M2VkY2U3MWRiNGRh****"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "GetObjectTagging",
+		Method: "GET",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgMClj7qD0BYiIDQ5Y2QyMjc3NGZkODRlMTU5M2VkY2U3MWRiNGRh****")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_GetObjectTagging(t *testing.T) {
@@ -4809,6 +5398,15 @@ func TestMarshalInput_DeleteObjectTagging(t *testing.T) {
 	request = &DeleteObjectTaggingRequest{
 		Bucket: Ptr("oss-demo"),
 	}
+	input = &OperationInput{
+		OpName: "DeleteObjectTagging",
+		Method: "DELETE",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Key")
@@ -4816,6 +5414,15 @@ func TestMarshalInput_DeleteObjectTagging(t *testing.T) {
 	request = &DeleteObjectTaggingRequest{
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
+	}
+	input = &OperationInput{
+		OpName: "DeleteObjectTagging",
+		Method: "DELETE",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
@@ -4825,9 +5432,38 @@ func TestMarshalInput_DeleteObjectTagging(t *testing.T) {
 		Key:       Ptr("oss-object"),
 		VersionId: Ptr("CAEQNRiBgMClj7qD0BYiIDQ5Y2QyMjc3NGZkODRlMTU5M2VkY2U3MWRiNGRh****"),
 	}
+	input = &OperationInput{
+		OpName: "DeleteObjectTagging",
+		Method: "DELETE",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgMClj7qD0BYiIDQ5Y2QyMjc3NGZkODRlMTU5M2VkY2U3MWRiNGRh****")
+
+	request = &DeleteObjectTaggingRequest{
+		Bucket:       Ptr("oss-demo"),
+		Key:          Ptr("oss-object"),
+		VersionId:    Ptr("CAEQNRiBgMClj7qD0BYiIDQ5Y2QyMjc3NGZkODRlMTU5M2VkY2U3MWRiNGRh****"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "DeleteObjectTagging",
+		Method: "DELETE",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"tagging": "",
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgMClj7qD0BYiIDQ5Y2QyMjc3NGZkODRlMTU5M2VkY2U3MWRiNGRh****")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_DeleteObjectTagging(t *testing.T) {
@@ -5204,6 +5840,31 @@ func TestMarshalInput_ProcessObject(t *testing.T) {
 	assert.Empty(t, input.Parameters["x-oss-process"])
 	data, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(data), "x-oss-process=image/resize,w_100|sys/saveas,o_ZGVzdC5qcGc=")
+
+	request = &ProcessObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		Process:      Ptr(process),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "ProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-process": "",
+		},
+	}
+	err = c.marshalInput(request, input, addProcess, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.NotEmpty(t, input.Body)
+	assert.Empty(t, input.Parameters["x-oss-process"])
+	data, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "x-oss-process=image/resize,w_100|sys/saveas,o_ZGVzdC5qcGc=")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_ProcessObject(t *testing.T) {
@@ -5387,6 +6048,32 @@ func TestMarshalInput_AsyncProcessObject(t *testing.T) {
 	assert.Empty(t, input.Parameters["x-oss-async-process"])
 	data, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(data), "x-oss-async-process=video/convert,f_avi,vcodec_h265,s_1920x1080,vb_2000000,fps_30,acodec_aac,ab_100000,sn_1|sys/saveas,b_ZGVzY3QtYnVja2V0,o_ZGVtby5tcDQ")
+
+	request = &AsyncProcessObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		AsyncProcess: Ptr(process),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "AsyncProcessObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"x-oss-async-process": "",
+		},
+	}
+	err = c.marshalInput(request, input, addProcess, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.NotEmpty(t, input.Body)
+	assert.Empty(t, input.Parameters["x-oss-async-process"])
+	data, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "x-oss-async-process=video/convert,f_avi,vcodec_h265,s_1920x1080,vb_2000000,fps_30,acodec_aac,ab_100000,sn_1|sys/saveas,b_ZGVzY3QtYnVja2V0,o_ZGVtby5tcDQ")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+
 }
 
 func TestUnmarshalOutput_AsyncProcessObject(t *testing.T) {

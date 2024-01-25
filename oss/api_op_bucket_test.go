@@ -317,6 +317,27 @@ func TestMarshalInput_ListObjects(t *testing.T) {
 	}
 	err = c.marshalInput(request, input)
 	assert.Nil(t, err)
+
+	request = &ListObjectsRequest{
+		Bucket:       Ptr("oss-demo"),
+		Delimiter:    Ptr("/"),
+		Marker:       Ptr(""),
+		MaxKeys:      int32(10),
+		Prefix:       Ptr(""),
+		EncodingType: Ptr("URL"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "ListObjects",
+		Method: "GET",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeDefault,
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_ListObjects(t *testing.T) {
@@ -599,6 +620,28 @@ func TestMarshalInput_ListObjectsV2(t *testing.T) {
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
+
+	request = &ListObjectsRequestV2{
+		Bucket:       Ptr("oss-demo"),
+		Delimiter:    Ptr("/"),
+		StartAfter:   Ptr(""),
+		MaxKeys:      int32(10),
+		Prefix:       Ptr(""),
+		EncodingType: Ptr("URL"),
+		FetchOwner:   true,
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "ListObjectsV2",
+		Method: "GET",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeDefault,
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_ListObjectsV2(t *testing.T) {
@@ -2078,8 +2121,34 @@ func TestMarshalInput_ListObjectVersions(t *testing.T) {
 	request = &ListObjectVersionsRequest{
 		Bucket: Ptr("oss-demo"),
 	}
+	input = &OperationInput{
+		OpName: "ListObjectVersions",
+		Method: "GET",
+		Parameters: map[string]string{
+			"versions ":     "",
+			"encoding-type": "url",
+		},
+		Bucket: request.Bucket,
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
+
+	request = &ListObjectVersionsRequest{
+		Bucket:       Ptr("oss-demo"),
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "ListObjectVersions",
+		Method: "GET",
+		Parameters: map[string]string{
+			"versions ":     "",
+			"encoding-type": "url",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 
 	request = &ListObjectVersionsRequest{
 		Bucket:          Ptr("oss-demo"),
@@ -2602,4 +2671,301 @@ func TestUnmarshalOutput_ListObjectVersions(t *testing.T) {
 	assert.Equal(t, resultErr.Status, "AccessDenied")
 	assert.Equal(t, resultErr.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, resultErr.Headers.Get("Content-Type"), "application/xml")
+}
+
+func TestMarshalInput_PutBucketRequestPayment(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var request *PutBucketRequestPaymentRequest
+	var input *OperationInput
+	var err error
+
+	request = &PutBucketRequestPaymentRequest{}
+	input = &OperationInput{
+		OpName: "PutBucketRequestPayment",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeDefault,
+		},
+		Parameters: map[string]string{
+			"requestPayment": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field")
+
+	request = &PutBucketRequestPaymentRequest{
+		Bucket: Ptr("oss-demo"),
+	}
+	input = &OperationInput{
+		OpName: "PutBucketRequestPayment",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeDefault,
+		},
+		Parameters: map[string]string{
+			"requestPayment": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.NotNil(t, err)
+
+	assert.Contains(t, err.Error(), "missing required field, PaymentConfiguration.")
+
+	request = &PutBucketRequestPaymentRequest{
+		Bucket: Ptr("oss-demo"),
+		PaymentConfiguration: &RequestPaymentConfiguration{
+			Payer: Requester,
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutBucketRequestPayment",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeDefault,
+		},
+		Parameters: map[string]string{
+			"requestPayment": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ := io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<RequestPaymentConfiguration><Payer>Requester</Payer></RequestPaymentConfiguration>")
+
+	request = &PutBucketRequestPaymentRequest{
+		Bucket: Ptr("oss-demo"),
+		PaymentConfiguration: &RequestPaymentConfiguration{
+			Payer: BucketOwner,
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutBucketRequestPayment",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeDefault,
+		},
+		Parameters: map[string]string{
+			"requestPayment": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<RequestPaymentConfiguration><Payer>BucketOwner</Payer></RequestPaymentConfiguration>")
+}
+
+func TestUnmarshalOutput_PutBucketRequestPayment(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var output *OperationOutput
+	var err error
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+		},
+	}
+	result := &PutBucketRequestPaymentResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+
+	output = &OperationOutput{
+		StatusCode: 404,
+		Status:     "NoSuchBucket",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 404)
+	assert.Equal(t, result.Status, "NoSuchBucket")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	output = &OperationOutput{
+		StatusCode: 400,
+		Status:     "InvalidArgument",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 400)
+	assert.Equal(t, result.Status, "InvalidArgument")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+
+	body := `<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>AccessDenied</Code>
+  <Message>AccessDenied</Message>
+  <RequestId>568D5566F2D0F89F5C0E****</RequestId>
+  <HostId>test.oss.aliyuncs.com</HostId>
+</Error>`
+	output = &OperationOutput{
+		StatusCode: 403,
+		Status:     "AccessDenied",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 403)
+	assert.Equal(t, result.Status, "AccessDenied")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+}
+
+func TestMarshalInput_GetBucketRequestPayment(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var request *GetBucketRequestPaymentRequest
+	var input *OperationInput
+	var err error
+
+	request = &GetBucketRequestPaymentRequest{}
+	input = &OperationInput{
+		OpName: "GetBucketVersioning",
+		Method: "GET",
+		Parameters: map[string]string{
+			"versioning": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field")
+
+	request = &GetBucketRequestPaymentRequest{
+		Bucket: Ptr("oss-demo"),
+	}
+	input = &OperationInput{
+		OpName: "GetBucketVersioning",
+		Method: "GET",
+		Parameters: map[string]string{
+			"versioning": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input)
+	assert.Nil(t, err)
+}
+
+func TestUnmarshalOutput_GetBucketRequestPayment(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var output *OperationOutput
+	var err error
+	body := `<?xml version="1.0" encoding="UTF-8"?>
+<RequestPaymentConfiguration>
+  <Payer>Requester</Payer>
+</RequestPaymentConfiguration>`
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	result := &GetBucketRequestPaymentResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, *result.Payer, "Requester")
+
+	body = `<?xml version="1.0" encoding="UTF-8"?>
+<RequestPaymentConfiguration>
+  <Payer>BucketOwner</Payer>
+</RequestPaymentConfiguration>`
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	result = &GetBucketRequestPaymentResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, *result.Payer, "BucketOwner")
+
+	output = &OperationOutput{
+		StatusCode: 404,
+		Status:     "NoSuchBucket",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 404)
+	assert.Equal(t, result.Status, "NoSuchBucket")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+
+	output = &OperationOutput{
+		StatusCode: 400,
+		Status:     "InvalidArgument",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 400)
+	assert.Equal(t, result.Status, "InvalidArgument")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+
+	body = `<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>AccessDenied</Code>
+  <Message>AccessDenied</Message>
+  <RequestId>568D5566F2D0F89F5C0E****</RequestId>
+  <HostId>test.oss.aliyuncs.com</HostId>
+</Error>`
+	output = &OperationOutput{
+		StatusCode: 403,
+		Status:     "AccessDenied",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 403)
+	assert.Equal(t, result.Status, "AccessDenied")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 }
