@@ -1550,3 +1550,373 @@ func TestMockAppendFile_CRC(t *testing.T) {
 	assert.Equal(t, 0, n)
 	f.Close()
 }
+
+func TestMockOpenFile_Payer(t *testing.T) {
+	length := 3*1024*1024 + 1234
+	data := []byte(randStr(length))
+	gmtTime := getNowGMT()
+	datasum := func() uint64 {
+		h := NewCRC64(0)
+		h.Write(data)
+		return h.Sum64()
+	}()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("x-oss-request-payer") == "" {
+			errData := []byte(
+				`<?xml version="1.0" encoding="UTF-8"?>
+				<Error>
+				  <Code>AccessDenied</Code>
+				  <Message>Access denied for requester pay bucket</Message>
+				  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+				  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+				  <BucketName>test</BucketName>
+				  <EC>0003-00000703</EC>
+				</Error>`)
+			w.Header().Set(HTTPHeaderContentType, "application/xml")
+			w.Header().Set(HTTPHeaderContentLength, fmt.Sprint(len(errData)))
+			w.WriteHeader(403)
+			w.Write(errData)
+			return
+		}
+		switch r.Method {
+		case "HEAD":
+			// header
+			w.Header().Set(HTTPHeaderLastModified, gmtTime)
+			w.Header().Set(HTTPHeaderContentLength, fmt.Sprint(length))
+			w.Header().Set(HTTPHeaderETag, "fba9dede5f27731c9771645a3986****")
+			w.Header().Set(HTTPHeaderContentType, "text/plain")
+
+			//status code
+			w.WriteHeader(200)
+
+			//body
+			w.Write(nil)
+		case "GET":
+			// header
+			var httpRange *HTTPRange
+			if r.Header.Get("Range") != "" {
+				httpRange, _ = ParseRange(r.Header.Get("Range"))
+			}
+
+			offset := int64(0)
+			statusCode := 200
+			sendLen := int64(length)
+			if httpRange != nil {
+				offset = httpRange.Offset
+				sendLen = int64(length) - httpRange.Offset
+				if httpRange.Count > 0 {
+					sendLen = httpRange.Count
+				}
+				cr := httpContentRange{
+					Offset: httpRange.Offset,
+					Count:  sendLen,
+					Total:  int64(length),
+				}
+				w.Header().Set("Content-Range", ToString(cr.FormatHTTPContentRange()))
+				statusCode = 206
+			}
+
+			w.Header().Set(HTTPHeaderContentLength, fmt.Sprint(sendLen))
+			w.Header().Set(HTTPHeaderLastModified, gmtTime)
+			w.Header().Set(HTTPHeaderETag, "fba9dede5f27731c9771645a3986****")
+			w.Header().Set(HTTPHeaderContentType, "text/plain")
+
+			//status code
+			w.WriteHeader(statusCode)
+
+			//body
+			sendData := data[int(offset):int(offset+sendLen)]
+			//fmt.Printf("sendData offset%d, len:%d, total:%d\n", offset, len(sendData), length)
+			w.Write(sendData)
+		}
+	}))
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+	f, err := NewReadOnlyFile(context.TODO(), client, "bucket", "key")
+	assert.NotNil(t, err)
+
+	f, err = NewReadOnlyFile(context.TODO(), client, "bucket", "key", func(op *OpenOptions) {
+		op.RequestPayer = Ptr("requester")
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, f)
+	assert.Equal(t, false, f.enablePrefetch)
+	assert.Equal(t, DefaultPrefetchChunkSize, f.chunkSize)
+	assert.Equal(t, DefaultPrefetchNum, f.prefetchNum)
+	assert.Equal(t, DefaultPrefetchThreshold, f.prefetchThreshold)
+
+	//stat
+	stat, err := f.Stat()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(length), stat.Size())
+	assert.Equal(t, gmtTime, stat.ModTime().Format(http.TimeFormat))
+	assert.Equal(t, os.FileMode(0644), stat.Mode())
+	assert.Equal(t, false, stat.IsDir())
+	assert.Equal(t, "oss://bucket/key", stat.Name())
+	h, ok := stat.Sys().(http.Header)
+	assert.True(t, ok)
+	assert.NotNil(t, h)
+	assert.Equal(t, "fba9dede5f27731c9771645a3986****", h.Get(HTTPHeaderETag))
+	assert.Equal(t, "text/plain", h.Get(HTTPHeaderContentType))
+
+	//seek ok
+	begin, err := f.Seek(0, io.SeekStart)
+	end, err := f.Seek(0, io.SeekEnd)
+	assert.Equal(t, stat.Size(), end-begin)
+
+	//seek invalid
+	begin, err = f.Seek(0, 4)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "invalid whence")
+	assert.Equal(t, int64(0), begin)
+
+	begin, err = f.Seek(-1, io.SeekStart)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "negative position")
+	assert.Equal(t, int64(0), begin)
+
+	begin, err = f.Seek(100, io.SeekEnd)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "offset is unavailable")
+	assert.Equal(t, int64(0), begin)
+
+	//read all
+	f.Seek(0, io.SeekStart)
+	hash := NewCRC64(0)
+	written, err := io.Copy(io.MultiWriter(io.Discard, hash), f)
+	assert.Equal(t, datasum, hash.Sum64())
+	assert.Equal(t, stat.Size(), written)
+	//seek readN
+	for i := 0; i < 64; i++ {
+		offset := rand.Int63n(int64(length / 4))
+		n := rand.Int63n(int64(length/2)) + 1
+		//fmt.Printf("seek readN check offset%d, len:%d\n", offset, n)
+		begin, err = f.Seek(offset, io.SeekStart)
+		assert.Nil(t, err)
+		assert.Equal(t, offset, begin)
+
+		hash := NewCRC64(0)
+		written, err := io.CopyN(io.MultiWriter(io.Discard, hash), f, n)
+		assert.Nil(t, err)
+		assert.Equal(t, n, written)
+
+		hash1 := NewCRC64(0)
+		hash1.Write(data[offset : offset+n])
+
+		assert.Equal(t, hash1.Sum64(), hash.Sum64())
+	}
+
+	//seek read from offset to end
+	for i := 0; i < 64; i++ {
+		offset := rand.Int63n(int64(length / 5))
+		begin, err = f.Seek(offset, io.SeekStart)
+		n := int64(length) - offset
+		//fmt.Printf("seek readAll check offset%d, len:%d\n", offset, n)
+		assert.Nil(t, err)
+		assert.Equal(t, offset, begin)
+
+		hash := NewCRC64(0)
+		written, err := io.Copy(io.MultiWriter(io.Discard, hash), f)
+		assert.Nil(t, err)
+		assert.Equal(t, n, written)
+
+		hash1 := NewCRC64(0)
+		hash1.Write(data[offset:])
+		assert.Equal(t, hash1.Sum64(), hash.Sum64())
+	}
+
+	//seek to end
+	begin, err = f.Seek(0, io.SeekEnd)
+	assert.Nil(t, err)
+	written, err = io.Copy(io.Discard, f)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(0), written)
+
+	//
+	begin, err = f.Seek(0, io.SeekStart)
+	assert.Nil(t, err)
+	io.CopyN(io.Discard, f, 2)
+	time.Sleep(2 * time.Second)
+
+	err = f.Close()
+	assert.Nil(t, err)
+
+	//call Close many times
+	err = f.Close()
+	assert.Nil(t, err)
+
+	_, err = f.Seek(0, io.SeekEnd)
+	assert.Equal(t, err, os.ErrClosed)
+
+	stat, err = f.Stat()
+	assert.Equal(t, err, os.ErrClosed)
+
+	bytedata := make([]byte, 5)
+	_, err = f.Read(bytedata)
+	assert.Equal(t, err, os.ErrClosed)
+
+	f = nil
+	err = f.Close()
+	assert.Equal(t, err, os.ErrInvalid)
+
+	_, err = f.Seek(0, io.SeekEnd)
+	assert.Equal(t, err, os.ErrInvalid)
+
+	stat, err = f.Stat()
+	assert.Equal(t, err, os.ErrInvalid)
+
+	_, err = f.Read(bytedata)
+	assert.Equal(t, err, os.ErrInvalid)
+}
+
+func TestMockAppendFile_Payer(t *testing.T) {
+	data := []byte("start:")
+	gmtTime := getNowGMT()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("x-oss-request-payer") == "" {
+			errData := []byte(
+				`<?xml version="1.0" encoding="UTF-8"?>
+				<Error>
+				  <Code>AccessDenied</Code>
+				  <Message>Access denied for requester pay bucket</Message>
+				  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+				  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+				  <BucketName>test</BucketName>
+				  <EC>0003-00000703</EC>
+				</Error>`)
+			w.Header().Set(HTTPHeaderContentType, "application/xml")
+			w.Header().Set(HTTPHeaderContentLength, fmt.Sprint(len(errData)))
+			w.WriteHeader(403)
+			w.Write(errData)
+			return
+		}
+		switch r.Method {
+		case "HEAD":
+			// header
+			w.Header().Set(HTTPHeaderLastModified, gmtTime)
+			w.Header().Set(HTTPHeaderContentLength, fmt.Sprint(len(data)))
+			w.Header().Set(HTTPHeaderETag, fmt.Sprintf("etag-%d", len(data)))
+			w.Header().Set(HTTPHeaderContentType, "text/plain")
+			w.Header().Set(HeaderOssObjectType, "Appendable")
+
+			//status code
+			w.WriteHeader(200)
+
+			//body
+			w.Write(nil)
+		case "POST":
+			in, err := io.ReadAll(r.Body)
+			assert.Nil(t, err)
+
+			var buffer bytes.Buffer
+			buffer.Write(data)
+			buffer.Write(in)
+			data = buffer.Bytes()
+
+			// header
+			w.Header().Set(HTTPHeaderContentLength, "0")
+			w.Header().Set(HTTPHeaderETag, fmt.Sprintf("etag-%d", len(data)))
+			w.Header().Set(HTTPHeaderContentType, "text/plain")
+			w.Header().Set(HeaderOssNextAppendPosition, fmt.Sprintf("%d", len(data)))
+
+			//status code
+			w.WriteHeader(200)
+
+			//body
+			w.Write(nil)
+		}
+	}))
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+	f, err := client.AppendFile(context.TODO(), "bucket", "key")
+	assert.NotNil(t, err)
+
+	f, err = client.AppendFile(context.TODO(), "bucket", "key", func(ap *AppendOptions) {
+		ap.RequestPayer = Ptr("requester")
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, f)
+
+	//stat
+	stat, err := f.Stat()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(len(data)), stat.Size())
+	assert.Equal(t, "oss://bucket/key", stat.Name())
+
+	n, err := f.Write([]byte("hello"))
+	assert.Nil(t, err)
+	assert.Equal(t, 5, n)
+
+	n, err = f.Write([]byte(" world"))
+	assert.Nil(t, err)
+	assert.Equal(t, 6, n)
+
+	pattern := "start:hello world"
+	assert.Equal(t, pattern, string(data))
+
+	stat, err = f.Stat()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(len(pattern)), stat.Size())
+	assert.Equal(t, "oss://bucket/key", stat.Name())
+
+	stat, err = f.Stat()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(len(pattern)), stat.Size())
+	assert.Equal(t, "oss://bucket/key", stat.Name())
+
+	length := 1238
+	str := randStr(length)
+	written, err := f.WriteFrom(io.NopCloser(bytes.NewReader([]byte(str))))
+	assert.Nil(t, err)
+	assert.Equal(t, int64(length), written)
+
+	assert.Equal(t, pattern+str, string(data))
+
+	err = f.Close()
+	assert.Nil(t, err)
+
+	//call Close many times
+	err = f.Close()
+	assert.Nil(t, err)
+
+	stat, err = f.Stat()
+	assert.Equal(t, err, os.ErrClosed)
+
+	_, err = f.Write([]byte("world"))
+	assert.Equal(t, err, os.ErrClosed)
+
+	_, err = f.WriteFrom(io.NopCloser(bytes.NewReader([]byte("world"))))
+	assert.Equal(t, err, os.ErrClosed)
+
+	f = nil
+	err = f.Close()
+	assert.Equal(t, err, os.ErrInvalid)
+
+	stat, err = f.Stat()
+	assert.Equal(t, err, os.ErrInvalid)
+
+	_, err = f.Write([]byte("world"))
+	assert.Equal(t, err, os.ErrInvalid)
+
+	_, err = f.WriteFrom(io.NopCloser(bytes.NewReader([]byte("world"))))
+	assert.Equal(t, err, os.ErrInvalid)
+
+}

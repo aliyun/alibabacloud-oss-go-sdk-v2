@@ -9,7 +9,7 @@ import (
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/crypto"
 )
 
-// user agent tag for client encryption
+// EncryptionUaSuffix user agent tag for client encryption
 const (
 	EncryptionUaSuffix string = "OssEncryptionClient"
 )

@@ -89,6 +89,17 @@ const (
 	VersionSuspended VersioningStatusType = "Suspended"
 )
 
+// PayerType the type of request payer
+type PayerType string
+
+const (
+	// Requester the requester who send the request
+	Requester PayerType = "Requester"
+
+	// BucketOwner the requester who send the request
+	BucketOwner PayerType = "BucketOwner"
+)
+
 // OSS headers
 const (
 	HeaderOssPrefix                      string = "X-Oss-"
