@@ -430,6 +430,11 @@ func (f *ReadOnlyFile) prefetch(offset int64, needAtLeast int) (err error) {
 		size := minInt64(remaining, f.chunkSize)
 		cnt := (size + (AsyncReadeBufferSize - 1)) / AsyncReadeBufferSize
 		//fmt.Printf("f.sizeInBytes:%v, off:%v, size:%v, cnt:%v\n", f.sizeInBytes, off, size, cnt)
+		//NewAsyncRangeReader support softStartInitial, add more buffer count to prevent connections from not being released
+		if size > softStartInitial {
+			acnt := (AsyncReadeBufferSize+(softStartInitial-1))/softStartInitial - 1
+			cnt += int64(acnt)
+		}
 		if size != 0 {
 			getFn := func(ctx context.Context, httpRange HTTPRange) (output *ReaderRangeGetOutput, err error) {
 				request := &GetObjectRequest{
