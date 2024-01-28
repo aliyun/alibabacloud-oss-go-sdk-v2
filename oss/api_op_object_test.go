@@ -63,6 +63,7 @@ func TestMarshalInput_PutObject(t *testing.T) {
 	assert.Equal(t, *input.Bucket, "oss-bucket")
 	assert.Equal(t, *input.Key, "oss-key")
 	assert.Nil(t, input.Body)
+	assert.Equal(t, input.Headers["x-oss-object-acl"], "")
 
 	request = &PutObjectRequest{
 		Bucket:               Ptr("oss-bucket"),

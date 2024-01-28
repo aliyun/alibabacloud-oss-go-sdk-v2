@@ -1857,6 +1857,7 @@ var testMockGetBucketInfoSuccessCases = []struct {
     <IntranetEndpoint>oss-cn-hangzhou-internal.aliyuncs.com</IntranetEndpoint>
     <Location>oss-cn-hangzhou</Location>
     <StorageClass>Standard</StorageClass>
+	<DataRedundancyType>LRS</DataRedundancyType>
     <TransferAcceleration>Disabled</TransferAcceleration>
     <CrossRegionReplication>Disabled</CrossRegionReplication>
     <Name>oss-example</Name>
@@ -1898,6 +1899,7 @@ var testMockGetBucketInfoSuccessCases = []struct {
 			assert.Equal(t, *o.BucketInfo.IntranetEndpoint, "oss-cn-hangzhou-internal.aliyuncs.com")
 			assert.Equal(t, *o.BucketInfo.Location, "oss-cn-hangzhou")
 			assert.Equal(t, *o.BucketInfo.StorageClass, "Standard")
+			assert.Equal(t, *o.BucketInfo.DataRedundancyType, "LRS")
 			assert.Equal(t, *o.BucketInfo.TransferAcceleration, "Disabled")
 			assert.Equal(t, *o.BucketInfo.CreationDate, time.Date(2013, time.July, 31, 10, 56, 21, 0, time.UTC))
 			assert.Equal(t, *o.BucketInfo.CrossRegionReplication, "Disabled")

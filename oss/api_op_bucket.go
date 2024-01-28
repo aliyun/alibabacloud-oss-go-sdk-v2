@@ -30,10 +30,10 @@ type CreateBucketConfiguration struct {
 	XMLName xml.Name `xml:"CreateBucketConfiguration"`
 
 	// The storage class of the bucket.
-	StorageClass StorageClassType `xml:"StorageClass"`
+	StorageClass StorageClassType `xml:"StorageClass,omitempty"`
 
 	// The redundancy type of the bucket.
-	DataRedundancyType DataRedundancyType `xml:"DataRedundancyType"`
+	DataRedundancyType DataRedundancyType `xml:"DataRedundancyType,omitempty"`
 }
 
 type PutBucketResult struct {
@@ -547,7 +547,7 @@ type BucketInfo struct {
 	ACL *string `xml:"AccessControlList>Grant"`
 
 	// The disaster recovery type of the bucket.
-	RedundancyType *string `xml:"DataRedundancyType"`
+	DataRedundancyType *string `xml:"DataRedundancyType"`
 
 	// The container that stores the information about the bucket owner.
 	Owner *Owner `xml:"Owner"`
@@ -1055,7 +1055,7 @@ type ObjectDeleteMarkerProperties struct {
 	LastModified *time.Time `xml:"LastModified"`
 
 	// The container that stores information about the bucket owner.
-	Owner Owner `xml:"Owner"`
+	Owner *Owner `xml:"Owner"`
 }
 
 type ObjectVersionProperties struct {

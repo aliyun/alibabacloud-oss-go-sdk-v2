@@ -152,6 +152,69 @@ func TestMarshalInput_PutBucket(t *testing.T) {
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
+	assert.Nil(t, input.Body)
+
+	// with CreateBucketConfiguration only StorageClass
+	request = &PutBucketRequest{
+		Bucket: Ptr("oss-demo"),
+		CreateBucketConfiguration: &CreateBucketConfiguration{
+			StorageClass: StorageClassArchive,
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutBucket",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	data, err := io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "<CreateBucketConfiguration><StorageClass>Archive</StorageClass></CreateBucketConfiguration>")
+
+	// with CreateBucketConfiguration StorageClass + DataRedundancyType
+	request = &PutBucketRequest{
+		Bucket: Ptr("oss-demo"),
+		CreateBucketConfiguration: &CreateBucketConfiguration{
+			StorageClass:       StorageClassArchive,
+			DataRedundancyType: DataRedundancyLRS,
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutBucket",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	data, err = io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "<CreateBucketConfiguration><StorageClass>Archive</StorageClass><DataRedundancyType>LRS</DataRedundancyType></CreateBucketConfiguration>")
+
+	// with CreateBucketConfiguration StorageClass + DataRedundancyType
+	request = &PutBucketRequest{
+		Bucket: Ptr("oss-demo"),
+		CreateBucketConfiguration: &CreateBucketConfiguration{
+			StorageClass:       "123",
+			DataRedundancyType: "DRII",
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutBucket",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	data, err = io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "<CreateBucketConfiguration><StorageClass>123</StorageClass><DataRedundancyType>DRII</DataRedundancyType></CreateBucketConfiguration>")
 }
 
 func TestUnmarshalOutput_PutBucket(t *testing.T) {
@@ -1025,6 +1088,7 @@ func TestUnmarshalOutput_GetBucketInfo(t *testing.T) {
     <StorageClass>Standard</StorageClass>
     <TransferAcceleration>Disabled</TransferAcceleration>
     <CrossRegionReplication>Disabled</CrossRegionReplication>
+	<DataRedundancyType>LRS</DataRedundancyType>
     <Name>oss-example</Name>
     <ResourceGroupId>rg-aek27tc********</ResourceGroupId>
     <Owner>
@@ -1071,6 +1135,7 @@ func TestUnmarshalOutput_GetBucketInfo(t *testing.T) {
 	assert.Equal(t, *result.BucketInfo.ACL, "private")
 	assert.Equal(t, *result.BucketInfo.BucketPolicy.LogBucket, "examplebucket")
 	assert.Equal(t, *result.BucketInfo.BucketPolicy.LogPrefix, "log/")
+	assert.Equal(t, *result.BucketInfo.DataRedundancyType, "LRS")
 
 	assert.Empty(t, result.BucketInfo.SseRule.KMSMasterKeyID)
 	assert.Nil(t, result.BucketInfo.SseRule.SSEAlgorithm)
@@ -2919,6 +2984,7 @@ func TestUnmarshalOutput_GetBucketRequestPayment(t *testing.T) {
 	output = &OperationOutput{
 		StatusCode: 404,
 		Status:     "NoSuchBucket",
+
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 			"Content-Type":     {"application/xml"},
