@@ -3,6 +3,7 @@ package oss
 import (
 	"fmt"
 	"log"
+	"strings"
 )
 
 // A LogPrinter is a interface for the SDK to log messages to.
@@ -107,6 +108,22 @@ func (l *standardLogger) Errorf(format string, v ...any) {
 
 func (l *standardLogger) Level() int {
 	return l.level
+}
+
+func ToLogLevel(s string) int {
+	s = strings.ToLower(s)
+	switch s {
+	case "error", "err":
+		return LogError
+	case "warning", "warn":
+		return LogWarn
+	case "info":
+		return LogInfo
+	case "debug", "dbg":
+		return LogDebug
+	default:
+		return LogOff
+	}
 }
 
 var _ Logger = (*nopLogger)(nil)
