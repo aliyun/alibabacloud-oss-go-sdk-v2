@@ -4639,7 +4639,9 @@ func TestAsyncProcessObject(t *testing.T) {
 	videoUrl := "https://oss-console-img-demo-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/video.mp4?spm=a2c4g.64555.0.0.515675979u4B8w&file=video.mp4"
 	fileName := "video.mp4"
 	resp, err := http.Get(videoUrl)
+	assert.Nil(t, err)
 	defer resp.Body.Close()
+	defer os.Remove(fileName)
 
 	file, err := os.Create(fileName)
 	defer file.Close()
@@ -4680,7 +4682,6 @@ func TestAsyncProcessObject(t *testing.T) {
 	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
-	os.Remove(fileName)
 }
 
 func TestGetObjectWithProcess(t *testing.T) {
