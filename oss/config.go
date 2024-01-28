@@ -21,7 +21,7 @@ type Config struct {
 
 	// RetryMaxAttempts specifies the maximum number attempts an API client will call
 	// an operation that fails with a retryable error.
-	RetryMaxAttempts int
+	RetryMaxAttempts *int
 
 	// Retryer guides how HTTP requests should be retried in case of recoverable failures.
 	Retryer retry.Retryer
@@ -114,9 +114,8 @@ func (c Config) Copy() Config {
 }
 
 func LoadDefaultConfig() *Config {
-	config := &Config{
-		RetryMaxAttempts: 3,
-	}
+	config := &Config{}
+	// TODO load config from env
 	return config
 }
 
@@ -131,7 +130,7 @@ func (c *Config) WithEndpoint(endpoint string) *Config {
 }
 
 func (c *Config) WithRetryMaxAttempts(value int) *Config {
-	c.RetryMaxAttempts = value
+	c.RetryMaxAttempts = Ptr(value)
 	return c
 }
 

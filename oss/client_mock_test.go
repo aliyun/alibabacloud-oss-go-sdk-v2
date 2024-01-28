@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/retry"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13883,5 +13884,102 @@ func TestMockGetBucketRequestPayment_Error(t *testing.T) {
 
 		output, err := client.GetBucketRequestPayment(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testRetryMaxAttemptsRevc = 0
+var testInvokeOperationRetryMaxAttempts = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Input          *OperationInput
+	CheckOutputFn  func(t *testing.T, o *OperationOutput, err error)
+}{
+	{
+		500,
+		map[string]string{
+			"x-oss-request-id": "65467C42E001B4333337****",
+			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(
+			`<?xml version="1.0" encoding="UTF-8"?>
+			<Error>
+				<Code>ServiceFail</Code>
+				<Message>Service in unreachable.</Message>
+				<RequestId>65467C42E001B4333337****</RequestId>
+				<EC>0002-00000040</EC>
+			</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/bucket/test-key.txt", r.URL.String())
+			testRetryMaxAttemptsRevc++
+		},
+		&OperationInput{
+			OpName: "PutObject",
+			Method: "PUT",
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("test-key.txt"),
+		},
+		func(t *testing.T, o *OperationOutput, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(500), serr.StatusCode)
+			assert.Contains(t, serr.RequestTarget, "/bucket/test-key.txt")
+		},
+	},
+}
+
+func TestInvokeOperation_RetryMaxAttempts(t *testing.T) {
+	for _, c := range testInvokeOperationRetryMaxAttempts {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		var (
+			retryAttemptsClient = 2
+			retryAttemptsOp     = 4
+		)
+		assert.NotEqual(t, retryAttemptsClient, retry.DefaultMaxAttempts)
+		assert.NotEqual(t, retryAttemptsOp, retry.DefaultMaxAttempts)
+
+		//default
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		testRetryMaxAttemptsRevc = 0
+		output, err := client.InvokeOperation(context.TODO(), c.Input)
+		c.CheckOutputFn(t, output, err)
+		assert.Equal(t, retry.DefaultMaxAttempts, testRetryMaxAttemptsRevc)
+
+		// overwrite througth client options
+		cfg = LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL).
+			WithRetryMaxAttempts(retryAttemptsClient)
+
+		client = NewClient(cfg)
+		assert.NotNil(t, c)
+
+		testRetryMaxAttemptsRevc = 0
+		output, err = client.InvokeOperation(context.TODO(), c.Input)
+		c.CheckOutputFn(t, output, err)
+		assert.Equal(t, retryAttemptsClient, testRetryMaxAttemptsRevc)
+
+		// overwrite througth InvokeOperation options
+		testRetryMaxAttemptsRevc = 0
+		output, err = client.InvokeOperation(context.TODO(), c.Input, func(o *Options) {
+			o.RetryMaxAttempts = Ptr(retryAttemptsOp)
+		})
+		c.CheckOutputFn(t, output, err)
+		assert.Equal(t, retryAttemptsOp, testRetryMaxAttemptsRevc)
 	}
 }

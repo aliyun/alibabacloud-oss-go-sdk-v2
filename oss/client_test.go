@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/retry"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/transport"
 	"github.com/stretchr/testify/assert"
@@ -1088,4 +1089,18 @@ func TestSinger(t *testing.T) {
 	v4, ok = c.options.Signer.(*signer.SignerV4)
 	assert.NotNil(t, v4)
 	assert.True(t, ok)
+}
+
+func TestRetryMaxAttempts(t *testing.T) {
+	cfg := NewConfig()
+	c := NewClient(cfg)
+	assert.Nil(t, c.options.RetryMaxAttempts)
+
+	assert.Equal(t, retry.DefaultMaxAttempts, c.retryMaxAttempts(nil))
+
+	cfg = NewConfig()
+	cfg.RetryMaxAttempts = Ptr(5)
+	c = NewClient(cfg)
+	assert.NotNil(t, c.options.RetryMaxAttempts)
+	assert.Equal(t, 5, c.retryMaxAttempts(nil))
 }

@@ -108,13 +108,14 @@ func (c *Client) GetObjectToFile(ctx context.Context, request *GetObjectRequest,
 		hash = NewCRC64(0)
 	}
 	i := 0
+	maxRetrys := c.retryMaxAttempts(nil)
 	for {
 		i++
 		result, retry, err = c.getObjectToFileNoRerty(ctx, request, filePath, hash, prog, optFns...)
 		if err == nil || !retry {
 			break
 		}
-		if i > c.options.RetryMaxAttempts {
+		if i > maxRetrys {
 			break
 		}
 	}
