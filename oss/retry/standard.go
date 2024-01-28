@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	defaultMaxAttempts = 3
-	defaultMaxBackoff  = 20 * time.Second
-	defaultBaseDelay   = 200 * time.Millisecond
+	DefaultMaxAttempts = 3
+	DefaultMaxBackoff  = 20 * time.Second
+	DefaultBaseDelay   = 200 * time.Millisecond
 )
 
 var DefaultErrorRetryables = []ErrorRetryable{
@@ -24,9 +24,9 @@ type Standard struct {
 
 func NewStandard(fnOpts ...func(*RetryOptions)) *Standard {
 	o := RetryOptions{
-		MaxAttempts:     defaultMaxAttempts,
-		MaxBackoff:      defaultMaxBackoff,
-		BaseDelay:       defaultBaseDelay,
+		MaxAttempts:     DefaultMaxAttempts,
+		MaxBackoff:      DefaultMaxBackoff,
+		BaseDelay:       DefaultBaseDelay,
 		ErrorRetryables: DefaultErrorRetryables,
 	}
 
@@ -35,11 +35,11 @@ func NewStandard(fnOpts ...func(*RetryOptions)) *Standard {
 	}
 
 	if o.MaxAttempts <= 0 {
-		o.MaxAttempts = defaultMaxAttempts
+		o.MaxAttempts = DefaultMaxAttempts
 	}
 
 	if o.BaseDelay <= 0 {
-		o.BaseDelay = defaultBaseDelay
+		o.BaseDelay = DefaultBaseDelay
 	}
 
 	if o.Backoff == nil {

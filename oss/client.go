@@ -31,7 +31,7 @@ type Options struct {
 
 	Endpoint *url.URL
 
-	RetryMaxAttempts int
+	RetryMaxAttempts *int
 
 	Retryer retry.Retryer
 
@@ -403,10 +403,11 @@ func (c *Client) sendRequest(ctx context.Context, input *OperationInput, opts *O
 func (c *Client) sendHttpRequest(ctx context.Context, signingCtx *signer.SigningContext, opts *Options) (response *http.Response, err error) {
 	request := signingCtx.Request
 	retryer := opts.Retryer
+	maxAttempts := c.retryMaxAttempts(opts)
 	body, _ := request.Body.(*teeReadNopCloser)
 	resetTime := signingCtx.Time.IsZero()
 	body.Mark()
-	for tries := 1; tries <= retryer.MaxAttempts(); tries++ {
+	for tries := 1; tries <= maxAttempts; tries++ {
 		if tries > 1 {
 			delay, err := retryer.RetryDelay(tries, err)
 			if err != nil {
@@ -608,7 +609,7 @@ func applyOperationOpt(c *Options, op *Options) {
 		c.Endpoint = op.Endpoint
 	}
 
-	if op.RetryMaxAttempts > 0 {
+	if ToInt(op.RetryMaxAttempts) > 0 {
 		c.RetryMaxAttempts = op.RetryMaxAttempts
 	}
 
@@ -1230,6 +1231,22 @@ func (c *Client) toClientError(err error, code string, output *OperationOutput) 
 
 func (c *Client) hasFeature(flag FeatureFlagsType) bool {
 	return (c.options.FeatureFlags & flag) > 0
+}
+
+func (c *Client) retryMaxAttempts(opts *Options) int {
+	if opts == nil {
+		opts = &c.options
+	}
+
+	if opts.RetryMaxAttempts != nil {
+		return ToInt(opts.RetryMaxAttempts)
+	}
+
+	if opts.Retryer != nil {
+		return opts.Retryer.MaxAttempts()
+	}
+
+	return retry.DefaultMaxAttempts
 }
 
 func (c *Client) dumpOperationOutput(output *OperationOutput) string {

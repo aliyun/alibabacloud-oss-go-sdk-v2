@@ -132,10 +132,10 @@ func TestStandard(t *testing.T) {
 	r := NewStandard()
 	assert.NotNil(t, r)
 
-	assert.Equal(t, defaultMaxAttempts, r.MaxAttempts())
+	assert.Equal(t, DefaultMaxAttempts, r.MaxAttempts())
 	for i := 0; i < RetriesAttemptedCelling*2; i++ {
 		delay, _ := r.RetryDelay(i, nil)
-		assert.Less(t, delay, defaultMaxBackoff+1*time.Second)
+		assert.Less(t, delay, DefaultMaxBackoff+1*time.Second)
 	}
 
 	assert.False(t, r.IsErrorRetryable(nil))

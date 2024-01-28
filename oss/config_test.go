@@ -12,7 +12,7 @@ import (
 
 func TestConfigDefault(t *testing.T) {
 	config := LoadDefaultConfig()
-	assert.Equal(t, 3, config.RetryMaxAttempts)
+	assert.Nil(t, config.RetryMaxAttempts)
 	assert.Nil(t, config.SignatureVersion)
 	assert.Nil(t, config.Region)
 	assert.Nil(t, config.Endpoint)
@@ -50,7 +50,7 @@ func TestConfigDefault(t *testing.T) {
 	assert.Equal(t, "Endpoint", *config.Endpoint)
 
 	config.WithRetryMaxAttempts(5)
-	assert.Equal(t, 5, config.RetryMaxAttempts)
+	assert.Equal(t, 5, *config.RetryMaxAttempts)
 
 	config.WithRetryer(retry.NopRetryer{})
 	assert.EqualValues(t, retry.NopRetryer{}, config.Retryer)
