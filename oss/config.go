@@ -2,6 +2,7 @@ package oss
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
@@ -115,7 +116,15 @@ func (c Config) Copy() Config {
 
 func LoadDefaultConfig() *Config {
 	config := &Config{}
-	// TODO load config from env
+
+	// load from env
+	str := os.Getenv("OSS_SDK_LOG_LEVEL")
+	if str != "" {
+		if level := ToLogLevel(str); level > LogOff {
+			config.LogLevel = Ptr(level)
+		}
+	}
+
 	return config
 }
 

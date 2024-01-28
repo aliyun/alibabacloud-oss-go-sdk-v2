@@ -2,6 +2,7 @@ package oss
 
 import (
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -115,4 +116,39 @@ func TestConfigDefault(t *testing.T) {
 
 	config.WithDisableDownloadCRC64Check(true)
 	assert.Equal(t, true, *config.DisableDownloadCRC64Check)
+}
+
+func TestLogLevelEnvironmentVariable(t *testing.T) {
+	oriloglevel := os.Getenv("OSS_SDK_LOG_LEVEL")
+	defer func() {
+		if oriloglevel == "" {
+			os.Unsetenv("OSS_SDK_LOG_LEVEL")
+		} else {
+			os.Setenv("OSS_SDK_LOG_LEVEL", oriloglevel)
+		}
+	}()
+
+	os.Setenv("OSS_SDK_LOG_LEVEL", "debug")
+	config := LoadDefaultConfig()
+	assert.Equal(t, LogDebug, *config.LogLevel)
+
+	os.Setenv("OSS_SDK_LOG_LEVEL", "info")
+	config = LoadDefaultConfig()
+	assert.Equal(t, LogInfo, *config.LogLevel)
+
+	os.Setenv("OSS_SDK_LOG_LEVEL", "error")
+	config = LoadDefaultConfig()
+	assert.Equal(t, LogError, *config.LogLevel)
+
+	os.Setenv("OSS_SDK_LOG_LEVEL", "warn")
+	config = LoadDefaultConfig()
+	assert.Equal(t, LogWarn, *config.LogLevel)
+
+	os.Setenv("OSS_SDK_LOG_LEVEL", "")
+	config = LoadDefaultConfig()
+	assert.Nil(t, config.LogLevel)
+
+	os.Setenv("OSS_SDK_LOG_LEVEL", "off")
+	config = LoadDefaultConfig()
+	assert.Nil(t, config.LogLevel)
 }

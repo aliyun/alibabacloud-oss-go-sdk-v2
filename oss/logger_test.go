@@ -79,3 +79,18 @@ func TestLogger(t *testing.T) {
 	l.Warnf("%s", "123")
 	l.Errorf("%s", "123")
 }
+
+func TestStrToLogLevel(t *testing.T) {
+	assert.Equal(t, LogOff, ToLogLevel(""))
+	assert.Equal(t, LogOff, ToLogLevel("123"))
+	assert.Equal(t, LogDebug, ToLogLevel("debug"))
+	assert.Equal(t, LogDebug, ToLogLevel("dbg"))
+	assert.Equal(t, LogInfo, ToLogLevel("info"))
+	assert.Equal(t, LogWarn, ToLogLevel("Warn"))
+	assert.Equal(t, LogWarn, ToLogLevel("warn"))
+	assert.Equal(t, LogWarn, ToLogLevel("WARNING"))
+
+	assert.Equal(t, LogError, ToLogLevel("ERROR"))
+	assert.Equal(t, LogError, ToLogLevel("err"))
+	assert.Equal(t, LogError, ToLogLevel("eRR"))
+}
