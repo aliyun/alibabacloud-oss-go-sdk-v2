@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
+	"os"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
@@ -15,15 +16,16 @@ var (
 	region     string
 	endpoint   string
 	bucketName string
+	objectName string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
 	flag.StringVar(&endpoint, "endpoint", "", "The domain names that other services can use to access OSS.")
-	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
+	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
+	flag.StringVar(&objectName, "object", "", "The name of the object.")
 }
 
-// a example of showing how to get the bucket info.
 func main() {
 	flag.Parse()
 	if len(bucketName) == 0 {
@@ -40,6 +42,11 @@ func main() {
 		endpoint = fmt.Sprintf("oss-%v.aliyuncs.com", region)
 	}
 
+	if len(objectName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, object name required")
+	}
+
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region).
@@ -47,19 +54,22 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	// Set the request
-	request := &oss.GetBucketInfoRequest{
-		Bucket: oss.Ptr(bucketName),
-	}
-
-	// Send request
-	result, err := client.GetBucketInfo(context.TODO(), request)
-
+	localFile := "upload.file"
+	file, err := os.Create(localFile)
+	defer file.Close()
 	if err != nil {
-		log.Fatalf("failed to get bucket info %v", err)
+		log.Fatalf("failed to create file %v", err)
 	}
-
-	// Print the result
-	out, _ := json.MarshalIndent(result.BucketInfo, "", "  ")
-	log.Printf("Result:\n%v", string(out))
+	_, err = io.WriteString(file, "hi oss")
+	if err != nil {
+		log.Fatalf("failed to write content %v", err)
+	}
+	result, err := client.PutObjectFromFile(context.TODO(), &oss.PutObjectRequest{
+		Bucket: oss.Ptr(bucketName),
+		Key:    oss.Ptr(objectName),
+	}, localFile)
+	if err != nil {
+		log.Fatalf("failed to put object from file %v", err)
+	}
+	log.Printf("put object from file result:%#v\n", result)
 }

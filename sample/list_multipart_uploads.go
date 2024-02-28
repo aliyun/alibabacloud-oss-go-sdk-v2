@@ -11,18 +11,17 @@ import (
 )
 
 var (
-	region       string
-	endpoint     string
-	bucketName   string
-	bucketPrefix string
-	maxKeys      int
+	region     string
+	endpoint   string
+	bucketName string
+	maxUploads int
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
 	flag.StringVar(&endpoint, "endpoint", "", "The domain names that other services can use to access OSS.")
-	flag.StringVar(&bucketPrefix, "prefix", "", "[optional]`bucket prefix` of the bucket name to list.")
-	flag.IntVar(&maxKeys, "max-keys", 0, "[optional]The maximum number of `keys per page` to retrieve at once.")
+	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
+	flag.IntVar(&maxUploads, "max-uploads", 0, "[optional]The maximum number of `keys per page` to retrieve at once.")
 }
 
 func main() {
@@ -36,6 +35,11 @@ func main() {
 		endpoint = fmt.Sprintf("oss-%v.aliyuncs.com", region)
 	}
 
+	if len(bucketName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, bucket name required")
+	}
+
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region).
@@ -43,34 +47,27 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	// Set the request
-	request := &oss.ListBucketsRequest{}
-
-	if len(bucketPrefix) > 0 {
-		request.Prefix = oss.Ptr(bucketPrefix)
+	request := &oss.ListMultipartUploadsRequest{
+		Bucket: oss.Ptr(bucketName),
 	}
 
-	if maxKeys > 0 {
-		request.MaxKeys = int32(maxKeys)
+	if maxUploads > 0 {
+		request.MaxUploads = int32(maxUploads)
 	}
 
-	// Create the Paginator for the ListBuckets operation.
-	p := client.NewListBucketsPaginator(request)
+	p := client.NewListMultipartUploadsPaginator(request)
 
-	// Iterate through the object pages
 	var i int
-	fmt.Println("Buckets:")
+	fmt.Println("List Multipart Uploads:")
 	for p.HasNext() {
 		i++
-
 		page, err := p.NextPage(context.TODO())
 		if err != nil {
 			log.Fatalf("failed to get page %v, %v", i, err)
 		}
-
 		// Log the objects found
-		for _, b := range page.Buckets {
-			fmt.Printf("Bucket:%v, %v, %v\n", oss.ToString(b.Name), oss.ToString(b.StorageClass), oss.ToString(b.Location))
+		for _, u := range page.Uploads {
+			fmt.Printf("Upload key:%v,upload id:%v, initiated:%v\n", oss.ToString(u.Key), oss.ToString(u.UploadId), oss.ToTime(u.Initiated))
 		}
 	}
 }
