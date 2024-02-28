@@ -11,22 +11,32 @@ import (
 )
 
 var (
-	region       string
-	endpoint     string
-	bucketName   string
-	bucketPrefix string
-	maxKeys      int
+	region          string
+	endpoint        string
+	bucketName      string
+	objectPrefix    string
+	objectDelimiter string
+	maxKeys         int
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
 	flag.StringVar(&endpoint, "endpoint", "", "The domain names that other services can use to access OSS.")
-	flag.StringVar(&bucketPrefix, "prefix", "", "[optional]`bucket prefix` of the bucket name to list.")
-	flag.IntVar(&maxKeys, "max-keys", 0, "[optional]The maximum number of `keys per page` to retrieve at once.")
+	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
+	flag.StringVar(&objectPrefix, "prefix", "", "[optional]`object prefix` of the keys to list.")
+	flag.StringVar(&objectDelimiter, "delimiter", "",
+		"[optional]`object key delimiter` used by List objects to group object keys.")
+	flag.IntVar(&maxKeys, "max-keys", 0,
+		"[optional]The maximum number of `keys per page` to retrieve at once.")
 }
 
 func main() {
 	flag.Parse()
+	if len(bucketName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, bucket name required")
+	}
+
 	if len(region) == 0 {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, region required")
@@ -44,22 +54,27 @@ func main() {
 	client := oss.NewClient(cfg)
 
 	// Set the request
-	request := &oss.ListBucketsRequest{}
+	request := &oss.ListObjectsRequestV2{
+		Bucket: oss.Ptr(bucketName),
+	}
 
-	if len(bucketPrefix) > 0 {
-		request.Prefix = oss.Ptr(bucketPrefix)
+	if len(objectPrefix) > 0 {
+		request.Prefix = oss.Ptr(objectPrefix)
+	}
+
+	if len(objectDelimiter) > 0 {
+		request.Delimiter = oss.Ptr(objectDelimiter)
 	}
 
 	if maxKeys > 0 {
 		request.MaxKeys = int32(maxKeys)
 	}
 
-	// Create the Paginator for the ListBuckets operation.
-	p := client.NewListBucketsPaginator(request)
+	p := client.NewListObjectsV2Paginator(request)
 
 	// Iterate through the object pages
 	var i int
-	fmt.Println("Buckets:")
+	log.Println("Objects:")
 	for p.HasNext() {
 		i++
 
@@ -69,8 +84,8 @@ func main() {
 		}
 
 		// Log the objects found
-		for _, b := range page.Buckets {
-			fmt.Printf("Bucket:%v, %v, %v\n", oss.ToString(b.Name), oss.ToString(b.StorageClass), oss.ToString(b.Location))
+		for _, obj := range page.Contents {
+			log.Printf("Object:%v, %v, %v\n", oss.ToString(obj.Key), obj.Size, oss.ToTime(obj.LastModified))
 		}
 	}
 }

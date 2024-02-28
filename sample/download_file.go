@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -15,15 +14,16 @@ var (
 	region     string
 	endpoint   string
 	bucketName string
+	objectName string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
 	flag.StringVar(&endpoint, "endpoint", "", "The domain names that other services can use to access OSS.")
-	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
+	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
+	flag.StringVar(&objectName, "object", "", "The name of the object.")
 }
 
-// a example of showing how to get the bucket info.
 func main() {
 	flag.Parse()
 	if len(bucketName) == 0 {
@@ -40,26 +40,24 @@ func main() {
 		endpoint = fmt.Sprintf("oss-%v.aliyuncs.com", region)
 	}
 
+	if len(objectName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, object name required")
+	}
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region).
 		WithEndpoint(endpoint)
 
 	client := oss.NewClient(cfg)
-
-	// Set the request
-	request := &oss.GetBucketInfoRequest{
+	d := oss.NewDownloader(client)
+	localFile := "download.file"
+	result, err := d.DownloadFile(context.TODO(), &oss.GetObjectRequest{
 		Bucket: oss.Ptr(bucketName),
-	}
-
-	// Send request
-	result, err := client.GetBucketInfo(context.TODO(), request)
-
+		Key:    oss.Ptr(objectName),
+	}, localFile)
 	if err != nil {
-		log.Fatalf("failed to get bucket info %v", err)
+		log.Fatalf("failed to download file %v", err)
 	}
-
-	// Print the result
-	out, _ := json.MarshalIndent(result.BucketInfo, "", "  ")
-	log.Printf("Result:\n%v", string(out))
+	log.Printf("download file result:%#v\n", result)
 }
