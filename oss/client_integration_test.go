@@ -390,7 +390,7 @@ func stsAssumeRole(accessKeyId string, accessKeySecret string, roleArn string) (
 	return &result, nil
 }
 
-func before(t *testing.T) func(t *testing.T) {
+func before(_ *testing.T) func(t *testing.T) {
 
 	//fmt.Println("setup test case")
 	return after
