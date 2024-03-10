@@ -40,7 +40,7 @@ type downloaderMockTracker struct {
 	mu sync.Mutex
 }
 
-func testSetupDownloaderMockServer(t *testing.T, tracker *downloaderMockTracker) *httptest.Server {
+func testSetupDownloaderMockServer(_ *testing.T, tracker *downloaderMockTracker) *httptest.Server {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		length := len(tracker.data)
 		data := tracker.data

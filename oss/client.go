@@ -139,7 +139,7 @@ func resolveEndpoint(cfg *Config, o *Options) {
 	o.Endpoint, _ = url.Parse(endpoint)
 }
 
-func resolveRetryer(cfg *Config, o *Options) {
+func resolveRetryer(_ *Config, o *Options) {
 	if o.Retryer != nil {
 		return
 	}
@@ -492,7 +492,7 @@ func (c *Client) sendHttpRequestOnce(ctx context.Context, signingCtx *signer.Sig
 	return response, err
 }
 
-func (c *Client) postSendHttpRequestOnce(signingCtx *signer.SigningContext, response *http.Response, err error) {
+func (c *Client) postSendHttpRequestOnce(signingCtx *signer.SigningContext, _ *http.Response, err error) {
 	if err != nil {
 		switch e := err.(type) {
 		case *ServiceError:
@@ -1157,7 +1157,7 @@ func addProcess(request any, input *OperationInput) error {
 	return nil
 }
 
-func addCrcCheck(request any, input *OperationInput) error {
+func addCrcCheck(_ any, input *OperationInput) error {
 	var w io.Writer = NewCRC64(0)
 	input.OpMetadata.Add(OpMetaKeyRequestBodyTracker, w)
 	input.OpMetadata.Add(OpMetaKeyResponsHandler, func(response *http.Response) error {

@@ -124,7 +124,7 @@ func (c *Client) GetObjectToFile(ctx context.Context, request *GetObjectRequest,
 
 func (c *Client) getObjectToFileNoRerty(ctx context.Context, request *GetObjectRequest, filePath string,
 	hash hash.Hash64, prog *progressTracker, optFns ...func(*Options)) (*GetObjectResult, bool, error) {
-	result, err := c.GetObject(ctx, request)
+	result, err := c.GetObject(ctx, request, optFns...)
 	if err != nil {
 		return nil, false, err
 	}

@@ -273,7 +273,7 @@ func (f *ReadOnlyFile) wrapErr(op string, err error) error {
 	return &os.PathError{Op: op, Path: f.name(), Err: err}
 }
 
-func (f *ReadOnlyFile) checkValid(op string) error {
+func (f *ReadOnlyFile) checkValid(_ string) error {
 	if f == nil {
 		return os.ErrInvalid
 	} else if f.closed {
@@ -424,7 +424,7 @@ func (f *ReadOnlyFile) readFromPrefetcher(offset int64, buf []byte) (bytesRead i
 	return
 }
 
-func (f *ReadOnlyFile) prefetch(offset int64, needAtLeast int) (err error) {
+func (f *ReadOnlyFile) prefetch(offset int64, _ /*needAtLeast*/ int) (err error) {
 	off := offset
 	for _, ar := range f.asyncReaders {
 		off = ar.oriHttpRange.Offset + ar.oriHttpRange.Count
@@ -679,7 +679,7 @@ func (f *AppendOnlyFile) wrapErr(op string, err error) error {
 	return &os.PathError{Op: op, Path: f.name(), Err: err}
 }
 
-func (f *AppendOnlyFile) checkValid(op string) error {
+func (f *AppendOnlyFile) checkValid(_ string) error {
 	if f == nil {
 		return os.ErrInvalid
 	} else if f.closed {
