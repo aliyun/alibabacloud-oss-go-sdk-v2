@@ -19,6 +19,11 @@ func (c *Client) NewUploader(optFns ...func(*UploaderOptions)) *Uploader {
 	return NewUploader(c, optFns...)
 }
 
+// NewCopier creates a new Copier instance to copy objects.
+func (c *Client) NewCopier(optFns ...func(*CopierOptions)) *Copier {
+	return NewCopier(c, optFns...)
+}
+
 // OpenFile opens the named file for reading.
 func (c *Client) OpenFile(ctx context.Context, bucket string, key string, optFns ...func(*OpenOptions)) (*ReadOnlyFile, error) {
 	return NewReadOnlyFile(ctx, c, bucket, key, optFns...)

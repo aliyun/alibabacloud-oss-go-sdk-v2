@@ -61,6 +61,12 @@ func (c Options) Copy() Options {
 	return to
 }
 
+func OpReadWriteTimeout(value time.Duration) func(*Options) {
+	return func(o *Options) {
+		o.OpReadWriteTimeout = Ptr(value)
+	}
+}
+
 type innerOptions struct {
 	BwTokenBuckets BwTokenBuckets
 

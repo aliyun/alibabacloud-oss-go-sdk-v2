@@ -436,6 +436,21 @@ type CopyObjectRequest struct {
 	// The storage class of the object.
 	StorageClass StorageClassType `input:"header,x-oss-storage-class"`
 
+	// The caching behavior of the web page when the object is downloaded.
+	CacheControl *string `input:"header,Cache-Control"`
+
+	// The method that is used to access the object.
+	ContentDisposition *string `input:"header,Content-Disposition"`
+
+	// The method that is used to encode the object.
+	ContentEncoding *string `input:"header,Content-Encoding"`
+
+	// A standard MIME type describing the format of the contents.
+	ContentType *string `input:"header,Content-Type"`
+
+	// The expiration time of the cache in UTC.
+	Expires *string `input:"header,Expires"`
+
 	// The metadata of the object that you want to upload.
 	Metadata map[string]string `input:"header,x-oss-meta-,usermeta"`
 
@@ -1305,6 +1320,9 @@ type InitiateMultipartUploadRequest struct {
 	// To indicate that the requester is aware that the request and data download will incur costs
 	RequestPayer *string `input:"header,x-oss-request-payer"`
 
+	// To disable the feature that Content-Type is automatically added based on the object name if not specified.
+	DisableAutoDetectMimeType bool
+
 	RequestCommon
 }
 
@@ -1346,9 +1364,10 @@ func (c *Client) InitiateMultipartUpload(ctx context.Context, request *InitiateM
 
 	marshalFns := []func(any, *OperationInput) error{
 		updateContentMd5,
-		c.updateContentType,
 	}
-
+	if !request.DisableAutoDetectMimeType {
+		marshalFns = append(marshalFns, c.updateContentType)
+	}
 	if err = c.marshalInput(request, input, marshalFns...); err != nil {
 		return nil, err
 	}

@@ -149,3 +149,14 @@ type AppendFileAPIClient interface {
 	HeadObject(ctx context.Context, request *HeadObjectRequest, optFns ...func(*Options)) (*HeadObjectResult, error)
 	AppendObject(ctx context.Context, request *AppendObjectRequest, optFns ...func(*Options)) (*AppendObjectResult, error)
 }
+
+type CopyAPIClient interface {
+	HeadObject(ctx context.Context, request *HeadObjectRequest, optFns ...func(*Options)) (*HeadObjectResult, error)
+	CopyObject(ctx context.Context, request *CopyObjectRequest, optFns ...func(*Options)) (*CopyObjectResult, error)
+	InitiateMultipartUpload(ctx context.Context, request *InitiateMultipartUploadRequest, optFns ...func(*Options)) (*InitiateMultipartUploadResult, error)
+	UploadPartCopy(ctx context.Context, request *UploadPartCopyRequest, optFns ...func(*Options)) (*UploadPartCopyResult, error)
+	CompleteMultipartUpload(ctx context.Context, request *CompleteMultipartUploadRequest, optFns ...func(*Options)) (*CompleteMultipartUploadResult, error)
+	AbortMultipartUpload(ctx context.Context, request *AbortMultipartUploadRequest, optFns ...func(*Options)) (*AbortMultipartUploadResult, error)
+	ListParts(ctx context.Context, request *ListPartsRequest, optFns ...func(*Options)) (*ListPartsResult, error)
+	GetObjectTagging(ctx context.Context, request *GetObjectTaggingRequest, optFns ...func(*Options)) (*GetObjectTaggingResult, error)
+}
