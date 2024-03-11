@@ -2,6 +2,7 @@ package oss
 
 import (
 	"net/url"
+	"strings"
 )
 
 func isValidRegion(region string) bool {
@@ -64,6 +65,19 @@ var supportedMethod = map[string]struct{}{
 
 func isValidMethod(method string) bool {
 	if _, ok := supportedMethod[method]; ok {
+		return true
+	}
+	return false
+}
+
+var supportedCopyDirective = map[string]struct{}{
+	"COPY":    {},
+	"REPLACE": {},
+}
+
+func isValidCopyDirective(value string) bool {
+	upper := strings.ToUpper(value)
+	if _, ok := supportedCopyDirective[upper]; ok {
 		return true
 	}
 	return false

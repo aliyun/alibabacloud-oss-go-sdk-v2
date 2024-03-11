@@ -20,6 +20,9 @@ const (
 	// Default part size for downloader downloads object
 	DefaultDownloadPartSize = DefaultPartSize
 
+	// Default part size for copier copys object, 64M
+	DefaultCopyPartSize int64 = 64 * 1024 * 1024
+
 	// Default parallel
 	DefaultParallel = 3
 
@@ -29,6 +32,9 @@ const (
 	// Default parallel for downloader downloads object
 	DefaultDownloadParallel = DefaultParallel
 
+	// Default parallel for copier copys object
+	DefaultCopyParallel = DefaultParallel
+
 	// Default prefetch threshold to swith to async read in ReadOnlyFile
 	DefaultPrefetchThreshold int64 = 20 * 1024 * 1024
 
@@ -37,6 +43,9 @@ const (
 
 	// Default prefetch chunk size for async read in ReadOnlyFile
 	DefaultPrefetchChunkSize = DefaultPartSize
+
+	// Default threshold to use muitipart copy in Copier, 256M
+	DefaultCopyThreshold int64 = 200 * 1024 * 1024
 
 	// File permission
 	FilePermMode = os.FileMode(0664)
