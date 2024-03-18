@@ -29,6 +29,23 @@ type DownloaderOptions struct {
 	ClientOptions []func(*Options)
 }
 
+type downloaderProgress struct {
+	pr      ProgressFunc
+	written int64
+	total   int64
+	mu      sync.Mutex
+}
+
+func (cpt *downloaderProgress) Write(b []byte) (n int, err error) {
+	n = len(b)
+	increment := int64(n)
+	cpt.mu.Lock()
+	defer cpt.mu.Unlock()
+	cpt.written += increment
+	cpt.pr(increment, cpt.written, cpt.total)
+	return
+}
+
 type Downloader struct {
 	options      DownloaderOptions
 	client       DownloadAPIClient
@@ -378,7 +395,7 @@ func (d *downloaderDelegate) download() (*DownloadResult, error) {
 	}
 
 	// writeChunkFn runs in worker goroutines to pull chunks off of the ch channel
-	writeChunkFn := func(ch chan downloaderChunk) {
+	writeChunkFn := func(ch chan downloaderChunk, progress *downloaderProgress) {
 		defer wg.Done()
 		var hash hash.Hash64
 		if d.calcCRC {
@@ -395,7 +412,7 @@ func (d *downloaderDelegate) download() (*DownloadResult, error) {
 				continue
 			}
 
-			dchunk, derr := d.downloadChunk(chunk, hash)
+			dchunk, derr := d.downloadChunk(chunk, hash, progress)
 
 			if derr != nil && derr != io.EOF {
 				saveErrFn(derr)
@@ -455,9 +472,16 @@ func (d *downloaderDelegate) download() (*DownloadResult, error) {
 
 	// Start the download workers
 	ch := make(chan downloaderChunk, d.options.ParallelNum)
+	var progress *downloaderProgress
+	if d.request.ProgressFn != nil {
+		progress = &downloaderProgress{
+			pr:    d.request.ProgressFn,
+			total: d.sizeInBytes,
+		}
+	}
 	for i := 0; i < d.options.ParallelNum; i++ {
 		wg.Add(1)
-		go writeChunkFn(ch)
+		go writeChunkFn(ch, progress)
 	}
 
 	// Start tracker worker if need track downloaded chunk
@@ -511,7 +535,7 @@ func (d *downloaderDelegate) incrWritten(n int64) {
 	d.written += n
 }
 
-func (d *downloaderDelegate) downloadChunk(chunk downloaderChunk, hash hash.Hash64) (downloadedChunk, error) {
+func (d *downloaderDelegate) downloadChunk(chunk downloaderChunk, hash hash.Hash64, progress *downloaderProgress) (downloadedChunk, error) {
 	// Get the next byte range of data
 	var request GetObjectRequest
 	copyRequest(&request, d.request)
@@ -546,6 +570,15 @@ func (d *downloaderDelegate) downloadChunk(chunk downloaderChunk, hash hash.Hash
 		r     io.Reader = reader
 		crc64 uint64    = 0
 	)
+	writer := io.MultiWriter()
+	if progress != nil {
+		writer = io.MultiWriter(writer, progress)
+	}
+	if hash != nil {
+		hash.Reset()
+		writer = io.MultiWriter(writer, hash)
+	}
+	r = io.TeeReader(reader, writer)
 	if hash != nil {
 		hash.Reset()
 		r = io.TeeReader(reader, hash)
