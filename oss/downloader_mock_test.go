@@ -1273,3 +1273,91 @@ func TestMockDownloaderDownloadFilePayer(t *testing.T) {
 		})
 	assert.Nil(t, err)
 }
+
+func TestMockDownloaderWithProgress(t *testing.T) {
+	length := 3*1024*1024 + 1234
+	data := []byte(randStr(length))
+	gmtTime := getNowGMT()
+	tracker := &downloaderMockTracker{
+		lastModified: gmtTime,
+		data:         data,
+	}
+	server := testSetupDownloaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+	client := NewClient(cfg)
+	var n int64
+	d := client.NewDownloader(func(do *DownloaderOptions) {
+		do.ParallelNum = 1
+		do.PartSize = 1 * 1024 * 1024
+	})
+	assert.NotNil(t, d)
+	assert.NotNil(t, d.client)
+	assert.Equal(t, int64(1*1024*1024), d.options.PartSize)
+	assert.Equal(t, 1, d.options.ParallelNum)
+	// filePath is invalid
+	_, err := d.DownloadFile(
+		context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("key"),
+			ProgressFn: func(increment, transferred, total int64) {
+				n = transferred
+			},
+		}, "")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "invalid field, filePath")
+	localFile := randStr(8) + "-no-surfix"
+	defer func() {
+		os.Remove(localFile)
+	}()
+	_, err = d.DownloadFile(
+		context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("key"),
+			ProgressFn: func(increment, transferred, total int64) {
+				n = transferred
+				fmt.Printf("increment:%#v, transferred:%#v, total:%#v\n", increment, transferred, total)
+			},
+		}, localFile)
+	assert.Nil(t, err)
+	assert.Equal(t, n, int64(length))
+	n = int64(0)
+	d = client.NewDownloader(func(do *DownloaderOptions) {
+		do.ParallelNum = 3
+		do.PartSize = 3 * 1024 * 1024
+	})
+	assert.NotNil(t, d)
+	assert.NotNil(t, d.client)
+	assert.Equal(t, int64(3*1024*1024), d.options.PartSize)
+	assert.Equal(t, 3, d.options.ParallelNum)
+	// filePath is invalid
+	_, err = d.DownloadFile(
+		context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("key"),
+			ProgressFn: func(increment, transferred, total int64) {
+				n = transferred
+			},
+		}, "")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "invalid field, filePath")
+	_, err = d.DownloadFile(
+		context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("key"),
+			ProgressFn: func(increment, transferred, total int64) {
+				n = transferred
+			},
+		}, localFile)
+	assert.Nil(t, err)
+	assert.Equal(t, n, int64(length))
+}
