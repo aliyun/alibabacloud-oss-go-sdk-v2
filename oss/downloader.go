@@ -507,8 +507,10 @@ func (d *downloaderDelegate) download() (*DownloadResult, error) {
 func (d *downloaderDelegate) incrWritten(n int64) {
 	d.m.Lock()
 	defer d.m.Unlock()
-
 	d.written += n
+	if d.request.ProgressFn != nil && n > 0 {
+		d.request.ProgressFn(n, d.written, d.sizeInBytes)
+	}
 }
 
 func (d *downloaderDelegate) downloadChunk(chunk downloaderChunk, hash hash.Hash64) (downloadedChunk, error) {
