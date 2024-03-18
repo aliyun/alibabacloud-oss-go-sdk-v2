@@ -151,10 +151,11 @@ type uploaderDelegate struct {
 	context context.Context
 	request *PutObjectRequest
 
-	body      io.Reader
-	readerPos int64
-	totalSize int64
-	hashCRC64 uint64
+	body        io.Reader
+	readerPos   int64
+	totalSize   int64
+	hashCRC64   uint64
+	transferred int64
 
 	// Source's Info, from file or reader
 	filePath string
@@ -568,6 +569,10 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 					if enableCRC {
 						crcParts = append(crcParts,
 							uploadPartCRC{partNumber: data.partNum, hashCRC64: upResult.HashCRC64, size: data.size})
+					}
+					if u.request.ProgressFn != nil {
+						u.transferred += int64(data.size)
+						u.request.ProgressFn(int64(data.size), u.transferred, u.totalSize)
 					}
 					mu.Unlock()
 				} else {
