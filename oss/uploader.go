@@ -26,6 +26,21 @@ type UploaderOptions struct {
 	ClientOptions []func(*Options)
 }
 
+type uploaderProgress struct {
+	pr      ProgressFunc
+	written int64
+	total   int64
+	mu      sync.Mutex
+}
+
+func (cpt *uploaderProgress) incrWritten(n int64) {
+	increment := n
+	cpt.mu.Lock()
+	defer cpt.mu.Unlock()
+	cpt.written += increment
+	cpt.pr(increment, cpt.written, cpt.total)
+}
+
 type Uploader struct {
 	options            UploaderOptions
 	client             UploadAPIClient
@@ -539,7 +554,7 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 	}
 
 	// readChunk runs in worker goroutines to pull chunks off of the ch channel
-	readChunkFn := func(ch chan uploaderChunk) {
+	readChunkFn := func(ch chan uploaderChunk, progress *uploaderProgress) {
 		defer wg.Done()
 		for {
 			data, ok := <-ch
@@ -563,6 +578,9 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 				//fmt.Printf("UploadPart result: %#v, %#v\n", upResult, err)
 
 				if err == nil {
+					if progress != nil {
+						progress.incrWritten(int64(data.size))
+					}
 					mu.Lock()
 					parts = append(parts, UploadPart{ETag: upResult.ETag, PartNumber: data.partNum})
 					if enableCRC {
@@ -579,9 +597,16 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 	}
 
 	ch := make(chan uploaderChunk, u.options.ParallelNum)
+	var progress *uploaderProgress
+	if u.request.ProgressFn != nil {
+		progress = &uploaderProgress{
+			pr:    u.request.ProgressFn,
+			total: u.totalSize,
+		}
+	}
 	for i := 0; i < u.options.ParallelNum; i++ {
 		wg.Add(1)
-		go readChunkFn(ch)
+		go readChunkFn(ch, progress)
 	}
 
 	// Read and queue the parts

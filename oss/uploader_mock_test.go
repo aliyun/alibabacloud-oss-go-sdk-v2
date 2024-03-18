@@ -1858,3 +1858,125 @@ func TestMockUploadWithPayer(t *testing.T) {
 		bytes.NewReader(data))
 	assert.Nil(t, err)
 }
+
+func TestMockUploadSinglePartFromFileWithProgress(t *testing.T) {
+	partSize := DefaultUploadPartSize
+	length := 5*100*1024 + 123
+	partsNum := length/int(partSize) + 1
+	tracker := &uploaderMockTracker{
+		partNum:       partsNum,
+		saveDate:      make([][]byte, partsNum),
+		checkTime:     make([]time.Time, partsNum),
+		timeout:       make([]time.Duration, partsNum),
+		uploadPartErr: make([]bool, partsNum),
+	}
+
+	data := []byte(randStr(length))
+	hash := NewCRC64(0)
+	hash.Write(data)
+	dataCrc64ecma := fmt.Sprint(hash.Sum64())
+
+	localFile := randStr(8) + ".txt"
+	createFileFromByte(t, localFile, data)
+	defer func() {
+		os.Remove(localFile)
+	}()
+
+	server := testSetupUploaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+	u := NewUploader(client)
+
+	assert.NotNil(t, u.client)
+	assert.Equal(t, DefaultUploadParallel, u.options.ParallelNum)
+	assert.Equal(t, DefaultUploadPartSize, u.options.PartSize)
+
+	n := int64(0)
+	result, err := u.UploadFile(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("key"),
+		ProgressFn: func(increment, transferred, total int64) {
+			n = transferred
+			fmt.Printf("increment:%#v, transferred:%#v, total:%#v\n", increment, transferred, total)
+		},
+	}, localFile)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assert.Nil(t, result.UploadId)
+	assert.Equal(t, dataCrc64ecma, *result.HashCRC64)
+	assert.Equal(t, n, int64(length))
+}
+
+func TestMockUploadParallelFromFileWithProgress(t *testing.T) {
+	partSize := int64(100 * 1024)
+	length := 5*100*1024 + 123
+	partsNum := length/int(partSize) + 1
+	tracker := &uploaderMockTracker{
+		partNum:       partsNum,
+		saveDate:      make([][]byte, partsNum),
+		checkTime:     make([]time.Time, partsNum),
+		timeout:       make([]time.Duration, partsNum),
+		uploadPartErr: make([]bool, partsNum),
+	}
+
+	data := []byte(randStr(length))
+	hash := NewCRC64(0)
+	hash.Write(data)
+	dataCrc64ecma := fmt.Sprint(hash.Sum64())
+
+	localFile := randStr(8) + "-no-surfix"
+	createFileFromByte(t, localFile, data)
+	defer func() {
+		os.Remove(localFile)
+	}()
+
+	server := testSetupUploaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+
+	u := NewUploader(client,
+		func(uo *UploaderOptions) {
+			uo.ParallelNum = 4
+			uo.PartSize = partSize
+		},
+	)
+	assert.Equal(t, 4, u.options.ParallelNum)
+	assert.Equal(t, partSize, u.options.PartSize)
+
+	tracker.timeout[0] = 1 * time.Second
+	tracker.timeout[2] = 500 * time.Millisecond
+
+	n := int64(0)
+	result, err := u.UploadFile(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("key"),
+		ProgressFn: func(increment, transferred, total int64) {
+			n = transferred
+			fmt.Printf("increment:%#v, transferred:%#v, total:%#v\n", increment, transferred, total)
+		},
+	}, localFile)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, "uploadId-1234", *result.UploadId)
+	assert.Equal(t, dataCrc64ecma, *result.HashCRC64)
+	assert.Equal(t, n, int64(length))
+}
