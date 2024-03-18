@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"net/url"
 	"strings"
 )
 
@@ -62,8 +63,9 @@ var retriableErrorStrings = []string{
 	"bad record MAC",
 	"stream error:",
 	"tls: use of closed connection",
-	"crc is inconsistent",
 	"connection was forcibly closed",
+	"broken pipe",
+	"crc is inconsistent", // oss crc check error pattern
 }
 
 var retriableErrors = []error{
@@ -71,10 +73,17 @@ var retriableErrors = []error{
 	io.ErrUnexpectedEOF,
 }
 
-func (*ConnectionErrorRetryable) IsErrorRetryable(err error) bool {
+func (c *ConnectionErrorRetryable) IsErrorRetryable(err error) bool {
 	if err != nil {
-		if r, ok := err.(net.Error); ok && (r.Temporary() || r.Timeout()) {
-			return true
+		switch t := err.(type) {
+		case *url.Error:
+			if t.Err != nil {
+				return c.IsErrorRetryable(t.Err)
+			}
+		case net.Error:
+			if t.Temporary() || t.Timeout() {
+				return true
+			}
 		}
 
 		for _, retriableErr := range retriableErrors {
