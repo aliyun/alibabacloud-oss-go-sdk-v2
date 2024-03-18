@@ -138,6 +138,7 @@ type copierDelegate struct {
 	tagProp  *GetObjectTaggingResult
 
 	sizeInBytes int64
+	transferred int64
 }
 
 func (c *Copier) newDelegate(ctx context.Context, request *CopyObjectRequest, optFns ...func(*CopierOptions)) (*copierDelegate, error) {
@@ -279,6 +280,10 @@ func (d *copierDelegate) singleCopy() (*CopyResult, error) {
 		return nil, d.wrapErr("", err)
 	}
 
+	// update
+	d.transferred = d.sizeInBytes
+	d.progressCallback(d.sizeInBytes)
+
 	return &CopyResult{
 		ETag:         result.ETag,
 		HashCRC64:    result.HashCRC64,
@@ -300,6 +305,10 @@ func (d *copierDelegate) shallowCopy() (*CopyResult, error) {
 		return nil, d.wrapErr("", err)
 	}
 
+	// update
+	d.transferred = d.sizeInBytes
+	d.progressCallback(d.sizeInBytes)
+
 	return &CopyResult{
 		ETag:         result.ETag,
 		HashCRC64:    result.HashCRC64,
@@ -310,6 +319,7 @@ func (d *copierDelegate) shallowCopy() (*CopyResult, error) {
 
 type copyChunk struct {
 	partNum     int32
+	size        int64
 	sourceRange string
 }
 
@@ -386,6 +396,8 @@ func (d *copierDelegate) multiCopy() (*CopyResult, error) {
 				if err == nil {
 					mu.Lock()
 					parts = append(parts, UploadPart{ETag: upResult.ETag, PartNumber: data.partNum})
+					d.transferred += data.size
+					d.progressCallback(data.size)
 					mu.Unlock()
 				} else {
 					saveErrFn(err)
@@ -414,7 +426,7 @@ func (d *copierDelegate) multiCopy() (*CopyResult, error) {
 		}
 		//fmt.Printf("send chunk: %d\n", qnum)
 		qnum++
-		ch <- copyChunk{partNum: qnum, sourceRange: fmt.Sprintf("bytes=%v-%v", readerPos, (readerPos + n - 1))}
+		ch <- copyChunk{partNum: qnum, size: n, sourceRange: fmt.Sprintf("bytes=%v-%v", readerPos, (readerPos + n - 1))}
 		readerPos += n
 	}
 
@@ -566,4 +578,10 @@ func (d *copierDelegate) wrapErr(uploadId string, err error) error {
 		UploadId: uploadId,
 		Path:     fmt.Sprintf("oss://%s/%s", *d.request.Bucket, *d.request.Key),
 		Err:      err}
+}
+
+func (d *copierDelegate) progressCallback(increment int64) {
+	if d.request.ProgressFn != nil {
+		d.request.ProgressFn(increment, d.transferred, d.sizeInBytes)
+	}
 }

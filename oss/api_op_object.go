@@ -466,6 +466,9 @@ type CopyObjectRequest struct {
 	// Specify the speed limit value. The speed limit value ranges from  245760 to 838860800, with a unit of bit/s.
 	TrafficLimit int64 `input:"header,x-oss-traffic-limit"`
 
+	// Progress callback function, it works in Copier.Copy only.
+	ProgressFn ProgressFunc
+
 	// To indicate that the requester is aware that the request and data download will incur costs
 	RequestPayer *string `input:"header,x-oss-request-payer"`
 
