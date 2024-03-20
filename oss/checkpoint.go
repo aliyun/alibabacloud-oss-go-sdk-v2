@@ -73,7 +73,7 @@ func newDownloadCheckpoint(request *GetObjectRequest, filePath string, baseDir s
 	if baseDir == "" {
 		dir = os.TempDir()
 	} else {
-		dir = filepath.Dir(baseDir)
+		dir, _ = filepath.Abs(baseDir)
 	}
 
 	cpFilePath := filepath.Join(dir, fmt.Sprintf("%v-%v%v", srcHash, destHash, CheckpointFileSuffixDownloader))
@@ -265,11 +265,11 @@ func newUploadCheckpoint(request *PutObjectRequest, filePath string, baseDir str
 	if baseDir == "" {
 		dir = os.TempDir()
 	} else {
-		dir = filepath.Dir(baseDir)
+		dir, _ = filepath.Abs(baseDir)
 	}
 
 	cpFilePath := filepath.Join(dir, fmt.Sprintf("%v-%v%v", srcHash, destHash, CheckpointFileSuffixUploader))
-
+	
 	cp := &uploadCheckpoint{
 		CpFilePath: cpFilePath,
 		CpDirPath:  dir,

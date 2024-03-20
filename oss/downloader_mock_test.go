@@ -832,6 +832,31 @@ func TestMockDownloaderDownloadFileEnableCheckpointNormal(t *testing.T) {
 			do.EnableCheckpoint = true
 		})
 	assert.Nil(t, err)
+	checkPointDir := "dir"
+	_, err = os.Stat(checkPointDir)
+	if err == nil {
+		os.Remove(checkPointDir)
+	}
+	_, err = d.DownloadFile(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")}, localFile,
+		func(do *DownloaderOptions) {
+			do.PartSize = int64(partSize)
+			do.ParallelNum = 3
+			do.CheckpointDir = checkPointDir
+			do.EnableCheckpoint = true
+		})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Invaid checkpoint dir")
+
+	os.Mkdir("dir", 0755)
+	_, err = d.DownloadFile(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")}, localFile,
+		func(do *DownloaderOptions) {
+			do.PartSize = int64(partSize)
+			do.ParallelNum = 3
+			do.CheckpointDir = checkPointDir
+			do.EnableCheckpoint = true
+		})
+	assert.Nil(t, err)
+	os.Remove(checkPointDir)
 }
 
 func TestMockDownloaderDownloadFileEnableCheckpoint2(t *testing.T) {

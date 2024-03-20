@@ -1307,6 +1307,75 @@ func TestMockUploadParallelUploadPartFail(t *testing.T) {
 	assert.Nil(t, tracker.saveDate[5])
 }
 
+func TestMockUploaderUploadFileEnableCheckpointDir(t *testing.T) {
+	partSize := int64(100 * 1024)
+	length := 5*100*1024 + 123
+	partsNum := length/int(partSize) + 1
+	tracker := &uploaderMockTracker{
+		partNum:       partsNum,
+		saveDate:      make([][]byte, partsNum),
+		checkTime:     make([]time.Time, partsNum),
+		timeout:       make([]time.Duration, partsNum),
+		uploadPartErr: make([]bool, partsNum),
+	}
+
+	data := []byte(randStr(length))
+	hash := NewCRC64(0)
+	hash.Write(data)
+
+	localFile := randStr(8) + "-no-surfix"
+	createFileFromByte(t, localFile, data)
+	defer func() {
+		os.Remove(localFile)
+	}()
+
+	server := testSetupUploaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+	checkPointDir := "dir"
+
+	_, err := os.Stat(checkPointDir)
+	if err == nil {
+		os.Remove(checkPointDir)
+	}
+	u := NewUploader(client,
+		func(uo *UploaderOptions) {
+			uo.ParallelNum = 4
+			uo.PartSize = partSize
+			uo.CheckpointDir = checkPointDir
+			uo.EnableCheckpoint = true
+		},
+	)
+	assert.Equal(t, 4, u.options.ParallelNum)
+	assert.Equal(t, partSize, u.options.PartSize)
+
+	tracker.timeout[0] = 1 * time.Second
+	tracker.timeout[2] = 500 * time.Millisecond
+
+	_, err = u.UploadFile(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("key"),
+	}, localFile)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Invaid checkpoint dir")
+	os.Mkdir("dir", 0755)
+
+	_, err = u.UploadFile(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("key"),
+	}, localFile)
+	assert.Nil(t, err)
+	os.Remove(checkPointDir)
+}
+
 func TestMockUploaderUploadFileEnableCheckpointNotUseCp(t *testing.T) {
 	partSize := int64(100 * 1024)
 	length := 5*100*1024 + 123
