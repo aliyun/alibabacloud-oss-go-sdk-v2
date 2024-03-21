@@ -388,10 +388,12 @@ func (f *ReadOnlyFile) checkResultValid(offset int64, header http.Header) error 
 		return fmt.Errorf("Range get fail, expect offset:%v, got offset:%v", offset, gotOffset)
 	}
 
-	if modTime != f.modTime || etag != f.etag {
+	if (modTime != "" && f.modTime != "" && modTime != f.modTime) ||
+		(etag != "" && f.etag != "" && etag != f.etag) {
 		return fmt.Errorf("Source file is changed, origin info [%v,%v], new info [%v,%v]",
 			f.modTime, f.etag, modTime, etag)
 	}
+
 	return nil
 }
 

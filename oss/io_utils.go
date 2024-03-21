@@ -293,7 +293,7 @@ func (a *AsyncRangeReader) init(buffers int) {
 							a.etag = etag
 						}
 						if etag != a.etag {
-							err = fmt.Errorf("Source file is changed, expect etag:%s ,got offset:%s", a.etag, etag)
+							err = fmt.Errorf("Source file is changed, expect etag:%s ,got etag:%s", a.etag, etag)
 						}
 
 						// Partial Response check
@@ -671,7 +671,7 @@ func (r *RangeReader) read(p []byte) (int, error) {
 				r.modTime = output.LastModified
 			}
 			if etag != r.etag {
-				err = fmt.Errorf("Source file is changed, expect etag:%s ,got offset:%s", r.etag, etag)
+				err = fmt.Errorf("Source file is changed, expect etag:%s ,got etag:%s", r.etag, etag)
 			}
 
 			// Partial Response check
