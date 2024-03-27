@@ -971,6 +971,18 @@ type HeadObjectResult struct {
 	// the CORS rule, this header is included in the response
 	ExposeHeaders *string `output:"header,Access-Control-Expose-Headers"`
 
+	// The caching behavior of the web page when the object is downloaded.
+	CacheControl *string `output:"header,Cache-Control"`
+
+	// The method that is used to access the object.
+	ContentDisposition *string `output:"header,Content-Disposition"`
+
+	// The method that is used to encode the object.
+	ContentEncoding *string `output:"header,Content-Encoding"`
+
+	// The expiration time of the cache in UTC.
+	Expires *string `output:"header,Expires"`
+
 	ResultCommon
 }
 

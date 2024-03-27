@@ -885,8 +885,37 @@ func unmarshalBodyXml(result any, output *OperationOutput) error {
 			return err
 		}
 	}
+
 	if len(body) > 0 {
 		if err = xml.Unmarshal(body, result); err != nil {
+			err = &DeserializationError{
+				Err:      err,
+				Snapshot: body,
+			}
+		}
+	}
+	return err
+}
+
+func unmarshalBodyXmlVersions(result any, output *OperationOutput) error {
+	var err error
+	var body []byte
+	if output.Body != nil {
+		defer output.Body.Close()
+		if body, err = io.ReadAll(output.Body); err != nil {
+			return err
+		}
+	}
+
+	if len(body) > 0 {
+		oldStrings := []string{"<Version>", "</Version>", "<DeleteMarker>", "</DeleteMarker>"}
+		newStrings := []string{"<ObjectMix>", "</ObjectMix>", "<ObjectMix>", "</ObjectMix>"}
+
+		replacedData := string(body)
+		for i := range oldStrings {
+			replacedData = strings.Replace(replacedData, oldStrings[i], newStrings[i], -1)
+		}
+		if err = xml.Unmarshal([]byte(replacedData), result); err != nil {
 			err = &DeserializationError{
 				Err:      err,
 				Snapshot: body,
