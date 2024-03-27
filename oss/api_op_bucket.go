@@ -382,6 +382,11 @@ func unmarshalEncodeType(result any, output *OperationOutput) error {
 					return err
 				}
 			}
+			for i := 0; i < len(r.ObjectVersionsDeleteMarkers); i++ {
+				if *r.ObjectVersionsDeleteMarkers[i].Key, err = url.QueryUnescape(*r.ObjectVersionsDeleteMarkers[i].Key); err != nil {
+					return err
+				}
+			}
 			for i := 0; i < len(r.CommonPrefixes); i++ {
 				if *r.CommonPrefixes[i].Prefix, err = url.QueryUnescape(*r.CommonPrefixes[i].Prefix); err != nil {
 					return err
@@ -990,6 +995,8 @@ type ListObjectVersionsRequest struct {
 	// To indicate that the requester is aware that the request and data download will incur costs
 	RequestPayer *string `input:"header,x-oss-request-payer"`
 
+	IsMix bool
+
 	RequestCommon
 }
 
@@ -1018,6 +1025,8 @@ type ListObjectVersionsResult struct {
 	// The container that stores the versions of objects, excluding delete markers.
 	ObjectVersions []ObjectVersionProperties `xml:"Version"`
 
+	ObjectVersionsDeleteMarkers []ObjectMixProperties `xml:"ObjectMix"`
+
 	// The prefix contained in the returned object names.
 	Prefix *string `xml:"Prefix"`
 
@@ -1039,6 +1048,15 @@ type ListObjectVersionsResult struct {
 	CommonPrefixes []CommonPrefix `xml:"CommonPrefixes"`
 
 	ResultCommon
+}
+
+type ObjectMixProperties ObjectVersionProperties
+
+func (m ObjectMixProperties) IsDeleteMarker() bool {
+	if m.VersionId != nil && m.Type == nil {
+		return true
+	}
+	return false
 }
 
 type ObjectDeleteMarkerProperties struct {
@@ -1114,7 +1132,14 @@ func (c *Client) ListObjectVersions(ctx context.Context, request *ListObjectVers
 	}
 
 	result := &ListObjectVersionsResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXml, unmarshalEncodeType); err != nil {
+	var unmarshalFns []func(result any, output *OperationOutput) error
+	if request.IsMix {
+		unmarshalFns = append(unmarshalFns, unmarshalBodyXmlVersions)
+	} else {
+		unmarshalFns = append(unmarshalFns, unmarshalBodyXml)
+	}
+	unmarshalFns = append(unmarshalFns, unmarshalEncodeType)
+	if err = c.unmarshalOutput(result, output, unmarshalFns...); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 
