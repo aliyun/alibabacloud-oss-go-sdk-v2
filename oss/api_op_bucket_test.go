@@ -2230,6 +2230,25 @@ func TestMarshalInput_ListObjectVersions(t *testing.T) {
 	assert.Equal(t, input.Parameters["delimiter"], "/")
 	assert.Equal(t, input.Parameters["max-keys"], "100")
 	assert.Equal(t, input.Parameters["prefix"], "abc")
+	assert.False(t, request.IsMix)
+
+	request = &ListObjectVersionsRequest{
+		Bucket:          Ptr("oss-demo"),
+		KeyMarker:       Ptr(""),
+		VersionIdMarker: Ptr(""),
+		Delimiter:       Ptr("/"),
+		MaxKeys:         int32(100),
+		Prefix:          Ptr("abc"),
+		IsMix:           true,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["key-marker"], "")
+	assert.Equal(t, input.Parameters["version-id-marker"], "")
+	assert.Equal(t, input.Parameters["delimiter"], "/")
+	assert.Equal(t, input.Parameters["max-keys"], "100")
+	assert.Equal(t, input.Parameters["prefix"], "abc")
+	assert.True(t, request.IsMix)
 }
 
 func TestUnmarshalOutput_ListObjectVersions(t *testing.T) {
@@ -2683,6 +2702,61 @@ func TestUnmarshalOutput_ListObjectVersions(t *testing.T) {
 	assert.NotEmpty(t, result.ObjectDeleteMarkers[0].LastModified)
 	assert.Equal(t, *result.ObjectDeleteMarkers[0].Owner.ID, "150692521021****")
 	assert.Equal(t, *result.ObjectDeleteMarkers[0].Owner.DisplayName, "150692521021****")
+
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	result = &ListObjectVersionsResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlVersions, unmarshalEncodeType)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, *result.Name, "demo-bucket")
+	prefix, _ = url.QueryUnescape(*result.Prefix)
+	assert.Equal(t, *result.Prefix, prefix)
+	assert.Equal(t, *result.KeyMarker, "")
+	assert.Equal(t, *result.VersionIdMarker, "")
+	assert.Equal(t, result.MaxKeys, int32(20))
+	assert.True(t, result.IsTruncated)
+	assert.Len(t, result.ObjectVersionsDeleteMarkers, 18)
+	key, _ = url.QueryUnescape("demo%2F")
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[0].Key, key)
+	assert.True(t, result.ObjectVersionsDeleteMarkers[0].IsLatest)
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[0].VersionId, "CAEQFxiBgIDh3b_tuRgiIGRjMjExMjVmMzcwMTQ2Njc4NjhhNTA0MzEzMDkx****")
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[0].LastModified, time.Date(2023, time.April, 1, 5, 52, 31, 0, time.UTC))
+	assert.True(t, result.ObjectVersionsDeleteMarkers[0].IsDeleteMarker())
+
+	key, _ = url.QueryUnescape("demo%2F")
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[1].Key, key)
+	assert.False(t, result.ObjectVersionsDeleteMarkers[1].IsLatest)
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[1].VersionId, "CAEQFxiBgICI173TtRgiIDFlMmYyMzFjNmJmMDQ0NTBiNmIyYThkZjA1YjA5****")
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[1].LastModified, time.Date(2023, time.March, 6, 3, 2, 28, 0, time.UTC))
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[1].ETag, `"D41D8CD98F00B204E9800998ECF8427E"`)
+	assert.False(t, result.ObjectVersionsDeleteMarkers[1].IsDeleteMarker())
+
+	key, _ = url.QueryUnescape("demo%2FLICENSE")
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[15].Key, key)
+	assert.False(t, result.ObjectVersionsDeleteMarkers[15].IsLatest)
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[15].VersionId, "CAEQEhiBgICIzK6NnBgiIDMxYjM3OTdmN2E0ODRjZjhhOWVhYTE5MTg3NmQw****")
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[15].LastModified, time.Date(2022, time.September, 28, 9, 4, 39, 0, time.UTC))
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[15].ETag, `"877D6894CBE5711A315681C24ED0****"`)
+	assert.False(t, result.ObjectVersionsDeleteMarkers[15].IsDeleteMarker())
+
+	key, _ = url.QueryUnescape("demo%2FREADME-CN.md")
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[16].Key, key)
+	assert.True(t, result.ObjectVersionsDeleteMarkers[16].IsLatest)
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[16].VersionId, "CAEQFBiCgID3.86GohgiIDc4ZTE0NTNhZTc5MDQxYzBhYTU5MjY1ZDFjNGJm****")
+	assert.Equal(t, *result.ObjectVersionsDeleteMarkers[16].LastModified, time.Date(2022, time.November, 4, 8, 0, 6, 0, time.UTC))
+	assert.True(t, result.ObjectVersionsDeleteMarkers[16].IsDeleteMarker())
+
 	output = &OperationOutput{
 		StatusCode: 404,
 		Status:     "NoSuchBucket",

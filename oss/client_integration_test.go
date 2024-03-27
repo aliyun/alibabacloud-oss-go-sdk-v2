@@ -2737,6 +2737,14 @@ func TestListObjectVersions(t *testing.T) {
 	assert.Len(t, versionsResult.ObjectDeleteMarkers, 2)
 	assert.Len(t, versionsResult.ObjectVersions, 2)
 
+	versions = &ListObjectVersionsRequest{
+		Bucket: Ptr(bucketName),
+		IsMix:  true,
+	}
+	versionsResult, err = client.ListObjectVersions(context.TODO(), versions)
+	assert.Nil(t, err)
+	assert.Len(t, versionsResult.ObjectVersionsDeleteMarkers, 4)
+
 	_, err = client.ListObjectVersions(context.TODO(), nil)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
