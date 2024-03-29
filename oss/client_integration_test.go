@@ -5438,3 +5438,104 @@ func TestClientExtensionWithPayer(t *testing.T) {
 	)
 	assert.NotNil(t, err)
 }
+
+func TestClientAppandFile(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	objectName := objectNamePrefix + randLowStr(6) + ".append"
+
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	f, err := client.AppendFile(context.TODO(), bucketName, objectName, func(ao *AppendOptions) {
+		ao.CreateParameter = &AppendObjectRequest{
+			Acl:          ObjectACLPublicRead,
+			CacheControl: Ptr("no-cache"),
+			Metadata: map[string]string{
+				"user": "jack",
+			},
+			Tagging: Ptr("key=value"),
+		}
+	})
+	assert.Nil(t, err)
+
+	n, err := f.Write([]byte("hello"))
+	assert.Nil(t, err)
+	assert.Equal(t, int(5), n)
+
+	n, err = f.Write([]byte(" world"))
+	assert.Nil(t, err)
+	assert.Equal(t, int(6), n)
+
+	nn, err := f.WriteFrom(strings.NewReader(" 123"))
+	assert.Nil(t, err)
+	assert.Equal(t, int64(4), nn)
+
+	info, err := f.Stat()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(15), info.Size())
+	header, ok := info.Sys().(http.Header)
+	assert.True(t, ok)
+
+	assert.Equal(t, "no-cache", header.Get("Cache-Control"))
+	assert.Equal(t, "jack", header.Get("x-oss-meta-user"))
+	assert.Equal(t, "1", header.Get("x-oss-tagging-count"))
+
+	f.Close()
+
+	//Open Again
+	f, err = client.AppendFile(context.TODO(), bucketName, objectName, func(ao *AppendOptions) {
+		ao.CreateParameter = &AppendObjectRequest{
+			Acl:          ObjectACLPublicRead,
+			CacheControl: Ptr("no-cache"),
+			Metadata: map[string]string{
+				"user": "jack",
+			},
+			Tagging: Ptr("key=value"),
+		}
+	})
+	n, err = f.Write([]byte("abc"))
+	assert.Nil(t, err)
+	info, err = f.Stat()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(18), info.Size())
+	f.Close()
+
+	objectName1 := objectNamePrefix + randLowStr(6) + "-1-.append"
+	f, err = client.AppendFile(context.TODO(), bucketName, objectName1, func(ao *AppendOptions) {
+		ao.CreateParameter = &AppendObjectRequest{
+			Acl:          ObjectACLPublicRead,
+			CacheControl: Ptr("no-cache"),
+			Metadata: map[string]string{
+				"user": "jack-1",
+			},
+			Tagging: Ptr("key1=value1"),
+		}
+	})
+	assert.Nil(t, err)
+
+	nn, err = f.WriteFrom(strings.NewReader("123"))
+	assert.Nil(t, err)
+	assert.Equal(t, int64(3), nn)
+
+	nn, err = f.WriteFrom(strings.NewReader("-abc-321"))
+	assert.Nil(t, err)
+	assert.Equal(t, int64(8), nn)
+	info, err = f.Stat()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(11), info.Size())
+	header, ok = info.Sys().(http.Header)
+	assert.True(t, ok)
+
+	assert.Equal(t, "no-cache", header.Get("Cache-Control"))
+	assert.Equal(t, "jack-1", header.Get("x-oss-meta-user"))
+	assert.Equal(t, "1", header.Get("x-oss-tagging-count"))
+	f.Close()
+}

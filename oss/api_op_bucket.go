@@ -995,6 +995,10 @@ type ListObjectVersionsRequest struct {
 	// To indicate that the requester is aware that the request and data download will incur costs
 	RequestPayer *string `input:"header,x-oss-request-payer"`
 
+	// To indicate that whether to stores the versions of objects and delete markers together in one container.
+	// When false(default), stores the versions of objects into ListObjectVersionsResult.ObjectVersions,
+	// When false(default), stores the delete markers into ListObjectVersionsResult.ObjectDeleteMarkers,
+	// When true, stores the versions and delete markers into ListObjectVersionsResult.ObjectVersionsDeleteMarkers,
 	IsMix bool
 
 	RequestCommon
@@ -1025,6 +1029,8 @@ type ListObjectVersionsResult struct {
 	// The container that stores the versions of objects, excluding delete markers.
 	ObjectVersions []ObjectVersionProperties `xml:"Version"`
 
+	// The container that stores the versions of objects and delete markers together in the order they are returned.
+	// Only valid when ListObjectVersionsRequest.IsMix is set to true
 	ObjectVersionsDeleteMarkers []ObjectMixProperties `xml:"ObjectMix"`
 
 	// The prefix contained in the returned object names.
