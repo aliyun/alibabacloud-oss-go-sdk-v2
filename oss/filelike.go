@@ -487,6 +487,12 @@ func (f *ReadOnlyFile) prefetch(offset int64, _ /*needAtLeast*/ int) (err error)
 type AppendOptions struct {
 	// To indicate that the requester is aware that the request and data download will incur costs
 	RequestPayer *string
+
+	// The parameters when the object is first generated, supports below
+	// CacheControl, ContentEncoding, Expires, ContentType, ContentType, Metadata
+	// SSE's parameters, Acl, StorageClass, Tagging
+	// If the object exists, ignore this parameters
+	CreateParameter *AppendObjectRequest
 }
 
 type AppendOnlyFile struct {
@@ -499,6 +505,9 @@ type AppendOnlyFile struct {
 	requestPayer *string
 
 	info os.FileInfo
+
+	created     bool
+	createParam *AppendObjectRequest
 
 	// current write position
 	offset    int64
@@ -523,6 +532,9 @@ func NewAppendFile(ctx context.Context, c AppendFileAPIClient, bucket string, ke
 		bucket:       bucket,
 		key:          key,
 		requestPayer: options.RequestPayer,
+
+		created:     false,
+		createParam: options.CreateParameter,
 	}
 
 	result, err := f.client.HeadObject(f.context, &HeadObjectRequest{Bucket: &f.bucket, Key: &f.key, RequestPayer: f.requestPayer})
@@ -539,6 +551,7 @@ func NewAppendFile(ctx context.Context, c AppendFileAPIClient, bucket string, ke
 		}
 		f.offset = result.ContentLength
 		f.hashCRC64 = result.HashCRC64
+		f.created = true
 	}
 
 	return f, nil
@@ -582,6 +595,8 @@ func (f *AppendOnlyFile) write(b []byte) (n int, err error) {
 		RequestPayer:  f.requestPayer,
 	}
 
+	f.applyCreateParamIfNeed(request)
+
 	if f.offset == 0 {
 		request.InitHashCRC64 = Ptr("0")
 	}
@@ -590,6 +605,7 @@ func (f *AppendOnlyFile) write(b []byte) (n int, err error) {
 	if result, err = f.client.AppendObject(f.context, request); err == nil {
 		f.offset = result.NextPosition
 		f.hashCRC64 = result.HashCRC64
+		f.created = true
 	} else {
 		var serr *ServiceError
 		if errors.As(err, &serr) && serr.Code == "PositionNotEqualToLength" {
@@ -597,6 +613,7 @@ func (f *AppendOnlyFile) write(b []byte) (n int, err error) {
 				if offset+int64(len(b)) == position {
 					f.offset = position
 					f.hashCRC64 = hashcrc
+					f.created = true
 					err = nil
 				}
 			}
@@ -633,6 +650,8 @@ func (f *AppendOnlyFile) writeFrom(r io.Reader) (n int64, err error) {
 		RequestPayer: f.requestPayer,
 	}
 
+	f.applyCreateParamIfNeed(request)
+
 	var roffset int64
 	var rs io.Seeker
 	rs, ok := r.(io.Seeker)
@@ -644,6 +663,7 @@ func (f *AppendOnlyFile) writeFrom(r io.Reader) (n int64, err error) {
 	if result, err = f.client.AppendObject(f.context, request); err == nil {
 		f.offset = result.NextPosition
 		f.hashCRC64 = result.HashCRC64
+		f.created = true
 	} else {
 		var serr *ServiceError
 		if errors.As(err, &serr) && serr.Code == "PositionNotEqualToLength" {
@@ -653,6 +673,7 @@ func (f *AppendOnlyFile) writeFrom(r io.Reader) (n int64, err error) {
 						if offset+(curr-roffset) == position {
 							f.offset = position
 							f.hashCRC64 = hashcrc
+							f.created = true
 							err = nil
 						}
 					}
@@ -669,6 +690,29 @@ func (f *AppendOnlyFile) nextAppendPosition() (int64, *string, bool) {
 		return h.ContentLength, h.HashCRC64, true
 	}
 	return 0, nil, false
+}
+
+func (f *AppendOnlyFile) applyCreateParamIfNeed(request *AppendObjectRequest) {
+	if f.created || f.createParam == nil {
+		return
+	}
+
+	if len(f.createParam.Acl) > 0 {
+		request.Acl = f.createParam.Acl
+	}
+	if len(f.createParam.StorageClass) > 0 {
+		request.StorageClass = f.createParam.StorageClass
+	}
+	request.CacheControl = f.createParam.CacheControl
+	request.ContentDisposition = f.createParam.ContentDisposition
+	request.ContentEncoding = f.createParam.ContentEncoding
+	request.Expires = f.createParam.Expires
+	request.ContentType = f.createParam.ContentType
+	request.ServerSideEncryption = f.createParam.ServerSideEncryption
+	request.ServerSideDataEncryption = f.createParam.ServerSideDataEncryption
+	request.SSEKMSKeyId = f.createParam.SSEKMSKeyId
+	request.Metadata = f.createParam.Metadata
+	request.Tagging = f.createParam.Tagging
 }
 
 // wrapErr wraps an error that occurred during an operation on an open file.
