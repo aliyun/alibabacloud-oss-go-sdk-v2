@@ -633,11 +633,11 @@ func TestUnmarshalOutput_ListObjects(t *testing.T) {
 func TestMarshalInput_ListObjectsV2(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
-	var request *ListObjectsRequestV2
+	var request *ListObjectsV2Request
 	var input *OperationInput
 	var err error
 
-	request = &ListObjectsRequestV2{}
+	request = &ListObjectsV2Request{}
 	input = &OperationInput{
 		OpName: "ListObjectsV2",
 		Method: "GET",
@@ -650,7 +650,7 @@ func TestMarshalInput_ListObjectsV2(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
-	request = &ListObjectsRequestV2{
+	request = &ListObjectsV2Request{
 		Bucket: Ptr("oss-demo"),
 	}
 	input = &OperationInput{
@@ -664,7 +664,7 @@ func TestMarshalInput_ListObjectsV2(t *testing.T) {
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 
-	request = &ListObjectsRequestV2{
+	request = &ListObjectsV2Request{
 		Bucket:       Ptr("oss-demo"),
 		Delimiter:    Ptr("/"),
 		StartAfter:   Ptr(""),
@@ -684,7 +684,7 @@ func TestMarshalInput_ListObjectsV2(t *testing.T) {
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 
-	request = &ListObjectsRequestV2{
+	request = &ListObjectsV2Request{
 		Bucket:       Ptr("oss-demo"),
 		Delimiter:    Ptr("/"),
 		StartAfter:   Ptr(""),
@@ -772,7 +772,7 @@ func TestUnmarshalOutput_ListObjectsV2(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result := &ListObjectsResultV2{}
+	result := &ListObjectsV2Result{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXml, unmarshalEncodeType)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
@@ -828,7 +828,7 @@ func TestUnmarshalOutput_ListObjectsV2(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &ListObjectsResultV2{}
+	result = &ListObjectsV2Result{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXml, unmarshalEncodeType)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
@@ -883,7 +883,7 @@ func TestUnmarshalOutput_ListObjectsV2(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &ListObjectsResultV2{}
+	result = &ListObjectsV2Result{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXml, unmarshalEncodeType)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
@@ -958,7 +958,7 @@ func TestUnmarshalOutput_ListObjectsV2(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &ListObjectsResultV2{}
+	result = &ListObjectsV2Result{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXml, unmarshalEncodeType)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
@@ -1022,7 +1022,7 @@ func TestUnmarshalOutput_ListObjectsV2(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	resultErr := &ListObjectsResultV2{}
+	resultErr := &ListObjectsV2Result{}
 	err = c.unmarshalOutput(resultErr, output, unmarshalBodyXml)
 	assert.Nil(t, err)
 	assert.Equal(t, resultErr.StatusCode, 403)

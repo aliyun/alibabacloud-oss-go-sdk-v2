@@ -1394,8 +1394,8 @@ var testMockListObjectsV2SuccessCases = []struct {
 	Headers        map[string]string
 	Body           []byte
 	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *ListObjectsRequestV2
-	CheckOutputFn  func(t *testing.T, o *ListObjectsResultV2, err error)
+	Request        *ListObjectsV2Request
+	CheckOutputFn  func(t *testing.T, o *ListObjectsV2Result, err error)
 }{
 	{
 		200,
@@ -1454,10 +1454,10 @@ var testMockListObjectsV2SuccessCases = []struct {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "/bucket?encoding-type=url&list-type=2", strUrl)
 		},
-		&ListObjectsRequestV2{
+		&ListObjectsV2Request{
 			Bucket: Ptr("bucket"),
 		},
-		func(t *testing.T, o *ListObjectsResultV2, err error) {
+		func(t *testing.T, o *ListObjectsV2Result, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
@@ -1544,7 +1544,7 @@ var testMockListObjectsV2SuccessCases = []struct {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
 		},
-		&ListObjectsRequestV2{
+		&ListObjectsV2Request{
 			Bucket:       Ptr("bucket"),
 			Delimiter:    Ptr("/"),
 			StartAfter:   Ptr("b"),
@@ -1553,7 +1553,7 @@ var testMockListObjectsV2SuccessCases = []struct {
 			EncodingType: Ptr("url"),
 			FetchOwner:   true,
 		},
-		func(t *testing.T, o *ListObjectsResultV2, err error) {
+		func(t *testing.T, o *ListObjectsV2Result, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
@@ -1642,7 +1642,7 @@ var testMockListObjectsV2SuccessCases = []struct {
 			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
 			assert.Equal(t, r.Header.Get("x-oss-request-payer"), "requester")
 		},
-		&ListObjectsRequestV2{
+		&ListObjectsV2Request{
 			Bucket:       Ptr("bucket"),
 			Delimiter:    Ptr("/"),
 			StartAfter:   Ptr("b"),
@@ -1652,7 +1652,7 @@ var testMockListObjectsV2SuccessCases = []struct {
 			FetchOwner:   true,
 			RequestPayer: Ptr("requester"),
 		},
-		func(t *testing.T, o *ListObjectsResultV2, err error) {
+		func(t *testing.T, o *ListObjectsV2Result, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
@@ -1705,8 +1705,8 @@ var testMockListObjectsV2ErrorCases = []struct {
 	Headers        map[string]string
 	Body           []byte
 	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *ListObjectsRequestV2
-	CheckOutputFn  func(t *testing.T, o *ListObjectsResultV2, err error)
+	Request        *ListObjectsV2Request
+	CheckOutputFn  func(t *testing.T, o *ListObjectsV2Result, err error)
 }{
 	{
 		404,
@@ -1728,10 +1728,10 @@ var testMockListObjectsV2ErrorCases = []struct {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "/bucket?encoding-type=url&list-type=2", strUrl)
 		},
-		&ListObjectsRequestV2{
+		&ListObjectsV2Request{
 			Bucket: Ptr("bucket"),
 		},
-		func(t *testing.T, o *ListObjectsResultV2, err error) {
+		func(t *testing.T, o *ListObjectsV2Result, err error) {
 			assert.Nil(t, o)
 			assert.NotNil(t, err)
 			var serr *ServiceError
@@ -1764,7 +1764,7 @@ var testMockListObjectsV2ErrorCases = []struct {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
 		},
-		&ListObjectsRequestV2{
+		&ListObjectsV2Request{
 			Bucket:       Ptr("bucket"),
 			Delimiter:    Ptr("/"),
 			StartAfter:   Ptr("b"),
@@ -1773,7 +1773,7 @@ var testMockListObjectsV2ErrorCases = []struct {
 			EncodingType: Ptr("url"),
 			FetchOwner:   true,
 		},
-		func(t *testing.T, o *ListObjectsResultV2, err error) {
+		func(t *testing.T, o *ListObjectsV2Result, err error) {
 			assert.Nil(t, o)
 			assert.NotNil(t, err)
 			var serr *ServiceError
@@ -1798,7 +1798,7 @@ var testMockListObjectsV2ErrorCases = []struct {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
 		},
-		&ListObjectsRequestV2{
+		&ListObjectsV2Request{
 			Bucket:       Ptr("bucket"),
 			Delimiter:    Ptr("/"),
 			StartAfter:   Ptr("b"),
@@ -1807,7 +1807,7 @@ var testMockListObjectsV2ErrorCases = []struct {
 			EncodingType: Ptr("url"),
 			FetchOwner:   true,
 		},
-		func(t *testing.T, o *ListObjectsResultV2, err error) {
+		func(t *testing.T, o *ListObjectsV2Result, err error) {
 			assert.Nil(t, o)
 			assert.NotNil(t, err)
 			assert.Contains(t, err.Error(), "execute ListObjectsV2 fail")
