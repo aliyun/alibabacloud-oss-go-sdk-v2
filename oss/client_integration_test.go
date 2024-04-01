@@ -600,7 +600,7 @@ func TestListObjectsV2(t *testing.T) {
 	client := getDefaultClient()
 	_, err := client.PutBucket(context.TODO(), putRequest)
 	assert.Nil(t, err)
-	request := &ListObjectsRequestV2{
+	request := &ListObjectsV2Request{
 		Bucket: Ptr(bucketName),
 	}
 	result, err := client.ListObjectsV2(context.TODO(), request)
@@ -613,7 +613,7 @@ func TestListObjectsV2(t *testing.T) {
 	assert.Empty(t, result.Delimiter)
 	assert.Equal(t, result.IsTruncated, false)
 	bucketNotExist := bucketNamePrefix + "not-exist" + randLowStr(5)
-	request = &ListObjectsRequestV2{
+	request = &ListObjectsV2Request{
 		Bucket: Ptr(bucketNotExist),
 	}
 	_, err = client.ListObjectsV2(context.TODO(), nil)
@@ -3926,7 +3926,7 @@ func TestPaginator(t *testing.T) {
 	}
 
 	var listObjCountV2 int
-	listObjV2Request := &ListObjectsRequestV2{
+	listObjV2Request := &ListObjectsV2Request{
 		Bucket:  Ptr(bucketNameTest),
 		MaxKeys: int32(4),
 	}
@@ -5195,7 +5195,7 @@ func TestPaymentWithRequester(t *testing.T) {
 	assert.Nil(t, err)
 	time.Sleep(1 * time.Second)
 
-	listObjReqV2 := &ListObjectsRequestV2{
+	listObjReqV2 := &ListObjectsV2Request{
 		Bucket:       Ptr(bucketName),
 		RequestPayer: Ptr("requester"),
 	}

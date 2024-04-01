@@ -279,7 +279,7 @@ func unmarshalEncodeType(result any, output *OperationOutput) error {
 				}
 			}
 		}
-	case *ListObjectsResultV2:
+	case *ListObjectsV2Result:
 		if r.EncodingType != nil && strings.EqualFold(*r.EncodingType, "url") {
 			fields := []**string{&r.Prefix, &r.StartAfter, &r.Delimiter, &r.ContinuationToken, &r.NextContinuationToken}
 			var s string
@@ -397,7 +397,7 @@ func unmarshalEncodeType(result any, output *OperationOutput) error {
 	return nil
 }
 
-type ListObjectsRequestV2 struct {
+type ListObjectsV2Request struct {
 	// The name of the bucket containing the objects
 	Bucket *string `input:"host,bucket,required"`
 
@@ -439,7 +439,7 @@ type ListObjectsRequestV2 struct {
 	RequestCommon
 }
 
-type ListObjectsResultV2 struct {
+type ListObjectsV2Result struct {
 	// The name of the bucket.
 	Name *string `xml:"Name"`
 
@@ -483,10 +483,10 @@ type ListObjectsResultV2 struct {
 }
 
 // ListObjectsV2 Queries information about all objects in a bucket.
-func (c *Client) ListObjectsV2(ctx context.Context, request *ListObjectsRequestV2, optFns ...func(*Options)) (*ListObjectsResultV2, error) {
+func (c *Client) ListObjectsV2(ctx context.Context, request *ListObjectsV2Request, optFns ...func(*Options)) (*ListObjectsV2Result, error) {
 	var err error
 	if request == nil {
-		request = &ListObjectsRequestV2{}
+		request = &ListObjectsV2Request{}
 	}
 	input := &OperationInput{
 		OpName: "ListObjectsV2",
@@ -508,7 +508,7 @@ func (c *Client) ListObjectsV2(ctx context.Context, request *ListObjectsRequestV
 		return nil, err
 	}
 
-	result := &ListObjectsResultV2{}
+	result := &ListObjectsV2Result{}
 	if err = c.unmarshalOutput(result, output, unmarshalBodyXml, unmarshalEncodeType); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}

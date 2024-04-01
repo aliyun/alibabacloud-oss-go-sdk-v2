@@ -79,15 +79,15 @@ func (p *ListObjectsPaginator) NextPage(ctx context.Context, optFns ...func(*Opt
 type ListObjectsV2Paginator struct {
 	options       PaginatorOptions
 	client        *Client
-	request       *ListObjectsRequestV2
+	request       *ListObjectsV2Request
 	continueToken *string
 	firstPage     bool
 	isTruncated   bool
 }
 
-func (c *Client) NewListObjectsV2Paginator(request *ListObjectsRequestV2, optFns ...func(*PaginatorOptions)) *ListObjectsV2Paginator {
+func (c *Client) NewListObjectsV2Paginator(request *ListObjectsV2Request, optFns ...func(*PaginatorOptions)) *ListObjectsV2Paginator {
 	if request == nil {
-		request = &ListObjectsRequestV2{}
+		request = &ListObjectsV2Request{}
 	}
 
 	options := PaginatorOptions{}
@@ -113,7 +113,7 @@ func (p *ListObjectsV2Paginator) HasNext() bool {
 }
 
 // NextPage retrieves the next ListObjectsV2 page.
-func (p *ListObjectsV2Paginator) NextPage(ctx context.Context, optFns ...func(*Options)) (*ListObjectsResultV2, error) {
+func (p *ListObjectsV2Paginator) NextPage(ctx context.Context, optFns ...func(*Options)) (*ListObjectsV2Result, error) {
 	if !p.HasNext() {
 		return nil, fmt.Errorf("no more pages available")
 	}
