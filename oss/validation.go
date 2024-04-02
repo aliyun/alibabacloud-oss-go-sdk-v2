@@ -55,12 +55,12 @@ func isValidRange(r *string) bool {
 }
 
 var supportedMethod = map[string]struct{}{
-	"GET":    {},
-	"PUT":    {},
-	"HEAD":   {},
-	"POST":   {},
-	"DELETE": {},
-	"OPTION": {},
+	"GET":     {},
+	"PUT":     {},
+	"HEAD":    {},
+	"POST":    {},
+	"DELETE":  {},
+	"OPTIONS": {},
 }
 
 func isValidMethod(method string) bool {
