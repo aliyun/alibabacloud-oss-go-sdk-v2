@@ -12,7 +12,6 @@ type HTTPStatusCodeRetryable struct {
 }
 
 var retryErrorCodes = []int{
-	400, // Bad request
 	401, // Unauthorized
 	408, // Request Timeout
 	429, // Rate exceeded.
@@ -39,6 +38,7 @@ type ServiceErrorCodeRetryable struct {
 
 var retryServiceErrorCodes = map[string]struct{}{
 	"RequestTimeTooSkewed": {},
+	"BadRequest":           {},
 }
 
 func (*ServiceErrorCodeRetryable) IsErrorRetryable(err error) bool {
