@@ -5539,3 +5539,27 @@ func TestClientAppandFile(t *testing.T) {
 	assert.Equal(t, "1", header.Get("x-oss-tagging-count"))
 	f.Close()
 }
+
+func TestServiceError(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	putRequest := &DeleteBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.DeleteBucket(context.TODO(), putRequest)
+	var serr *ServiceError
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "The specified bucket does not exist.")
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+	assert.NotNil(t, serr.Headers)
+	assert.NotEmpty(t, serr.Headers.Get("x-oss-request-id"))
+	assert.NotEmpty(t, serr.Headers.Get("server"))
+}

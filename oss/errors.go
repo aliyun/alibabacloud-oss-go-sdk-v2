@@ -3,6 +3,7 @@ package oss
 import (
 	"encoding/xml"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -18,6 +19,7 @@ type ServiceError struct {
 	Snapshot      []byte
 	Timestamp     time.Time
 	RequestTarget string
+	Headers       http.Header
 }
 
 func (e *ServiceError) Error() string {
