@@ -579,6 +579,7 @@ func tryConvertServiceError(response *http.Response) (err error) {
 		Timestamp:     timestamp,
 		RequestTarget: fmt.Sprintf("%s %s", response.Request.Method, response.Request.URL),
 		Snapshot:      body,
+		Headers:       response.Header,
 	}
 
 	if err != nil {
