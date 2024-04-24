@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
@@ -15,15 +15,16 @@ var (
 	region     string
 	endpoint   string
 	bucketName string
+	objects    string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
 	flag.StringVar(&endpoint, "endpoint", "", "The domain names that other services can use to access OSS.")
-	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
+	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
+	flag.StringVar(&objects, "objects", "", "The name of the objects.")
 }
 
-// a example of showing how to get the bucket info.
 func main() {
 	flag.Parse()
 	if len(bucketName) == 0 {
@@ -40,26 +41,27 @@ func main() {
 		endpoint = fmt.Sprintf("oss-%v.aliyuncs.com", region)
 	}
 
+	if len(objects) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, objects name required")
+	}
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region).
 		WithEndpoint(endpoint)
-
 	client := oss.NewClient(cfg)
-
-	// Set the request
-	request := &oss.GetBucketInfoRequest{
-		Bucket: oss.Ptr(bucketName),
+	var DeleteObjects []oss.DeleteObject
+	objectSlice := strings.Split(objects, ",")
+	for _, name := range objectSlice {
+		DeleteObjects = append(DeleteObjects, oss.DeleteObject{Key: oss.Ptr(name)})
 	}
-
-	// Send request
-	result, err := client.GetBucketInfo(context.TODO(), request)
-
+	request := &oss.DeleteMultipleObjectsRequest{
+		Bucket:  oss.Ptr(bucketName),
+		Objects: DeleteObjects,
+	}
+	result, err := client.DeleteMultipleObjects(context.TODO(), request)
 	if err != nil {
-		log.Fatalf("failed to get bucket info %v", err)
+		log.Fatalf("failed to delete multiple objects %v", err)
 	}
-
-	// Print the result
-	out, _ := json.MarshalIndent(result.BucketInfo, "", "  ")
-	log.Printf("Result:\n%v", string(out))
+	log.Printf("delete multiple objects result:%#v\n", result)
 }

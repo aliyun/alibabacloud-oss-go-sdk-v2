@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -23,7 +22,6 @@ func init() {
 	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
 }
 
-// a example of showing how to get the bucket info.
 func main() {
 	flag.Parse()
 	if len(bucketName) == 0 {
@@ -48,18 +46,13 @@ func main() {
 	client := oss.NewClient(cfg)
 
 	// Set the request
-	request := &oss.GetBucketInfoRequest{
+	request := &oss.GetBucketStatRequest{
 		Bucket: oss.Ptr(bucketName),
 	}
 
-	// Send request
-	result, err := client.GetBucketInfo(context.TODO(), request)
-
+	result, err := client.GetBucketStat(context.TODO(), request)
 	if err != nil {
-		log.Fatalf("failed to get bucket info %v", err)
+		log.Fatalf("failed to get bucket stat %v", err)
 	}
-
-	// Print the result
-	out, _ := json.MarshalIndent(result.BucketInfo, "", "  ")
-	log.Printf("Result:\n%v", string(out))
+	log.Printf("get bucket stat result:%#v\n", result)
 }

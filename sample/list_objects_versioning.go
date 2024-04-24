@@ -30,7 +30,6 @@ func init() {
 		"[optional]The maximum number of `keys per page` to retrieve at once.")
 }
 
-// Lists all objects in a bucket using paginator
 func main() {
 	flag.Parse()
 	if len(bucketName) == 0 {
@@ -55,7 +54,7 @@ func main() {
 	client := oss.NewClient(cfg)
 
 	// Set the request
-	request := &oss.ListObjectsRequest{
+	request := &oss.ListObjectVersionsRequest{
 		Bucket: oss.Ptr(bucketName),
 	}
 
@@ -71,8 +70,7 @@ func main() {
 		request.MaxKeys = int32(maxKeys)
 	}
 
-	// Create the Paginator for the ListObjects operation.
-	p := client.NewListObjectsPaginator(request)
+	p := client.NewListObjectVersionsPaginator(request)
 
 	// Iterate through the object pages
 	var i int
@@ -86,8 +84,8 @@ func main() {
 		}
 
 		// Log the objects found
-		for _, obj := range page.Contents {
-			log.Printf("Object:%v, %v, %v\n", oss.ToString(obj.Key), obj.Size, oss.ToTime(obj.LastModified))
+		for _, obj := range page.ObjectVersions {
+			log.Printf("Object:%v, VersionId:%v, IsLatest:%v, Size:%v, ETag:%v, Storage Class:%v,  Last Modified:%v\n", oss.ToString(obj.Key), oss.ToString(obj.VersionId), obj.IsLatest, obj.Size, oss.ToString(obj.ETag), oss.ToString(obj.StorageClass), oss.ToTime(obj.LastModified))
 		}
 	}
 }
