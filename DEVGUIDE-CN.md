@@ -1592,7 +1592,6 @@ mc, err := MasterCustomCipher(materialDesc, "yourSecrectKey")
 eclient, err := NewEncryptionClient(client, mc)
 ```
 
-
 ## 其它接口
 
 为了方便用户使用，封装了一些易用性接口。当前扩展的接口如下：
