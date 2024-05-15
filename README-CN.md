@@ -176,6 +176,9 @@ func main() {
 > - 通过环境变量，配置访问凭证, `export OSS_ACCESS_KEY_ID="your access key id"`, `export OSS_ACCESS_KEY_SECRET="your access key secrect"`
 > - 以 list_buckets.go 为例，执行 `go run list_buckets.go -region cn-hangzhou`。
 
+## 资源
+[开发者指南](DEVGUIDE-CN.md) - 参阅该指南，来帮助您安装、配置和使用该开发套件。
+
 ## 许可协议
 > - Apache-2.0, 请参阅 [许可文件](LICENSE)
 

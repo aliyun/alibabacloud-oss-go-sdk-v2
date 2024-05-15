@@ -176,5 +176,8 @@ More example projects can be found in the `sample` folder
 > - Configure credentials values from the environment variables, like `export OSS_ACCESS_KEY_ID="your access key id"`, `export OSS_ACCESS_KEY_SECRET="your access key secrect"`
 > - Take list_buckets.go as an example，run `go run list_buckets.go -region cn-hangzhou` command。
 
+## Resources
+[Developer Guide](DEVGUIDE-CN.md) - Use this document to learn how to get started and use this sdk.
+
 ## License
 > - Apache-2.0, see [license file](LICENSE)

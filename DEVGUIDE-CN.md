@@ -13,6 +13,7 @@
 * [安装](#安装)
 * [配置](#配置)
 * [接口说明](#接口说明)
+* [场景示例](#场景示例)
 * [迁移指南](#迁移指南)
 
 # 安装
@@ -66,7 +67,6 @@ func main() {
 * [访问域名](#访问域名)
 * [HTTP客户端](#http客户端)
 * [重试](#重试)
-* [超时](#超时)
 * [日志](#日志)
 * [配置参数汇总](#配置参数汇总)
 
@@ -641,7 +641,7 @@ cfg := oss.LoadDefaultConfig().WithRetryer(retry.NewStandard(func(ro *retry.Retr
 
 ```
 cfg := oss.LoadDefaultConfig().WithRetryer(retry.NewStandard(func(ro *retry.RetryOptions) {
-  ro.Backoff = &retry.NewFixedDelayBackoff(2 * time.Second)
+  ro.Backoff = retry.NewFixedDelayBackoff(2 * time.Second)
 }))
 ```
 
@@ -740,7 +740,7 @@ cfg := oss.LoadDefaultConfig().
 * [类文件(File-Like)](#类文件file-like)
 * [客户端加密](#客户端加密)
 * [其它接口](#其它接口)
-* [上传/下载接口汇总](#上传下载接口汇总)
+* [上传下载接口对比](#上传下载接口对比)
 
 ## 基础接口
 
@@ -1014,14 +1014,339 @@ for {
 
 ## 传输管理器
 
-TODO: 描述信息
+针对大文件的传输场景，新增了 'Uploader'，'Downloader' 和 'Copier' 模块，分别管理对象的 上传，下载 和 拷贝。
 
-### 上传管理器
+### 上传管理器(Uploader)
 
-### 下载管理器
+上传管理器 利用分片上传接口，把大文件或者流分成多个较小的分片并发上传，提升上传的性能。
+</br>针对文件的上传场景，还提供了断点续传的能力，即在上传过程中，记录已完成的分片状态，如果出现网络中断、程序异常退出等问题导致文件上传失败，甚至重试多次仍无法完成上传，再次上传时，可以通过断点记录文件恢复上传。
 
-### 拷贝管理器
+```
+type Uploader struct {
+  ...
+}
 
+func (c *Client) NewUploader(optFns ...func(*UploaderOptions)) *Uploader 
+
+func (u *Uploader) UploadFrom(ctx context.Context, request *PutObjectRequest, body io.Reader, optFns ...func(*UploaderOptions)) (*UploadResult, error)
+
+func (u *Uploader) UploadFile(ctx context.Context, request *PutObjectRequest, filePath string, optFns ...func(*UploaderOptions)) (*UploadResult, error)
+```
+
+**参数列表**：
+|参数名|类型|说明
+|:-------|:-------|:-------
+|ctx|context.Context|请求的上下文
+|request|*PutObjectRequest|上传对象的请求参数，和 PutObject 接口的 请求参数一致
+|body|io.Reader|需要上传的流。当 body 只支持io.Reader类型，必须先把数据缓冲在内存中，然后才能上传该部分。当 body 同时支持 io.Reader, io.Seeker 和 io.ReaderAt 类型时，不需要把数据缓存在内存里。
+|filePath|string|本地文件路径
+|optFns|...func(*UploaderOptions)|(可选)，配置选项
+
+
+**UploaderOptions选项说明：**
+|参数|类型|说明
+|:-------|:-------|:-------
+|PartSize|int64|指定分片大小，默认值为 5MiB
+|ParallelNum|int|指定上传任务的并发数，默认值为 3。针对的是单次调用的并发限制，而不是全局的并发限制
+|LeavePartsOnError|bool|当上传失败时，是否保留已上传的分片，默认不保留 
+|EnableCheckpoint|bool|是否记录断点上传信息，默认不记录
+|CheckpointDir|string|指定记录文件的保存路径，例如 /local/dir/, 当EnableCheckpoint 为 true时有效
+
+
+当使用NewUploader实例化实例时，您可以指定多个配置选项来自定义对象的上传行为。也可以在每次调用上传接口时，指定多个配置选项来自定义每次上传对象的行为。
+
+设置Uploader的配置参数
+```
+u := client.NewUploader(func(uo *oss.UploaderOptions) {
+  uo.PartSize = 10 * 1024 * 1024
+})
+```
+
+设置每次上传请求的配置参数
+```
+request := &oss.PutObjectRequest{Bucket: oss.Ptr("bucket"), Key: oss.Ptr("key")}
+result, err := u.UploadFile(context.TODO(), request, "/local/dir/example", func(uo *oss.UploaderOptions) {
+  uo.PartSize = 10 * 1024 * 1024
+})
+```
+
+示例
+
+1. 使用 Uploader上传流
+
+```
+...
+client := oss.NewClient(cfg)
+
+u := client.NewUploader()
+
+var r io.Reader
+// TODO 绑定io.Reader 实例到 r
+
+result, err := u.UploadFrom(context.TODO(),
+  &oss.PutObjectRequest{
+    Bucket: oss.Ptr("bucket"),
+    Key:    oss.Ptr("key"),
+  },
+  r,
+)
+
+if err != nil {
+  log.Fatalf("failed to UploadFile %v", err)
+}
+
+fmt.Printf("upload done, etag %v\n", oss.ToString(result.ETag))
+```
+
+2. 使用 Uploader上传文件
+
+```
+...
+client := oss.NewClient(cfg)
+
+u := client.NewUploader()
+
+result, err := u.UploadFile(context.TODO(),
+  &oss.PutObjectRequest{
+    Bucket: oss.Ptr("bucket"),
+    Key:    oss.Ptr("key"),
+  },
+  "/local/dir/example",
+)
+
+if err != nil {
+  log.Fatalf("failed to UploadFile %v", err)
+}
+
+fmt.Printf("upload done, etag %v\n", oss.ToString(result.ETag))
+```
+
+3. 上传文件，并开启断点续传功能
+```
+...
+client := oss.NewClient(cfg)
+u := client.NewUploader(func(uo *oss.UploaderOptions) {
+  uo.CheckpointDir = "/local/dir/"
+  uo.EnableCheckpoint = true
+})
+
+result, err := u.UploadFile(context.TODO(),
+  &oss.PutObjectRequest{
+    Bucket: oss.Ptr("bucket"),
+    Key:    oss.Ptr("key"),
+  },
+  "/local/dir/example"
+)
+
+if err != nil {
+  log.Fatalf("failed to UploadFile %v", err)
+}
+
+fmt.Printf("upload done, etag %v\n", oss.ToString(result.ETag))
+```
+
+
+### 下载管理器(Downloader)
+
+下载管理器 利用范围下载，把大文件分成多个较小的分片并发下载，提升下载的性能。
+</br>该接口提供了断点续传的能力，即在下载过程中，记录已完成的分片状态，如果出现网络中断、程序异常退出等问题导致文件下载失败，甚至重试多次仍无法完成下载，再次下载时，可以通过断点记录文件恢复下载。
+
+```
+type Downloader struct {
+  ...
+}
+
+func (c *Client) NewDownloader(optFns ...func(*DownloaderOptions)) *Downloader
+
+func (d *Downloader) DownloadFile(ctx context.Context, request *GetObjectRequest, filePath string, optFns ...func(*DownloaderOptions)) (result *DownloadResult, err error)
+```
+
+**参数列表**：
+|参数名|类型|说明
+|:-------|:-------|:-------
+|ctx|context.Context|请求的上下文
+|request|*GetObjectRequest|下载对象的请求参数，和 GetObject 接口的 请求参数一致
+|filePath|string|本地文件路径
+|optFns|...func(*DownloaderOptions)|(可选)，配置选项
+
+
+**DownloaderOptions选项说明：**
+|参数|类型|说明
+|:-------|:-------|:-------
+|PartSize|int64|指定分片大小，默认值为 5MiB
+|ParallelNum|int|指定上传任务的并发数，默认值为 3。针对的是单次调用的并发限制，而不是全局的并发限制
+|EnableCheckpoint|bool|是否记录断点下载信息，默认不记录
+|CheckpointDir|string|指定记录文件的保存路径，例如 /local/dir/, 当EnableCheckpoint 为 true时有效
+|VerifyData|bool|恢复下载时，是否要校验已下载数据的CRC64值，默认不校验, 当EnableCheckpoint 为 true时有效
+|UseTempFile |bool|下载文件时，是否使用临时文件，默认使用。先下载到 临时文件上，当成功后，再重命名为目标文件
+
+
+当使用NewDownloader实例化实例时，您可以指定多个配置选项来自定义对象的下载行为。也可以在每次调用下载接口时，指定多个配置选项来自定义每次下载对象的行为。
+
+设置Downloader的配置参数
+```
+d := client.NewDownloader(func(do *oss.DownloaderOptions) {
+  do.PartSize = 10 * 1024 * 1024
+})
+```
+
+设置每次上传请求的配置参数
+```
+request := &oss.GetObjectRequest{Bucket: oss.Ptr("bucket"), Key: oss.Ptr("key")}
+d.DownloadFile(context.TODO(), request, "/local/dir/example", func(do *oss.DownloaderOptions) {
+  do.PartSize = 10 * 1024 * 1024
+})
+```
+
+示例
+
+1. 使用 Downloader 下载到本地文件
+
+```
+...
+client := oss.NewClient(cfg)
+
+d := client.NewDownloader()
+
+d.DownloadFile(context.TODO(),
+  &oss.GetObjectRequest{
+    Bucket: oss.Ptr("bucket"),
+    Key:    oss.Ptr("key"),
+  },
+  "/local/dir/example",
+)
+```
+
+### 拷贝管理器(Copier)
+当需要将对象从存储空间复制到另外一个存储空间，或者修改对象的属性时，您可以通过拷贝接口 或者分片拷贝接口来完成这个操作。
+</br>这两个接口有其适用的场景，例如：
+* 拷贝接口(CopyObject) 只适合拷贝 5GiB 以下的对象；
+* 分片拷贝接口(UploadPartCopy) 不支持 元数据指令(x-oss-metadata-directive) 和 标签指令(x-oss-tagging-directive) 参数, 
+拷贝时，您需要主动去设置需要复制的元数据和标签。
+* 服务端优化了拷贝(CopyObject)接口，使其具备浅拷贝的能力，在特定的场景下也支持拷贝大文件。
+
+拷贝管理器提供了通用的拷贝接口，隐藏了接口的差异和实现细节，根据拷贝的请求参数，自动选择合适的接口复制对象。
+
+```
+type Copier struct {
+  ...
+}
+
+func (c *Client) NewCopier(optFns ...func(*CopierOptions)) *Copier
+
+func (c *Copier) Copy(ctx context.Context, request *CopyObjectRequest, optFns ...func(*CopierOptions)) (*CopyResult, error)
+```
+
+**参数列表**：
+|参数名|类型|说明
+|:-------|:-------|:-------
+|ctx|context.Context|请求的上下文
+|request|*CopyObjectRequest|拷贝对象的请求参数，和 CopyObject 接口的 请求参数一致
+|optFns|...func(*CopierOptions)|(可选)，配置选项
+
+
+**CopierOptions选项说明：**
+|参数|类型|说明
+|:-------|:-------|:-------
+|PartSize|int64|指定分片大小，默认值为 64MiB
+|ParallelNum|int|指定上传任务的并发数，默认值为 3。针对的是单次调用的并发限制，而不是全局的并发限制
+|MultipartCopyThreshold|int64|使用分片拷贝的阈值，默认值为 200MiB
+|LeavePartsOnError|bool|当拷贝失败时，是否保留已拷贝的分片，默认不保留 
+|DisableShallowCopy|bool|不使用浅拷贝行为，默认使用
+
+
+当使用NewCopier实例化实例时，您可以指定多个配置选项来自定义对象的下载行为。也可以在每次调用下载接口时，指定多个配置选项来自定义每次下载对象的行为。
+
+设置Copier的配置参数
+```
+d := client.NewCopier(func(co *oss.CopierOptions) {
+  co.PartSize = 100 * 1024 * 1024
+})
+```
+
+设置每次拷贝请求的配置参数
+```
+request := &oss.CopyObjectRequest{
+  Bucket:       oss.Ptr("bucket"),
+  Key:          oss.Ptr("key"),
+  SourceBucket: oss.Ptr("src-bucket"),
+  SourceKey:    oss.Ptr("src-key"),
+}
+copier.Copy(context.TODO(), request, func(co *oss.CopierOptions) {
+  co.PartSize = 100 * 1024 * 1024
+})
+```
+
+> **注意:**
+> </br>拷贝对象时，CopyObjectRequest.MetadataDirective 决定了对象元数据的拷贝行为，默认 复制 源对象标签
+> </br>拷贝对象时，CopyObjectRequest.TaggingDirective 决定了对象标签的拷贝行为，默认 复制 源对象标签 
+
+
+示例
+
+1. 拷贝文件，默认会复制 元数据 和 标签
+```
+...
+client := oss.NewClient(cfg)
+copier := client.NewCopier()
+
+result, err := copier.Copy(context.TODO(), &oss.CopyObjectRequest{
+  Bucket:       oss.Ptr("bucket"),
+  Key:          oss.Ptr("key"),
+  SourceBucket: oss.Ptr("src-bucket"),
+  SourceKey:    oss.Ptr("src-key"),
+})
+
+if err != nil {
+  log.Fatalf("failed to UploadFile %v", err)
+}
+
+fmt.Printf("copy done, etag %v\n", oss.ToString(result.ETag))
+```
+
+2. 拷贝文件，只拷贝数据，不拷贝元数据和标签
+```
+...
+client := oss.NewClient(cfg)
+copier := client.NewCopier()
+
+result, err := copier.Copy(context.TODO(), &oss.CopyObjectRequest{
+  Bucket:            oss.Ptr("bucket"),
+  Key:               oss.Ptr("key"),
+  SourceBucket:      oss.Ptr("src-bucket"),
+  SourceKey:         oss.Ptr("src-key"),
+  MetadataDirective: oss.Ptr("Replace"),
+  TaggingDirective:  oss.Ptr("Replace"),
+})
+
+if err != nil {
+  log.Fatalf("failed to UploadFile %v", err)
+}
+
+fmt.Printf("copy done, etag %v\n", oss.ToString(result.ETag))
+```
+
+3. 修改 对象的存储类型 为标准类型
+
+```
+...
+client := oss.NewClient(cfg)
+copier := client.NewCopier()
+
+result, err := copier.Copy(context.TODO(), &oss.CopyObjectRequest{
+  Bucket:       oss.Ptr("bucket"),
+  Key:          oss.Ptr("key"),
+  SourceBucket: oss.Ptr("src-bucket"),
+  SourceKey:    oss.Ptr("src-key"),
+  StorageClass: oss.StorageClassStandard,
+})
+
+if err != nil {
+  log.Fatalf("failed to UploadFile %v", err)
+}
+
+fmt.Printf("copy done, etag %v\n", oss.ToString(result.ETag))
+```
 
 ## 类文件(File-Like)
 
@@ -1366,6 +1691,8 @@ func NewEncryptionClient(c *Client, masterCipher crypto.MasterCipher, optFns ...
 |**辅助接口名**|**说明**
 |Unwrap|获取非加密客户端实例，可以通过该实例访问其它基础接口
 
+> **说明:** EncryptionClient 采用了 和 Client 一样的接口命名规则 和 调用方式，有关接口的详细用法，请参考指南的其它章节说明。
+
 ### 使用RSA主密钥
 
 **创建RAS加密客户端**
@@ -1674,9 +2001,254 @@ result, err := client.GetObjectToFile(context.TODO(),
 )
 ```
 
-## 上传/下载接口汇总
+## 上传下载接口对比
 
-TODO: 以表格方式，汇总上传/下载类接口 和 特点。
+提供了各种上传下载接口，您可以根据使用场景，选择适合的接口。
+
+**上传接口**
+|接口名 | 说明
+|:-------|:-------
+|Client.PutObject|简单上传, 最大支持5GiB</br>支持CRC64数据校验(默认启用)</br>支持进度条</br>请求body类型为io.Reader, 当支持io.Seeker类型时，具备失败重传
+|Client.PutObjectFromFile|与Client.PutObject接口能力一致</br>请求body数据来源于文件路径
+|分片上传接口</br>Client.InitiateMultipartUpload</br>Client.UploadPar</br>Client.CompleteMultipartUpload|分片上传，单个分片最大5GiB，文件最大48.8TiB</br>UploadPart接口支持CRC64校验(默认启用)</br>UploadPart接口支持进度条</br>UploadPart>请求body类型为io.Reader, 当支持io.Seeker类型时，具备失败重传
+|Uploader.UploadFrom|封装了简单上传 和 分片上传接口，最大支持48.8TiB</br>支持CRC64数据校验(默认启用)</br>支持进度条</br>请求body参数类型为io.Reader，当同时支持 io.Reader, io.Seeker 和 io.ReaderAt 类型时，不需要把数据缓存在内存里，否则 必须先把数据缓冲在内存中，然后才能上传该部分
+|Uploader.UploadFile|与Uploader.UploadFrom接口能力一致</br>请求body数据来源于文件路径</br>支持断点续传
+|Client.AppendObject|追加上传, 最终文件最大支持5GiB</br>支持CRC64数据校验(默认启用)</br>支持进度条</br>请求body类型为io.Reader, 当支持io.Seeker类型时，具备失败重传(该接口为非幂等接口，重传时可能出现失败)
+|AppendOnlyFile接口</br>AppendOnlyFile.Write</br>AppendOnlyFile.WriteFrom|与Client.AppendObject接口能力一致</br>优化了重传时失败后容错处理
+
+**下载接口**
+|接口名| 说明
+|:-------|:-------
+|Client.GetObject|流式下载, 响应体为io.ReadCloser类型</br>不直接支持CRC64校验</br>不直接支持进度条</br>流式读数据阶段，不支持失败重连
+|Client.GetObjectToFile|下载到本地文件</br>单连接下载</br>支持CRC64数据校验(默认启用)</br>支持进度条</br>支持失败重连
+|Downloader.DownloadFile&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|采用分片方式下载到本地文件</br>支持自定义分片大小和并发数</br>支持CRC64数据校验(默认启用)</br>支持进度条</br>支持失败重连</br>支持断点续传</br>先写临时文件，再重命名(可配置，默认启用)
+|ReadOnlyFile接口</br>ReadOnlyFile.Read</br>ReadOnlyFile.Seek</br>ReadOnlyFile.Close|File-Like形式接口, 提供io.Reader, io.Seeker 和 io.Closer接口</br>具备Seek能力</br>支持单流模式(默认)</br>支持异步预取模式，提升读的速度</br>支持自定义预取块和预取数</br>不直接支持CRC64校验</br>不直接支持进度条</br>支持失败重连
+
+
+# 场景示例
+
+本部分将从使用场景出发, 介绍如何使用SDK。
+
+包含的主题
+* [设置进度条](#设置进度条)
+* [数据校验](#数据校验)
+
+## 设置进度条
+
+在对象的上传，下载 和 拷贝 场景下，您可以设置进度条，用于查看对象的传输状态。
+
+**支持设置进度条的请求参数**
+|支持的请求参数| 用法
+|:-------|:-------
+|PutObjectRequest|PutObjectRequest.ProgressFunc
+|GetObjectRequest|GetObjectRequest.ProgressFunc
+|CopyObjectRequest|CopyObjectRequest.ProgressFunc
+|AppendObjectRequest|AppendObjectRequest.ProgressFunc
+|UploadPartRequest|UploadPartRequest.ProgressFunc
+
+**ProgressFunc定义和参数说明**
+```
+type ProgressFunc func(increment, transferred, total int64)
+```
+|参数名|类型|说明
+|:-------|:-------|:-------
+|increment|int64|本次回调传输的数据大小,单位字节
+|transferred|int64|已传输的数据大小，单位为字节
+|total|int64|本次请求的数据大小，单位为字节，如果为 -1，表示获无法获取总大小
+
+
+示例
+
+1. 上传时，设置进度条，以GetObject 为例
+
+```
+...
+client := oss.NewClient(cfg)
+client.PutObject(context.TODO(), &oss.PutObjectRequest{
+  Bucket: oss.Ptr("bucket"),
+  Key:    oss.Ptr("key"),
+  ProgressFn: func(increment, transferred, total int64) {
+    fmt.Printf("increment:%v, transferred:%v, total:%v\n", increment, transferred, total)
+  },
+})
+
+
+```
+
+2. 下载时，设置进度条，以GetObjectToFile为例
+```
+...
+client := oss.NewClient(cfg)
+client.GetObjectToFile(context.TODO(),
+  &oss.GetObjectRequest{
+    Bucket: oss.Ptr("bucket"),
+    Key:    oss.Ptr("key"),
+    ProgressFn: func(increment, transferred, total int64) {
+      fmt.Printf("increment:%v, transferred:%v, total:%v\n", increment, transferred, total)
+    },
+  },
+  "/local/dir/example",
+)
+```
+
+3. 流式下载时，设置进度条，以GetObject 为例
+```
+...
+client := oss.NewClient(cfg)
+
+result, err := client.GetObject(context.TODO(), &oss.GetObjectRequest{
+  Bucket: oss.Ptr("bucket"),
+  Key:    oss.Ptr("key"),
+})
+
+if err != nil {
+  log.Fatalf("fail to GetObject %v", err)
+}
+
+prop := oss.NewProgress(
+  func(increment, transferred, total int64) {
+    fmt.Printf("increment:%v, transferred:%v, total:%v\n", increment, transferred, total)
+  },
+  result.ContentLength,
+)
+
+io.ReadAll(io.TeeReader(result.Body, prop))
+```
+
+## 数据校验
+
+OSS提供基于MD5和CRC64的数据校验，确保请求的过程中的数据完整性。
+
+## MD5校验
+
+当向OSS发送请求时，如果设置了Content-MD5，OSS会根据接收的内容计算MD5。当OSS计算的MD5值和上传提供的MD5值不一致时，则返回InvalidDigest异常，从而保证数据的完整性。
+
+基础接口里，除了 PutObject, AppendObject, UploadPart 接口外，会自动计算MD5, 并设置Content-MD5, 保证请求的完整性。
+
+如果您需要在 PutObject, AppendObject, UploadPart 接口里使用MD5校验，可以参考以下写法
+
+```
+...
+client := oss.NewClient(cfg)
+
+var body io.Reader
+
+// 计算Content-Md5, 如果 body 不是 io.ReadSeeker 类型, 则先读到缓存里，再计算MD5
+calcMd5 := func(input io.Reader) (io.Reader, string, error) {
+  if input == nil {
+    return input, "1B2M2Y8AsgTpgAmY7PhCfg==", nil
+  }
+  var (
+    r  io.ReadSeeker
+    ok bool
+  )
+  if r, ok = input.(io.ReadSeeker); !ok {
+    buf, err := io.ReadAll(input)
+    if err != nil {
+      return input, "", err
+    }
+    r = bytes.NewReader(buf)
+  }
+
+  curPos, err := r.Seek(0, io.SeekCurrent)
+  if err != nil {
+    return input, "", err
+  }
+  h := md5.New()
+  _, err = io.Copy(h, r)
+  if err != nil {
+    return input, "", err
+  }
+  _, err = r.Seek(curPos, io.SeekStart)
+  if err != nil {
+    return input, "", err
+  }
+
+  return r, base64.StdEncoding.EncodeToString(h.Sum(nil)), nil
+}
+
+body, md5, err := calcMd5(body)
+
+if err != nil {
+  log.Fatalf("fail to calcMd5, %v", err)
+}
+
+result, err := client.PutObject(context.TODO(), &oss.PutObjectRequest{
+  Bucket:     oss.Ptr("bucket"),
+  Key:        oss.Ptr("key"),
+  ContentMD5: oss.Ptr(md5),
+  Body:       body,
+})
+
+if err != nil {
+  log.Fatalf("fail to PutObject, %v", err)
+}
+
+fmt.Printf("PutObject result, etg:%v", oss.ToString(result.ETag))
+```
+
+## CRC64校验
+
+上传对象时，默认开启CRC64数据校验，以确保数据的完整性，例如 PutObject, AppendObject, UploadPart 等接口。
+
+下载对象时，
+* 如果是下载到本地文件，默认开启CRC64数据校验，以确保数据的完整性，例如 Downloader.DownloadFile 和 GetObjectToFile 接口。
+* 如果是流式读类型的接口，不会做CRC64校验，例如 GetObject 和 ReadOnlyFile.Read 接口。
+
+如果您需要在流式读接口里使用CRC64校验，可以参考以下写法
+
+```
+...
+client := oss.NewClient(cfg)
+
+result, err := client.GetObject(context.TODO(), &oss.GetObjectRequest{
+  Bucket: oss.Ptr("bucket"),
+  Key:    oss.Ptr("key"),
+})
+
+if err != nil {
+  log.Fatalf("fail to GetObject, %v", err)
+}
+defer func() {
+  if result.Body != nil {
+    result.Body.Close()
+  }
+}()
+
+var h hash.Hash64
+var r io.Reader = result.Body
+
+// 响应头返回的是整个文件的CRC64值，如果是范围下载，不支持CRC64校验
+// 206 Partial Content 表示是范围下载
+if result.StatusCode == 200 {
+  h = oss.NewCRC64(0)
+  r = io.TeeReader(result.Body, h)
+}
+_, err = io.Copy(io.Discard, r)
+
+if err != nil {
+  log.Fatalf("fail to Copy, %v", err)
+}
+
+if h != nil && result.HashCRC64 != nil {
+  ccrc := fmt.Sprint(h.Sum64())
+  scrc := oss.ToString(result.HashCRC64)
+  if ccrc != scrc {
+    log.Fatalf("crc is inconsistent, client %s, server %s", ccrc, scrc)
+  }
+}
+```
+
+如果您需要关闭CRC64校验，通过Config.WithDisableDownloadCRC64Check 和  Config.WithDisableUploadCRC64Check 配置，例如
+```
+cfg := oss.LoadDefaultConfig().
+  WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+  WithRegion(region).
+  WithDisableDownloadCRC64Check(true).
+  WithDisableUploadCRC64Check(true)
+
+client := oss.NewClient(cfg)
+```
 
 
 # 迁移指南
@@ -1946,7 +2518,9 @@ V2 版本使用 传输管理器 'Uploader'，'Downloader' 和 'Copier' 分别 �
 
 V2 版本 使用 EncryptionClient 来提供 客户端加密功能，同时也对API 接口做了精简，采用了 和 Client 一样的接口命名规则 和 调用方式。
 
-另外，该版本 移除了 使用KMS托管用户主密钥 的 参考实现，仅保留 基于 RSA 自主管理的主密钥 的参考实现。
+另外，该版本 仅保留 基于 RSA 自主管理的主密钥 的参考实现。
+
+对于 KSM 的实现，可以参考[sample/crypto/kms.go](sample/crypto/kms.go)。
 
 关于客户端加密的详细使用说明，请参考[客户端加密](#客户端加密)。
 
