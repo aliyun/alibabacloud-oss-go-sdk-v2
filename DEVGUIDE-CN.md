@@ -1333,7 +1333,7 @@ func NewEncryptionClient(c *Client, masterCipher crypto.MasterCipher, optFns ...
 |参数名|类型|说明
 |:-------|:-------|:-------
 |c|*Client| 非加密客户端实例
-|masterCipher|crypto.MasterCipher|主密钥实例
+|masterCipher|crypto.MasterCipher|主密钥实例，用于加密和解密数据密钥
 |optFns|...func(*EncryptionClientOptions)|(可选)，加密客户端配置选项
 
 **返回值列表**：
@@ -1345,7 +1345,7 @@ func NewEncryptionClient(c *Client, masterCipher crypto.MasterCipher, optFns ...
 **EncryptionClientOptions选项说明：**
 |参数|类型|说明
 |:-------|:-------|:-------
-|MasterCiphers|[]crypto.MasterCipher|主密钥实例列表, 解密时使用
+|MasterCiphers|[]crypto.MasterCipher|主密钥实例组, 用于解密数据密钥。
 
 **EncryptionClient接口：**
 |基础接口名|说明
@@ -1381,11 +1381,25 @@ cfg := oss.LoadDefaultConfig().
 
 client := oss.NewClient(cfg)
 
+// 创建一个主密钥的描述信息，创建后不允许修改。主密钥描述信息和主密钥一一对应。
+// 如果所有的对象都使用相同的主密钥，主密钥描述信息可以为空，但后续不支持更换主密钥。
+// 如果主密钥描述信息为空，解密时无法判断使用的是哪个主密钥。
+// 强烈建议为每个主密钥都配置主密钥描述信息，由客户端保存主密钥和描述信息之间的对应关系。
 materialDesc := make(map[string]string)
 materialDesc["desc"] = "your master encrypt key material describe information"
 
+// 创建只包含 主密钥 的 加密客户端
 mc, err := crypto.CreateMasterRsa(materialDesc, "yourRsaPublicKey", "yourRsaPrivateKey")
 eclient, err := NewEncryptionClient(client, mc)
+
+// 创建包含主密钥 和 多个解密密钥的 加密客户端
+// 当解密时，先匹配解密密钥的描述信息，如果不匹配，则使用主密钥解密
+//decryptMC := []crypto.MasterCipher{
+//	// TODO
+//}
+//eclient, err := oss.NewEncryptionClient(client, mc, func(eco *oss.EncryptionClientOptions) {
+//	eco.MasterCiphers = decryptMC
+//})
 ```
 
 **使用加密客户端上传或者下载**
@@ -1486,7 +1500,7 @@ for i := 0; i < partsNum; i++ {
   if end > length {
     end = length
   }
-  
+
   // 加密客户端 需要 设置分片加密上下文
   upResult, err := eclient.UploadPart(context.TODO(), &oss.UploadPartRequest{
     Bucket:     oss.Ptr(bucketName),
@@ -1516,10 +1530,67 @@ if err != nil {
 }
 ```
 
-### 使用自定主密钥
-当RSA主密钥方式无法满足需求时，您可自定主密钥的加密实现。
+### 使用自定义主密钥
+当RSA主密钥方式无法满足需求时，您可自定主密钥的加密实现。主密钥的接口定义如下：
+```
+type MasterCipher interface {
+  Encrypt([]byte) ([]byte, error)
+  Decrypt([]byte) ([]byte, error)
+  GetWrapAlgorithm() string
+  GetMatDesc() string
+}
+```
+**MasterCipher接口说明**
+|接口名|说明
+|:-------|:-------
+|Encrypt|加密 数据加密密钥 和 加密数据的初始值(IV)
+|Decrypt|解密 数据加密密钥  和 加密数据的初始值(IV)
+|GetWrapAlgorithm|返回 数据密钥的加密算法信息，建议采用 算法/模式/填充 格式，例如RSA/NONE/PKCS1Padding
+|GetMatDesc|返回 主密钥的描述信息，JSON格式
 
+例如
 
+```
+...
+type MasterCustomCipher struct {
+  MatDesc    string
+  SecrectKey string
+}
+
+func (mrc MasterCustomCipher) GetWrapAlgorithm() string {
+  return "Custom/None/NoPadding"
+}
+
+func (mrc MasterCustomCipher) GetMatDesc() string {
+  return mrc.MatDesc
+}
+
+func (mrc MasterCustomCipher) Encrypt(plainData []byte) ([]byte, error) {
+  // TODO
+}
+
+func (mrc MasterCustomCipher) Decrypt(cryptoData []byte) ([]byte, error) {
+  // TODO
+}
+
+func MasterCustomCipher(matDesc map[string]string, secrectKey string) (crypto.MasterCipher, error) {
+  var jsonDesc string
+  if len(matDesc) > 0 {
+    b, err := json.Marshal(matDesc)
+    if err != nil {
+      return nil, err
+    }
+    jsonDesc = string(b)
+  }
+  return MasterCustomCipher{MatDesc: jsonDesc, SecrectKey: secrectKey}, nil
+}
+
+client := oss.NewClient(cfg)
+materialDesc := make(map[string]string)
+materialDesc["desc"] = "your master encrypt key material describe information"
+mc, err := MasterCustomCipher(materialDesc, "yourSecrectKey")
+eclient, err := NewEncryptionClient(client, mc)
+```
 
 ## 其它接口
 
