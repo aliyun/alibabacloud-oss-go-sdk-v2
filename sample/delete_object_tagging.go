@@ -12,14 +12,15 @@ import (
 var (
 	region     string
 	bucketName string
+	objectName string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
-	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
+	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
+	flag.StringVar(&objectName, "object", "", "The name of the object.")
 }
 
-// Lists all objects in a bucket using paginator
 func main() {
 	flag.Parse()
 	if len(bucketName) == 0 {
@@ -32,30 +33,24 @@ func main() {
 		log.Fatalf("invalid parameters, region required")
 	}
 
+	if len(objectName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, object name required")
+	}
+
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region)
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.ListObjectsRequest{
+	request := &oss.DeleteObjectTaggingRequest{
 		Bucket: oss.Ptr(bucketName),
+		Key:    oss.Ptr(objectName),
 	}
-	p := client.NewListObjectsPaginator(request)
-
-	var i int
-	log.Println("Objects:")
-	for p.HasNext() {
-		i++
-
-		page, err := p.NextPage(context.TODO())
-		if err != nil {
-			log.Fatalf("failed to get page %v, %v", i, err)
-		}
-
-		// Log the objects found
-		for _, obj := range page.Contents {
-			log.Printf("Object:%v, %v, %v\n", oss.ToString(obj.Key), obj.Size, oss.ToTime(obj.LastModified))
-		}
+	result, err := client.DeleteObjectTagging(context.TODO(), request)
+	if err != nil {
+		log.Fatalf("failed to delete object tagging %v", err)
 	}
+	log.Printf("delete object tagging result:%#v\n", result)
 }

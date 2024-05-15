@@ -16,20 +16,19 @@ var (
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
-	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
+	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
 }
 
-// Lists all objects in a bucket using paginator
 func main() {
 	flag.Parse()
-	if len(bucketName) == 0 {
-		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, bucket name required")
-	}
-
 	if len(region) == 0 {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, region required")
+	}
+
+	if len(bucketName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, bucket name required")
 	}
 
 	cfg := oss.LoadDefaultConfig().
@@ -38,24 +37,23 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.ListObjectsRequest{
+	request := &oss.ListMultipartUploadsRequest{
 		Bucket: oss.Ptr(bucketName),
 	}
-	p := client.NewListObjectsPaginator(request)
+
+	p := client.NewListMultipartUploadsPaginator(request)
 
 	var i int
-	log.Println("Objects:")
+	log.Println("List Multipart Uploads:")
 	for p.HasNext() {
 		i++
-
 		page, err := p.NextPage(context.TODO())
 		if err != nil {
 			log.Fatalf("failed to get page %v, %v", i, err)
 		}
-
 		// Log the objects found
-		for _, obj := range page.Contents {
-			log.Printf("Object:%v, %v, %v\n", oss.ToString(obj.Key), obj.Size, oss.ToTime(obj.LastModified))
+		for _, u := range page.Uploads {
+			log.Printf("Upload key:%v,upload id:%v, initiated:%v\n", oss.ToString(u.Key), oss.ToString(u.UploadId), oss.ToTime(u.Initiated))
 		}
 	}
 }

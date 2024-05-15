@@ -19,7 +19,6 @@ func init() {
 	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
 }
 
-// Lists all objects in a bucket using paginator
 func main() {
 	flag.Parse()
 	if len(bucketName) == 0 {
@@ -38,10 +37,10 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.ListObjectsRequest{
+	request := &oss.ListObjectsV2Request{
 		Bucket: oss.Ptr(bucketName),
 	}
-	p := client.NewListObjectsPaginator(request)
+	p := client.NewListObjectsV2Paginator(request)
 
 	var i int
 	log.Println("Objects:")
