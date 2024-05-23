@@ -19,7 +19,6 @@ func init() {
 	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
 }
 
-// Lists all objects in a bucket using paginator
 func main() {
 	flag.Parse()
 	if len(bucketName) == 0 {
@@ -38,24 +37,13 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.ListObjectsRequest{
+	request := &oss.GetBucketStatRequest{
 		Bucket: oss.Ptr(bucketName),
 	}
-	p := client.NewListObjectsPaginator(request)
 
-	var i int
-	log.Println("Objects:")
-	for p.HasNext() {
-		i++
-
-		page, err := p.NextPage(context.TODO())
-		if err != nil {
-			log.Fatalf("failed to get page %v, %v", i, err)
-		}
-
-		// Log the objects found
-		for _, obj := range page.Contents {
-			log.Printf("Object:%v, %v, %v\n", oss.ToString(obj.Key), obj.Size, oss.ToTime(obj.LastModified))
-		}
+	result, err := client.GetBucketStat(context.TODO(), request)
+	if err != nil {
+		log.Fatalf("failed to get bucket stat %v", err)
 	}
+	log.Printf("get bucket stat result:%#v\n", result)
 }
