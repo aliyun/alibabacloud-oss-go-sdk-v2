@@ -1046,7 +1046,7 @@ func (u *Uploader) UploadFile(ctx context.Context, request *PutObjectRequest, fi
 **UploaderOptions选项说明：**
 |参数|类型|说明
 |:-------|:-------|:-------
-|PartSize|int64|指定分片大小，默认值为 5MiB
+|PartSize|int64|指定分片大小，默认值为 6MiB
 |ParallelNum|int|指定上传任务的并发数，默认值为 3。针对的是单次调用的并发限制，而不是全局的并发限制
 |LeavePartsOnError|bool|当上传失败时，是否保留已上传的分片，默认不保留 
 |EnableCheckpoint|bool|是否记录断点上传信息，默认不记录
@@ -1173,7 +1173,7 @@ func (d *Downloader) DownloadFile(ctx context.Context, request *GetObjectRequest
 **DownloaderOptions选项说明：**
 |参数|类型|说明
 |:-------|:-------|:-------
-|PartSize|int64|指定分片大小，默认值为 5MiB
+|PartSize|int64|指定分片大小，默认值为 6MiB
 |ParallelNum|int|指定上传任务的并发数，默认值为 3。针对的是单次调用的并发限制，而不是全局的并发限制
 |EnableCheckpoint|bool|是否记录断点下载信息，默认不记录
 |CheckpointDir|string|指定记录文件的保存路径，例如 /local/dir/, 当EnableCheckpoint 为 true时有效
@@ -1390,7 +1390,7 @@ func (c *Client) OpenFile(ctx context.Context, bucket string, key string, optFns
 |RequestPayer|*string|启用了请求者付费模式时，需要设置为'requester'
 |EnablePrefetch|bool|是否启用预取模式，默认不启用
 |PrefetchNum|int|预取块的数量，默认值为3。启用预取模式时有效
-|ChunkSize|int64|每个预取块的大小，默认值为5MiB。启用预取模式时有效
+|ChunkSize|int64|每个预取块的大小，默认值为6MiB。启用预取模式时有效
 |PrefetchThreshold|int64|持续顺序读取多少字节后进入到预取模式，默认值为20MiB。启用预取模式时有效
 
 **ReadOnlyFile接口：**
@@ -2497,11 +2497,11 @@ V2 版本使用 传输管理器 'Uploader'，'Downloader' 和 'Copier' 分别 �
 
 |场景|v2|v1
 |:-------|:-------|:-------
-|上传-分片默认值|5 MiB|通过参数设置
+|上传-分片默认值|6 MiB|通过参数设置
 |上传-并发默认值|3|1
 |上传-阈值|分片大小|无
 |上传-记录checkpoint|支持|支持
-|下载-分片默认值|5 MiB|通过参数设置
+|下载-分片默认值|6 MiB|通过参数设置
 |下载-并发默认值|3|1
 |下载-阈值|分片大小|无
 |下载-记录checkpoint|支持|支持

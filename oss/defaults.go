@@ -11,8 +11,8 @@ const (
 	// Min part size, 100KB, For UploadPart
 	MinPartSize int64 = 100 * 1024
 
-	// Default part size, 5M
-	DefaultPartSize int64 = 5 * 1024 * 1024
+	// Default part size, 6M
+	DefaultPartSize int64 = 6 * 1024 * 1024
 
 	// Default part size for uploader uploads data
 	DefaultUploadPartSize = DefaultPartSize

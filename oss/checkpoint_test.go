@@ -170,7 +170,7 @@ func TestDownloadCheckpointValid(t *testing.T) {
 		"Content-Length": {"344606"},
 		"Last-Modified":  {"Fri, 24 Feb 2012 06:07:48 GMT"},
 	}
-	partSize := DefaultDownloadPartSize
+	partSize := int64(5 * 1024 * 1024) //DefaultDownloadPartSize
 	cp := newDownloadCheckpoint(request, destFilePath, cpDir, header, partSize)
 
 	os.Remove(destFilePath)
@@ -385,7 +385,7 @@ func TestUploadCheckpointValid(t *testing.T) {
 		modTime: modTime,
 		size:    int64(100),
 	}
-	partSize := DefaultDownloadPartSize
+	partSize := int64(5 * 1024 * 1024) //DefaultUploadPartSize
 
 	cp := newUploadCheckpoint(request, destFilePath, cpDir, info, partSize)
 
