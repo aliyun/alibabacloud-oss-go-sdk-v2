@@ -10,7 +10,7 @@ const (
 	major = "1"
 	minor = "0"
 	patch = "0"
-	tag   = "-devpreview"
+	tag   = ""
 
 	SdkName = "alibabacloud-go-sdk-v2"
 )
