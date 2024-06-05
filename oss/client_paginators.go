@@ -20,6 +20,7 @@ type ListObjectsPaginator struct {
 	isTruncated bool
 }
 
+// Deprecated: This interface is deprecated and use NewListObjectsV2Paginator instead of.
 func (c *Client) NewListObjectsPaginator(request *ListObjectsRequest, optFns ...func(*PaginatorOptions)) *ListObjectsPaginator {
 	if request == nil {
 		request = &ListObjectsRequest{}

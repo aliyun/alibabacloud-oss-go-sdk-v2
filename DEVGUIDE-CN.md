@@ -726,7 +726,7 @@ cfg := oss.LoadDefaultConfig().
 |UseInternalEndpoint|是否使用内网域名访问，默认不使用|WithUseInternalEndpoint(true)
 |DisableUploadCRC64Check|上传时关闭CRC64校验，默认开启CRC64校验|WithDisableUploadCRC64Check(true)
 |DisableDownloadCRC64Check|下载时关闭CRC64校验，默认开启CRC64校验|WithDisableDownloadCRC64Check(true)
-
+|AdditionalHeaders| V4签名中指定选签的headers|WithAdditionalHeaders([]string{"content-length","content-type"})
 
 # 接口说明
 

@@ -91,6 +91,7 @@ func NewClient(cfg *Config, optFns ...func(*Options)) *Client {
 		CredentialsProvider: cfg.CredentialsProvider,
 		HttpClient:          cfg.HttpClient,
 		FeatureFlags:        FeatureFlagsDefault,
+		AdditionalHeaders:   cfg.AdditionalHeaders,
 	}
 	inner := innerOptions{
 		Log: NewLogger(ToInt(cfg.LogLevel), cfg.LogPrinter),
@@ -360,14 +361,15 @@ func (c *Client) sendRequest(ctx context.Context, input *OperationInput, opts *O
 	subResource, _ := input.OpMetadata.Get(signer.SubResource).([]string)
 	clockOffset := c.inner.ClockOffset
 	signingCtx := &signer.SigningContext{
-		Product:         Ptr(opts.Product),
-		Region:          Ptr(opts.Region),
-		Bucket:          input.Bucket,
-		Key:             input.Key,
-		Request:         request,
-		SubResource:     subResource,
-		AuthMethodQuery: opts.AuthMethod != nil && *opts.AuthMethod == AuthMethodQuery,
-		ClockOffset:     clockOffset,
+		Product:           Ptr(opts.Product),
+		Region:            Ptr(opts.Region),
+		Bucket:            input.Bucket,
+		Key:               input.Key,
+		Request:           request,
+		SubResource:       subResource,
+		AuthMethodQuery:   opts.AuthMethod != nil && *opts.AuthMethod == AuthMethodQuery,
+		ClockOffset:       clockOffset,
+		AdditionalHeaders: opts.AdditionalHeaders,
 	}
 
 	if date := request.Header.Get(HeaderOssDate); date != "" {
