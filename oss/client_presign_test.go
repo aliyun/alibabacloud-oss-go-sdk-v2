@@ -395,7 +395,8 @@ func TestPresignWithError(t *testing.T) {
 	cfg := LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewStaticCredentialsProvider("ak", "sk")).
 		WithRegion("cn-hangzhou").
-		WithEndpoint("oss-cn-hangzhou.aliyuncs.com")
+		WithEndpoint("oss-cn-hangzhou.aliyuncs.com").
+		WithSignatureVersion(SignatureVersionV1)
 
 	client := NewClient(cfg)
 
@@ -411,6 +412,13 @@ func TestPresignWithError(t *testing.T) {
 	_, err = client.Presign(context.TODO(), nil)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "null field, request")
+
+	getRequest := &GetObjectRequest{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("key+123"),
+	}
+	_, err = client.Presign(context.TODO(), getRequest, PresignExpires(8*24*time.Hour))
+	assert.Nil(t, err)
 
 	cfg = LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewStaticCredentialsProvider("ak", "sk")).
@@ -432,4 +440,12 @@ func TestPresignWithError(t *testing.T) {
 	_, err = client.Presign(context.TODO(), nil)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "null field, request")
+
+	getRequest = &GetObjectRequest{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("key+123"),
+	}
+	_, err = client.Presign(context.TODO(), getRequest, PresignExpires(8*24*time.Hour))
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "expires should be not greater than 604800(seven days)")
 }

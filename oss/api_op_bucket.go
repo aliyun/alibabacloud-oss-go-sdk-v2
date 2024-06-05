@@ -220,6 +220,7 @@ type CommonPrefix struct {
 }
 
 // ListObjects Lists the information about all objects in a bucket.
+// Deprecated: This interface is deprecated and use ListObjectsV2 instead of.
 func (c *Client) ListObjects(ctx context.Context, request *ListObjectsRequest, optFns ...func(*Options)) (*ListObjectsResult, error) {
 	var err error
 	if request == nil {
