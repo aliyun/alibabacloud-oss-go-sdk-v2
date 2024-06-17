@@ -45,6 +45,8 @@ var (
 	payerAccessKey_ = os.Getenv("OSS_TEST_PAYER_ACCESS_KEY_SECRET")
 	payerUID_       = os.Getenv("OSS_TEST_PAYER_UID")
 
+	cloudboxId_ = os.Getenv("OSS_TEST_CLOUDBOX_ID")
+
 	instance_ *Client
 	testOnce_ sync.Once
 
@@ -65,7 +67,14 @@ func getDefaultClient() *Client {
 			WithEndpoint(endpoint_).
 			WithSignatureVersion(getSignatrueVersion())
 
-		instance_ = NewClient(cfg)
+		var optFns []func(*Options)
+		if len(cloudboxId_) > 0 {
+			optFns = append(optFns, func(o *Options) {
+				o.Product = "oss-cloudbox"
+				o.Region = cloudboxId_
+			})
+		}
+		instance_ = NewClient(cfg, optFns...)
 	})
 	return instance_
 }
@@ -77,7 +86,15 @@ func getClient(region, endpoint string) *Client {
 		WithEndpoint(endpoint).
 		WithSignatureVersion(getSignatrueVersion())
 
-	return NewClient(cfg)
+	var optFns []func(*Options)
+	if len(cloudboxId_) > 0 {
+		optFns = append(optFns, func(o *Options) {
+			o.Product = "oss-cloudbox"
+			o.Region = cloudboxId_
+		})
+	}
+
+	return NewClient(cfg, optFns...)
 }
 
 func getClientUseStsToken(region, endpoint string) *Client {
@@ -94,7 +111,15 @@ func getClientUseStsToken(region, endpoint string) *Client {
 		WithEndpoint(endpoint).
 		WithSignatureVersion(getSignatrueVersion())
 
-	return NewClient(cfg)
+	var optFns []func(*Options)
+	if len(cloudboxId_) > 0 {
+		optFns = append(optFns, func(o *Options) {
+			o.Product = "oss-cloudbox"
+			o.Region = cloudboxId_
+		})
+	}
+
+	return NewClient(cfg, optFns...)
 }
 
 func getClientWithCredentialsProvider(region, endpoint string, cred credentials.CredentialsProvider) *Client {
@@ -104,7 +129,15 @@ func getClientWithCredentialsProvider(region, endpoint string, cred credentials.
 		WithEndpoint(endpoint).
 		WithSignatureVersion(getSignatrueVersion())
 
-	return NewClient(cfg)
+	var optFns []func(*Options)
+	if len(cloudboxId_) > 0 {
+		optFns = append(optFns, func(o *Options) {
+			o.Product = "oss-cloudbox"
+			o.Region = cloudboxId_
+		})
+	}
+
+	return NewClient(cfg, optFns...)
 }
 
 func getKmsID(region string) string {
