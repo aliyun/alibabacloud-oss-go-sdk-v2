@@ -94,8 +94,8 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	// Create the Paginator for the ListObjects operation.
-	p := client.NewListObjectsPaginator(&oss.ListObjectsRequest{
+	// Create the Paginator for the ListObjectsV2 operation.
+	p := client.NewListObjectsV2Paginator(&oss.ListObjectsV2Request{
 		Bucket: oss.Ptr(bucketName),
 	})
 
@@ -177,7 +177,7 @@ More example projects can be found in the `sample` folder
 > - Take list_buckets.go as an example，run `go run list_buckets.go -region cn-hangzhou` command。
 
 ## Resources
-[Developer Guide](DEVGUIDE-CN.md) - Use this document to learn how to get started and use this sdk.
+[Developer Guide](DEVGUIDE.md) - Use this document to learn how to get started and use this sdk.
 
 ## License
 > - Apache-2.0, see [license file](LICENSE)

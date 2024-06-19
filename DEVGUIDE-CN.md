@@ -82,18 +82,18 @@ import (
 )
 
 func main() {
-	var (
-		// 以华东1（杭州）为例
-		region = "cn-hangzhou"
+  var (
+    // 以华东1（杭州）为例
+    region = "cn-hangzhou"
 
-		// 以从环境变量中获取访问凭证为例
-		provider credentials.CredentialsProvider = credentials.NewEnvironmentVariableCredentialsProvider()
-	)
+    // 以从环境变量中获取访问凭证为例
+    provider credentials.CredentialsProvider = credentials.NewEnvironmentVariableCredentialsProvider()
+  )
 
-	cfg := oss.LoadDefaultConfig().
-		WithCredentialsProvider(provider).
-		WithRegion(region)
-}
+  cfg := oss.LoadDefaultConfig().
+    WithCredentialsProvider(provider).
+    WithRegion(region)
+  }
 ```
 
 ## 区域
@@ -103,7 +103,7 @@ SDK 没有默认区域，您需要加载配置时使用`config.WithRegion`作为
 cfg := oss.LoadDefaultConfig().WithRegion("cn-hangzhou")
 ```
 
-说明：该SDK默认使用v4签名，所以必须指定该参数。
+>**说明**：该SDK默认使用v4签名，所以必须指定该参数。
 
 ## 凭证
 
@@ -1642,7 +1642,7 @@ if header, ok := info.Sys().(http.Header); ok {
 > </br>使用客户端加密功能时，您需要对主密钥的完整性和正确性负责。
 > </br>在对加密数据进行复制或者迁移时，您需要对加密元数据的完整性和正确性负责。
 
-如果您需要了解OSS客户端加密实现的原理，请参考OSS用户指南中的[客户端加密](https://help.aliyun.com/zh/oss/user-guide/client-side-encryption)。
+如果您需要了解OSS客户端加密实现的原理，请参考OSS用户指南中的[客户端加密](https://www.alibabacloud.com/help/zh/oss/user-guide/client-side-encryption)。
 
 使用客户端加密，首先您需要实例化加密客户端，然后调用其提供的接口进行操作。您的对象将作为请求的一部分自动加密和解密。
 
