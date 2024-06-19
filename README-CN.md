@@ -94,8 +94,8 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	// Create the Paginator for the ListObjects operation.
-	p := client.NewListObjectsPaginator(&oss.ListObjectsRequest{
+	// Create the Paginator for the ListObjectsV2 operation.
+	p := client.NewListObjectsV2Paginator(&oss.ListObjectsV2Request{
 		Bucket: oss.Ptr(bucketName),
 	})
 
