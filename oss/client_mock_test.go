@@ -13983,3 +13983,60 @@ func TestInvokeOperation_RetryMaxAttempts(t *testing.T) {
 		assert.Equal(t, retryAttemptsOp, testRetryMaxAttemptsRevc)
 	}
 }
+
+var testMockUserAgentCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutBucketRequest
+	CheckOutputFn  func(t *testing.T, o *PutBucketResult, err error)
+}{
+	{
+		403,
+		map[string]string{
+			"x-oss-request-id": "65467C42E001B4333337****",
+			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(
+			`<?xml version="1.0" encoding="UTF-8"?>
+			<Error>
+				<Code>SignatureDoesNotMatch</Code>
+				<Message>The request signature we calculated does not match the signature you provided. Check your key and signing method.</Message>
+				<RequestId>65467C42E001B4333337****</RequestId>
+				<SignatureProvided>RizTbeKC/QlwxINq8xEdUPowc84=</SignatureProvided>
+				<EC>0002-00000040</EC>
+			</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/bucket", r.URL.String())
+			assert.Contains(t, r.Header.Get("User-Agent"), "/my-agent")
+			assert.True(t, strings.HasSuffix(r.Header.Get("User-Agent"), "/my-agent"))
+		},
+		&PutBucketRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *PutBucketResult, err error) {
+		},
+	},
+}
+
+func TestMockUserAgentCases(t *testing.T) {
+	for _, c := range testMockUserAgentCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL).
+			WithUserAgent("my-agent")
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutBucket(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}

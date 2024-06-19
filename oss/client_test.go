@@ -1104,3 +1104,15 @@ func TestRetryMaxAttempts(t *testing.T) {
 	assert.NotNil(t, c.options.RetryMaxAttempts)
 	assert.Equal(t, 5, c.retryMaxAttempts(nil))
 }
+
+func TestUserAgent(t *testing.T) {
+	cfg := NewConfig()
+	c := NewClient(cfg)
+	assert.NotEmpty(t, defaultUserAgent)
+	assert.Equal(t, defaultUserAgent, c.inner.UserAgent)
+
+	cfg = NewConfig()
+	cfg.UserAgent = Ptr("my-user-agent")
+	c = NewClient(cfg)
+	assert.Equal(t, defaultUserAgent+"/my-user-agent", c.inner.UserAgent)
+}

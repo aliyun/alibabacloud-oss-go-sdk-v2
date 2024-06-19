@@ -106,6 +106,9 @@ type Config struct {
 
 	// Additional signable headers.
 	AdditionalHeaders []string
+
+	// The optional user specific identifier appended to the User-Agent header.
+	UserAgent *string
 }
 
 func NewConfig() *Config {
@@ -258,5 +261,10 @@ func (c *Config) WithDisableDownloadCRC64Check(value bool) *Config {
 
 func (c *Config) WithAdditionalHeaders(value []string) *Config {
 	c.AdditionalHeaders = value
+	return c
+}
+
+func (c *Config) WithUserAgent(value string) *Config {
+	c.UserAgent = Ptr(value)
 	return c
 }

@@ -727,6 +727,7 @@ Supported configuration parameters
 | DisableUploadCRC64Check | Specifies that CRC-64 is disabled during object upload. By default, CRC-64 is enabled. | WithDisableUploadCRC64Check(true) |
 | DisableDownloadCRC64Check | Specifies that CRC-64 is disabled during object download. By default, CRC-64 is enabled. | WithDisableDownloadCRC64Check(true) |
 |AdditionalHeaders| Specifies that additional headers to be signed. It's valid in V4 signature.|WithAdditionalHeaders([]string{"content-length"})
+|UserAgent|Specifies user identifier appended to the User-Agent header.|WithUserAgent("user identifier")
 
 
 # API operations
