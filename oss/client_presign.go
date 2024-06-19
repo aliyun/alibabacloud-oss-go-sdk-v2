@@ -68,7 +68,6 @@ func (c *Client) Presign(ctx context.Context, request any, optFns ...func(*Presi
 	} else if options.Expires > 0 {
 		input.OpMetadata.Set(signer.SignTime, time.Now().Add(options.Expires))
 	}
-
 	output, err := c.invokeOperation(ctx, &input, defaultPresignOptions)
 	if err != nil {
 		return nil, err
@@ -155,6 +154,11 @@ func (c *Client) unmarshalPresignOutput(result *PresignResult, output *Operation
 	if signTime, ok := output.OpMetadata.Get(signer.SignTime).(time.Time); ok {
 		result.Expiration = signTime
 	}
-
+	_, ok := c.options.Signer.(*signer.SignerV4)
+	if ok {
+		if !result.Expiration.IsZero() && (result.Expiration.After(time.Now().Add(7 * 24 * time.Hour))) {
+			return fmt.Errorf("expires should be not greater than 604800(seven days)")
+		}
+	}
 	return nil
 }
