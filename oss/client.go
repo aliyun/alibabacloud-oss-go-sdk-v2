@@ -75,6 +75,9 @@ type innerOptions struct {
 
 	// Logger
 	Log Logger
+
+	// UserAgent
+	UserAgent string
 }
 
 type Client struct {
@@ -94,7 +97,8 @@ func NewClient(cfg *Config, optFns ...func(*Options)) *Client {
 		AdditionalHeaders:   cfg.AdditionalHeaders,
 	}
 	inner := innerOptions{
-		Log: NewLogger(ToInt(cfg.LogLevel), cfg.LogPrinter),
+		Log:       NewLogger(ToInt(cfg.LogLevel), cfg.LogPrinter),
+		UserAgent: buildUserAgent(cfg),
 	}
 
 	resolveEndpoint(cfg, &options)
@@ -249,6 +253,14 @@ func resolveFeatureFlags(cfg *Config, o *Options) {
 	}
 }
 
+func buildUserAgent(cfg *Config) string {
+	if cfg.UserAgent == nil {
+		return defaultUserAgent
+	}
+
+	return fmt.Sprintf("%s/%s", defaultUserAgent, ToString(cfg.UserAgent))
+}
+
 func (c *Client) invokeOperation(ctx context.Context, input *OperationInput, optFns []func(*Options)) (output *OperationOutput, err error) {
 	if c.getLogLevel() >= LogInfo {
 		c.inner.Log.Infof("InvokeOperation Start: input[%p], OpName:%s, Bucket:%s, Key:%s",
@@ -337,7 +349,7 @@ func (c *Client) sendRequest(ctx context.Context, input *OperationInput, opts *O
 			request.Header.Add(k, v)
 		}
 	}
-	request.Header.Set("User-Agent", defaultUserAgent)
+	request.Header.Set("User-Agent", c.inner.UserAgent)
 
 	// body
 	var body io.Reader

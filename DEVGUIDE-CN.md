@@ -727,6 +727,7 @@ cfg := oss.LoadDefaultConfig().
 |DisableUploadCRC64Check|上传时关闭CRC64校验，默认开启CRC64校验|WithDisableUploadCRC64Check(true)
 |DisableDownloadCRC64Check|下载时关闭CRC64校验，默认开启CRC64校验|WithDisableDownloadCRC64Check(true)
 |AdditionalHeaders|指定额外的签名请求头，V4签名下有效|WithAdditionalHeaders([]string{"content-length"})
+|UserAgent|指定额外的User-Agent信息|WithUserAgent("user identifier")
 
 # 接口说明
 

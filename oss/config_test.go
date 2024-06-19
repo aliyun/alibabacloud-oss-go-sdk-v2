@@ -41,6 +41,9 @@ func TestConfigDefault(t *testing.T) {
 	assert.Nil(t, config.DisableUploadCRC64Check)
 	assert.Nil(t, config.DisableDownloadCRC64Check)
 
+	assert.Nil(t, config.AdditionalHeaders)
+	assert.Nil(t, config.UserAgent)
+
 	config.WithSignatureVersion(SignatureVersionV1)
 	assert.Equal(t, SignatureVersionV1, *config.SignatureVersion)
 
@@ -116,6 +119,15 @@ func TestConfigDefault(t *testing.T) {
 
 	config.WithDisableDownloadCRC64Check(true)
 	assert.Equal(t, true, *config.DisableDownloadCRC64Check)
+
+	config.WithAdditionalHeaders([]string{"content-length"})
+	assert.NotNil(t, config.AdditionalHeaders)
+	assert.Len(t, config.AdditionalHeaders, 1)
+	assert.Equal(t, "content-length", config.AdditionalHeaders[0])
+
+	config.WithUserAgent("custom-ua")
+	assert.NotNil(t, config.UserAgent)
+	assert.Equal(t, "custom-ua", *config.UserAgent)
 }
 
 func TestLogLevelEnvironmentVariable(t *testing.T) {
