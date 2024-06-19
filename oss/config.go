@@ -103,6 +103,9 @@ type Config struct {
 	// This feature only takes effect for Downloader.DownloadFile, GetObjectToFile
 	// Set this to `true` to disable this feature.
 	DisableDownloadCRC64Check *bool
+
+	// Additional signable headers.
+	AdditionalHeaders []string
 }
 
 func NewConfig() *Config {
@@ -250,5 +253,10 @@ func (c *Config) WithDisableUploadCRC64Check(value bool) *Config {
 
 func (c *Config) WithDisableDownloadCRC64Check(value bool) *Config {
 	c.DisableDownloadCRC64Check = Ptr(value)
+	return c
+}
+
+func (c *Config) WithAdditionalHeaders(value []string) *Config {
+	c.AdditionalHeaders = value
 	return c
 }

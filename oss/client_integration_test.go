@@ -3669,6 +3669,135 @@ func TestPresign(t *testing.T) {
 	deleteBucket(bucketName, t)
 }
 
+func TestPresignExtra(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	//TODO
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	// PutObjRequest
+	body := randLowStr(1000)
+	objectName := objectNamePrefix + randLowStr(6)
+	putObjRequest := &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	result, err := client.Presign(context.TODO(), putObjRequest)
+	assert.Nil(t, err)
+	req, err := http.NewRequest(result.Method, result.URL, strings.NewReader(body))
+	assert.Nil(t, err)
+	c := &http.Client{}
+	resp, err := c.Do(req)
+	assert.Equal(t, resp.StatusCode, 200)
+
+	cfgV1 := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessID_, accessKey_)).
+		WithRegion(region_).
+		WithEndpoint(endpoint_).
+		WithSignatureVersion(SignatureVersionV1).WithAdditionalHeaders([]string{"content-length"})
+
+	clientV1 := NewClient(cfgV1)
+	getObjRequest := &GetObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	expiration := time.Now().Add(1 * time.Second)
+	result, err = clientV1.Presign(context.TODO(), getObjRequest, PresignExpiration(expiration))
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", result.Method)
+	assert.NotEmpty(t, result.Expiration)
+	req, err = http.NewRequest(result.Method, result.URL, nil)
+	assert.Nil(t, err)
+	resp, _ = c.Do(req)
+	assert.Equal(t, resp.StatusCode, 200)
+	data, _ := io.ReadAll(resp.Body)
+	assert.Equal(t, string(data), body)
+
+	getObjRequest = &GetObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	expiration = time.Now().Add(-1 * time.Second)
+	result, err = clientV1.Presign(context.TODO(), getObjRequest, PresignExpiration(expiration))
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", result.Method)
+	assert.NotEmpty(t, result.Expiration)
+	req, err = http.NewRequest(result.Method, result.URL, nil)
+	assert.Nil(t, err)
+	resp, _ = c.Do(req)
+	assert.Equal(t, resp.StatusCode, 403)
+
+	result, err = clientV1.Presign(context.TODO(), putObjRequest)
+	assert.Nil(t, err)
+	req, err = http.NewRequest(result.Method, result.URL, strings.NewReader(body))
+	assert.Nil(t, err)
+	resp, err = c.Do(req)
+	assert.Equal(t, resp.StatusCode, 200)
+
+	cfgV4 := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessID_, accessKey_)).
+		WithRegion(region_).
+		WithEndpoint(endpoint_).
+		WithSignatureVersion(SignatureVersionV4).WithAdditionalHeaders([]string{"content-length"})
+
+	clientV4 := NewClient(cfgV4)
+	getObjRequest = &GetObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	expiration = time.Now().Add(1 * time.Second)
+	result, err = clientV4.Presign(context.TODO(), getObjRequest, PresignExpiration(expiration))
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", result.Method)
+	assert.NotEmpty(t, result.Expiration)
+	req, err = http.NewRequest(result.Method, result.URL, nil)
+	assert.Nil(t, err)
+	resp, _ = c.Do(req)
+	assert.Equal(t, resp.StatusCode, 200)
+	data, _ = io.ReadAll(resp.Body)
+	assert.Equal(t, string(data), body)
+
+	getObjRequest = &GetObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	expiration = time.Now().Add(8 * 24 * time.Hour)
+	result, err = clientV4.Presign(context.TODO(), getObjRequest, PresignExpiration(expiration))
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "expires should be not greater than 604800(seven days)")
+
+	putObjRequest = &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		RequestCommon: RequestCommon{
+			Headers: map[string]string{
+				"content-length": "1000",
+			},
+		},
+	}
+	result, err = clientV4.Presign(context.TODO(), putObjRequest)
+	assert.Nil(t, err)
+	req, err = http.NewRequest(result.Method, result.URL, strings.NewReader(body))
+	assert.Nil(t, err)
+	resp, err = c.Do(req)
+	assert.Equal(t, resp.StatusCode, 200)
+
+	req, err = http.NewRequest(result.Method, result.URL, strings.NewReader("hi oss"))
+	assert.Nil(t, err)
+	resp, err = c.Do(req)
+	assert.Equal(t, resp.StatusCode, 403)
+
+	deleteBucket(bucketName, t)
+}
+
 func TestPresignWithStsToken(t *testing.T) {
 	after := before(t)
 	defer after(t)
