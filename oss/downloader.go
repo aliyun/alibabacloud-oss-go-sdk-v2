@@ -467,6 +467,11 @@ func (d *downloaderDelegate) download() (*DownloadResult, error) {
 		go trackerFn(cpCh)
 	}
 
+	// Consume downloaded data
+	if d.request.ProgressFn != nil && d.written > 0 {
+		d.request.ProgressFn(d.written, d.written, d.sizeInBytes)
+	}
+
 	// Queue the next range of bytes to read.
 	for getErrFn() == nil {
 		if d.pos >= d.epos {
