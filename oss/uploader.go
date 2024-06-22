@@ -161,10 +161,11 @@ type uploaderDelegate struct {
 	filePath string
 	fileInfo os.FileInfo
 
-	// for resume upload
-	uploadId   string
-	partNumber int32
-	cseContext *EncryptionMultiPartContext
+	// for resumable upload
+	uploadId      string
+	partNumber    int32
+	cseContext    *EncryptionMultiPartContext
+	uploadedParts []Part
 
 	partPool byteSlicePool
 
@@ -278,6 +279,7 @@ func (u *uploaderDelegate) adjustSource() error {
 			hashCRC64       uint64 = 0
 			page            *ListPartsResult
 			err             error
+			uploadedParts   []Part
 		)
 	outerLoop:
 
@@ -293,6 +295,7 @@ func (u *uploaderDelegate) adjustSource() error {
 					break outerLoop
 				}
 				checkPartNumber++
+				uploadedParts = append(uploadedParts, p)
 				if updateCRC64 && p.HashCRC64 != nil {
 					value, _ := strconv.ParseUint(ToString(p.HashCRC64), 10, 64)
 					hashCRC64 = CRC64Combine(hashCRC64, value, uint64(p.Size))
@@ -317,6 +320,7 @@ func (u *uploaderDelegate) adjustSource() error {
 		u.readerPos = newOffset
 		u.hashCRC64 = hashCRC64
 		u.cseContext = cseContext
+		u.uploadedParts = uploadedParts
 	}
 	return nil
 }
@@ -594,6 +598,18 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 		qnum int32 = startPartNum
 		qerr error = nil
 	)
+
+	// consume uploaded parts
+	if u.readerPos > 0 {
+		for _, p := range u.uploadedParts {
+			parts = append(parts, UploadPart{PartNumber: p.PartNumber, ETag: p.ETag})
+		}
+		if u.request.ProgressFn != nil {
+			u.transferred = u.readerPos
+			u.request.ProgressFn(u.readerPos, u.transferred, u.totalSize)
+		}
+	}
+
 	for getErrFn() == nil && qerr == nil {
 		var (
 			reader       io.ReadSeeker
