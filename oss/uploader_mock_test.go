@@ -37,6 +37,7 @@ type uploaderMockTracker struct {
 	putObjectErr   bool
 	ListPartsErr   bool
 	crcPartInvalid []bool
+	CompleteMPData []byte
 }
 
 func testSetupUploaderMockServer(t *testing.T, tracker *uploaderMockTracker) *httptest.Server {
@@ -99,6 +100,8 @@ func testSetupUploaderMockServer(t *testing.T, tracker *uploaderMockTracker) *ht
 					<Key>key</Key>
 					<ETag>etag</ETag>
 			  	</CompleteMultipartUploadResult>`)
+
+				tracker.CompleteMPData, _ = io.ReadAll(r.Body)
 
 				hash := NewCRC64(0)
 				mr := NewMultiBytesReader(tracker.saveDate)
@@ -1514,6 +1517,8 @@ func TestMockUploaderUploadFileEnableCheckpointUseCp(t *testing.T) {
 	assert.Equal(t, int32(3), atomic.LoadInt32(&tracker.uploadPartCnt))
 	//FeatureAutoDetectMimeType is enabled default
 	assert.Equal(t, "application/octet-stream", tracker.contentType)
+	assert.Equal(t, strings.Count(string(tracker.CompleteMPData), "<PartNumber>"), 6)
+	assert.Equal(t, strings.Count(string(tracker.CompleteMPData), "<PartNumber>1</PartNumber>"), 1)
 
 	assert.NoFileExists(t, cpFile)
 
@@ -1913,4 +1918,145 @@ func TestMockUploadSinglePartFromFileWithProgress(t *testing.T) {
 	assert.Nil(t, result.UploadId)
 	assert.Equal(t, dataCrc64ecma, *result.HashCRC64)
 	assert.Equal(t, n, int64(length))
+}
+
+func TestMockUploaderUploadFileEnableCheckpointUseCpProgress(t *testing.T) {
+	partSize := int64(100 * 1024)
+	length := 5*100*1024 + 123
+	partsNum := length/int(partSize) + 1
+	tracker := &uploaderMockTracker{
+		partNum:       partsNum,
+		saveDate:      make([][]byte, partsNum),
+		checkTime:     make([]time.Time, partsNum),
+		timeout:       make([]time.Duration, partsNum),
+		uploadPartErr: make([]bool, partsNum),
+	}
+
+	data := []byte(randStr(length))
+	hash := NewCRC64(0)
+	hash.Write(data)
+	dataCrc64ecma := fmt.Sprint(hash.Sum64())
+
+	localFile := "upload-file-with-cp-no-surfix"
+	absPath, _ := filepath.Abs(localFile)
+	hashmd5 := md5.New()
+	hashmd5.Write([]byte(absPath))
+	srcHash := hex.EncodeToString(hashmd5.Sum(nil))
+	cpFile := srcHash + "-d36fc07f5d963b319b1b48e20a9b8ae9.ucp"
+
+	createFileFromByte(t, localFile, data)
+	defer func() {
+		os.Remove(localFile)
+	}()
+
+	server := testSetupUploaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+
+	u := NewUploader(client,
+		func(uo *UploaderOptions) {
+			uo.ParallelNum = 5
+			uo.PartSize = partSize
+			uo.CheckpointDir = "."
+			uo.EnableCheckpoint = true
+		},
+	)
+	assert.Equal(t, 5, u.options.ParallelNum)
+	assert.Equal(t, partSize, u.options.PartSize)
+
+	// Case 1, fail in part number 4
+	tracker.saveDate = make([][]byte, partsNum)
+	tracker.checkTime = make([]time.Time, partsNum)
+	tracker.timeout = make([]time.Duration, partsNum)
+	tracker.uploadPartErr = make([]bool, partsNum)
+	tracker.timeout[0] = 1 * time.Second
+	tracker.timeout[2] = 500 * time.Millisecond
+	tracker.uploadPartErr[3] = true
+	os.Remove(cpFile)
+
+	inc := int64(0)
+	result, err := u.UploadFile(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("key"),
+		ProgressFn: func(increment, transferred, total int64) {
+			inc += increment
+			//fmt.Printf("increment:%#v, transferred:%#v, total:%#v\n", increment, transferred, total)
+		},
+	}, localFile)
+
+	assert.NotNil(t, err)
+	assert.Nil(t, result)
+	var uerr *UploadError
+	errors.As(err, &uerr)
+	assert.NotNil(t, uerr)
+	assert.Equal(t, "uploadId-1234", uerr.UploadId)
+	assert.Equal(t, "oss://bucket/key", uerr.Path)
+
+	var serr *ServiceError
+	errors.As(err, &serr)
+	assert.NotNil(t, serr)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+
+	assert.NotNil(t, tracker.saveDate[0])
+	assert.NotNil(t, tracker.saveDate[1])
+	assert.NotNil(t, tracker.saveDate[2])
+	assert.Nil(t, tracker.saveDate[3])
+	assert.NotNil(t, tracker.saveDate[4])
+
+	assert.FileExists(t, cpFile)
+
+	assert.Less(t, inc, int64(length))
+
+	//retry
+	time.Sleep(2 * time.Second)
+	retryTime := time.Now()
+	tracker.uploadPartErr[3] = false
+	atomic.StoreInt32(&tracker.uploadPartCnt, 0)
+
+	inc = 0
+	result, err = u.UploadFile(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("key"),
+		ProgressFn: func(increment, transferred, total int64) {
+			inc += increment
+			//fmt.Printf("increment:%#v, transferred:%#v, total:%#v\n", increment, transferred, total)
+		},
+	}, localFile)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	assert.True(t, tracker.checkTime[0].Before(retryTime))
+	assert.True(t, tracker.checkTime[1].Before(retryTime))
+	assert.True(t, tracker.checkTime[2].Before(retryTime))
+	assert.True(t, tracker.checkTime[3].After(retryTime))
+	assert.True(t, tracker.checkTime[4].After(retryTime))
+	assert.True(t, tracker.checkTime[5].After(retryTime))
+
+	mr := NewMultiBytesReader(tracker.saveDate)
+	all, err := io.ReadAll(mr)
+	assert.Nil(t, err)
+
+	hashall := NewCRC64(0)
+	hashall.Write(all)
+	allCrc64ecma := fmt.Sprint(hashall.Sum64())
+	assert.Equal(t, dataCrc64ecma, allCrc64ecma)
+
+	assert.Equal(t, int32(0), atomic.LoadInt32(&tracker.putObjectCnt))
+	assert.Equal(t, int32(3), atomic.LoadInt32(&tracker.uploadPartCnt))
+	//FeatureAutoDetectMimeType is enabled default
+	assert.Equal(t, "application/octet-stream", tracker.contentType)
+	assert.Equal(t, strings.Count(string(tracker.CompleteMPData), "<PartNumber>"), 6)
+	assert.Equal(t, strings.Count(string(tracker.CompleteMPData), "<PartNumber>1</PartNumber>"), 1)
+
+	assert.NoFileExists(t, cpFile)
+	assert.Equal(t, int64(length), inc)
 }
