@@ -1361,3 +1361,126 @@ func TestMockDownloaderWithProgress(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, n, int64(length))
 }
+
+func TestMockDownloaderDownloadFileEnableCheckpointProgress(t *testing.T) {
+	partSize := 128
+	length := 1234
+	data := []byte(randStr(length))
+	gmtTime := getNowGMT()
+	datasum := func() uint64 {
+		h := NewCRC64(0)
+		h.Write(data)
+		return h.Sum64()
+	}()
+	tracker := &downloaderMockTracker{
+		lastModified: gmtTime,
+		data:         data,
+		failPartNum:  6,
+		partSize:     int32(partSize),
+	}
+	server := testSetupDownloaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+	d := NewDownloader(client)
+	assert.NotNil(t, d)
+	assert.NotNil(t, d.client)
+
+	localFile := "check-point-to-check-no-surfix"
+	localFileTmep := "check-point-to-check-no-surfix" + TempFileSuffix
+	absPath, _ := filepath.Abs(localFileTmep)
+	hashmd5 := md5.New()
+	hashmd5.Reset()
+	hashmd5.Write([]byte(absPath))
+	destHash := hex.EncodeToString(hashmd5.Sum(nil))
+	cpFileName := "ddaf063c8f69766ecc8e4a93b6402e3e-" + destHash + ".dcp"
+	defer func() {
+		os.Remove(localFile)
+	}()
+	os.Remove(localFile)
+	os.Remove(localFileTmep)
+	os.Remove(cpFileName)
+	inc := int64(0)
+	_, err := d.DownloadFile(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("key"),
+			ProgressFn: func(increment, transferred, total int64) {
+				inc += increment
+			},
+		},
+		localFile,
+		func(do *DownloaderOptions) {
+			do.PartSize = int64(partSize)
+			do.ParallelNum = 3
+			do.CheckpointDir = "."
+			do.EnableCheckpoint = true
+		})
+
+	assert.NotNil(t, err)
+	assert.True(t, FileExists(localFileTmep))
+	assert.True(t, FileExists(cpFileName))
+	assert.Less(t, inc, int64(length))
+
+	//load CheckPointFile
+	content, err := os.ReadFile(cpFileName)
+	assert.Nil(t, err)
+	dcp := downloadCheckpoint{}
+	err = json.Unmarshal(content, &dcp.Info)
+	assert.Nil(t, err)
+
+	assert.Equal(t, "fba9dede5f27731c9771645a3986****", dcp.Info.Data.ObjectMeta.ETag)
+	assert.Equal(t, gmtTime, dcp.Info.Data.ObjectMeta.LastModified)
+	assert.Equal(t, int64(length), dcp.Info.Data.ObjectMeta.Size)
+
+	assert.Equal(t, "oss://bucket/key", dcp.Info.Data.ObjectInfo.Name)
+	assert.Equal(t, "", dcp.Info.Data.ObjectInfo.VersionId)
+	assert.Equal(t, "", dcp.Info.Data.ObjectInfo.Range)
+
+	abslocalFileTmep, _ := filepath.Abs(localFileTmep)
+	assert.Equal(t, abslocalFileTmep, dcp.Info.Data.FilePath)
+	assert.Equal(t, int64(partSize), dcp.Info.Data.PartSize)
+
+	assert.Equal(t, int64(tracker.failPartNum*tracker.partSize), dcp.Info.Data.DownloadInfo.Offset)
+	h := NewCRC64(0)
+	h.Write(data[0:int(dcp.Info.Data.DownloadInfo.Offset)])
+	assert.Equal(t, h.Sum64(), dcp.Info.Data.DownloadInfo.CRC64)
+
+	// resume from checkpoint
+	tracker.failPartNum = 0
+	inc = int64(0)
+	result, err := d.DownloadFile(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("key"),
+			ProgressFn: func(increment, transferred, total int64) {
+				inc += increment
+			},
+		},
+		localFile,
+		func(do *DownloaderOptions) {
+			do.PartSize = int64(partSize)
+			do.ParallelNum = 3
+			do.CheckpointDir = "."
+			do.EnableCheckpoint = true
+			do.VerifyData = true
+		})
+
+	assert.Nil(t, err)
+	assert.Equal(t, int64(length), result.Written)
+
+	hash := NewCRC64(0)
+	rfile, err := os.Open(localFile)
+	io.Copy(hash, rfile)
+	rfile.Close()
+	assert.Equal(t, datasum, hash.Sum64())
+	assert.Equal(t, dcp.Info.Data.DownloadInfo.Offset, tracker.gotMinOffset)
+	assert.Equal(t, int64(length), inc)
+}
