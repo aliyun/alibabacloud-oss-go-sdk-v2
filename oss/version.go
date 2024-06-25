@@ -9,7 +9,7 @@ import (
 const (
 	major = "1"
 	minor = "0"
-	patch = "1"
+	patch = "2"
 	tag   = ""
 
 	SdkName = "alibabacloud-go-sdk-v2"

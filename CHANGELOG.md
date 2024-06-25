@@ -1,5 +1,10 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.0.2 日期：2024-06-25
+### 变更内容
+- Fix：resumable download/upload progress bug
+- Fix：resumable upload bug
+ 
 ## 版本号：v1.0.1 日期：2024-06-21
 ### 变更内容
 - Feature：Add additional Headers opition
