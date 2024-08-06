@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/hmac"
+	"crypto/md5"
 	"crypto/sha1"
 	"crypto/tls"
 	"encoding/base64"
@@ -423,6 +424,86 @@ func TestInvokeOperation(t *testing.T) {
 
 	_, err = client.InvokeOperation(context.TODO(), nil)
 	assert.NotNil(t, err)
+}
+
+func TestInvokeOperation_BucketPolicy(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	//TODO
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	calcMd5 := func(input string) string {
+		if len(input) == 0 {
+			return "1B2M2Y8AsgTpgAmY7PhCfg=="
+		}
+		h := md5.New()
+		h.Write([]byte(input))
+		return base64.StdEncoding.EncodeToString(h.Sum(nil))
+	}
+
+	// PutBucketPolicy
+	policy := `{"Version":"1","Statement":[{"Action":["oss:PutObject","oss:GetObject"],"Effect":"Allow","Resource":["acs:oss:*:*:*"]}]}`
+	input := &OperationInput{
+		OpName: "PutBucketPolicy",
+		Method: "PUT",
+		Parameters: map[string]string{
+			"policy": "",
+		},
+		// Add Content-md5
+		Headers: map[string]string{
+			"Content-MD5": calcMd5(policy),
+		},
+		Body:   strings.NewReader(policy),
+		Bucket: Ptr(bucketName),
+	}
+
+	output, err := client.InvokeOperation(context.TODO(), input)
+	assert.NoError(t, err)
+
+	// GetBucketPolicy
+	input = &OperationInput{
+		OpName: "GetBucketPolicy",
+		Method: "GET",
+		Parameters: map[string]string{
+			"policy": "",
+		},
+		Bucket: Ptr(bucketName),
+	}
+
+	output, err = client.InvokeOperation(context.TODO(), input)
+	assert.NoError(t, err)
+	policy1, err := io.ReadAll(output.Body)
+	assert.NoError(t, err)
+	if output.Body != nil {
+		output.Body.Close()
+	}
+	assert.NotEmpty(t, policy1)
+
+	// DeleteBucketPolicy
+	input = &OperationInput{
+		OpName: "DeleteBucketPolicy",
+		Method: "DELETE",
+		Parameters: map[string]string{
+			"policy": "",
+		},
+		Bucket: Ptr(bucketName),
+	}
+	output, err = client.InvokeOperation(context.TODO(), input)
+	assert.NoError(t, err)
+	// discard body
+	_, err = io.ReadAll(output.Body)
+	assert.NoError(t, err)
+	if output.Body != nil {
+		output.Body.Close()
+	}
 }
 
 func TestListBuckets(t *testing.T) {
