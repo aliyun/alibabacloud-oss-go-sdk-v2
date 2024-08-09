@@ -577,6 +577,13 @@ type BucketInfo struct {
 
 	// The container that stores the logs.
 	BucketPolicy BucketPolicy `xml:"BucketPolicy"`
+
+	// The description of the bucket.
+	Comment *string `xml:"Comment"`
+
+	// Indicates whether Block Public Access is enabled for the bucket.
+	// true: Block Public Access is enabled. false: Block Public Access is disabled.
+	BlockPublicAccess bool `xml:"BlockPublicAccess"`
 }
 
 type SSERule struct {
@@ -743,6 +750,22 @@ type GetBucketStatResult struct {
 
 	// The number of Cold Archive objects in the bucket.
 	ColdArchiveObjectCount int64 `xml:"ColdArchiveObjectCount"`
+
+	// The number of Deep Cold Archive objects in the bucket.
+	DeepColdArchiveObjectCount int64 `xml:"DeepColdArchiveObjectCount"`
+
+	// The billed storage usage of Deep Cold Archive objects in the bucket. Unit: bytes.
+	DeepColdArchiveStorage int64 `xml:"DeepColdArchiveStorage"`
+
+	// The actual storage usage of Deep Cold Archive objects in the bucket. Unit: bytes.
+	DeepColdArchiveRealStorage int64 `xml:"DeepColdArchiveRealStorage"`
+
+	// The number of multipart parts in the bucket.
+	MultipartPartCount int64 `xml:"MultipartPartCount"`
+
+	// The number of delete marker in the bucket.
+	DeleteMarkerCount int64 `xml:"DeleteMarkerCount"`
+
 	ResultCommon
 }
 
