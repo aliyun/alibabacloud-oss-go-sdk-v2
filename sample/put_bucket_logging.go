@@ -16,7 +16,7 @@ var (
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
-	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
+	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
 }
 
 func main() {
@@ -37,24 +37,18 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.ListObjectVersionsRequest{
+	putRequest := &oss.PutBucketLoggingRequest{
 		Bucket: oss.Ptr(bucketName),
+		BucketLoggingStatus: &oss.BucketLoggingStatus{
+			LoggingEnabled: &oss.LoggingEnabled{
+				TargetBucket: oss.Ptr("TargetBucket"),
+			},
+		},
 	}
-	p := client.NewListObjectVersionsPaginator(request)
-
-	var i int
-	log.Println("Object Versions:")
-	for p.HasNext() {
-		i++
-
-		page, err := p.NextPage(context.TODO())
-		if err != nil {
-			log.Fatalf("failed to get page %v, %v", i, err)
-		}
-
-		// Log the objects found
-		for _, obj := range page.ObjectVersions {
-			log.Printf("Object:%v, VersionId:%v, IsLatest:%v, Size:%v, ETag:%v, Storage Class:%v,  Last Modified:%v\n", oss.ToString(obj.Key), oss.ToString(obj.VersionId), obj.IsLatest, obj.Size, oss.ToString(obj.ETag), oss.ToString(obj.StorageClass), oss.ToTime(obj.LastModified))
-		}
+	putResult, err := client.PutBucketLogging(context.TODO(), putRequest)
+	if err != nil {
+		log.Fatalf("failed to put bucket logging %v", err)
 	}
+
+	log.Printf("put bucket logging result:%#v\n", putResult)
 }

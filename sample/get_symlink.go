@@ -28,9 +28,6 @@ func main() {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, region required")
 	}
-	if len(endpoint) == 0 {
-		endpoint = fmt.Sprintf("oss-%v.aliyuncs.com", region)
-	}
 	if len(bucketName) == 0 {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, bucket name required")

@@ -40,10 +40,6 @@ func main() {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, object name required")
 	}
-	if len(uploadId) == 0 {
-		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, upload id required")
-	}
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region)

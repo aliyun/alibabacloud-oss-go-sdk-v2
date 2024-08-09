@@ -42,8 +42,8 @@ func main() {
 	}
 	getResult, err := client.GetBucketRequestPayment(context.TODO(), getRequest)
 	if err != nil {
-		log.Fatalf("failed to get bucket reques payment %v", err)
+		log.Fatalf("failed to get bucket request payment %v", err)
 	}
 
-	log.Printf("get bucket reques payment result:%#v\n", getResult)
+	log.Printf("get bucket request payment result:%#v\n", getResult)
 }
