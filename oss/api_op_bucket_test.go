@@ -1213,11 +1213,15 @@ func TestUnmarshalOutput_GetBucketInfo(t *testing.T) {
 	assert.Empty(t, result.BucketInfo.SseRule.KMSMasterKeyID)
 	assert.Equal(t, *result.BucketInfo.SseRule.SSEAlgorithm, "")
 	assert.Nil(t, result.BucketInfo.SseRule.KMSDataEncryption)
+	assert.False(t, result.BucketInfo.BlockPublicAccess)
+	assert.Nil(t, result.BucketInfo.Comment)
 
 	body = `<?xml version="1.0" encoding="UTF-8"?>
 <BucketInfo>
   <Bucket>
     <AccessMonitor>Enabled</AccessMonitor>
+    <BlockPublicAccess>true</BlockPublicAccess>
+    <Comment>test</Comment>
     <CreationDate>2013-07-31T10:56:21.000Z</CreationDate>
     <ExtranetEndpoint>oss-cn-hangzhou.aliyuncs.com</ExtranetEndpoint>
     <IntranetEndpoint>oss-cn-hangzhou-internal.aliyuncs.com</IntranetEndpoint>
@@ -1279,6 +1283,8 @@ func TestUnmarshalOutput_GetBucketInfo(t *testing.T) {
 	assert.Empty(t, *result.BucketInfo.SseRule.KMSMasterKeyID)
 	assert.Equal(t, *result.BucketInfo.SseRule.SSEAlgorithm, "KMS")
 	assert.Equal(t, *result.BucketInfo.SseRule.KMSDataEncryption, "SM4")
+	assert.True(t, result.BucketInfo.BlockPublicAccess)
+	assert.Equal(t, *result.BucketInfo.Comment, "test")
 
 	output = &OperationOutput{
 		StatusCode: 404,
@@ -1510,6 +1516,8 @@ func TestUnmarshalOutput_GetBucketStat(t *testing.T) {
   <ObjectCount>230</ObjectCount>
   <MultipartUploadCount>40</MultipartUploadCount>
   <LiveChannelCount>4</LiveChannelCount>
+  <MultipartPartCount>1</MultipartPartCount>
+  <DeleteMarkerCount>6276</DeleteMarkerCount>
   <LastModifiedTime>1643341269</LastModifiedTime>
   <StandardStorage>430</StandardStorage>
   <StandardObjectCount>66</StandardObjectCount>
@@ -1522,6 +1530,9 @@ func TestUnmarshalOutput_GetBucketStat(t *testing.T) {
   <ColdArchiveStorage>2359296</ColdArchiveStorage>
   <ColdArchiveRealStorage>360</ColdArchiveRealStorage>
   <ColdArchiveObjectCount>36</ColdArchiveObjectCount>
+  <DeepColdArchiveStorage>2340340840</DeepColdArchiveStorage>
+  <DeepColdArchiveRealStorage>2340340840</DeepColdArchiveRealStorage>
+  <DeepColdArchiveObjectCount>2</DeepColdArchiveObjectCount>
 </BucketStat>`
 	output = &OperationOutput{
 		StatusCode: 200,
@@ -1555,6 +1566,11 @@ func TestUnmarshalOutput_GetBucketStat(t *testing.T) {
 	assert.Equal(t, int64(2359296), result.ColdArchiveStorage)
 	assert.Equal(t, int64(360), result.ColdArchiveRealStorage)
 	assert.Equal(t, int64(36), result.ColdArchiveObjectCount)
+	assert.Equal(t, int64(2340340840), result.DeepColdArchiveStorage)
+	assert.Equal(t, int64(2340340840), result.DeepColdArchiveRealStorage)
+	assert.Equal(t, int64(2), result.DeepColdArchiveObjectCount)
+	assert.Equal(t, int64(1), result.MultipartPartCount)
+	assert.Equal(t, int64(6276), result.DeleteMarkerCount)
 
 	output = &OperationOutput{
 		StatusCode: 404,

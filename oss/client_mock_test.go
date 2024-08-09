@@ -1913,6 +1913,8 @@ var testMockGetBucketInfoSuccessCases = []struct {
 			assert.Empty(t, *o.BucketInfo.SseRule.KMSMasterKeyID)
 			assert.Equal(t, *o.BucketInfo.SseRule.SSEAlgorithm, "KMS")
 			assert.Equal(t, *o.BucketInfo.SseRule.KMSDataEncryption, "SM4")
+			assert.False(t, o.BucketInfo.BlockPublicAccess)
+			assert.Nil(t, o.BucketInfo.Comment)
 		},
 	},
 	{
@@ -1926,6 +1928,8 @@ var testMockGetBucketInfoSuccessCases = []struct {
 <BucketInfo>
   <Bucket>
     <AccessMonitor>Enabled</AccessMonitor>
+    <BlockPublicAccess>true</BlockPublicAccess>
+    <Comment>test</Comment>
     <CreationDate>2013-07-31T10:56:21.000Z</CreationDate>
     <ExtranetEndpoint>oss-cn-hangzhou.aliyuncs.com</ExtranetEndpoint>
     <IntranetEndpoint>oss-cn-hangzhou-internal.aliyuncs.com</IntranetEndpoint>
@@ -1980,6 +1984,9 @@ var testMockGetBucketInfoSuccessCases = []struct {
 			assert.Empty(t, o.BucketInfo.SseRule.KMSMasterKeyID)
 			assert.Nil(t, o.BucketInfo.SseRule.SSEAlgorithm)
 			assert.Nil(t, o.BucketInfo.SseRule.KMSDataEncryption)
+
+			assert.True(t, o.BucketInfo.BlockPublicAccess)
+			assert.Equal(t, *o.BucketInfo.Comment, "test")
 		},
 	},
 }
@@ -2357,6 +2364,11 @@ var testMockGetBucketStatSuccessCases = []struct {
   <ColdArchiveStorage>2359296</ColdArchiveStorage>
   <ColdArchiveRealStorage>360</ColdArchiveRealStorage>
   <ColdArchiveObjectCount>36</ColdArchiveObjectCount>
+  <DeepColdArchiveStorage>2340340840</DeepColdArchiveStorage>
+  <DeepColdArchiveRealStorage>2340340840</DeepColdArchiveRealStorage>
+  <DeepColdArchiveObjectCount>2</DeepColdArchiveObjectCount>
+  <MultipartPartCount>1</MultipartPartCount>
+  <DeleteMarkerCount>6276</DeleteMarkerCount>
 </BucketStat>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "/bucket?stat", r.URL.String())
@@ -2387,6 +2399,11 @@ var testMockGetBucketStatSuccessCases = []struct {
 			assert.Equal(t, int64(2359296), o.ColdArchiveStorage)
 			assert.Equal(t, int64(360), o.ColdArchiveRealStorage)
 			assert.Equal(t, int64(36), o.ColdArchiveObjectCount)
+			assert.Equal(t, int64(2340340840), o.DeepColdArchiveStorage)
+			assert.Equal(t, int64(2340340840), o.DeepColdArchiveRealStorage)
+			assert.Equal(t, int64(2), o.DeepColdArchiveObjectCount)
+			assert.Equal(t, int64(1), o.MultipartPartCount)
+			assert.Equal(t, int64(6276), o.DeleteMarkerCount)
 		},
 	},
 }
