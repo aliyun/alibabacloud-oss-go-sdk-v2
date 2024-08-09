@@ -16,7 +16,7 @@ var (
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
-	flag.StringVar(&bucketName, "bucket", "", "The `name` of the bucket.")
+	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
 }
 
 func main() {
@@ -37,24 +37,13 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.ListObjectVersionsRequest{
+	request := &oss.DeleteUserDefinedLogFieldsConfigRequest{
 		Bucket: oss.Ptr(bucketName),
 	}
-	p := client.NewListObjectVersionsPaginator(request)
-
-	var i int
-	log.Println("Object Versions:")
-	for p.HasNext() {
-		i++
-
-		page, err := p.NextPage(context.TODO())
-		if err != nil {
-			log.Fatalf("failed to get page %v, %v", i, err)
-		}
-
-		// Log the objects found
-		for _, obj := range page.ObjectVersions {
-			log.Printf("Object:%v, VersionId:%v, IsLatest:%v, Size:%v, ETag:%v, Storage Class:%v,  Last Modified:%v\n", oss.ToString(obj.Key), oss.ToString(obj.VersionId), obj.IsLatest, obj.Size, oss.ToString(obj.ETag), oss.ToString(obj.StorageClass), oss.ToTime(obj.LastModified))
-		}
+	result, err := client.DeleteUserDefinedLogFieldsConfig(context.TODO(), request)
+	if err != nil {
+		log.Fatalf("failed to delete user defined log fields config %v", err)
 	}
+
+	log.Printf("delete user defined log fields config result:%#v\n", result)
 }

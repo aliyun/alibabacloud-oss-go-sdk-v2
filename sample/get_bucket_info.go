@@ -34,10 +34,6 @@ func main() {
 		log.Fatalf("invalid parameters, region required")
 	}
 
-	if len(endpoint) == 0 {
-		endpoint = fmt.Sprintf("oss-%v.aliyuncs.com", region)
-	}
-
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region)

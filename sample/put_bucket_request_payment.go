@@ -48,5 +48,5 @@ func main() {
 		log.Fatalf("failed to put bucket request payment %v", err)
 	}
 
-	log.Printf("put bucket reques request result:%#v\n", putResult)
+	log.Printf("put bucket request payment result:%#v\n", putResult)
 }
