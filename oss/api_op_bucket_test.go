@@ -2980,10 +2980,10 @@ func TestMarshalInput_GetBucketRequestPayment(t *testing.T) {
 
 	request = &GetBucketRequestPaymentRequest{}
 	input = &OperationInput{
-		OpName: "GetBucketVersioning",
+		OpName: "GetBucketRequestPayment",
 		Method: "GET",
 		Parameters: map[string]string{
-			"versioning": "",
+			"requestPayment": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -2995,10 +2995,10 @@ func TestMarshalInput_GetBucketRequestPayment(t *testing.T) {
 		Bucket: Ptr("oss-demo"),
 	}
 	input = &OperationInput{
-		OpName: "GetBucketVersioning",
+		OpName: "GetBucketRequestPayment",
 		Method: "GET",
 		Parameters: map[string]string{
-			"versioning": "",
+			"requestPayment": "",
 		},
 		Bucket: request.Bucket,
 	}
