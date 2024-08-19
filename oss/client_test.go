@@ -2,6 +2,7 @@ package oss
 
 import (
 	"bytes"
+	"encoding/xml"
 	"io"
 	"net/http"
 	"testing"
@@ -589,6 +590,92 @@ func TestUnmarshalOutput(t *testing.T) {
 	assert.Equal(t, "OK", xmlresult.Status)
 	assert.Equal(t, "StrField1", *xmlresult.StrField1)
 	assert.Equal(t, "StrField2", *xmlresult.StrField2)
+}
+
+type bodyConfiguration struct {
+	XMLName   xml.Name `xml:"BodyConfiguration"`
+	StrField1 *string  `xml:"StrField1"`
+	StrField2 *string  `xml:"StrField2"`
+}
+
+type xmlBodyResult2 struct {
+	ResultCommon
+	XmlStruct *bodyConfiguration `output:"body,BodyConfiguration,xml"`
+}
+
+func TestUnmarshalOutput2(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var output *OperationOutput
+	var err error
+
+	//empty
+	output = &OperationOutput{}
+	assert.Nil(t, output.Input)
+	assert.Nil(t, output.Body)
+	assert.Nil(t, output.Headers)
+	assert.Empty(t, output.Status)
+	assert.Empty(t, output.StatusCode)
+
+	// extract body to inner filed
+	body := "<BodyConfiguration><StrField1>StrField1</StrField1><StrField2>StrField2</StrField2></BodyConfiguration>"
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       ReadSeekNopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"Content-Type": {"application/xml"},
+		},
+	}
+	xmlresult := &xmlBodyResult{}
+	err = c.unmarshalOutput(xmlresult, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, xmlresult.StatusCode)
+	assert.Equal(t, "OK", xmlresult.Status)
+	assert.Equal(t, "StrField1", *xmlresult.StrField1)
+	assert.Equal(t, "StrField2", *xmlresult.StrField2)
+
+	// extract body to outer filed, without init
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       ReadSeekNopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"Content-Type": {"application/xml"},
+		},
+	}
+	xmlresult2 := &xmlBodyResult2{}
+	assert.Nil(t, xmlresult2.XmlStruct)
+	err = c.unmarshalOutput(xmlresult2, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, xmlresult2.StatusCode)
+	assert.Equal(t, "OK", xmlresult2.Status)
+	assert.NotNil(t, xmlresult2.XmlStruct)
+	assert.Equal(t, "StrField1", *xmlresult2.XmlStruct.StrField1)
+	assert.Equal(t, "StrField2", *xmlresult2.XmlStruct.StrField2)
+
+	// extract body to outer filed, init
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       ReadSeekNopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"Content-Type": {"application/xml"},
+		},
+	}
+	xmlresult2 = &xmlBodyResult2{
+		XmlStruct: &bodyConfiguration{},
+	}
+	assert.NotNil(t, xmlresult2.XmlStruct)
+	assert.Nil(t, xmlresult2.XmlStruct.StrField1)
+	assert.Nil(t, xmlresult2.XmlStruct.StrField2)
+	err = c.unmarshalOutput(xmlresult2, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, xmlresult2.StatusCode)
+	assert.Equal(t, "OK", xmlresult2.Status)
+	assert.NotNil(t, xmlresult2.XmlStruct)
+	assert.Equal(t, "StrField1", *xmlresult2.XmlStruct.StrField1)
+	assert.Equal(t, "StrField2", *xmlresult2.XmlStruct.StrField2)
 }
 
 type headerStubResult struct {
