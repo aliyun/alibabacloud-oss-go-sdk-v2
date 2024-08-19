@@ -100,6 +100,14 @@ const (
 	BucketOwner PayerType = "BucketOwner"
 )
 
+// BucketWormStateType the type of bucket worm state
+type BucketWormStateType string
+
+const (
+	BucketWormStateInProgress BucketWormStateType = "InProgress"
+	BucketWormStateLocked BucketWormStateType = "Locked"
+)
+
 // OSS headers
 const (
 	HeaderOssPrefix                      string = "X-Oss-"

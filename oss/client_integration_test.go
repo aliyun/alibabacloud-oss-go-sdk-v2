@@ -6078,3 +6078,87 @@ func TestDeleteUserDefinedLogFieldsConfig(t *testing.T) {
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
 }
+
+func TestBucketWorm(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	initWorm := &InitiateBucketWormRequest{
+		Bucket: Ptr(bucketName),
+		InitiateWormConfiguration: &InitiateWormConfiguration{
+			1,
+		},
+	}
+
+	initResult, err := client.InitiateBucketWorm(context.TODO(), initWorm)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	getRequest := &GetBucketWormRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	getResult, err := client.GetBucketWorm(context.TODO(), getRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	assert.Equal(t, *getResult.WormConfiguration.WormId, *initResult.WormId)
+	assert.NotEmpty(t, *getResult.WormConfiguration.CreationDate)
+	assert.NotEmpty(t, getResult.WormConfiguration.RetentionPeriodInDays)
+	assert.NotEmpty(t, getResult.WormConfiguration.State)
+
+	abortRequest := &AbortBucketWormRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	abortResult, err := client.AbortBucketWorm(context.TODO(), abortRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+	assert.Equal(t, 204, abortResult.StatusCode)
+	var serr *ServiceError
+	completeRequest := &CompleteBucketWormRequest{
+		Bucket: Ptr(bucketName),
+		WormId: initResult.WormId,
+	}
+
+	_, err = client.CompleteBucketWorm(context.TODO(), completeRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	extendRequest := &ExtendBucketWormRequest{
+		Bucket: Ptr(bucketName),
+		WormId: initResult.WormId,
+	}
+	_, err = client.ExtendBucketWorm(context.TODO(), extendRequest)
+	assert.NotNil(t, err)
+	assert.Equal(t, "missing required field, ExtendWormConfiguration.", err.Error())
+	time.Sleep(1 * time.Second)
+
+	extendRequest = &ExtendBucketWormRequest{
+		Bucket: Ptr(bucketName),
+		WormId: initResult.WormId,
+		ExtendWormConfiguration: &ExtendWormConfiguration{
+			2,
+		},
+	}
+
+	serr = &ServiceError{}
+	_, err = client.ExtendBucketWorm(context.TODO(), extendRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.NotEmpty(t, serr.RequestID)
+}
