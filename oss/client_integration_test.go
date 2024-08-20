@@ -6162,3 +6162,140 @@ func TestBucketWorm(t *testing.T) {
 	assert.Equal(t, int(404), serr.StatusCode)
 	assert.NotEmpty(t, serr.RequestID)
 }
+
+func TestBucketPolicy(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	request := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), request)
+	assert.Nil(t, err)
+
+	putRequest := &PutBucketPolicyRequest{
+		Bucket: Ptr(bucketName),
+		Body: strings.NewReader(`{
+   "Version":"1",
+   "Statement":[
+   {
+     "Action":[
+       "oss:PutObject",
+       "oss:GetObject"
+    ],
+    "Effect":"Deny",
+    "Principal":["1234567890"],
+    "Resource":["acs:oss:*:1234567890:*/*"]
+   }
+  ]
+ }`),
+	}
+
+	putResult, err := client.PutBucketPolicy(context.TODO(), putRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getRequest := &GetBucketPolicyRequest{
+		Bucket: Ptr(bucketName),
+	}
+	getResult, err := client.GetBucketPolicy(context.TODO(), getRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	assert.NotEmpty(t, getResult.Body)
+
+	statusRequest := &GetBucketPolicyStatusRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	statusResult, err := client.GetBucketPolicyStatus(context.TODO(), statusRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, statusResult.StatusCode)
+	assert.NotEmpty(t, statusResult.Headers.Get("X-Oss-Request-Id"))
+	assert.False(t, statusResult.PolicyStatus.IsPublic)
+
+	delRequest := &DeleteBucketPolicyRequest{
+		Bucket: Ptr(bucketName),
+	}
+	delResult, err := client.DeleteBucketPolicy(context.TODO(), delRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	var serr *ServiceError
+	bucketNameNotExist := bucketName + "-not-exist"
+	getRequest = &GetBucketPolicyRequest{
+		Bucket: Ptr(bucketNameNotExist),
+	}
+	getResult, err = client.GetBucketPolicy(context.TODO(), getRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	statusRequest = &GetBucketPolicyStatusRequest{
+		Bucket: Ptr(bucketNameNotExist),
+	}
+	serr = &ServiceError{}
+	statusResult, err = client.GetBucketPolicyStatus(context.TODO(), statusRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	putRequest = &PutBucketPolicyRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		Body: strings.NewReader(`{
+   "Version":"1",
+   "Statement":[
+   {
+     "Action":[
+       "oss:PutObject",
+       "oss:GetObject"
+    ],
+    "Effect":"Deny",
+    "Principal":["1234567890"],
+    "Resource":["acs:oss:*:1234567890:*/*"]
+   }
+  ]
+ }`),
+	}
+	serr = &ServiceError{}
+	putResult, err = client.PutBucketPolicy(context.TODO(), putRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	delRequest = &DeleteBucketPolicyRequest{
+		Bucket: Ptr(bucketNameNotExist),
+	}
+	serr = &ServiceError{}
+	delResult, err = client.DeleteBucketPolicy(context.TODO(), delRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+}
