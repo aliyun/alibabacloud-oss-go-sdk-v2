@@ -12,40 +12,49 @@ import (
 var (
 	region     string
 	bucketName string
-	objectName string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
 	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
-	flag.StringVar(&objectName, "object", "", "The name of the object.")
 }
 
 func main() {
 	flag.Parse()
-	if len(region) == 0 {
-		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, region required")
-	}
 	if len(bucketName) == 0 {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, bucket name required")
 	}
-	if len(objectName) == 0 {
+
+	if len(region) == 0 {
 		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, object name required")
+		log.Fatalf("invalid parameters, region required")
 	}
+
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region)
+
 	client := oss.NewClient(cfg)
-	getRequest := &oss.GetSymlinkRequest{
+
+	request := &oss.PutBucketWebsiteRequest{
 		Bucket: oss.Ptr(bucketName),
-		Key:    oss.Ptr(objectName),
+		WebsiteConfiguration: &oss.WebsiteConfiguration{
+			IndexDocument: &oss.IndexDocument{
+				Suffix:        oss.Ptr("index.html"),
+				SupportSubDir: oss.Ptr(true),
+				Type:          oss.Ptr(int64(0)),
+			},
+			ErrorDocument: &oss.ErrorDocument{
+				Key:        oss.Ptr("error.html"),
+				HttpStatus: oss.Ptr(int64(404)),
+			},
+		},
 	}
-	getResult, err := client.GetSymlink(context.TODO(), getRequest)
+	result, err := client.PutBucketWebsite(context.TODO(), request)
 	if err != nil {
-		log.Fatalf("failed to get symlink %v", err)
+		log.Fatalf("failed to put bucket website %v", err)
 	}
-	log.Printf("get symlink result:%#v\n", getResult)
+
+	log.Printf("put bucket website result:%#v\n", result)
 }

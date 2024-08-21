@@ -86,10 +86,9 @@ func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
 		Status:     "OK",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"x-oss-worm-id":    {"123"},
 		},
 	}
-	result := &GetBucketTransferAccelerationResult{}
+	result := &PutBucketTransferAccelerationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
@@ -114,7 +113,7 @@ func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketTransferAccelerationResult{}
+	result = &PutBucketTransferAccelerationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
@@ -129,7 +128,7 @@ func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketTransferAccelerationResult{}
+	result = &PutBucketTransferAccelerationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
@@ -153,7 +152,7 @@ func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketTransferAccelerationResult{}
+	result = &PutBucketTransferAccelerationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)

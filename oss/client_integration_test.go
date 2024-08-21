@@ -6433,3 +6433,106 @@ func TestBucketArchiveDirectRead(t *testing.T) {
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
 }
+
+func TestBucketWebsite(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	request := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), request)
+	assert.Nil(t, err)
+
+	putRequest := &PutBucketWebsiteRequest{
+		Bucket: Ptr(bucketName),
+		WebsiteConfiguration: &WebsiteConfiguration{
+			IndexDocument: &IndexDocument{
+				Suffix:        Ptr("index.html"),
+				SupportSubDir: Ptr(true),
+				Type:          Ptr(int64(0)),
+			},
+			ErrorDocument: &ErrorDocument{
+				Key:        Ptr("error.html"),
+				HttpStatus: Ptr(int64(404)),
+			},
+		},
+	}
+	putResult, err := client.PutBucketWebsite(context.TODO(), putRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getRequest := &GetBucketWebsiteRequest{
+		Bucket: Ptr(bucketName),
+	}
+	getResult, err := client.GetBucketWebsite(context.TODO(), getRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	assert.Equal(t, getResult.WebsiteConfiguration, putRequest.WebsiteConfiguration)
+	time.Sleep(1 * time.Second)
+
+	delRequest := &DeleteBucketWebsiteRequest{
+		Bucket: Ptr(bucketName),
+	}
+	delResult, err := client.DeleteBucketWebsite(context.TODO(), delRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delResult.StatusCode)
+	assert.NotEmpty(t, delResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	var serr *ServiceError
+	bucketNameNotExist := bucketName + "-not-exist"
+	getRequest = &GetBucketWebsiteRequest{
+		Bucket: Ptr(bucketNameNotExist),
+	}
+	getResult, err = client.GetBucketWebsite(context.TODO(), getRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	putRequest = &PutBucketWebsiteRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		WebsiteConfiguration: &WebsiteConfiguration{
+			IndexDocument: &IndexDocument{
+				Suffix:        Ptr("index.html"),
+				SupportSubDir: Ptr(true),
+				Type:          Ptr(int64(0)),
+			},
+			ErrorDocument: &ErrorDocument{
+				Key:        Ptr("error.html"),
+				HttpStatus: Ptr(int64(404)),
+			},
+		},
+	}
+	serr = &ServiceError{}
+	putResult, err = client.PutBucketWebsite(context.TODO(), putRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	delRequest = &DeleteBucketWebsiteRequest{
+		Bucket: Ptr(bucketNameNotExist),
+	}
+	delResult, err = client.DeleteBucketWebsite(context.TODO(), delRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+}

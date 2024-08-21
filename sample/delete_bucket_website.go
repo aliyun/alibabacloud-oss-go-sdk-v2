@@ -12,40 +12,38 @@ import (
 var (
 	region     string
 	bucketName string
-	objectName string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
 	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
-	flag.StringVar(&objectName, "object", "", "The name of the object.")
 }
 
 func main() {
 	flag.Parse()
-	if len(region) == 0 {
-		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, region required")
-	}
 	if len(bucketName) == 0 {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, bucket name required")
 	}
-	if len(objectName) == 0 {
+
+	if len(region) == 0 {
 		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, object name required")
+		log.Fatalf("invalid parameters, region required")
 	}
+
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region)
+
 	client := oss.NewClient(cfg)
-	getRequest := &oss.GetSymlinkRequest{
+
+	request := &oss.DeleteBucketWebsiteRequest{
 		Bucket: oss.Ptr(bucketName),
-		Key:    oss.Ptr(objectName),
 	}
-	getResult, err := client.GetSymlink(context.TODO(), getRequest)
+	result, err := client.DeleteBucketWebsite(context.TODO(), request)
 	if err != nil {
-		log.Fatalf("failed to get symlink %v", err)
+		log.Fatalf("failed to delete bucket website %v", err)
 	}
-	log.Printf("get symlink result:%#v\n", getResult)
+
+	log.Printf("delete bucket website result:%#v\n", result)
 }
