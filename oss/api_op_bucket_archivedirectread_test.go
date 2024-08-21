@@ -10,73 +10,73 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMarshalInput_PutBucketTransferAcceleration(t *testing.T) {
+func TestMarshalInput_PutBucketArchiveDirectRead(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
-	var request *PutBucketTransferAccelerationRequest
+	var request *PutBucketArchiveDirectReadRequest
 	var input *OperationInput
 	var err error
 
-	request = &PutBucketTransferAccelerationRequest{}
+	request = &PutBucketArchiveDirectReadRequest{}
 	input = &OperationInput{
-		OpName: "PutBucketTransferAcceleration",
+		OpName: "PutBucketArchiveDirectRead",
 		Method: "PUT",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
-			"transferAcceleration": "",
+			"bucketArchiveDirectRead": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"transferAcceleration"})
+	input.OpMetadata.Set(signer.SubResource, []string{"bucketArchiveDirectRead"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
 
-	request = &PutBucketTransferAccelerationRequest{
+	request = &PutBucketArchiveDirectReadRequest{
 		Bucket: Ptr("oss-demo"),
 	}
 	input = &OperationInput{
-		OpName: "PutBucketTransferAcceleration",
+		OpName: "PutBucketArchiveDirectRead",
 		Method: "PUT",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
-			"transferAcceleration": "",
+			"bucketArchiveDirectRead": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"transferAcceleration"})
+	input.OpMetadata.Set(signer.SubResource, []string{"bucketArchiveDirectRead"})
 	err = c.marshalInput(request, input, updateContentMd5)
-	assert.Contains(t, err.Error(), "missing required field, TransferAccelerationConfiguration.")
+	assert.Contains(t, err.Error(), "missing required field, ArchiveDirectReadConfiguration.")
 
-	request = &PutBucketTransferAccelerationRequest{
+	request = &PutBucketArchiveDirectReadRequest{
 		Bucket: Ptr("oss-demo"),
-		TransferAccelerationConfiguration: &TransferAccelerationConfiguration{
+		ArchiveDirectReadConfiguration: &ArchiveDirectReadConfiguration{
 			Enabled: true,
 		},
 	}
 	input = &OperationInput{
-		OpName: "PutBucketTransferAcceleration",
+		OpName: "PutBucketArchiveDirectRead",
 		Method: "PUT",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
-			"transferAcceleration": "",
+			"bucketArchiveDirectRead": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"transferAcceleration"})
+	input.OpMetadata.Set(signer.SubResource, []string{"bucketArchiveDirectRead"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "<TransferAccelerationConfiguration><Enabled>true</Enabled></TransferAccelerationConfiguration>")
+	assert.Equal(t, string(body), "<ArchiveDirectReadConfiguration><Enabled>true</Enabled></ArchiveDirectReadConfiguration>")
 }
 
-func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
+func TestUnmarshalOutput_PutBucketArchiveDirectRead(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
 	var output *OperationOutput
@@ -89,7 +89,7 @@ func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
 			"x-oss-worm-id":    {"123"},
 		},
 	}
-	result := &GetBucketTransferAccelerationResult{}
+	result := &GetBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
@@ -114,7 +114,7 @@ func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketTransferAccelerationResult{}
+	result = &GetBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
@@ -129,7 +129,7 @@ func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketTransferAccelerationResult{}
+	result = &GetBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
@@ -153,7 +153,7 @@ func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketTransferAccelerationResult{}
+	result = &GetBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
@@ -162,58 +162,58 @@ func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 }
 
-func TestMarshalInput_GetBucketTransferAcceleration(t *testing.T) {
+func TestMarshalInput_GetBucketArchiveDirectRead(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
-	var request *GetBucketTransferAccelerationRequest
+	var request *GetBucketArchiveDirectReadRequest
 	var input *OperationInput
 	var err error
 
-	request = &GetBucketTransferAccelerationRequest{}
+	request = &GetBucketArchiveDirectReadRequest{}
 	input = &OperationInput{
-		OpName: "GetBucketTransferAcceleration",
+		OpName: "GetBucketArchiveDirectRead",
 		Method: "GET",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
-			"transferAcceleration": "",
+			"bucketArchiveDirectRead": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"transferAcceleration"})
+	input.OpMetadata.Set(signer.SubResource, []string{"bucketArchiveDirectRead"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
-	request = &GetBucketTransferAccelerationRequest{
+	request = &GetBucketArchiveDirectReadRequest{
 		Bucket: Ptr("oss-demo"),
 	}
 	input = &OperationInput{
-		OpName: "GetBucketTransferAcceleration",
+		OpName: "GetBucketArchiveDirectRead",
 		Method: "GET",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
-			"transferAcceleration": "",
+			"bucketArchiveDirectRead": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"transferAcceleration"})
+	input.OpMetadata.Set(signer.SubResource, []string{"bucketArchiveDirectRead"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 
-func TestUnmarshalOutput_GetBucketTransferAcceleration(t *testing.T) {
+func TestUnmarshalOutput_GetBucketArchiveDirectRead(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
 	var output *OperationOutput
 	var err error
 	body := `<?xml version="1.0" encoding="UTF-8"?>
-<TransferAccelerationConfiguration>
+<ArchiveDirectReadConfiguration>
  <Enabled>true</Enabled>
-</TransferAccelerationConfiguration>`
+</ArchiveDirectReadConfiguration>`
 	output = &OperationOutput{
 		StatusCode: 200,
 		Status:     "OK",
@@ -222,13 +222,13 @@ func TestUnmarshalOutput_GetBucketTransferAcceleration(t *testing.T) {
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 		},
 	}
-	result := &GetBucketTransferAccelerationResult{}
+	result := &GetBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.True(t, result.TransferAccelerationConfiguration.Enabled)
+	assert.True(t, result.ArchiveDirectReadConfiguration.Enabled)
 
 	output = &OperationOutput{
 		StatusCode: 404,
@@ -238,7 +238,7 @@ func TestUnmarshalOutput_GetBucketTransferAcceleration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketTransferAccelerationResult{}
+	result = &GetBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
@@ -253,7 +253,7 @@ func TestUnmarshalOutput_GetBucketTransferAcceleration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketTransferAccelerationResult{}
+	result = &GetBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
@@ -277,7 +277,7 @@ func TestUnmarshalOutput_GetBucketTransferAcceleration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketTransferAccelerationResult{}
+	result = &GetBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
