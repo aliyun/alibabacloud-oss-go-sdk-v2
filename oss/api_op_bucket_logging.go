@@ -79,7 +79,7 @@ func (c *Client) PutBucketLogging(ctx context.Context, request *PutBucketLogging
 	}
 
 	result := &PutBucketLoggingResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXml); err != nil {
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
@@ -94,7 +94,7 @@ type GetBucketLoggingRequest struct {
 
 type GetBucketLoggingResult struct {
 	// Indicates the container used to store access logging configuration of a bucket.
-	LoggingEnabled *LoggingEnabled `xml:"LoggingEnabled"`
+	BucketLoggingStatus *BucketLoggingStatus `output:"body,BucketLoggingStatus,xml"`
 
 	ResultCommon
 }
@@ -127,7 +127,7 @@ func (c *Client) GetBucketLogging(ctx context.Context, request *GetBucketLogging
 	}
 
 	result := &GetBucketLoggingResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXml); err != nil {
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
@@ -172,7 +172,7 @@ func (c *Client) DeleteBucketLogging(ctx context.Context, request *DeleteBucketL
 	}
 
 	result := &DeleteBucketLoggingResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXml); err != nil {
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
@@ -220,7 +220,7 @@ func (c *Client) PutUserDefinedLogFieldsConfig(ctx context.Context, request *Put
 	}
 
 	result := &PutUserDefinedLogFieldsConfigResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXml); err != nil {
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
@@ -234,11 +234,8 @@ type GetUserDefinedLogFieldsConfigRequest struct {
 }
 
 type GetUserDefinedLogFieldsConfigResult struct {
-	// The container that stores the configurations of custom request headers.
-	HeaderSet *HeaderSet `xml:"HeaderSet"`
-
-	// The container that stores the configurations of custom URL parameters.
-	ParamSet *ParamSet `xml:"ParamSet"`
+	// The container for the user-defined logging configuration.
+	UserDefinedLogFieldsConfiguration *UserDefinedLogFieldsConfiguration `output:"body,UserDefinedLogFieldsConfiguration,xml"`
 
 	ResultCommon
 }
@@ -271,7 +268,7 @@ func (c *Client) GetUserDefinedLogFieldsConfig(ctx context.Context, request *Get
 	}
 
 	result := &GetUserDefinedLogFieldsConfigResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXml); err != nil {
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
@@ -316,7 +313,7 @@ func (c *Client) DeleteUserDefinedLogFieldsConfig(ctx context.Context, request *
 	}
 
 	result := &DeleteUserDefinedLogFieldsConfigResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXml); err != nil {
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err

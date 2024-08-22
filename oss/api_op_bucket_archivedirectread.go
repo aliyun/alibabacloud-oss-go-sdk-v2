@@ -8,7 +8,7 @@ import (
 
 type ArchiveDirectReadConfiguration struct {
 	// Specifies whether to enable real-time access of Archive objects for a bucket. Valid values:- true- false
-	Enabled bool `xml:"Enabled"`
+	Enabled *bool `xml:"Enabled"`
 }
 
 type GetBucketArchiveDirectReadRequest struct {

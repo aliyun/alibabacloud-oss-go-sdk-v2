@@ -55,7 +55,7 @@ func TestMarshalInput_InitiateBucketWorm(t *testing.T) {
 	request = &InitiateBucketWormRequest{
 		Bucket: Ptr("oss-demo"),
 		InitiateWormConfiguration: &InitiateWormConfiguration{
-			3,
+			Ptr(int32(3)),
 		},
 	}
 	input = &OperationInput{
@@ -474,7 +474,7 @@ func TestMarshalInput_ExtendBucketWorm(t *testing.T) {
 		Bucket: Ptr("oss-demo"),
 		WormId: Ptr("123"),
 		ExtendWormConfiguration: &ExtendWormConfiguration{
-			3,
+			Ptr(int32(3)),
 		},
 	}
 	input = &OperationInput{
@@ -641,7 +641,7 @@ func TestUnmarshalOutput_GetBucketWorm(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, *result.WormConfiguration.WormId, "1666E2CFB2B3418****")
 	assert.Equal(t, result.WormConfiguration.State, BucketWormStateLocked)
-	assert.Equal(t, result.WormConfiguration.RetentionPeriodInDays, int32(1))
+	assert.Equal(t, *result.WormConfiguration.RetentionPeriodInDays, int32(1))
 	assert.Equal(t, *result.WormConfiguration.CreationDate, "2020-10-15T15:50:32")
 
 	output = &OperationOutput{

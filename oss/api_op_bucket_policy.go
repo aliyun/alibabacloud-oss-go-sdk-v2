@@ -9,8 +9,8 @@ import (
 )
 
 type PolicyStatus struct {
-	// Indicates whether the current bucket policy allows public access.truefalse
-	IsPublic bool `xml:"IsPublic"`
+	// Indicates whether the current bucket policy allows public access.true false
+	IsPublic *bool `xml:"IsPublic"`
 }
 
 type PutBucketPolicyRequest struct {
@@ -168,7 +168,6 @@ type GetBucketPolicyStatusRequest struct {
 }
 
 type GetBucketPolicyStatusResult struct {
-
 	// The container that stores public access information.
 	PolicyStatus *PolicyStatus `output:"body,PolicyStatus,xml"`
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"log"
-	"strings"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
@@ -41,7 +40,7 @@ func main() {
 	request := &oss.PutBucketTransferAccelerationRequest{
 		Bucket: oss.Ptr(bucketName),
 		TransferAccelerationConfiguration: &oss.TransferAccelerationConfiguration{
-			true,
+			oss.Ptr(true),
 		},
 	}
 	result, err := client.PutBucketTransferAcceleration(context.TODO(), request)
