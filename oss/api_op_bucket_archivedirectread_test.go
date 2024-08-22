@@ -55,7 +55,7 @@ func TestMarshalInput_PutBucketArchiveDirectRead(t *testing.T) {
 	request = &PutBucketArchiveDirectReadRequest{
 		Bucket: Ptr("oss-demo"),
 		ArchiveDirectReadConfiguration: &ArchiveDirectReadConfiguration{
-			Enabled: true,
+			Enabled: Ptr(true),
 		},
 	}
 	input = &OperationInput{
@@ -86,10 +86,9 @@ func TestUnmarshalOutput_PutBucketArchiveDirectRead(t *testing.T) {
 		Status:     "OK",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"x-oss-worm-id":    {"123"},
 		},
 	}
-	result := &GetBucketArchiveDirectReadResult{}
+	result := &PutBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
@@ -114,7 +113,7 @@ func TestUnmarshalOutput_PutBucketArchiveDirectRead(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketArchiveDirectReadResult{}
+	result = &PutBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
@@ -129,7 +128,7 @@ func TestUnmarshalOutput_PutBucketArchiveDirectRead(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketArchiveDirectReadResult{}
+	result = &PutBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
@@ -153,7 +152,7 @@ func TestUnmarshalOutput_PutBucketArchiveDirectRead(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketArchiveDirectReadResult{}
+	result = &PutBucketArchiveDirectReadResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
@@ -228,7 +227,7 @@ func TestUnmarshalOutput_GetBucketArchiveDirectRead(t *testing.T) {
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.True(t, result.ArchiveDirectReadConfiguration.Enabled)
+	assert.True(t, *result.ArchiveDirectReadConfiguration.Enabled)
 
 	output = &OperationOutput{
 		StatusCode: 404,

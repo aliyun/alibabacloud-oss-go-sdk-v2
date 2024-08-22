@@ -55,7 +55,7 @@ func TestMarshalInput_PutBucketTransferAcceleration(t *testing.T) {
 	request = &PutBucketTransferAccelerationRequest{
 		Bucket: Ptr("oss-demo"),
 		TransferAccelerationConfiguration: &TransferAccelerationConfiguration{
-			Enabled: true,
+			Enabled: Ptr(true),
 		},
 	}
 	input = &OperationInput{
@@ -86,7 +86,6 @@ func TestUnmarshalOutput_PutBucketTransferAcceleration(t *testing.T) {
 		Status:     "OK",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"x-oss-worm-id":    {"123"},
 		},
 	}
 	result := &GetBucketTransferAccelerationResult{}
@@ -228,7 +227,7 @@ func TestUnmarshalOutput_GetBucketTransferAcceleration(t *testing.T) {
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.True(t, result.TransferAccelerationConfiguration.Enabled)
+	assert.True(t, *result.TransferAccelerationConfiguration.Enabled)
 
 	output = &OperationOutput{
 		StatusCode: 404,

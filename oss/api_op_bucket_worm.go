@@ -8,12 +8,12 @@ import (
 
 type InitiateWormConfiguration struct {
 	// The number of days for which objects can be retained.
-	RetentionPeriodInDays int32 `xml:"RetentionPeriodInDays"`
+	RetentionPeriodInDays *int32 `xml:"RetentionPeriodInDays"`
 }
 
 type ExtendWormConfiguration struct {
 	// The number of days for which objects can be retained.
-	RetentionPeriodInDays int32 `xml:"RetentionPeriodInDays"`
+	RetentionPeriodInDays *int32 `xml:"RetentionPeriodInDays"`
 }
 
 type WormConfiguration struct {
@@ -24,7 +24,7 @@ type WormConfiguration struct {
 	State BucketWormStateType `xml:"State"`
 
 	// The number of days for which objects can be retained.
-	RetentionPeriodInDays int32 `xml:"RetentionPeriodInDays"`
+	RetentionPeriodInDays *int32 `xml:"RetentionPeriodInDays"`
 
 	// The time at which the retention policy was created.
 	CreationDate *string `xml:"CreationDate"`

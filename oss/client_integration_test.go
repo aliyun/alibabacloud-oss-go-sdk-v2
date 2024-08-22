@@ -5774,7 +5774,7 @@ func TestServiceError(t *testing.T) {
 	assert.NotEmpty(t, serr.Headers.Get("server"))
 }
 
-func TestPutBucketLogging(t *testing.T) {
+func TestBucketLogging(t *testing.T) {
 	after := before(t)
 	defer after(t)
 	//TODO
@@ -5795,14 +5795,71 @@ func TestPutBucketLogging(t *testing.T) {
 			},
 		},
 	}
-
 	result, err := client.PutBucketLogging(context.TODO(), request)
-	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
-
 	assert.Nil(t, err)
 	assert.Equal(t, 200, result.StatusCode)
 	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getRequest := &GetBucketLoggingRequest{
+		Bucket: Ptr(bucketName),
+	}
+	getResult, err := client.GetBucketLogging(context.TODO(), getRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	assert.Equal(t, *getResult.BucketLoggingStatus.LoggingEnabled.TargetBucket, bucketName)
+	assert.Equal(t, *getResult.BucketLoggingStatus.LoggingEnabled.TargetPrefix, "TargetPrefix")
+	time.Sleep(1 * time.Second)
+
+	delRequest := &DeleteBucketLoggingRequest{
+		Bucket: Ptr(bucketName),
+	}
+	delResult, err := client.DeleteBucketLogging(context.TODO(), delRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delResult.StatusCode)
+	assert.Equal(t, "204 No Content", delResult.Status)
+	assert.NotEmpty(t, delResult.Headers.Get("x-oss-request-id"))
+	assert.NotEmpty(t, delResult.Headers.Get("Date"))
+	time.Sleep(1 * time.Second)
+
+	putUserRequest := &PutUserDefinedLogFieldsConfigRequest{
+		Bucket: Ptr(bucketName),
+		UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
+			HeaderSet: &HeaderSet{
+				[]string{"header1", "header2", "header3"},
+			},
+			ParamSet: &ParamSet{
+				[]string{"param1", "param2"},
+			},
+		},
+	}
+	putUserResult, err := client.PutUserDefinedLogFieldsConfig(context.TODO(), putUserRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putUserResult.StatusCode)
+	assert.NotEmpty(t, putUserResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getUserRequest := &GetUserDefinedLogFieldsConfigRequest{
+		Bucket: Ptr(bucketName),
+	}
+	getUserResult, err := client.GetUserDefinedLogFieldsConfig(context.TODO(), getUserRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getUserResult.StatusCode)
+	assert.NotEmpty(t, getUserResult.Headers.Get("X-Oss-Request-Id"))
+	assert.Equal(t, 3, len(getUserResult.UserDefinedLogFieldsConfiguration.HeaderSet.Header))
+	assert.Equal(t, 2, len(getUserResult.UserDefinedLogFieldsConfiguration.ParamSet.Parameter))
+	time.Sleep(1 * time.Second)
+
+	delUserRequest := &DeleteUserDefinedLogFieldsConfigRequest{
+		Bucket: Ptr(bucketName),
+	}
+	delUserResult, err := client.DeleteUserDefinedLogFieldsConfig(context.TODO(), delUserRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delUserResult.StatusCode)
+	assert.Equal(t, "204 No Content", delUserResult.Status)
+	assert.NotEmpty(t, delUserResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
 
 	var serr *ServiceError
 	bucketNameNotExist := bucketName + "-not-exist"
@@ -5823,40 +5880,12 @@ func TestPutBucketLogging(t *testing.T) {
 	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
-}
 
-func TestGetBucketLogging(t *testing.T) {
-	after := before(t)
-	defer after(t)
-	//TODO
-	bucketName := bucketNamePrefix + randLowStr(6)
-	putRequest := &PutBucketRequest{
-		Bucket: Ptr(bucketName),
-	}
-	client := getDefaultClient()
-	_, err := client.PutBucket(context.TODO(), putRequest)
-	assert.Nil(t, err)
-
-	request := &GetBucketLoggingRequest{
-		Bucket: Ptr(bucketName),
-	}
-
-	result, err := client.GetBucketLogging(context.TODO(), request)
-	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
-
-	assert.Nil(t, err)
-	assert.Equal(t, 200, result.StatusCode)
-	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
-	assert.Nil(t, result.LoggingEnabled.TargetBucket)
-	assert.Nil(t, result.LoggingEnabled.TargetPrefix)
-
-	var serr *ServiceError
-	bucketNameNotExist := bucketName + "-not-exist"
-	request = &GetBucketLoggingRequest{
+	getRequest = &GetBucketLoggingRequest{
 		Bucket: Ptr(bucketNameNotExist),
 	}
-	result, err = client.GetBucketLogging(context.TODO(), request)
+	serr = &ServiceError{}
+	getResult, err = client.GetBucketLogging(context.TODO(), getRequest)
 	assert.NotNil(t, err)
 	errors.As(err, &serr)
 	assert.Equal(t, int(404), serr.StatusCode)
@@ -5864,39 +5893,12 @@ func TestGetBucketLogging(t *testing.T) {
 	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
-}
 
-func TestDeleteBucketLogging(t *testing.T) {
-	after := before(t)
-	defer after(t)
-	//TODO
-	bucketName := bucketNamePrefix + randLowStr(6)
-	putRequest := &PutBucketRequest{
-		Bucket: Ptr(bucketName),
-	}
-	client := getDefaultClient()
-	_, err := client.PutBucket(context.TODO(), putRequest)
-	assert.Nil(t, err)
-
-	request := &DeleteBucketLoggingRequest{
-		Bucket: Ptr(bucketName),
-	}
-
-	result, err := client.DeleteBucketLogging(context.TODO(), request)
-	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
-
-	assert.Equal(t, 204, result.StatusCode)
-	assert.Equal(t, "204 No Content", result.Status)
-	assert.NotEmpty(t, result.Headers.Get("x-oss-request-id"))
-	assert.NotEmpty(t, result.Headers.Get("Date"))
-
-	var serr *ServiceError
-	bucketNameNotExist := bucketName + "-not-exist"
-	request = &DeleteBucketLoggingRequest{
+	delRequest = &DeleteBucketLoggingRequest{
 		Bucket: Ptr(bucketNameNotExist),
 	}
-	result, err = client.DeleteBucketLogging(context.TODO(), request)
+	serr = &ServiceError{}
+	delResult, err = client.DeleteBucketLogging(context.TODO(), delRequest)
 	assert.NotNil(t, err)
 	errors.As(err, &serr)
 	assert.Equal(t, int(404), serr.StatusCode)
@@ -5904,43 +5906,8 @@ func TestDeleteBucketLogging(t *testing.T) {
 	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
-}
 
-func TestPutUserDefinedLogFieldsConfig(t *testing.T) {
-	after := before(t)
-	defer after(t)
-	//TODO
-	bucketName := bucketNamePrefix + randLowStr(6)
-	putRequest := &PutBucketRequest{
-		Bucket: Ptr(bucketName),
-	}
-	client := getDefaultClient()
-	_, err := client.PutBucket(context.TODO(), putRequest)
-	assert.Nil(t, err)
-
-	request := &PutUserDefinedLogFieldsConfigRequest{
-		Bucket: Ptr(bucketName),
-		UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-			HeaderSet: &HeaderSet{
-				[]string{"header1", "header2", "header3"},
-			},
-			ParamSet: &ParamSet{
-				[]string{"param1", "param2"},
-			},
-		},
-	}
-
-	result, err := client.PutUserDefinedLogFieldsConfig(context.TODO(), request)
-	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
-
-	assert.Nil(t, err)
-	assert.Equal(t, 200, result.StatusCode)
-	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
-
-	var serr *ServiceError
-	bucketNameNotExist := bucketName + "-not-exist"
-	request = &PutUserDefinedLogFieldsConfigRequest{
+	putUserRequest = &PutUserDefinedLogFieldsConfigRequest{
 		Bucket: Ptr(bucketNameNotExist),
 		UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
 			HeaderSet: &HeaderSet{
@@ -5951,7 +5918,8 @@ func TestPutUserDefinedLogFieldsConfig(t *testing.T) {
 			},
 		},
 	}
-	result, err = client.PutUserDefinedLogFieldsConfig(context.TODO(), request)
+	serr = &ServiceError{}
+	putUserResult, err = client.PutUserDefinedLogFieldsConfig(context.TODO(), putUserRequest)
 	assert.NotNil(t, err)
 	errors.As(err, &serr)
 	assert.Equal(t, int(404), serr.StatusCode)
@@ -5959,59 +5927,12 @@ func TestPutUserDefinedLogFieldsConfig(t *testing.T) {
 	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
-}
 
-func TestGetUserDefinedLogFieldsConfig(t *testing.T) {
-	after := before(t)
-	defer after(t)
-	//TODO
-	bucketName := bucketNamePrefix + randLowStr(6)
-	putRequest := &PutBucketRequest{
-		Bucket: Ptr(bucketName),
-	}
-	client := getDefaultClient()
-	_, err := client.PutBucket(context.TODO(), putRequest)
-	assert.Nil(t, err)
-
-	userRequest := &PutUserDefinedLogFieldsConfigRequest{
-		Bucket: Ptr(bucketName),
-		UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-			HeaderSet: &HeaderSet{
-				[]string{"header1", "header2", "header3"},
-			},
-			ParamSet: &ParamSet{
-				[]string{"param1", "param2"},
-			},
-		},
-	}
-
-	userResult, err := client.PutUserDefinedLogFieldsConfig(context.TODO(), userRequest)
-	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
-
-	assert.Equal(t, 200, userResult.StatusCode)
-	assert.NotEmpty(t, userResult.Headers.Get("X-Oss-Request-Id"))
-
-	request := &GetUserDefinedLogFieldsConfigRequest{
-		Bucket: Ptr(bucketName),
-	}
-
-	result, err := client.GetUserDefinedLogFieldsConfig(context.TODO(), request)
-	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
-
-	assert.Nil(t, err)
-	assert.Equal(t, 200, result.StatusCode)
-	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
-	assert.Equal(t, 3, len(result.HeaderSet.Header))
-	assert.Equal(t, 2, len(result.ParamSet.Parameter))
-
-	var serr *ServiceError
-	bucketNameNotExist := bucketName + "-not-exist"
-	request = &GetUserDefinedLogFieldsConfigRequest{
+	getUserRequest = &GetUserDefinedLogFieldsConfigRequest{
 		Bucket: Ptr(bucketNameNotExist),
 	}
-	result, err = client.GetUserDefinedLogFieldsConfig(context.TODO(), request)
+	serr = &ServiceError{}
+	getUserResult, err = client.GetUserDefinedLogFieldsConfig(context.TODO(), getUserRequest)
 	assert.NotNil(t, err)
 	errors.As(err, &serr)
 	assert.Equal(t, int(404), serr.StatusCode)
@@ -6019,57 +5940,11 @@ func TestGetUserDefinedLogFieldsConfig(t *testing.T) {
 	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
-}
 
-func TestDeleteUserDefinedLogFieldsConfig(t *testing.T) {
-	after := before(t)
-	defer after(t)
-	//TODO
-	bucketName := bucketNamePrefix + randLowStr(6)
-	putRequest := &PutBucketRequest{
-		Bucket: Ptr(bucketName),
-	}
-	client := getDefaultClient()
-	_, err := client.PutBucket(context.TODO(), putRequest)
-	assert.Nil(t, err)
-
-	userRequest := &PutUserDefinedLogFieldsConfigRequest{
-		Bucket: Ptr(bucketName),
-		UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-			HeaderSet: &HeaderSet{
-				[]string{"header1", "header2", "header3"},
-			},
-			ParamSet: &ParamSet{
-				[]string{"param1", "param2"},
-			},
-		},
-	}
-
-	userResult, err := client.PutUserDefinedLogFieldsConfig(context.TODO(), userRequest)
-	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
-
-	assert.Equal(t, 200, userResult.StatusCode)
-	assert.NotEmpty(t, userResult.Headers.Get("X-Oss-Request-Id"))
-
-	request := &DeleteUserDefinedLogFieldsConfigRequest{
-		Bucket: Ptr(bucketName),
-	}
-
-	result, err := client.DeleteUserDefinedLogFieldsConfig(context.TODO(), request)
-	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
-
-	assert.Equal(t, 204, result.StatusCode)
-	assert.Equal(t, "204 No Content", result.Status)
-	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
-
-	var serr *ServiceError
-	bucketNameNotExist := bucketName + "-not-exist"
-	request = &DeleteUserDefinedLogFieldsConfigRequest{
+	delUserRequest = &DeleteUserDefinedLogFieldsConfigRequest{
 		Bucket: Ptr(bucketNameNotExist),
 	}
-	result, err = client.DeleteUserDefinedLogFieldsConfig(context.TODO(), request)
+	delUserResult, err = client.DeleteUserDefinedLogFieldsConfig(context.TODO(), delUserRequest)
 	assert.NotNil(t, err)
 	errors.As(err, &serr)
 	assert.Equal(t, int(404), serr.StatusCode)
@@ -6094,7 +5969,7 @@ func TestBucketWorm(t *testing.T) {
 	initWorm := &InitiateBucketWormRequest{
 		Bucket: Ptr(bucketName),
 		InitiateWormConfiguration: &InitiateWormConfiguration{
-			1,
+			Ptr(int32(1)),
 		},
 	}
 
@@ -6108,29 +5983,27 @@ func TestBucketWorm(t *testing.T) {
 
 	getResult, err := client.GetBucketWorm(context.TODO(), getRequest)
 	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
-
 	assert.Equal(t, 200, getResult.StatusCode)
 	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
 	assert.Equal(t, *getResult.WormConfiguration.WormId, *initResult.WormId)
 	assert.NotEmpty(t, *getResult.WormConfiguration.CreationDate)
 	assert.NotEmpty(t, getResult.WormConfiguration.RetentionPeriodInDays)
 	assert.NotEmpty(t, getResult.WormConfiguration.State)
+	time.Sleep(1 * time.Second)
 
 	abortRequest := &AbortBucketWormRequest{
 		Bucket: Ptr(bucketName),
 	}
-
 	abortResult, err := client.AbortBucketWorm(context.TODO(), abortRequest)
 	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
 	assert.Equal(t, 204, abortResult.StatusCode)
+	time.Sleep(1 * time.Second)
+
 	var serr *ServiceError
 	completeRequest := &CompleteBucketWormRequest{
 		Bucket: Ptr(bucketName),
 		WormId: initResult.WormId,
 	}
-
 	_, err = client.CompleteBucketWorm(context.TODO(), completeRequest)
 	assert.NotNil(t, err)
 	errors.As(err, &serr)
@@ -6151,10 +6024,9 @@ func TestBucketWorm(t *testing.T) {
 		Bucket: Ptr(bucketName),
 		WormId: initResult.WormId,
 		ExtendWormConfiguration: &ExtendWormConfiguration{
-			2,
+			Ptr(int32(2)),
 		},
 	}
-
 	serr = &ServiceError{}
 	_, err = client.ExtendBucketWorm(context.TODO(), extendRequest)
 	assert.NotNil(t, err)
@@ -6213,12 +6085,11 @@ func TestBucketPolicy(t *testing.T) {
 	statusRequest := &GetBucketPolicyStatusRequest{
 		Bucket: Ptr(bucketName),
 	}
-
 	statusResult, err := client.GetBucketPolicyStatus(context.TODO(), statusRequest)
 	assert.Nil(t, err)
 	assert.Equal(t, 200, statusResult.StatusCode)
 	assert.NotEmpty(t, statusResult.Headers.Get("X-Oss-Request-Id"))
-	assert.False(t, statusResult.PolicyStatus.IsPublic)
+	assert.False(t, *statusResult.PolicyStatus.IsPublic)
 
 	delRequest := &DeleteBucketPolicyRequest{
 		Bucket: Ptr(bucketName),
@@ -6315,7 +6186,7 @@ func TestBucketTransferAcceleration(t *testing.T) {
 	putRequest := &PutBucketTransferAccelerationRequest{
 		Bucket: Ptr(bucketName),
 		TransferAccelerationConfiguration: &TransferAccelerationConfiguration{
-			true,
+			Ptr(true),
 		},
 	}
 	putResult, err := client.PutBucketTransferAcceleration(context.TODO(), putRequest)
@@ -6333,7 +6204,7 @@ func TestBucketTransferAcceleration(t *testing.T) {
 
 	assert.Equal(t, 200, getResult.StatusCode)
 	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
-	assert.True(t, getResult.TransferAccelerationConfiguration.Enabled)
+	assert.True(t, *getResult.TransferAccelerationConfiguration.Enabled)
 
 	var serr *ServiceError
 	bucketNameNotExist := bucketName + "-not-exist"
@@ -6353,7 +6224,7 @@ func TestBucketTransferAcceleration(t *testing.T) {
 	putRequest = &PutBucketTransferAccelerationRequest{
 		Bucket: Ptr(bucketNameNotExist),
 		TransferAccelerationConfiguration: &TransferAccelerationConfiguration{
-			true,
+			Ptr(true),
 		},
 	}
 	serr = &ServiceError{}
@@ -6382,7 +6253,7 @@ func TestBucketArchiveDirectRead(t *testing.T) {
 	putRequest := &PutBucketArchiveDirectReadRequest{
 		Bucket: Ptr(bucketName),
 		ArchiveDirectReadConfiguration: &ArchiveDirectReadConfiguration{
-			true,
+			Ptr(true),
 		},
 	}
 	putResult, err := client.PutBucketArchiveDirectRead(context.TODO(), putRequest)
@@ -6400,7 +6271,7 @@ func TestBucketArchiveDirectRead(t *testing.T) {
 
 	assert.Equal(t, 200, getResult.StatusCode)
 	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
-	assert.True(t, getResult.ArchiveDirectReadConfiguration.Enabled)
+	assert.True(t, *getResult.ArchiveDirectReadConfiguration.Enabled)
 
 	var serr *ServiceError
 	bucketNameNotExist := bucketName + "-not-exist"
@@ -6420,7 +6291,7 @@ func TestBucketArchiveDirectRead(t *testing.T) {
 	putRequest = &PutBucketArchiveDirectReadRequest{
 		Bucket: Ptr(bucketNameNotExist),
 		ArchiveDirectReadConfiguration: &ArchiveDirectReadConfiguration{
-			true,
+			Ptr(true),
 		},
 	}
 	serr = &ServiceError{}

@@ -8,7 +8,7 @@ import (
 
 type TransferAccelerationConfiguration struct {
 	// Whether the transfer acceleration is enabled for this bucket.
-	Enabled bool `xml:"Enabled"`
+	Enabled *bool `xml:"Enabled"`
 }
 
 type PutBucketTransferAccelerationRequest struct {

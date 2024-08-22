@@ -20,9 +20,6 @@ func init() {
 }
 
 func main() {
-	var (
-		wormId = "worm id"
-	)
 	flag.Parse()
 	if len(bucketName) == 0 {
 		flag.PrintDefaults()

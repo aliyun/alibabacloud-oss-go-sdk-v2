@@ -39,6 +39,9 @@ func main() {
 
 	request := &oss.InitiateBucketWormRequest{
 		Bucket: oss.Ptr(bucketName),
+		InitiateWormConfiguration: &oss.InitiateWormConfiguration{
+			oss.Ptr(int32(3)),
+		},
 	}
 	result, err := client.InitiateBucketWorm(context.TODO(), request)
 	if err != nil {
