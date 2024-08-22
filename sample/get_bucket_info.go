@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"

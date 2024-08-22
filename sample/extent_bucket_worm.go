@@ -44,7 +44,7 @@ func main() {
 		Bucket: oss.Ptr(bucketName),
 		WormId: oss.Ptr(wormId),
 		ExtendWormConfiguration: &oss.ExtendWormConfiguration{
-			2,
+			oss.Ptr(int32(3)),
 		},
 	}
 	result, err := client.ExtendBucketWorm(context.TODO(), request)

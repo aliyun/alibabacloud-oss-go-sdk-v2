@@ -14320,8 +14320,8 @@ var testMockGetBucketLoggingSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, *o.LoggingEnabled.TargetBucket, "bucket-log")
-			assert.Equal(t, *o.LoggingEnabled.TargetPrefix, "prefix-access_log")
+			assert.Equal(t, *o.BucketLoggingStatus.LoggingEnabled.TargetBucket, "bucket-log")
+			assert.Equal(t, *o.BucketLoggingStatus.LoggingEnabled.TargetPrefix, "prefix-access_log")
 		},
 	},
 	{
@@ -14349,8 +14349,8 @@ var testMockGetBucketLoggingSuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 
-			assert.Equal(t, *o.LoggingEnabled.TargetBucket, "bucket-log")
-			assert.Nil(t, o.LoggingEnabled.TargetPrefix)
+			assert.Equal(t, *o.BucketLoggingStatus.LoggingEnabled.TargetBucket, "bucket-log")
+			assert.Nil(t, o.BucketLoggingStatus.LoggingEnabled.TargetPrefix)
 		},
 	},
 }
@@ -14951,10 +14951,10 @@ var testMockGetUserDefinedLogFieldsConfigSuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 
-			assert.Equal(t, 3, len(o.HeaderSet.Header))
-			assert.Equal(t, "header3", o.HeaderSet.Header[2])
-			assert.Equal(t, 2, len(o.ParamSet.Parameter))
-			assert.Equal(t, "param2", o.ParamSet.Parameter[1])
+			assert.Equal(t, 3, len(o.UserDefinedLogFieldsConfiguration.HeaderSet.Header))
+			assert.Equal(t, "header3", o.UserDefinedLogFieldsConfiguration.HeaderSet.Header[2])
+			assert.Equal(t, 2, len(o.UserDefinedLogFieldsConfiguration.ParamSet.Parameter))
+			assert.Equal(t, "param2", o.UserDefinedLogFieldsConfiguration.ParamSet.Parameter[1])
 		},
 	},
 	{
@@ -14981,9 +14981,9 @@ var testMockGetUserDefinedLogFieldsConfigSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, 1, len(o.HeaderSet.Header))
-			assert.Equal(t, "header1", o.HeaderSet.Header[0])
-			assert.Nil(t, o.ParamSet)
+			assert.Equal(t, 1, len(o.UserDefinedLogFieldsConfiguration.HeaderSet.Header))
+			assert.Equal(t, "header1", o.UserDefinedLogFieldsConfiguration.HeaderSet.Header[0])
+			assert.Nil(t, o.UserDefinedLogFieldsConfiguration.ParamSet)
 		},
 	},
 }
@@ -15331,7 +15331,7 @@ var testMockInitiateBucketWormSuccessCases = []struct {
 		&InitiateBucketWormRequest{
 			Bucket: Ptr("bucket"),
 			InitiateWormConfiguration: &InitiateWormConfiguration{
-				3,
+				Ptr(int32(3)),
 			},
 		},
 		func(t *testing.T, o *InitiateBucketWormResult, err error) {
@@ -15394,7 +15394,7 @@ var testMockInitiateBucketWormErrorCases = []struct {
 		&InitiateBucketWormRequest{
 			Bucket: Ptr("bucket"),
 			InitiateWormConfiguration: &InitiateWormConfiguration{
-				3,
+				Ptr(int32(3)),
 			},
 		},
 		func(t *testing.T, o *InitiateBucketWormResult, err error) {
@@ -15435,7 +15435,7 @@ var testMockInitiateBucketWormErrorCases = []struct {
 		&InitiateBucketWormRequest{
 			Bucket: Ptr("bucket"),
 			InitiateWormConfiguration: &InitiateWormConfiguration{
-				3,
+				Ptr(int32(3)),
 			},
 		},
 		func(t *testing.T, o *InitiateBucketWormResult, err error) {
@@ -15468,7 +15468,7 @@ var testMockInitiateBucketWormErrorCases = []struct {
 		&InitiateBucketWormRequest{
 			Bucket: Ptr("bucket"),
 			InitiateWormConfiguration: &InitiateWormConfiguration{
-				3,
+				Ptr(int32(3)),
 			},
 		},
 		func(t *testing.T, o *InitiateBucketWormResult, err error) {
@@ -15829,7 +15829,7 @@ var testMockExtendBucketWormRequestSuccessCases = []struct {
 			Bucket: Ptr("bucket"),
 			WormId: Ptr("123"),
 			ExtendWormConfiguration: &ExtendWormConfiguration{
-				3,
+				Ptr(int32(3)),
 			},
 		},
 		func(t *testing.T, o *ExtendBucketWormResult, err error) {
@@ -15893,7 +15893,7 @@ var testMockExtendBucketWormErrorCases = []struct {
 			Bucket: Ptr("bucket"),
 			WormId: Ptr("123"),
 			ExtendWormConfiguration: &ExtendWormConfiguration{
-				3,
+				Ptr(int32(3)),
 			},
 		},
 		func(t *testing.T, o *ExtendBucketWormResult, err error) {
@@ -15934,7 +15934,7 @@ var testMockExtendBucketWormErrorCases = []struct {
 			Bucket: Ptr("bucket"),
 			WormId: Ptr("123"),
 			ExtendWormConfiguration: &ExtendWormConfiguration{
-				3,
+				Ptr(int32(3)),
 			},
 		},
 		func(t *testing.T, o *ExtendBucketWormResult, err error) {
@@ -16007,7 +16007,7 @@ var testMockGetBucketWormRequestSuccessCases = []struct {
 
 			assert.Equal(t, *o.WormConfiguration.WormId, "1666E2CFB2B3418****")
 			assert.Equal(t, o.WormConfiguration.State, BucketWormStateLocked)
-			assert.Equal(t, o.WormConfiguration.RetentionPeriodInDays, int32(1))
+			assert.Equal(t, *o.WormConfiguration.RetentionPeriodInDays, int32(1))
 			assert.Equal(t, *o.WormConfiguration.CreationDate, "2020-10-15T15:50:32")
 		},
 	},
@@ -16653,7 +16653,7 @@ var testMockGetBucketPolicyStatusSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.True(t, o.PolicyStatus.IsPublic)
+			assert.True(t, *o.PolicyStatus.IsPublic)
 		},
 	},
 	{
@@ -16679,7 +16679,7 @@ var testMockGetBucketPolicyStatusSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.False(t, o.PolicyStatus.IsPublic)
+			assert.False(t, *o.PolicyStatus.IsPublic)
 		},
 	},
 }
@@ -16828,7 +16828,7 @@ var testMockPutBucketTransferAccelerationSuccessCases = []struct {
 		&PutBucketTransferAccelerationRequest{
 			Bucket: Ptr("bucket"),
 			TransferAccelerationConfiguration: &TransferAccelerationConfiguration{
-				true,
+				Ptr(true),
 			},
 		},
 		func(t *testing.T, o *PutBucketTransferAccelerationResult, err error) {
@@ -16853,7 +16853,7 @@ var testMockPutBucketTransferAccelerationSuccessCases = []struct {
 		&PutBucketTransferAccelerationRequest{
 			Bucket: Ptr("bucket"),
 			TransferAccelerationConfiguration: &TransferAccelerationConfiguration{
-				false,
+				Ptr(false),
 			},
 		},
 		func(t *testing.T, o *PutBucketTransferAccelerationResult, err error) {
@@ -16916,7 +16916,7 @@ var testMockPutBucketTransferAccelerationErrorCases = []struct {
 		&PutBucketTransferAccelerationRequest{
 			Bucket: Ptr("bucket"),
 			TransferAccelerationConfiguration: &TransferAccelerationConfiguration{
-				true,
+				Ptr(true),
 			},
 		},
 		func(t *testing.T, o *PutBucketTransferAccelerationResult, err error) {
@@ -16957,7 +16957,7 @@ var testMockPutBucketTransferAccelerationErrorCases = []struct {
 		&PutBucketTransferAccelerationRequest{
 			Bucket: Ptr("bucket"),
 			TransferAccelerationConfiguration: &TransferAccelerationConfiguration{
-				true,
+				Ptr(true),
 			},
 		},
 		func(t *testing.T, o *PutBucketTransferAccelerationResult, err error) {
@@ -17023,7 +17023,7 @@ var testMockGetBucketTransferAccelerationSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.True(t, o.TransferAccelerationConfiguration.Enabled)
+			assert.True(t, *o.TransferAccelerationConfiguration.Enabled)
 		},
 	},
 	{
@@ -17047,7 +17047,7 @@ var testMockGetBucketTransferAccelerationSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.False(t, o.TransferAccelerationConfiguration.Enabled)
+			assert.False(t, *o.TransferAccelerationConfiguration.Enabled)
 		},
 	},
 }
@@ -17196,7 +17196,7 @@ var testMockPutBucketArchiveDirectReadSuccessCases = []struct {
 		&PutBucketArchiveDirectReadRequest{
 			Bucket: Ptr("bucket"),
 			ArchiveDirectReadConfiguration: &ArchiveDirectReadConfiguration{
-				true,
+				Ptr(true),
 			},
 		},
 		func(t *testing.T, o *PutBucketArchiveDirectReadResult, err error) {
@@ -17221,7 +17221,7 @@ var testMockPutBucketArchiveDirectReadSuccessCases = []struct {
 		&PutBucketArchiveDirectReadRequest{
 			Bucket: Ptr("bucket"),
 			ArchiveDirectReadConfiguration: &ArchiveDirectReadConfiguration{
-				false,
+				Ptr(false),
 			},
 		},
 		func(t *testing.T, o *PutBucketArchiveDirectReadResult, err error) {
@@ -17284,7 +17284,7 @@ var testMockPutBucketArchiveDirectReadErrorCases = []struct {
 		&PutBucketArchiveDirectReadRequest{
 			Bucket: Ptr("bucket"),
 			ArchiveDirectReadConfiguration: &ArchiveDirectReadConfiguration{
-				true,
+				Ptr(true),
 			},
 		},
 		func(t *testing.T, o *PutBucketArchiveDirectReadResult, err error) {
@@ -17325,7 +17325,7 @@ var testMockPutBucketArchiveDirectReadErrorCases = []struct {
 		&PutBucketArchiveDirectReadRequest{
 			Bucket: Ptr("bucket"),
 			ArchiveDirectReadConfiguration: &ArchiveDirectReadConfiguration{
-				true,
+				Ptr(true),
 			},
 		},
 		func(t *testing.T, o *PutBucketArchiveDirectReadResult, err error) {
@@ -17391,7 +17391,7 @@ var testMockGetBucketArchiveDirectReadSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.True(t, o.ArchiveDirectReadConfiguration.Enabled)
+			assert.True(t, *o.ArchiveDirectReadConfiguration.Enabled)
 		},
 	},
 	{
@@ -17415,7 +17415,7 @@ var testMockGetBucketArchiveDirectReadSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.False(t, o.ArchiveDirectReadConfiguration.Enabled)
+			assert.False(t, *o.ArchiveDirectReadConfiguration.Enabled)
 		},
 	},
 }

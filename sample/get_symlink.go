@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"

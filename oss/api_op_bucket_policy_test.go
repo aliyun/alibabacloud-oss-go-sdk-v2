@@ -457,7 +457,7 @@ func TestUnmarshalOutput_GetBucketPolicyStatus(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
-	assert.True(t, result.PolicyStatus.IsPublic)
+	assert.True(t, *result.PolicyStatus.IsPublic)
 	body = `<?xml version="1.0" encoding="UTF-8"?>
 		<Error>
 		<Code>NoSuchBucket</Code>

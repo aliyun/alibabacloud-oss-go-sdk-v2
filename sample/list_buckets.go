@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
@@ -11,7 +10,7 @@ import (
 )
 
 var (
-	region     string
+	region string
 )
 
 func init() {
@@ -47,7 +46,7 @@ func main() {
 
 		// Log the objects found
 		for _, b := range page.Buckets {
-			fmt.Printf("Bucket:%v, %v, %v\n", oss.ToString(b.Name), oss.ToString(b.StorageClass), oss.ToString(b.Location))
+			log.Printf("Bucket:%v, %v, %v\n", oss.ToString(b.Name), oss.ToString(b.StorageClass), oss.ToString(b.Location))
 		}
 	}
 }

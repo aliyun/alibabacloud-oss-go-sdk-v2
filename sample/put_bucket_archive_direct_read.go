@@ -40,7 +40,7 @@ func main() {
 	request := &oss.PutBucketArchiveDirectReadRequest{
 		Bucket: oss.Ptr(bucketName),
 		ArchiveDirectReadConfiguration: &oss.ArchiveDirectReadConfiguration{
-			true,
+			oss.Ptr(true),
 		},
 	}
 	result, err := client.PutBucketArchiveDirectRead(context.TODO(), request)

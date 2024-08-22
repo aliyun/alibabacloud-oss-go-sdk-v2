@@ -92,7 +92,7 @@ func TestUnmarshalOutput_PutBucketLogging(t *testing.T) {
 		},
 	}
 	result := &PutBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -107,7 +107,7 @@ func TestUnmarshalOutput_PutBucketLogging(t *testing.T) {
 		},
 	}
 	result = &PutBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -122,7 +122,7 @@ func TestUnmarshalOutput_PutBucketLogging(t *testing.T) {
 		},
 	}
 	result = &PutBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -146,7 +146,7 @@ func TestUnmarshalOutput_PutBucketLogging(t *testing.T) {
 		},
 	}
 	result = &PutBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
@@ -213,15 +213,15 @@ func TestUnmarshalOutput_GetBucketLogging(t *testing.T) {
 		},
 	}
 	result := &GetBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 
-	assert.Equal(t, *result.LoggingEnabled.TargetBucket, "bucket-log")
-	assert.Equal(t, *result.LoggingEnabled.TargetPrefix, "prefix-access_log")
+	assert.Equal(t, *result.BucketLoggingStatus.LoggingEnabled.TargetBucket, "bucket-log")
+	assert.Equal(t, *result.BucketLoggingStatus.LoggingEnabled.TargetPrefix, "prefix-access_log")
 
 	output = &OperationOutput{
 		StatusCode: 404,
@@ -233,7 +233,7 @@ func TestUnmarshalOutput_GetBucketLogging(t *testing.T) {
 		},
 	}
 	result = &GetBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -249,7 +249,7 @@ func TestUnmarshalOutput_GetBucketLogging(t *testing.T) {
 		},
 	}
 	result = &GetBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -273,7 +273,7 @@ func TestUnmarshalOutput_GetBucketLogging(t *testing.T) {
 		},
 	}
 	result = &GetBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
@@ -330,18 +330,18 @@ func TestUnmarshalOutput_DeleteBucketLogging(t *testing.T) {
 	var output *OperationOutput
 	var err error
 	output = &OperationOutput{
-		StatusCode: 200,
-		Status:     "OK",
+		StatusCode: 204,
+		Status:     "No Content",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 			"Content-Type":     {"application/xml"},
 		},
 	}
 	result := &DeleteBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
-	assert.Equal(t, result.StatusCode, 200)
-	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.StatusCode, 204)
+	assert.Equal(t, result.Status, "No Content")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 
@@ -355,7 +355,7 @@ func TestUnmarshalOutput_DeleteBucketLogging(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -371,7 +371,7 @@ func TestUnmarshalOutput_DeleteBucketLogging(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -395,7 +395,7 @@ func TestUnmarshalOutput_DeleteBucketLogging(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
@@ -487,7 +487,7 @@ func TestUnmarshalOutput_PutUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result := &PutBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -502,7 +502,7 @@ func TestUnmarshalOutput_PutUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result = &PutBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -517,7 +517,7 @@ func TestUnmarshalOutput_PutUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result = &PutBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -541,7 +541,7 @@ func TestUnmarshalOutput_PutUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result = &PutBucketLoggingResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
@@ -618,15 +618,15 @@ func TestUnmarshalOutput_GetUserDefinedLogFieldsConfig(t *testing.T) {
 		Body: io.NopCloser(bytes.NewReader([]byte(body))),
 	}
 	result := &GetUserDefinedLogFieldsConfigResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, (*result.HeaderSet).Header[0], "header1")
-	assert.Equal(t, (*result.HeaderSet).Header[2], "header3")
-	assert.Equal(t, (*result.ParamSet).Parameter[1], "param2")
+	assert.Equal(t, (*result.UserDefinedLogFieldsConfiguration.HeaderSet).Header[0], "header1")
+	assert.Equal(t, (*result.UserDefinedLogFieldsConfiguration.HeaderSet).Header[2], "header3")
+	assert.Equal(t, (*result.UserDefinedLogFieldsConfiguration.ParamSet).Parameter[1], "param2")
 
 	output = &OperationOutput{
 		StatusCode: 404,
@@ -637,7 +637,7 @@ func TestUnmarshalOutput_GetUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result = &GetUserDefinedLogFieldsConfigResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -652,7 +652,7 @@ func TestUnmarshalOutput_GetUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result = &GetUserDefinedLogFieldsConfigResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -676,7 +676,7 @@ func TestUnmarshalOutput_GetUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result = &GetUserDefinedLogFieldsConfigResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
@@ -741,7 +741,7 @@ func TestUnmarshalOutput_DeleteUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result := &DeleteUserDefinedLogFieldsConfigResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -758,7 +758,7 @@ func TestUnmarshalOutput_DeleteUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result = &DeleteUserDefinedLogFieldsConfigResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -774,7 +774,7 @@ func TestUnmarshalOutput_DeleteUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result = &DeleteUserDefinedLogFieldsConfigResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -798,7 +798,7 @@ func TestUnmarshalOutput_DeleteUserDefinedLogFieldsConfig(t *testing.T) {
 		},
 	}
 	result = &DeleteUserDefinedLogFieldsConfigResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
