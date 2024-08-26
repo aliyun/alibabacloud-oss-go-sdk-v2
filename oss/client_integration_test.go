@@ -6407,3 +6407,76 @@ func TestBucketWebsite(t *testing.T) {
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
 }
+
+func TestBucketHttpsConfig(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	request := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), request)
+	assert.Nil(t, err)
+
+	putRequest := &PutBucketHttpsConfigRequest{
+		Bucket: Ptr(bucketName),
+		HttpsConfiguration: &HttpsConfiguration{
+			TLS: &TLS{
+				Enable:      Ptr(true),
+				TLSVersions: []string{"TLSv1.2", "TLSv1.3"},
+			},
+		},
+	}
+	putResult, err := client.PutBucketHttpsConfig(context.TODO(), putRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getRequest := &GetBucketHttpsConfigRequest{
+		Bucket: Ptr(bucketName),
+	}
+	getResult, err := client.GetBucketHttpsConfig(context.TODO(), getRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	assert.True(t, *getResult.HttpsConfiguration.TLS.Enable)
+	assert.Equal(t, len(getResult.HttpsConfiguration.TLS.TLSVersions), 2)
+	time.Sleep(1 * time.Second)
+
+	var serr *ServiceError
+	bucketNameNotExist := bucketName + "-not-exist"
+	getRequest = &GetBucketHttpsConfigRequest{
+		Bucket: Ptr(bucketNameNotExist),
+	}
+	getResult, err = client.GetBucketHttpsConfig(context.TODO(), getRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	putRequest = &PutBucketHttpsConfigRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		HttpsConfiguration: &HttpsConfiguration{
+			TLS: &TLS{
+				Enable:      Ptr(true),
+				TLSVersions: []string{"TLSv1.2", "TLSv1.3"},
+			},
+		},
+	}
+	putResult, err = client.PutBucketHttpsConfig(context.TODO(), putRequest)
+	serr = &ServiceError{}
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+}
