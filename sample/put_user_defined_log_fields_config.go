@@ -41,10 +41,10 @@ func main() {
 		Bucket: oss.Ptr(bucketName),
 		UserDefinedLogFieldsConfiguration: &oss.UserDefinedLogFieldsConfiguration{
 			HeaderSet: &oss.HeaderSet{
-				Header: []string{"header1", "header2"},
+				Headers: []string{"header1", "header2"},
 			},
 			ParamSet: &oss.ParamSet{
-				Parameter: []string{"param"},
+				Parameters: []string{"param"},
 			},
 		},
 	}

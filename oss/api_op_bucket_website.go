@@ -11,13 +11,13 @@ type MirrorHeaders struct {
 	PassAll *bool `xml:"PassAll"`
 
 	// The headers to pass through to the origin. This parameter takes effect only when the value of RedirectType is Mirror. Each specified header can be up to 1,024 bytes in length and can contain only letters, digits, and hyphens (-). You can specify up to 10 headers.
-	Pass []string `xml:"Pass"`
+	Passs []string `xml:"Pass"`
 
 	// The headers that are not allowed to pass through to the origin. This parameter takes effect only when the value of RedirectType is Mirror. Each header can be up to 1,024 bytes in length and can contain only letters, digits, and hyphens (-). You can specify up to 10 headers. This parameter is used together with PassAll.
-	Remove []string `xml:"Remove"`
+	Removes []string `xml:"Remove"`
 
 	// The headers that are sent to the origin. The specified headers are configured in the data returned by the origin regardless of whether the headers are contained in the request. This parameter takes effect only when the value of RedirectType is Mirror. You can specify up to 10 headers.
-	Set []MirrorHeadersSet `xml:"Set"`
+	Sets []MirrorHeadersSet `xml:"Set"`
 }
 
 type RoutingRule struct {
@@ -80,7 +80,7 @@ type RoutingRuleCondition struct {
 	HttpErrorCodeReturnedEquals *int64 `xml:"HttpErrorCodeReturnedEquals"`
 
 	// This rule can only be matched if the request contains the specified header and the value is the specified value. This container can specify up to 10.
-	IncludeHeader []IncludeHeader `xml:"IncludeHeader"`
+	IncludeHeaders []IncludeHeader `xml:"IncludeHeader"`
 }
 
 type MirrorHeadersSet struct {
@@ -140,7 +140,7 @@ type RoutingRuleRedirect struct {
 
 type RoutingRules struct {
 	// The specified redirection rule or mirroring-based back-to-origin rule. You can specify up to 20 rules.
-	RoutingRule []RoutingRule `xml:"RoutingRule"`
+	RoutingRules []RoutingRule `xml:"RoutingRule"`
 }
 
 type GetBucketWebsiteRequest struct {
