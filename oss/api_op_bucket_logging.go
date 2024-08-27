@@ -21,12 +21,12 @@ type BucketLoggingStatus struct {
 
 type HeaderSet struct {
 	// The list of the custom request headers.
-	Header []string `xml:"header"`
+	Headers []string `xml:"header"`
 }
 
 type ParamSet struct {
 	// The list of the custom URL parameters.
-	Parameter []string `xml:"parameter"`
+	Parameters []string `xml:"parameter"`
 }
 
 type UserDefinedLogFieldsConfiguration struct {

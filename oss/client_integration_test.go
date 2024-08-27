@@ -5847,8 +5847,8 @@ func TestBucketLogging(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getUserResult.StatusCode)
 	assert.NotEmpty(t, getUserResult.Headers.Get("X-Oss-Request-Id"))
-	assert.Equal(t, 3, len(getUserResult.UserDefinedLogFieldsConfiguration.HeaderSet.Header))
-	assert.Equal(t, 2, len(getUserResult.UserDefinedLogFieldsConfiguration.ParamSet.Parameter))
+	assert.Equal(t, 3, len(getUserResult.UserDefinedLogFieldsConfiguration.HeaderSet.Headers))
+	assert.Equal(t, 2, len(getUserResult.UserDefinedLogFieldsConfiguration.ParamSet.Parameters))
 	time.Sleep(1 * time.Second)
 
 	delUserRequest := &DeleteUserDefinedLogFieldsConfigRequest{
