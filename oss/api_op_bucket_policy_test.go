@@ -24,7 +24,7 @@ func TestMarshalInput_PutBucketPolicy(t *testing.T) {
 		OpName: "PutBucketPolicy",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeDefault,
+			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
 			"policy": "",
@@ -43,7 +43,7 @@ func TestMarshalInput_PutBucketPolicy(t *testing.T) {
 		OpName: "PutBucketPolicy",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeDefault,
+			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
 			"policy": "",
@@ -62,7 +62,7 @@ func TestMarshalInput_PutBucketPolicy(t *testing.T) {
 		OpName: "PutBucketPolicy",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeDefault,
+			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
 			"policy": "",

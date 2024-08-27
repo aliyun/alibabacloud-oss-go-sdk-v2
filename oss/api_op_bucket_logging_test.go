@@ -22,7 +22,7 @@ func TestMarshalInput_PutBucketLogging(t *testing.T) {
 		OpName: "PutBucketLogging",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeDefault,
+			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
 			"logging": "",
@@ -41,7 +41,7 @@ func TestMarshalInput_PutBucketLogging(t *testing.T) {
 		OpName: "PutBucketLogging",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeDefault,
+			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
 			"logging": "",
@@ -65,7 +65,7 @@ func TestMarshalInput_PutBucketLogging(t *testing.T) {
 		OpName: "PutBucketLogging",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeDefault,
+			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
 			"logging": "",
@@ -624,9 +624,9 @@ func TestUnmarshalOutput_GetUserDefinedLogFieldsConfig(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, (*result.UserDefinedLogFieldsConfiguration.HeaderSet).Header[0], "header1")
-	assert.Equal(t, (*result.UserDefinedLogFieldsConfiguration.HeaderSet).Header[2], "header3")
-	assert.Equal(t, (*result.UserDefinedLogFieldsConfiguration.ParamSet).Parameter[1], "param2")
+	assert.Equal(t, (*result.UserDefinedLogFieldsConfiguration.HeaderSet).Headers[0], "header1")
+	assert.Equal(t, (*result.UserDefinedLogFieldsConfiguration.HeaderSet).Headers[2], "header3")
+	assert.Equal(t, (*result.UserDefinedLogFieldsConfiguration.ParamSet).Parameters[1], "param2")
 
 	output = &OperationOutput{
 		StatusCode: 404,

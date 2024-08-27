@@ -112,9 +112,9 @@ func TestMarshalInput_PutBucketWebsite(t *testing.T) {
 							MirrorCheckMd5:        Ptr(false),
 							MirrorHeaders: &MirrorHeaders{
 								PassAll: Ptr(true),
-								Pass:    []string{"myheader-key1", "myheader-key2"},
-								Remove:  []string{"myheader-key3", "myheader-key4"},
-								Set: []MirrorHeadersSet{
+								Passs:   []string{"myheader-key1", "myheader-key2"},
+								Removes: []string{"myheader-key3", "myheader-key4"},
+								Sets: []MirrorHeadersSet{
 									{
 										Key:   Ptr("myheader-key5"),
 										Value: Ptr("myheader-value5"),
@@ -128,7 +128,7 @@ func TestMarshalInput_PutBucketWebsite(t *testing.T) {
 						Condition: &RoutingRuleCondition{
 							KeyPrefixEquals:             Ptr("abc/"),
 							HttpErrorCodeReturnedEquals: Ptr(int64(404)),
-							IncludeHeader: []IncludeHeader{
+							IncludeHeaders: []IncludeHeader{
 								{
 									Key:    Ptr("host"),
 									Equals: Ptr("test.oss-cn-beijing-internal.aliyuncs.com"),
@@ -436,43 +436,43 @@ func TestUnmarshalOutput_GetBucketWebsite(t *testing.T) {
 	assert.Equal(t, *result.WebsiteConfiguration.IndexDocument.Type, int64(0))
 	assert.Equal(t, *result.WebsiteConfiguration.ErrorDocument.Key, "error.html")
 	assert.Equal(t, *result.WebsiteConfiguration.ErrorDocument.HttpStatus, int64(404))
-	assert.Equal(t, len(result.WebsiteConfiguration.RoutingRules.RoutingRule), 3)
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].RuleNumber, int64(1))
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Condition.KeyPrefixEquals, "abc/")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Condition.HttpErrorCodeReturnedEquals, int64(404))
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.RedirectType, "Mirror")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.PassQueryString, true)
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorURL, "http://example.com/")
-	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorPassQueryString)
-	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorFollowRedirect)
-	assert.False(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorCheckMd5)
-	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorHeaders.PassAll)
-	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorHeaders.Pass[0], "myheader-key1")
-	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorHeaders.Pass[1], "myheader-key2")
-	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorHeaders.Remove[0], "myheader-key3")
-	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorHeaders.Remove[1], "myheader-key4")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorHeaders.Set[0].Key, "myheader-key5")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[0].Redirect.MirrorHeaders.Set[0].Value, "myheader-value5")
+	assert.Equal(t, len(result.WebsiteConfiguration.RoutingRules.RoutingRules), 3)
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].RuleNumber, int64(1))
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Condition.KeyPrefixEquals, "abc/")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Condition.HttpErrorCodeReturnedEquals, int64(404))
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.RedirectType, "Mirror")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.PassQueryString, true)
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorURL, "http://example.com/")
+	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorPassQueryString)
+	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorFollowRedirect)
+	assert.False(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorCheckMd5)
+	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.PassAll)
+	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passs[0], "myheader-key1")
+	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passs[1], "myheader-key2")
+	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Removes[0], "myheader-key3")
+	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Removes[1], "myheader-key4")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Sets[0].Key, "myheader-key5")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Sets[0].Value, "myheader-value5")
 
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[1].RuleNumber, int64(2))
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[1].Condition.KeyPrefixEquals, "abc/")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[1].Condition.HttpErrorCodeReturnedEquals, int64(404))
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[1].Condition.IncludeHeader[0].Key, "host")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[1].Condition.IncludeHeader[0].Equals, "test.oss-cn-beijing-internal.aliyuncs.com")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[1].Redirect.RedirectType, "AliCDN")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[1].Redirect.Protocol, "http")
-	assert.False(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[1].Redirect.PassQueryString)
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[1].Redirect.ReplaceKeyWith, "prefix/${key}.suffix")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[1].Redirect.HttpRedirectCode, int64(301))
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].RuleNumber, int64(2))
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Condition.KeyPrefixEquals, "abc/")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Condition.HttpErrorCodeReturnedEquals, int64(404))
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Condition.IncludeHeaders[0].Key, "host")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Condition.IncludeHeaders[0].Equals, "test.oss-cn-beijing-internal.aliyuncs.com")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.RedirectType, "AliCDN")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.Protocol, "http")
+	assert.False(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.PassQueryString)
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.ReplaceKeyWith, "prefix/${key}.suffix")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.HttpRedirectCode, int64(301))
 
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[2].RuleNumber, int64(3))
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[2].Redirect.RedirectType, "External")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[2].Redirect.PassQueryString, false)
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[2].Redirect.ReplaceKeyWith, "prefix/${key}")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[2].Redirect.HttpRedirectCode, int64(302))
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[2].Redirect.EnableReplacePrefix, false)
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[2].Redirect.Protocol, "http")
-	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRule[2].Redirect.HostName, "example.com")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[2].RuleNumber, int64(3))
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[2].Redirect.RedirectType, "External")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[2].Redirect.PassQueryString, false)
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[2].Redirect.ReplaceKeyWith, "prefix/${key}")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[2].Redirect.HttpRedirectCode, int64(302))
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[2].Redirect.EnableReplacePrefix, false)
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[2].Redirect.Protocol, "http")
+	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[2].Redirect.HostName, "example.com")
 
 	output = &OperationOutput{
 		StatusCode: 404,
