@@ -37,23 +37,18 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.PutBucketTagsRequest{
+	request := &oss.PutBucketEncryptionRequest{
 		Bucket: oss.Ptr(bucketName),
-		Tagging: &oss.Tagging{
-			&oss.TagSet{
-				[]oss.Tag{
-					{
-						oss.Ptr("k1"),
-						oss.Ptr("v1"),
-					},
-				},
+		ServerSideEncryptionRule: &oss.ServerSideEncryptionRule{
+			&oss.ApplyServerSideEncryptionByDefault{
+				SSEAlgorithm:      oss.Ptr("KMS"),
+				KMSDataEncryption: oss.Ptr("SM4"),
 			},
 		},
 	}
-	result, err := client.PutBucketTags(context.TODO(), request)
+	result, err := client.PutBucketEncryption(context.TODO(), request)
 	if err != nil {
-		log.Fatalf("failed to put bucket tags %v", err)
+		log.Fatalf("failed to put bucket encryption %v", err)
 	}
-
-	log.Printf("put bucket tags result:%#v\n", result)
+	log.Printf("put bucket encryption result:%#v\n", result)
 }
