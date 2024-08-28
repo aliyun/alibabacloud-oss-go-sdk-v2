@@ -12,54 +12,48 @@ import (
 var (
 	region     string
 	bucketName string
-	objectName string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
 	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
-	flag.StringVar(&objectName, "object", "", "The name of the object.")
 }
 
 func main() {
 	flag.Parse()
-	if len(region) == 0 {
-		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, region required")
-	}
 	if len(bucketName) == 0 {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, bucket name required")
 	}
-	if len(objectName) == 0 {
+
+	if len(region) == 0 {
 		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, object name required")
+		log.Fatalf("invalid parameters, region required")
 	}
+
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region)
+
 	client := oss.NewClient(cfg)
-	putRequest := &oss.PutObjectTaggingRequest{
+
+	request := &oss.PutBucketTagsRequest{
 		Bucket: oss.Ptr(bucketName),
-		Key:    oss.Ptr(objectName),
 		Tagging: &oss.Tagging{
-			TagSet: &oss.TagSet{
-				Tags: []oss.Tag{
+			&oss.TagSet{
+				[]oss.Tag{
 					{
-						Key:   oss.Ptr("k1"),
-						Value: oss.Ptr("v1"),
-					},
-					{
-						Key:   oss.Ptr("k2"),
-						Value: oss.Ptr("v2"),
+						oss.Ptr("k1"),
+						oss.Ptr("v1"),
 					},
 				},
 			},
 		},
 	}
-	putResult, err := client.PutObjectTagging(context.TODO(), putRequest)
+	getResult, err := client.PutBucketTags(context.TODO(), request)
 	if err != nil {
-		log.Fatalf("failed to put object tagging %v", err)
+		log.Fatalf("failed to put bucket tags %v", err)
 	}
-	log.Printf("put object tagging result:%#v\n", putResult)
+
+	log.Printf("put bucket tags result:%#v\n", getResult)
 }

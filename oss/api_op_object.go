@@ -2181,15 +2181,27 @@ type PutObjectTaggingRequest struct {
 }
 
 type Tagging struct {
-	TagSet TagSet `xml:"TagSet"`
+	// The container used to store a set of Tags.
+	TagSet *TagSet `xml:"TagSet"`
 }
 
 type TagSet struct {
+	// The tags.
 	Tags []Tag `xml:"Tag"`
 }
 
 type Tag struct {
-	Key   *string `xml:"Key"`
+	// The key of a tag.
+	// *  A tag key can be up to 64 bytes in length.
+	// *  A tag key cannot start with `http://`, `https://`, or `Aliyun`.
+	// *  A tag key must be UTF-8 encoded.
+	// *  A tag key cannot be left empty.
+	Key *string `xml:"Key"`
+
+	// The value of the tag that you want to add or modify.
+	// * A tag value can be up to 128 bytes in length.
+	// * A tag value must be UTF-8 encoded.
+	// * The tag value can be left empty.
 	Value *string `xml:"Value"`
 }
 
