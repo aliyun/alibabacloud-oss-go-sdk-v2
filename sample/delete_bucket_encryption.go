@@ -37,23 +37,13 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.PutBucketTagsRequest{
+	request := &oss.DeleteBucketEncryptionRequest{
 		Bucket: oss.Ptr(bucketName),
-		Tagging: &oss.Tagging{
-			&oss.TagSet{
-				[]oss.Tag{
-					{
-						oss.Ptr("k1"),
-						oss.Ptr("v1"),
-					},
-				},
-			},
-		},
 	}
-	result, err := client.PutBucketTags(context.TODO(), request)
+	result, err := client.DeleteBucketEncryption(context.TODO(), request)
 	if err != nil {
-		log.Fatalf("failed to put bucket tags %v", err)
+		log.Fatalf("failed to delete bucket encryption %v", err)
 	}
 
-	log.Printf("put bucket tags result:%#v\n", result)
+	log.Printf("delete bucket encryption result:%#v\n", result)
 }
