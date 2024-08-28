@@ -5009,7 +5009,7 @@ func TestMarshalInput_PutObjectTagging(t *testing.T) {
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
 		Tagging: &Tagging{
-			TagSet{
+			&TagSet{
 				Tags: []Tag{
 					{
 						Key:   Ptr("k1"),
@@ -5037,7 +5037,7 @@ func TestMarshalInput_PutObjectTagging(t *testing.T) {
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
 		Tagging: &Tagging{
-			TagSet{
+			&TagSet{
 				Tags: []Tag{
 					{
 						Key:   Ptr("k1"),
