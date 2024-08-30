@@ -138,6 +138,15 @@ const (
 	InventoryOptionalFieldEncryptionStatus    InventoryOptionalFieldType = "EncryptionStatus"
 )
 
+// AccessMonitorStatusType The type of access monitor status
+type AccessMonitorStatusType string
+
+// Enum values for AccessMonitorStatusType
+const (
+	AccessMonitorStatusEnabled  AccessMonitorStatusType = "Enabled"
+	AccessMonitorStatusDisabled AccessMonitorStatusType = "Disabled"
+)
+
 // OSS headers
 const (
 	HeaderOssPrefix                      string = "X-Oss-"
