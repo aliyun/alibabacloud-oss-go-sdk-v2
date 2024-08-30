@@ -56,7 +56,7 @@ func TestMarshalInput_PutBucketHttpsConfig(t *testing.T) {
 		Bucket: Ptr("oss-demo"),
 		HttpsConfiguration: &HttpsConfiguration{
 			TLS: &TLS{
-				Enable:     Ptr(true),
+				Enable:      Ptr(true),
 				TLSVersions: []string{"TLSv1.2", "TLSv1.3"},
 			},
 		},
@@ -171,7 +171,7 @@ func TestMarshalInput_GetBucketHttpsConfig(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"httpsConfig"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
@@ -187,7 +187,7 @@ func TestMarshalInput_GetBucketHttpsConfig(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"httpsConfig"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 

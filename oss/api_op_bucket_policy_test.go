@@ -168,7 +168,7 @@ func TestMarshalInput_GetBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
 
@@ -184,7 +184,7 @@ func TestMarshalInput_GetBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 
@@ -295,7 +295,7 @@ func TestMarshalInput_DeleteBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
@@ -314,7 +314,7 @@ func TestMarshalInput_DeleteBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 
@@ -409,7 +409,7 @@ func TestMarshalInput_GetBucketPolicyStatus(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policyStatus"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
@@ -428,7 +428,7 @@ func TestMarshalInput_GetBucketPolicyStatus(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policyStatus"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 

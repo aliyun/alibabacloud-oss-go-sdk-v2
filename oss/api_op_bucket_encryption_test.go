@@ -411,7 +411,7 @@ func TestMarshalInput_DeleteBucketEncryption(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"encryption"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
 
@@ -430,7 +430,7 @@ func TestMarshalInput_DeleteBucketEncryption(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"encryption"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 
@@ -447,7 +447,7 @@ func TestUnmarshalOutput_DeleteBucketEncryption(t *testing.T) {
 		},
 	}
 	result := &DeleteBucketEncryptionResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 204)
 	assert.Equal(t, result.Status, "No Content")
@@ -472,7 +472,7 @@ func TestUnmarshalOutput_DeleteBucketEncryption(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketEncryptionResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -488,7 +488,7 @@ func TestUnmarshalOutput_DeleteBucketEncryption(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketEncryptionResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -512,7 +512,7 @@ func TestUnmarshalOutput_DeleteBucketEncryption(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketEncryptionResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXml)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")

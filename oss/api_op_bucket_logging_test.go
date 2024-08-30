@@ -171,7 +171,7 @@ func TestMarshalInput_GetBucketLogging(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"logging"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
@@ -187,7 +187,7 @@ func TestMarshalInput_GetBucketLogging(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"logging"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 
@@ -301,7 +301,7 @@ func TestMarshalInput_DeleteBucketLogging(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"logging"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
@@ -320,7 +320,7 @@ func TestMarshalInput_DeleteBucketLogging(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"logging"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 
@@ -704,7 +704,7 @@ func TestMarshalInput_DeleteUserDefinedLogFieldsConfig(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"userDefinedLogFieldsConfig"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
@@ -723,7 +723,7 @@ func TestMarshalInput_DeleteUserDefinedLogFieldsConfig(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"userDefinedLogFieldsConfig"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 

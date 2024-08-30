@@ -182,7 +182,7 @@ func TestMarshalInput_GetBucketTags(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
@@ -201,7 +201,7 @@ func TestMarshalInput_GetBucketTags(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
-	err = c.marshalInput(request, input)
+	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 
