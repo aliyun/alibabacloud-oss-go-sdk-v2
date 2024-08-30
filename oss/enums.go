@@ -105,7 +105,37 @@ type BucketWormStateType string
 
 const (
 	BucketWormStateInProgress BucketWormStateType = "InProgress"
-	BucketWormStateLocked BucketWormStateType = "Locked"
+	BucketWormStateLocked     BucketWormStateType = "Locked"
+)
+
+// InventoryFormatType The format of exported inventory lists
+type InventoryFormatType string
+
+// InventoryFormatCSV Enum values for InventoryFormatType
+const (
+	InventoryFormatCSV InventoryFormatType = "CSV"
+)
+
+// InventoryFrequencyType The frequency at which inventory lists are exported
+type InventoryFrequencyType string
+
+// Enum values for InventoryFrequencyType
+const (
+	InventoryFrequencyDaily  InventoryFrequencyType = "Daily"
+	InventoryFrequencyWeekly InventoryFrequencyType = "Weekly"
+)
+
+// InventoryOptionalFieldType The configuration fields that are included in inventory lists.
+type InventoryOptionalFieldType string
+
+// Enum values for InventoryOptionalFieldType
+const (
+	InventoryOptionalFieldSize                InventoryOptionalFieldType = "Size"
+	InventoryOptionalFieldLastModifiedDate    InventoryOptionalFieldType = "LastModifiedDate"
+	InventoryOptionalFieldETag                InventoryOptionalFieldType = "ETag"
+	InventoryOptionalFieldStorageClass        InventoryOptionalFieldType = "StorageClass"
+	InventoryOptionalFieldIsMultipartUploaded InventoryOptionalFieldType = "IsMultipartUploaded"
+	InventoryOptionalFieldEncryptionStatus    InventoryOptionalFieldType = "EncryptionStatus"
 )
 
 // OSS headers
