@@ -157,7 +157,7 @@ func (c *Client) CompleteBucketWorm(ctx context.Context, request *CompleteBucket
 		},
 		Bucket: request.Bucket,
 	}
-
+	input.OpMetadata.Set(signer.SubResource, []string{"wormId"})
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (c *Client) ExtendBucketWorm(ctx context.Context, request *ExtendBucketWorm
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"wormExtend"})
+	input.OpMetadata.Set(signer.SubResource, []string{"wormExtend", "wormId"})
 
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err

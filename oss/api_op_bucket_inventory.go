@@ -142,7 +142,7 @@ func (c *Client) PutBucketInventory(ctx context.Context, request *PutBucketInven
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
@@ -195,7 +195,7 @@ func (c *Client) GetBucketInventory(ctx context.Context, request *GetBucketInven
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
@@ -298,7 +298,7 @@ func (c *Client) DeleteBucketInventory(ctx context.Context, request *DeleteBucke
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
