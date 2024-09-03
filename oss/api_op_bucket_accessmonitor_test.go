@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +28,6 @@ func TestMarshalInput_PutBucketAccessMonitor(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"accessmonitor"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
@@ -48,7 +46,6 @@ func TestMarshalInput_PutBucketAccessMonitor(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"accessmonitor"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Contains(t, err.Error(), "missing required field, AccessMonitorConfiguration.")
 
@@ -69,7 +66,6 @@ func TestMarshalInput_PutBucketAccessMonitor(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"accessmonitor"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
@@ -180,7 +176,6 @@ func TestMarshalInput_GetBucketAccessMonitor(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"accessmonitor"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
@@ -199,7 +194,6 @@ func TestMarshalInput_GetBucketAccessMonitor(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"accessmonitor"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }

@@ -29,7 +29,7 @@ func TestMarshalInput_PutBucketInventory(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
@@ -48,7 +48,7 @@ func TestMarshalInput_PutBucketInventory(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, InventoryId.")
@@ -68,7 +68,7 @@ func TestMarshalInput_PutBucketInventory(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, InventoryConfiguration.")
@@ -128,7 +128,7 @@ func TestMarshalInput_PutBucketInventory(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
@@ -284,7 +284,7 @@ func TestMarshalInput_GetBucketInventory(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
@@ -303,7 +303,7 @@ func TestMarshalInput_GetBucketInventory(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, InventoryId.")
@@ -323,7 +323,7 @@ func TestMarshalInput_GetBucketInventory(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
@@ -754,7 +754,7 @@ func TestMarshalInput_DeleteBucketInventory(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
@@ -773,7 +773,7 @@ func TestMarshalInput_DeleteBucketInventory(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, InventoryId.")
@@ -793,7 +793,7 @@ func TestMarshalInput_DeleteBucketInventory(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"inventory"})
+	input.OpMetadata.Set(signer.SubResource, []string{"inventory", "inventoryId"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }

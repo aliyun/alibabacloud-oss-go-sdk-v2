@@ -2,8 +2,6 @@ package oss
 
 import (
 	"context"
-
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 )
 
 type AccessMonitorConfiguration struct {
@@ -42,8 +40,6 @@ func (c *Client) PutBucketAccessMonitor(ctx context.Context, request *PutBucketA
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"accessmonitor"})
-
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
 	}
@@ -92,8 +88,6 @@ func (c *Client) GetBucketAccessMonitor(ctx context.Context, request *GetBucketA
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"accessmonitor"})
-
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
 	}
