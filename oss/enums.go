@@ -147,6 +147,30 @@ const (
 	AccessMonitorStatusDisabled AccessMonitorStatusType = "Disabled"
 )
 
+type HistoricalObjectReplicationType string
+
+// Enum values for HistoricalObjectReplicationType
+const (
+	HistoricalObjectReplicationEnabled HistoricalObjectReplicationType = "enabled"
+	HistoricalObjectReplicationDisabled HistoricalObjectReplicationType = "disabled"
+)
+
+type TransferTypeType string
+
+// Enum values for TransferTypeType
+const (
+	TransferTypeInternal TransferTypeType = "internal"
+	TransferTypeOssAcc TransferTypeType = "oss_acc"
+)
+
+type StatusType string
+
+// Enum values for StatusType
+const (
+	StatusEnabled StatusType = "Enabled"
+	StatusDisabled StatusType = "Disabled"
+)
+
 // OSS headers
 const (
 	HeaderOssPrefix                      string = "X-Oss-"
