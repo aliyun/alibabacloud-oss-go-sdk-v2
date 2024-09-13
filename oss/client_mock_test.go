@@ -134,7 +134,7 @@ var testInvokeOperationAnonymousCases = []struct {
 				</AccessControlList>
 			</AccessControlPolicy>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 		},
 		&OperationInput{
 			OpName: "GetBucketAcl",
@@ -355,7 +355,7 @@ var testMockPutBucketSuccessCases = []struct {
 		nil,
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket", r.URL.String())
+			assert.Equal(t, "/bucket/", r.URL.String())
 		},
 		&PutBucketRequest{
 			Bucket: Ptr("bucket"),
@@ -378,7 +378,7 @@ var testMockPutBucketSuccessCases = []struct {
 		nil,
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket", r.URL.String())
+			assert.Equal(t, "/bucket/", r.URL.String())
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, "<CreateBucketConfiguration><StorageClass>Archive</StorageClass><DataRedundancyType>LRS</DataRedundancyType></CreateBucketConfiguration>", string(requestBody))
@@ -446,7 +446,7 @@ var testMockPutBucketErrorCases = []struct {
 				<EC>0002-00000040</EC>
 			</Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket", r.URL.String())
+			assert.Equal(t, "/bucket/", r.URL.String())
 		},
 		&PutBucketRequest{
 			Bucket: Ptr("bucket"),
@@ -481,7 +481,7 @@ var testMockPutBucketErrorCases = []struct {
 				<EC>0015-00000104</EC>
 			</Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket", r.URL.String())
+			assert.Equal(t, "/bucket/", r.URL.String())
 		},
 		&PutBucketRequest{
 			Bucket: Ptr("bucket"),
@@ -773,7 +773,7 @@ var testMockDeleteBucketSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket", r.URL.String())
+			assert.Equal(t, "/bucket/", r.URL.String())
 		},
 		&DeleteBucketRequest{
 			Bucket: Ptr("bucket"),
@@ -832,7 +832,7 @@ var testMockDeleteBucketErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket", r.URL.String())
+			assert.Equal(t, "/bucket/", r.URL.String())
 		},
 		&DeleteBucketRequest{
 			Bucket: Ptr("bucket"),
@@ -867,7 +867,7 @@ var testMockDeleteBucketErrorCases = []struct {
   <EC>0015-00000301</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket", r.URL.String())
+			assert.Equal(t, "/bucket/", r.URL.String())
 		},
 		&DeleteBucketRequest{
 			Bucket: Ptr("bucket"),
@@ -979,7 +979,7 @@ var testMockListObjectsSuccessCases = []struct {
 </Contents>
 </ListBucketResult>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?encoding-type=url", r.URL.String())
+			assert.Equal(t, "/bucket/?encoding-type=url", r.URL.String())
 		},
 		&ListObjectsRequest{
 			Bucket: Ptr("bucket"),
@@ -1063,7 +1063,7 @@ var testMockListObjectsSuccessCases = []struct {
 </ListBucketResult>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=URL&marker&max-keys=3&prefix", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=URL&marker&max-keys=3&prefix", strUrl)
 		},
 		&ListObjectsRequest{
 			Bucket:       Ptr("bucket"),
@@ -1156,7 +1156,7 @@ var testMockListObjectsSuccessCases = []struct {
 </ListBucketResult>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=URL&marker&max-keys=3&prefix", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=URL&marker&max-keys=3&prefix", strUrl)
 			assert.Equal(t, r.Header.Get("x-oss-request-payer"), "requester")
 		},
 		&ListObjectsRequest{
@@ -1241,7 +1241,7 @@ var testMockListObjectsErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?encoding-type=url", r.URL.String())
+			assert.Equal(t, "/bucket/?encoding-type=url", r.URL.String())
 		},
 		&ListObjectsRequest{
 			Bucket: Ptr("bucket"),
@@ -1277,7 +1277,7 @@ var testMockListObjectsErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=URL&marker&max-keys=3&prefix", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=URL&marker&max-keys=3&prefix", strUrl)
 		},
 		&ListObjectsRequest{
 			Bucket:       Ptr("bucket"),
@@ -1310,7 +1310,7 @@ var testMockListObjectsErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=URL&marker&max-keys=3&prefix", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=URL&marker&max-keys=3&prefix", strUrl)
 		},
 		&ListObjectsRequest{
 			Bucket:       Ptr("bucket"),
@@ -1344,7 +1344,7 @@ var testMockListObjectsErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=URL&marker&max-keys=3&prefix", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=URL&marker&max-keys=3&prefix", strUrl)
 		},
 		&ListObjectsRequest{
 			Bucket:       Ptr("bucket"),
@@ -1452,7 +1452,7 @@ var testMockListObjectsV2SuccessCases = []struct {
 </ListBucketResult>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encoding-type=url&list-type=2", strUrl)
+			assert.Equal(t, "/bucket/?encoding-type=url&list-type=2", strUrl)
 		},
 		&ListObjectsV2Request{
 			Bucket: Ptr("bucket"),
@@ -1542,7 +1542,7 @@ var testMockListObjectsV2SuccessCases = []struct {
 </ListBucketResult>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
 		},
 		&ListObjectsV2Request{
 			Bucket:       Ptr("bucket"),
@@ -1639,7 +1639,7 @@ var testMockListObjectsV2SuccessCases = []struct {
 </ListBucketResult>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
 			assert.Equal(t, r.Header.Get("x-oss-request-payer"), "requester")
 		},
 		&ListObjectsV2Request{
@@ -1726,7 +1726,7 @@ var testMockListObjectsV2ErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encoding-type=url&list-type=2", strUrl)
+			assert.Equal(t, "/bucket/?encoding-type=url&list-type=2", strUrl)
 		},
 		&ListObjectsV2Request{
 			Bucket: Ptr("bucket"),
@@ -1762,7 +1762,7 @@ var testMockListObjectsV2ErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
 		},
 		&ListObjectsV2Request{
 			Bucket:       Ptr("bucket"),
@@ -1796,7 +1796,7 @@ var testMockListObjectsV2ErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=url&fetch-owner=true&list-type=2&max-keys=3&prefix=a%2F&start-after=b", strUrl)
 		},
 		&ListObjectsV2Request{
 			Bucket:       Ptr("bucket"),
@@ -1882,7 +1882,7 @@ var testMockGetBucketInfoSuccessCases = []struct {
   </Bucket>
 </BucketInfo>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?bucketInfo", r.URL.String())
+			assert.Equal(t, "/bucket/?bucketInfo", r.URL.String())
 		},
 		&GetBucketInfoRequest{
 			Bucket: Ptr("bucket"),
@@ -1953,7 +1953,7 @@ var testMockGetBucketInfoSuccessCases = []struct {
   </Bucket>
 </BucketInfo>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?bucketInfo", r.URL.String())
+			assert.Equal(t, "/bucket/?bucketInfo", r.URL.String())
 		},
 		&GetBucketInfoRequest{
 			Bucket: Ptr("bucket"),
@@ -2035,7 +2035,7 @@ var testMockGetBucketInfoErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?bucketInfo", r.URL.String())
+			assert.Equal(t, "/bucket/?bucketInfo", r.URL.String())
 		},
 		&GetBucketInfoRequest{
 			Bucket: Ptr("bucket"),
@@ -2071,7 +2071,7 @@ var testMockGetBucketInfoErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?bucketInfo", strUrl)
+			assert.Equal(t, "/bucket/?bucketInfo", strUrl)
 		},
 		&GetBucketInfoRequest{
 			Bucket: Ptr("bucket"),
@@ -2099,7 +2099,7 @@ var testMockGetBucketInfoErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?bucketInfo", strUrl)
+			assert.Equal(t, "/bucket/?bucketInfo", strUrl)
 		},
 		&GetBucketInfoRequest{
 			Bucket: Ptr("bucket"),
@@ -2149,7 +2149,7 @@ var testMockGetBucketLocationSuccessCases = []struct {
 		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
 <LocationConstraint>oss-cn-hangzhou</LocationConstraint>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?location", r.URL.String())
+			assert.Equal(t, "/bucket/?location", r.URL.String())
 		},
 		&GetBucketLocationRequest{
 			Bucket: Ptr("bucket"),
@@ -2174,7 +2174,7 @@ var testMockGetBucketLocationSuccessCases = []struct {
 		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
 <LocationConstraint>oss-cn-chengdu</LocationConstraint>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?location", r.URL.String())
+			assert.Equal(t, "/bucket/?location", r.URL.String())
 		},
 		&GetBucketLocationRequest{
 			Bucket: Ptr("bucket"),
@@ -2235,7 +2235,7 @@ var testMockGetBucketLocationErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?location", r.URL.String())
+			assert.Equal(t, "/bucket/?location", r.URL.String())
 		},
 		&GetBucketLocationRequest{
 			Bucket: Ptr("bucket"),
@@ -2271,7 +2271,7 @@ var testMockGetBucketLocationErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?location", strUrl)
+			assert.Equal(t, "/bucket/?location", strUrl)
 		},
 		&GetBucketLocationRequest{
 			Bucket: Ptr("bucket"),
@@ -2299,7 +2299,7 @@ var testMockGetBucketLocationErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?location", strUrl)
+			assert.Equal(t, "/bucket/?location", strUrl)
 		},
 		&GetBucketLocationRequest{
 			Bucket: Ptr("bucket"),
@@ -2371,7 +2371,7 @@ var testMockGetBucketStatSuccessCases = []struct {
   <DeleteMarkerCount>6276</DeleteMarkerCount>
 </BucketStat>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?stat", r.URL.String())
+			assert.Equal(t, "/bucket/?stat", r.URL.String())
 		},
 		&GetBucketStatRequest{
 			Bucket: Ptr("bucket"),
@@ -2452,7 +2452,7 @@ var testMockGetBucketStatErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?stat", r.URL.String())
+			assert.Equal(t, "/bucket/?stat", r.URL.String())
 		},
 		&GetBucketStatRequest{
 			Bucket: Ptr("bucket"),
@@ -2488,7 +2488,7 @@ var testMockGetBucketStatErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?stat", strUrl)
+			assert.Equal(t, "/bucket/?stat", strUrl)
 		},
 		&GetBucketStatRequest{
 			Bucket: Ptr("bucket"),
@@ -2516,7 +2516,7 @@ var testMockGetBucketStatErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?stat", strUrl)
+			assert.Equal(t, "/bucket/?stat", strUrl)
 		},
 		&GetBucketStatRequest{
 			Bucket: Ptr("bucket"),
@@ -2565,7 +2565,7 @@ var testMockPutBucketAclSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 			assert.Equal(t, string(BucketACLPublicRead), r.Header.Get("X-Oss-Acl"))
 		},
 		&PutBucketAclRequest{
@@ -2589,7 +2589,7 @@ var testMockPutBucketAclSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 			assert.Equal(t, string(BucketACLPrivate), r.Header.Get("X-Oss-Acl"))
 		},
 		&PutBucketAclRequest{
@@ -2613,7 +2613,7 @@ var testMockPutBucketAclSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 			assert.Equal(t, string(BucketACLPublicReadWrite), r.Header.Get("X-Oss-Acl"))
 		},
 		&PutBucketAclRequest{
@@ -2674,7 +2674,7 @@ var testMockPutBucketAclErrorCases = []struct {
   <ArgumentValue>error-acl</ArgumentValue>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 			assert.Equal(t, string(BucketACLPrivate), r.Header.Get("X-Oss-Acl"))
 		},
 		&PutBucketAclRequest{
@@ -2711,7 +2711,7 @@ var testMockPutBucketAclErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?acl", strUrl)
+			assert.Equal(t, "/bucket/?acl", strUrl)
 			assert.Equal(t, string(BucketACLPrivate), r.Header.Get("X-Oss-Acl"))
 		},
 		&PutBucketAclRequest{
@@ -2741,7 +2741,7 @@ var testMockPutBucketAclErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?acl", strUrl)
+			assert.Equal(t, "/bucket/?acl", strUrl)
 			assert.Equal(t, string(BucketACLPrivate), r.Header.Get("X-Oss-Acl"))
 		},
 		&PutBucketAclRequest{
@@ -2801,7 +2801,7 @@ var testMockGetBucketAclSuccessCases = []struct {
     </AccessControlList>
 </AccessControlPolicy>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 		},
 		&GetBucketAclRequest{
 			Bucket: Ptr("bucket"),
@@ -2836,7 +2836,7 @@ var testMockGetBucketAclSuccessCases = []struct {
     </AccessControlList>
 </AccessControlPolicy>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 		},
 		&GetBucketAclRequest{
 			Bucket: Ptr("bucket"),
@@ -2871,7 +2871,7 @@ var testMockGetBucketAclSuccessCases = []struct {
     </AccessControlList>
 </AccessControlPolicy>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 		},
 		&GetBucketAclRequest{
 			Bucket: Ptr("bucket"),
@@ -2934,7 +2934,7 @@ var testMockGetBucketAclErrorCases = []struct {
   <ArgumentValue>error-acl</ArgumentValue>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 		},
 		&GetBucketAclRequest{
 			Bucket: Ptr("bucket"),
@@ -2969,7 +2969,7 @@ var testMockGetBucketAclErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?acl", strUrl)
+			assert.Equal(t, "/bucket/?acl", strUrl)
 		},
 		&GetBucketAclRequest{
 			Bucket: Ptr("bucket"),
@@ -3004,7 +3004,7 @@ var testMockGetBucketAclErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 		},
 		&GetBucketAclRequest{
 			Bucket: Ptr("bucket"),
@@ -3031,7 +3031,7 @@ var testMockGetBucketAclErrorCases = []struct {
 		},
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?acl", r.URL.String())
+			assert.Equal(t, "/bucket/?acl", r.URL.String())
 		},
 		&GetBucketAclRequest{
 			Bucket: Ptr("bucket"),
@@ -5392,7 +5392,7 @@ var testMockDeleteMultipleObjectsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delete&encoding-type=url", strUrl)
+			assert.Equal(t, "/bucket/?delete&encoding-type=url", strUrl)
 			data, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, string(data), "<Delete><Quiet>true</Quiet><Object><Key>key1.txt</Key></Object><Object><Key>key2.txt</Key></Object></Delete>")
@@ -5434,7 +5434,7 @@ var testMockDeleteMultipleObjectsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delete&encoding-type=url", strUrl)
+			assert.Equal(t, "/bucket/?delete&encoding-type=url", strUrl)
 			data, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, string(data), ("<Delete><Quiet>false</Quiet><Object><Key>key1.txt</Key></Object><Object><Key>key2.txt</Key></Object></Delete>"))
@@ -5483,7 +5483,7 @@ var testMockDeleteMultipleObjectsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delete&encoding-type=url", strUrl)
+			assert.Equal(t, "/bucket/?delete&encoding-type=url", strUrl)
 			data, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, string(data), "<Delete><Quiet>false</Quiet><Object><Key>key1.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****</VersionId></Object><Object><Key>key2.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****</VersionId></Object></Delete>")
@@ -5529,7 +5529,7 @@ var testMockDeleteMultipleObjectsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delete&encoding-type=url", strUrl)
+			assert.Equal(t, "/bucket/?delete&encoding-type=url", strUrl)
 			data, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, string(data), "<Delete><Quiet>false</Quiet><Object><Key>go-sdk-v1&#x01;&#x02;&#x03;&#x04;&#x05;&#x06;&#x07;&#x08;&#x9;&#xA;&#x0B;&#x0C;&#xD;&#x0E;&#x0F;&#x10;&#x11;&#x12;&#x13;&#x14;&#x15;&#x16;&#x17;&#x18;&#x19;&#x1A;&#x1B;&#x1C;&#x1D;&#x1E;&#x1F;</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****</VersionId></Object></Delete>")
@@ -5571,7 +5571,7 @@ var testMockDeleteMultipleObjectsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delete&encoding-type=url", strUrl)
+			assert.Equal(t, "/bucket/?delete&encoding-type=url", strUrl)
 			data, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, string(data), "<Delete><Quiet>false</Quiet><Object><Key>go-sdk-v1&#x01;&#x02;&#x03;&#x04;&#x05;&#x06;&#x07;&#x08;&#x9;&#xA;&#x0B;&#x0C;&#xD;&#x0E;&#x0F;&#x10;&#x11;&#x12;&#x13;&#x14;&#x15;&#x16;&#x17;&#x18;&#x19;&#x1A;&#x1B;&#x1C;&#x1D;&#x1E;&#x1F;</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****</VersionId></Object></Delete>")
@@ -5644,7 +5644,7 @@ var testMockDeleteMultipleObjectsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delete&encoding-type=url", strUrl)
+			assert.Equal(t, "/bucket/?delete&encoding-type=url", strUrl)
 			data, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, string(data), "<Delete><Quiet>false</Quiet><Object><Key>key1.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****</VersionId></Object><Object><Key>key2.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****</VersionId></Object></Delete>")
@@ -5686,7 +5686,7 @@ var testMockDeleteMultipleObjectsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delete&encoding-type=url", strUrl)
+			assert.Equal(t, "/bucket/?delete&encoding-type=url", strUrl)
 			data, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, string(data), "<Delete><Quiet>false</Quiet><Object><Key>key1.txt</Key></Object><Object><Key>key2.txt</Key></Object></Delete>")
@@ -5719,7 +5719,7 @@ var testMockDeleteMultipleObjectsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delete&encoding-type=url", strUrl)
+			assert.Equal(t, "/bucket/?delete&encoding-type=url", strUrl)
 			data, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, string(data), "<Delete><Quiet>false</Quiet><Object><Key>key1.txt</Key></Object><Object><Key>key2.txt</Key></Object></Delete>")
@@ -9119,7 +9119,7 @@ var testMockListMultipartUploadsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encoding-type=url&uploads", strUrl)
+			assert.Equal(t, "/bucket/?encoding-type=url&uploads", strUrl)
 		},
 		&ListMultipartUploadsRequest{
 			Bucket: Ptr("bucket"),
@@ -9227,7 +9227,7 @@ var testMockListMultipartUploadsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&key-marker&max-uploads=10&prefix=pre&upload-id-marker&uploads", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=url&key-marker&max-uploads=10&prefix=pre&upload-id-marker&uploads", strUrl)
 		},
 		&ListMultipartUploadsRequest{
 			Bucket:         Ptr("bucket"),
@@ -9341,7 +9341,7 @@ var testMockListMultipartUploadsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&key-marker&max-uploads=10&prefix=pre&upload-id-marker&uploads", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=url&key-marker&max-uploads=10&prefix=pre&upload-id-marker&uploads", strUrl)
 			assert.Equal(t, r.Header.Get("x-oss-request-payer"), "requester")
 		},
 		&ListMultipartUploadsRequest{
@@ -9423,7 +9423,7 @@ var testMockListMultipartUploadsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encoding-type=url&uploads", strUrl)
+			assert.Equal(t, "/bucket/?encoding-type=url&uploads", strUrl)
 		},
 		&ListMultipartUploadsRequest{
 			Bucket: Ptr("bucket"),
@@ -9460,7 +9460,7 @@ var testMockListMultipartUploadsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encoding-type=url&uploads", strUrl)
+			assert.Equal(t, "/bucket/?encoding-type=url&uploads", strUrl)
 		},
 		&ListMultipartUploadsRequest{
 			Bucket: Ptr("bucket"),
@@ -9855,7 +9855,7 @@ var testMockPutBucketVersioningSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?versioning", r.URL.String())
+			assert.Equal(t, "/bucket/?versioning", r.URL.String())
 			body, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(body), "<VersioningConfiguration><Status>Suspended</Status></VersioningConfiguration>")
 		},
@@ -9881,7 +9881,7 @@ var testMockPutBucketVersioningSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?versioning", r.URL.String())
+			assert.Equal(t, "/bucket/?versioning", r.URL.String())
 			body, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(body), "<VersioningConfiguration><Status>Enabled</Status></VersioningConfiguration>")
 		},
@@ -9945,7 +9945,7 @@ var testMockPutBucketVersioningErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?versioning", r.URL.String())
+			assert.Equal(t, "/bucket/?versioning", r.URL.String())
 			body, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(body), "<VersioningConfiguration><Status>Enabled</Status></VersioningConfiguration>")
 		},
@@ -9978,7 +9978,7 @@ var testMockPutBucketVersioningErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?versioning", r.URL.String())
+			assert.Equal(t, "/bucket/?versioning", r.URL.String())
 			body, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(body), "<VersioningConfiguration><Status>Enabled</Status></VersioningConfiguration>")
 		},
@@ -10034,7 +10034,7 @@ var testMockGetBucketVersioningSuccessCases = []struct {
 </VersioningConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?versioning", r.URL.String())
+			assert.Equal(t, "/bucket/?versioning", r.URL.String())
 		},
 		&GetBucketVersioningRequest{
 			Bucket: Ptr("bucket"),
@@ -10059,7 +10059,7 @@ var testMockGetBucketVersioningSuccessCases = []struct {
 </VersioningConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?versioning", r.URL.String())
+			assert.Equal(t, "/bucket/?versioning", r.URL.String())
 		},
 		&GetBucketVersioningRequest{
 			Bucket: Ptr("bucket"),
@@ -10084,7 +10084,7 @@ var testMockGetBucketVersioningSuccessCases = []struct {
 </VersioningConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?versioning", r.URL.String())
+			assert.Equal(t, "/bucket/?versioning", r.URL.String())
 		},
 		&GetBucketVersioningRequest{
 			Bucket: Ptr("bucket"),
@@ -10144,7 +10144,7 @@ var testMockGetBucketVersioningErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?versioning", r.URL.String())
+			assert.Equal(t, "/bucket/?versioning", r.URL.String())
 		},
 		&GetBucketVersioningRequest{
 			Bucket: Ptr("bucket"),
@@ -10179,7 +10179,7 @@ var testMockGetBucketVersioningErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?versioning", r.URL.String())
+			assert.Equal(t, "/bucket/?versioning", r.URL.String())
 		},
 		&GetBucketVersioningRequest{
 			Bucket: Ptr("bucket"),
@@ -10207,7 +10207,7 @@ var testMockGetBucketVersioningErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?versioning", r.URL.String())
+			assert.Equal(t, "/bucket/?versioning", r.URL.String())
 		},
 		&GetBucketVersioningRequest{
 			Bucket: Ptr("bucket"),
@@ -10268,7 +10268,7 @@ var testMockListObjectVersionsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&key-marker&max-keys=20&prefix=demo%2F&version-id-marker&versions", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=url&key-marker&max-keys=20&prefix=demo%2F&version-id-marker&versions", strUrl)
 		},
 		&ListObjectVersionsRequest{
 			Bucket:          Ptr("bucket"),
@@ -10352,7 +10352,7 @@ var testMockListObjectVersionsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encoding-type=url&versions", strUrl)
+			assert.Equal(t, "/bucket/?encoding-type=url&versions", strUrl)
 		},
 		&ListObjectVersionsRequest{
 			Bucket: Ptr("bucket"),
@@ -10443,7 +10443,7 @@ var testMockListObjectVersionsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&key-marker&max-keys=5&prefix=demo%2Fgp-&version-id-marker&versions", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=url&key-marker&max-keys=5&prefix=demo%2Fgp-&version-id-marker&versions", strUrl)
 		},
 		&ListObjectVersionsRequest{
 			Bucket:          Ptr("bucket"),
@@ -10499,7 +10499,7 @@ var testMockListObjectVersionsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?delimiter=%2F&encoding-type=url&key-marker&max-keys=20&prefix=demo%2F&version-id-marker&versions", strUrl)
+			assert.Equal(t, "/bucket/?delimiter=%2F&encoding-type=url&key-marker&max-keys=20&prefix=demo%2F&version-id-marker&versions", strUrl)
 			assert.Equal(t, r.Header.Get("x-oss-request-payer"), "requester")
 		},
 		&ListObjectVersionsRequest{
@@ -10575,7 +10575,7 @@ var testMockListObjectVersionsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encoding-type=url&versions", strUrl)
+			assert.Equal(t, "/bucket/?encoding-type=url&versions", strUrl)
 		},
 		&ListObjectVersionsRequest{
 			Bucket: Ptr("bucket"),
@@ -10611,7 +10611,7 @@ var testMockListObjectVersionsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encoding-type=url&versions", strUrl)
+			assert.Equal(t, "/bucket/?encoding-type=url&versions", strUrl)
 		},
 		&ListObjectVersionsRequest{
 			Bucket: Ptr("bucket"),
@@ -10640,7 +10640,7 @@ var testMockListObjectVersionsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encoding-type=url&versions", strUrl)
+			assert.Equal(t, "/bucket/?encoding-type=url&versions", strUrl)
 		},
 		&ListObjectVersionsRequest{
 			Bucket: Ptr("bucket"),
@@ -13502,7 +13502,7 @@ var testMockPutBucketRequestPaymentSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?requestPayment", r.URL.String())
+			assert.Equal(t, "/bucket/?requestPayment", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<RequestPaymentConfiguration><Payer>Requester</Payer></RequestPaymentConfiguration>")
 		},
@@ -13527,7 +13527,7 @@ var testMockPutBucketRequestPaymentSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?requestPayment", r.URL.String())
+			assert.Equal(t, "/bucket/?requestPayment", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<RequestPaymentConfiguration><Payer>BucketOwner</Payer></RequestPaymentConfiguration>")
 		},
@@ -13590,7 +13590,7 @@ var testMockPutBucketRequestPaymentErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?requestPayment", r.URL.String())
+			assert.Equal(t, "/bucket/?requestPayment", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<RequestPaymentConfiguration><Payer>BucketOwner</Payer></RequestPaymentConfiguration>")
 		},
@@ -13631,7 +13631,7 @@ var testMockPutBucketRequestPaymentErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?requestPayment", strUrl)
+			assert.Equal(t, "/bucket/?requestPayment", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<RequestPaymentConfiguration><Payer>BucketOwner</Payer></RequestPaymentConfiguration>")
 		},
@@ -13664,7 +13664,7 @@ var testMockPutBucketRequestPaymentErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?requestPayment", strUrl)
+			assert.Equal(t, "/bucket/?requestPayment", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<RequestPaymentConfiguration><Payer>BucketOwner</Payer></RequestPaymentConfiguration>")
 		},
@@ -13721,7 +13721,7 @@ var testMockGetBucketRequestPaymentSuccessCases = []struct {
 </RequestPaymentConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?requestPayment", r.URL.String())
+			assert.Equal(t, "/bucket/?requestPayment", r.URL.String())
 		},
 		&GetBucketRequestPaymentRequest{
 			Bucket: Ptr("bucket"),
@@ -13746,7 +13746,7 @@ var testMockGetBucketRequestPaymentSuccessCases = []struct {
 </RequestPaymentConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?requestPayment", r.URL.String())
+			assert.Equal(t, "/bucket/?requestPayment", r.URL.String())
 		},
 		&GetBucketRequestPaymentRequest{
 			Bucket: Ptr("bucket"),
@@ -13805,7 +13805,7 @@ var testMockGetBucketRequestPaymentErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?requestPayment", r.URL.String())
+			assert.Equal(t, "/bucket/?requestPayment", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketRequestPaymentRequest{
@@ -13843,7 +13843,7 @@ var testMockGetBucketRequestPaymentErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?requestPayment", strUrl)
+			assert.Equal(t, "/bucket/?requestPayment", strUrl)
 		},
 		&GetBucketRequestPaymentRequest{
 			Bucket: Ptr("bucket"),
@@ -13872,7 +13872,7 @@ var testMockGetBucketRequestPaymentErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?requestPayment", strUrl)
+			assert.Equal(t, "/bucket/?requestPayment", strUrl)
 		},
 		&GetBucketRequestPaymentRequest{
 			Bucket: Ptr("bucket"),
@@ -14026,7 +14026,7 @@ var testMockUserAgentCases = []struct {
 				<EC>0002-00000040</EC>
 			</Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket", r.URL.String())
+			assert.Equal(t, "/bucket/", r.URL.String())
 			assert.Contains(t, r.Header.Get("User-Agent"), "/my-agent")
 			assert.True(t, strings.HasSuffix(r.Header.Get("User-Agent"), "/my-agent"))
 		},
@@ -14074,7 +14074,7 @@ var testMockPutBucketLoggingSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?logging", r.URL.String())
+			assert.Equal(t, "/bucket/?logging", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketLoggingStatus><LoggingEnabled><TargetBucket>TargetBucket</TargetBucket><TargetPrefix>TargetPrefix</TargetPrefix></LoggingEnabled></BucketLoggingStatus>")
 		},
@@ -14102,7 +14102,7 @@ var testMockPutBucketLoggingSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?logging", r.URL.String())
+			assert.Equal(t, "/bucket/?logging", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketLoggingStatus><LoggingEnabled><TargetBucket>TargetBucket</TargetBucket></LoggingEnabled></BucketLoggingStatus>")
 		},
@@ -14167,7 +14167,7 @@ var testMockPutBucketLoggingErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?logging", r.URL.String())
+			assert.Equal(t, "/bucket/?logging", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketLoggingStatus><LoggingEnabled><TargetBucket>TargetBucket</TargetBucket><TargetPrefix>TargetPrefix</TargetPrefix></LoggingEnabled></BucketLoggingStatus>")
 		},
@@ -14211,7 +14211,7 @@ var testMockPutBucketLoggingErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?logging", strUrl)
+			assert.Equal(t, "/bucket/?logging", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketLoggingStatus><LoggingEnabled><TargetBucket>TargetBucket</TargetBucket><TargetPrefix>TargetPrefix</TargetPrefix></LoggingEnabled></BucketLoggingStatus>")
 		},
@@ -14247,7 +14247,7 @@ var testMockPutBucketLoggingErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?logging", strUrl)
+			assert.Equal(t, "/bucket/?logging", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketLoggingStatus><LoggingEnabled><TargetBucket>TargetBucket</TargetBucket><TargetPrefix>TargetPrefix</TargetPrefix></LoggingEnabled></BucketLoggingStatus>")
 		},
@@ -14310,7 +14310,7 @@ var testMockGetBucketLoggingSuccessCases = []struct {
 </BucketLoggingStatus>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?logging", r.URL.String())
+			assert.Equal(t, "/bucket/?logging", r.URL.String())
 		},
 		&GetBucketLoggingRequest{
 			Bucket: Ptr("bucket"),
@@ -14338,7 +14338,7 @@ var testMockGetBucketLoggingSuccessCases = []struct {
 </BucketLoggingStatus>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?logging", r.URL.String())
+			assert.Equal(t, "/bucket/?logging", r.URL.String())
 		},
 		&GetBucketLoggingRequest{
 			Bucket: Ptr("bucket"),
@@ -14399,7 +14399,7 @@ var testMockGetBucketLoggingErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?logging", r.URL.String())
+			assert.Equal(t, "/bucket/?logging", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketLoggingRequest{
@@ -14437,7 +14437,7 @@ var testMockGetBucketLoggingErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?logging", strUrl)
+			assert.Equal(t, "/bucket/?logging", strUrl)
 		},
 		&GetBucketLoggingRequest{
 			Bucket: Ptr("bucket"),
@@ -14466,7 +14466,7 @@ var testMockGetBucketLoggingErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?logging", strUrl)
+			assert.Equal(t, "/bucket/?logging", strUrl)
 		},
 		&GetBucketLoggingRequest{
 			Bucket: Ptr("bucket"),
@@ -14516,7 +14516,7 @@ var testMockDeleteBucketLoggingSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?logging", strUrl)
+			assert.Equal(t, "/bucket/?logging", strUrl)
 		},
 		&DeleteBucketLoggingRequest{
 			Bucket: Ptr("bucket"),
@@ -14540,7 +14540,7 @@ var testMockDeleteBucketLoggingSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?logging", strUrl)
+			assert.Equal(t, "/bucket/?logging", strUrl)
 		},
 		&DeleteBucketLoggingRequest{
 			Bucket: Ptr("bucket"),
@@ -14600,7 +14600,7 @@ var testMockDeleteBucketLoggingErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?logging", strUrl)
+			assert.Equal(t, "/bucket/?logging", strUrl)
 		},
 		&DeleteBucketLoggingRequest{
 			Bucket: Ptr("bucket"),
@@ -14636,7 +14636,7 @@ var testMockDeleteBucketLoggingErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?logging", strUrl)
+			assert.Equal(t, "/bucket/?logging", strUrl)
 		},
 		&DeleteBucketLoggingRequest{
 			Bucket: Ptr("bucket"),
@@ -14691,7 +14691,7 @@ var testMockPutUserDefinedLogFieldsConfigSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<UserDefinedLogFieldsConfiguration><HeaderSet><header>header1</header><header>header2</header><header>header3</header></HeaderSet><ParamSet><parameter>param1</parameter><parameter>param2</parameter></ParamSet></UserDefinedLogFieldsConfiguration>")
 		},
@@ -14721,7 +14721,7 @@ var testMockPutUserDefinedLogFieldsConfigSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<UserDefinedLogFieldsConfiguration><HeaderSet><header>header1</header></HeaderSet></UserDefinedLogFieldsConfiguration>")
 		},
@@ -14786,7 +14786,7 @@ var testMockPutUserDefinedLogFieldsConfigErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<UserDefinedLogFieldsConfiguration><HeaderSet><header>header1</header><header>header2</header><header>header3</header></HeaderSet><ParamSet><parameter>param1</parameter><parameter>param2</parameter></ParamSet></UserDefinedLogFieldsConfiguration>")
 		},
@@ -14832,7 +14832,7 @@ var testMockPutUserDefinedLogFieldsConfigErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", strUrl)
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<UserDefinedLogFieldsConfiguration><HeaderSet><header>header1</header><header>header2</header><header>header3</header></HeaderSet><ParamSet><parameter>param1</parameter><parameter>param2</parameter></ParamSet></UserDefinedLogFieldsConfiguration>")
 		},
@@ -14870,7 +14870,7 @@ var testMockPutUserDefinedLogFieldsConfigErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", strUrl)
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<UserDefinedLogFieldsConfiguration><HeaderSet><header>header1</header><header>header2</header><header>header3</header></HeaderSet><ParamSet><parameter>param1</parameter><parameter>param2</parameter></ParamSet></UserDefinedLogFieldsConfiguration>")
 		},
@@ -14940,7 +14940,7 @@ var testMockGetUserDefinedLogFieldsConfigSuccessCases = []struct {
 </UserDefinedLogFieldsConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", r.URL.String())
 		},
 		&GetUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -14971,7 +14971,7 @@ var testMockGetUserDefinedLogFieldsConfigSuccessCases = []struct {
 </UserDefinedLogFieldsConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", r.URL.String())
 		},
 		&GetUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -15032,7 +15032,7 @@ var testMockGetUserDefinedLogFieldsConfigErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetUserDefinedLogFieldsConfigRequest{
@@ -15070,7 +15070,7 @@ var testMockGetUserDefinedLogFieldsConfigErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", strUrl)
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", strUrl)
 		},
 		&GetUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -15099,7 +15099,7 @@ var testMockGetUserDefinedLogFieldsConfigErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", strUrl)
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", strUrl)
 		},
 		&GetUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -15149,7 +15149,7 @@ var testMockDeleteUserDefinedLogFieldsConfigSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", strUrl)
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", strUrl)
 		},
 		&DeleteUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -15173,7 +15173,7 @@ var testMockDeleteUserDefinedLogFieldsConfigSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", strUrl)
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", strUrl)
 		},
 		&DeleteUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -15233,7 +15233,7 @@ var testMockDeleteUserDefinedLogFieldsConfigErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", strUrl)
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", strUrl)
 		},
 		&DeleteUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -15269,7 +15269,7 @@ var testMockDeleteUserDefinedLogFieldsConfigErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?userDefinedLogFieldsConfig", strUrl)
+			assert.Equal(t, "/bucket/?userDefinedLogFieldsConfig", strUrl)
 		},
 		&DeleteUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -15324,7 +15324,7 @@ var testMockInitiateBucketWormSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?worm", r.URL.String())
+			assert.Equal(t, "/bucket/?worm", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<InitiateWormConfiguration><RetentionPeriodInDays>3</RetentionPeriodInDays></InitiateWormConfiguration>")
 		},
@@ -15387,7 +15387,7 @@ var testMockInitiateBucketWormErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?worm", r.URL.String())
+			assert.Equal(t, "/bucket/?worm", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<InitiateWormConfiguration><RetentionPeriodInDays>3</RetentionPeriodInDays></InitiateWormConfiguration>")
 		},
@@ -15428,7 +15428,7 @@ var testMockInitiateBucketWormErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?worm", strUrl)
+			assert.Equal(t, "/bucket/?worm", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<InitiateWormConfiguration><RetentionPeriodInDays>3</RetentionPeriodInDays></InitiateWormConfiguration>")
 		},
@@ -15461,7 +15461,7 @@ var testMockInitiateBucketWormErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?worm", strUrl)
+			assert.Equal(t, "/bucket/?worm", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<InitiateWormConfiguration><RetentionPeriodInDays>3</RetentionPeriodInDays></InitiateWormConfiguration>")
 		},
@@ -15515,7 +15515,7 @@ var testMockAbortBucketWormSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
-			assert.Equal(t, "/bucket?worm", r.URL.String())
+			assert.Equal(t, "/bucket/?worm", r.URL.String())
 		},
 		&AbortBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -15573,7 +15573,7 @@ var testMockAbortBucketWormErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?worm", r.URL.String())
+			assert.Equal(t, "/bucket/?worm", r.URL.String())
 		},
 		&AbortBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -15609,7 +15609,7 @@ var testMockAbortBucketWormErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?worm", strUrl)
+			assert.Equal(t, "/bucket/?worm", strUrl)
 		},
 		&AbortBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -15665,7 +15665,7 @@ var testMockCompleteBucketWormRequestSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket?wormId=123", r.URL.String())
+			assert.Equal(t, "/bucket/?wormId=123", r.URL.String())
 		},
 		&CompleteBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -15725,7 +15725,7 @@ var testMockCompleteBucketWormErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket?wormId=123", r.URL.String())
+			assert.Equal(t, "/bucket/?wormId=123", r.URL.String())
 		},
 		&CompleteBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -15763,7 +15763,7 @@ var testMockCompleteBucketWormErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket?wormId=123", strUrl)
+			assert.Equal(t, "/bucket/?wormId=123", strUrl)
 		},
 		&CompleteBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -15821,7 +15821,7 @@ var testMockExtendBucketWormRequestSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?wormExtend&wormId=123", strUrl)
+			assert.Equal(t, "/bucket/?wormExtend&wormId=123", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ExtendWormConfiguration><RetentionPeriodInDays>3</RetentionPeriodInDays></ExtendWormConfiguration>")
 		},
@@ -15887,7 +15887,7 @@ var testMockExtendBucketWormErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?wormExtend&wormId=123", strUrl)
+			assert.Equal(t, "/bucket/?wormExtend&wormId=123", strUrl)
 		},
 		&ExtendBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -15928,7 +15928,7 @@ var testMockExtendBucketWormErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket?wormExtend&wormId=123", strUrl)
+			assert.Equal(t, "/bucket/?wormExtend&wormId=123", strUrl)
 		},
 		&ExtendBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -15994,7 +15994,7 @@ var testMockGetBucketWormRequestSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?worm", strUrl)
+			assert.Equal(t, "/bucket/?worm", strUrl)
 		},
 		&GetBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -16059,7 +16059,7 @@ var testMockGetBucketWormErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?worm", strUrl)
+			assert.Equal(t, "/bucket/?worm", strUrl)
 		},
 		&GetBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -16096,7 +16096,7 @@ var testMockGetBucketWormErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?worm", strUrl)
+			assert.Equal(t, "/bucket/?worm", strUrl)
 		},
 		&GetBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -16125,7 +16125,7 @@ var testMockGetBucketWormErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?worm", strUrl)
+			assert.Equal(t, "/bucket/?worm", strUrl)
 		},
 		&GetBucketWormRequest{
 			Bucket: Ptr("bucket"),
@@ -16173,7 +16173,7 @@ var testMockPutBucketPolicySuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?policy", r.URL.String())
+			assert.Equal(t, "/bucket/?policy", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:PutObject\",\"oss:GetObject\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:oss:*:1234567890:*/*\"]}]}")
 		},
@@ -16234,7 +16234,7 @@ var testMockPutBucketPolicyErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?policy", r.URL.String())
+			assert.Equal(t, "/bucket/?policy", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:PutObject\",\"oss:GetObject\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:oss:*:1234567890:*/*\"]}]}")
 		},
@@ -16273,7 +16273,7 @@ var testMockPutBucketPolicyErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?policy", strUrl)
+			assert.Equal(t, "/bucket/?policy", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:PutObject\",\"oss:GetObject\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:oss:*:1234567890:*/*\"]}]}")
 		},
@@ -16332,7 +16332,7 @@ var testMockGetBucketPolicySuccessCases = []struct {
 		[]byte(`{"Version":"1","Statement":[{"Action":["oss:PutObject","oss:GetObject"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:oss:*:1234567890:*/*"]}]}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?policy", r.URL.String())
+			assert.Equal(t, "/bucket/?policy", r.URL.String())
 		},
 		&GetBucketPolicyRequest{
 			Bucket: Ptr("bucket"),
@@ -16391,7 +16391,7 @@ var testMockGetBucketPolicyErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?policy", r.URL.String())
+			assert.Equal(t, "/bucket/?policy", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketPolicyRequest{
@@ -16429,7 +16429,7 @@ var testMockGetBucketPolicyErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?policy", strUrl)
+			assert.Equal(t, "/bucket/?policy", strUrl)
 		},
 		&GetBucketPolicyRequest{
 			Bucket: Ptr("bucket"),
@@ -16486,7 +16486,7 @@ var testMockDeleteBucketPolicySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?policy", strUrl)
+			assert.Equal(t, "/bucket/?policy", strUrl)
 		},
 		&DeleteBucketPolicyRequest{
 			Bucket: Ptr("bucket"),
@@ -16547,7 +16547,7 @@ var testMockDeleteBucketPolicyErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?policy", strUrl)
+			assert.Equal(t, "/bucket/?policy", strUrl)
 		},
 		&DeleteBucketPolicyRequest{
 			Bucket: Ptr("bucket"),
@@ -16583,7 +16583,7 @@ var testMockDeleteBucketPolicyErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?policy", strUrl)
+			assert.Equal(t, "/bucket/?policy", strUrl)
 		},
 		&DeleteBucketPolicyRequest{
 			Bucket: Ptr("bucket"),
@@ -16643,7 +16643,7 @@ var testMockGetBucketPolicyStatusSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?policyStatus", strUrl)
+			assert.Equal(t, "/bucket/?policyStatus", strUrl)
 		},
 		&GetBucketPolicyStatusRequest{
 			Bucket: Ptr("bucket"),
@@ -16669,7 +16669,7 @@ var testMockGetBucketPolicyStatusSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?policyStatus", strUrl)
+			assert.Equal(t, "/bucket/?policyStatus", strUrl)
 		},
 		&GetBucketPolicyStatusRequest{
 			Bucket: Ptr("bucket"),
@@ -16730,7 +16730,7 @@ var testMockGetBucketPolicyStatusErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?policyStatus", strUrl)
+			assert.Equal(t, "/bucket/?policyStatus", strUrl)
 		},
 		&GetBucketPolicyStatusRequest{
 			Bucket: Ptr("bucket"),
@@ -16766,7 +16766,7 @@ var testMockGetBucketPolicyStatusErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?policyStatus", strUrl)
+			assert.Equal(t, "/bucket/?policyStatus", strUrl)
 		},
 		&GetBucketPolicyStatusRequest{
 			Bucket: Ptr("bucket"),
@@ -16821,7 +16821,7 @@ var testMockPutBucketTransferAccelerationSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?transferAcceleration", r.URL.String())
+			assert.Equal(t, "/bucket/?transferAcceleration", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<TransferAccelerationConfiguration><Enabled>true</Enabled></TransferAccelerationConfiguration>")
 		},
@@ -16846,7 +16846,7 @@ var testMockPutBucketTransferAccelerationSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?transferAcceleration", r.URL.String())
+			assert.Equal(t, "/bucket/?transferAcceleration", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<TransferAccelerationConfiguration><Enabled>false</Enabled></TransferAccelerationConfiguration>")
 		},
@@ -16909,7 +16909,7 @@ var testMockPutBucketTransferAccelerationErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?transferAcceleration", r.URL.String())
+			assert.Equal(t, "/bucket/?transferAcceleration", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<TransferAccelerationConfiguration><Enabled>true</Enabled></TransferAccelerationConfiguration>")
 		},
@@ -16950,7 +16950,7 @@ var testMockPutBucketTransferAccelerationErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?transferAcceleration", strUrl)
+			assert.Equal(t, "/bucket/?transferAcceleration", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<TransferAccelerationConfiguration><Enabled>true</Enabled></TransferAccelerationConfiguration>")
 		},
@@ -17013,7 +17013,7 @@ var testMockGetBucketTransferAccelerationSuccessCases = []struct {
 </TransferAccelerationConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?transferAcceleration", r.URL.String())
+			assert.Equal(t, "/bucket/?transferAcceleration", r.URL.String())
 		},
 		&GetBucketTransferAccelerationRequest{
 			Bucket: Ptr("bucket"),
@@ -17037,7 +17037,7 @@ var testMockGetBucketTransferAccelerationSuccessCases = []struct {
 </TransferAccelerationConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?transferAcceleration", r.URL.String())
+			assert.Equal(t, "/bucket/?transferAcceleration", r.URL.String())
 		},
 		&GetBucketTransferAccelerationRequest{
 			Bucket: Ptr("bucket"),
@@ -17096,7 +17096,7 @@ var testMockGetBucketTransferAccelerationErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?transferAcceleration", r.URL.String())
+			assert.Equal(t, "/bucket/?transferAcceleration", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketTransferAccelerationRequest{
@@ -17134,7 +17134,7 @@ var testMockGetBucketTransferAccelerationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?transferAcceleration", strUrl)
+			assert.Equal(t, "/bucket/?transferAcceleration", strUrl)
 		},
 		&GetBucketTransferAccelerationRequest{
 			Bucket: Ptr("bucket"),
@@ -17189,7 +17189,7 @@ var testMockPutBucketArchiveDirectReadSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?bucketArchiveDirectRead", r.URL.String())
+			assert.Equal(t, "/bucket/?bucketArchiveDirectRead", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ArchiveDirectReadConfiguration><Enabled>true</Enabled></ArchiveDirectReadConfiguration>")
 		},
@@ -17214,7 +17214,7 @@ var testMockPutBucketArchiveDirectReadSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?bucketArchiveDirectRead", r.URL.String())
+			assert.Equal(t, "/bucket/?bucketArchiveDirectRead", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ArchiveDirectReadConfiguration><Enabled>false</Enabled></ArchiveDirectReadConfiguration>")
 		},
@@ -17277,7 +17277,7 @@ var testMockPutBucketArchiveDirectReadErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?bucketArchiveDirectRead", r.URL.String())
+			assert.Equal(t, "/bucket/?bucketArchiveDirectRead", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ArchiveDirectReadConfiguration><Enabled>true</Enabled></ArchiveDirectReadConfiguration>")
 		},
@@ -17318,7 +17318,7 @@ var testMockPutBucketArchiveDirectReadErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?bucketArchiveDirectRead", strUrl)
+			assert.Equal(t, "/bucket/?bucketArchiveDirectRead", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ArchiveDirectReadConfiguration><Enabled>true</Enabled></ArchiveDirectReadConfiguration>")
 		},
@@ -17381,7 +17381,7 @@ var testMockGetBucketArchiveDirectReadSuccessCases = []struct {
 </ArchiveDirectReadConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?bucketArchiveDirectRead", r.URL.String())
+			assert.Equal(t, "/bucket/?bucketArchiveDirectRead", r.URL.String())
 		},
 		&GetBucketArchiveDirectReadRequest{
 			Bucket: Ptr("bucket"),
@@ -17405,7 +17405,7 @@ var testMockGetBucketArchiveDirectReadSuccessCases = []struct {
 </ArchiveDirectReadConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?bucketArchiveDirectRead", r.URL.String())
+			assert.Equal(t, "/bucket/?bucketArchiveDirectRead", r.URL.String())
 		},
 		&GetBucketArchiveDirectReadRequest{
 			Bucket: Ptr("bucket"),
@@ -17464,7 +17464,7 @@ var testMockGetBucketArchiveDirectReadErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?bucketArchiveDirectRead", r.URL.String())
+			assert.Equal(t, "/bucket/?bucketArchiveDirectRead", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketArchiveDirectReadRequest{
@@ -17502,7 +17502,7 @@ var testMockGetBucketArchiveDirectReadErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?bucketArchiveDirectRead", strUrl)
+			assert.Equal(t, "/bucket/?bucketArchiveDirectRead", strUrl)
 		},
 		&GetBucketArchiveDirectReadRequest{
 			Bucket: Ptr("bucket"),
@@ -17531,7 +17531,7 @@ var testMockGetBucketArchiveDirectReadErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?bucketArchiveDirectRead", strUrl)
+			assert.Equal(t, "/bucket/?bucketArchiveDirectRead", strUrl)
 		},
 		&GetBucketArchiveDirectReadRequest{
 			Bucket: Ptr("bucket"),
@@ -17579,7 +17579,7 @@ var testMockPutBucketWebsiteSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?website", r.URL.String())
+			assert.Equal(t, "/bucket/?website", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<WebsiteConfiguration><IndexDocument><Suffix>index.html</Suffix><SupportSubDir>true</SupportSubDir><Type>0</Type></IndexDocument><ErrorDocument><Key>error.html</Key><HttpStatus>404</HttpStatus></ErrorDocument></WebsiteConfiguration>")
 		},
@@ -17612,7 +17612,7 @@ var testMockPutBucketWebsiteSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?website", r.URL.String())
+			assert.Equal(t, "/bucket/?website", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<WebsiteConfiguration><IndexDocument><Suffix>index.html</Suffix><SupportSubDir>true</SupportSubDir><Type>0</Type></IndexDocument><ErrorDocument><Key>error.html</Key><HttpStatus>404</HttpStatus></ErrorDocument><RoutingRules><RoutingRule><RuleNumber>1</RuleNumber><Condition><KeyPrefixEquals>abc/</KeyPrefixEquals><HttpErrorCodeReturnedEquals>404</HttpErrorCodeReturnedEquals></Condition><Redirect><MirrorURL>http://example.com/</MirrorURL><MirrorFollowRedirect>true</MirrorFollowRedirect><PassQueryString>true</PassQueryString><MirrorHeaders><PassAll>true</PassAll><Pass>myheader-key1</Pass><Pass>myheader-key2</Pass><Remove>myheader-key3</Remove><Remove>myheader-key4</Remove><Set><Key>myheader-key5</Key><Value>myheader-value5</Value></Set></MirrorHeaders><RedirectType>Mirror</RedirectType><MirrorCheckMd5>false</MirrorCheckMd5><MirrorPassQueryString>true</MirrorPassQueryString></Redirect></RoutingRule><RoutingRule><RuleNumber>2</RuleNumber><Condition><KeyPrefixEquals>abc/</KeyPrefixEquals><HttpErrorCodeReturnedEquals>404</HttpErrorCodeReturnedEquals><IncludeHeader><Key>host</Key><Equals>test.oss-cn-beijing-internal.aliyuncs.com</Equals></IncludeHeader></Condition><Redirect><ReplaceKeyWith>prefix/${key}.suffix</ReplaceKeyWith><HostName>example.com</HostName><PassQueryString>false</PassQueryString><RedirectType>AliCDN</RedirectType><Protocol>http</Protocol><HttpRedirectCode>301</HttpRedirectCode></Redirect></RoutingRule><RoutingRule><RuleNumber>3</RuleNumber><Condition><HttpErrorCodeReturnedEquals>404</HttpErrorCodeReturnedEquals></Condition><Redirect><EnableReplacePrefix>false</EnableReplacePrefix><ReplaceKeyWith>prefix/${key}</ReplaceKeyWith><HostName>example.com</HostName><PassQueryString>false</PassQueryString><RedirectType>External</RedirectType><Protocol>http</Protocol><HttpRedirectCode>302</HttpRedirectCode></Redirect></RoutingRule></RoutingRules></WebsiteConfiguration>")
 		},
@@ -17749,7 +17749,7 @@ var testMockPutBucketWebsiteErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?website", r.URL.String())
+			assert.Equal(t, "/bucket/?website", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<WebsiteConfiguration><IndexDocument><Suffix>index.html</Suffix><SupportSubDir>true</SupportSubDir><Type>0</Type></IndexDocument><ErrorDocument><Key>error.html</Key><HttpStatus>404</HttpStatus></ErrorDocument></WebsiteConfiguration>")
 		},
@@ -17798,7 +17798,7 @@ var testMockPutBucketWebsiteErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?website", strUrl)
+			assert.Equal(t, "/bucket/?website", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<WebsiteConfiguration><IndexDocument><Suffix>index.html</Suffix><SupportSubDir>true</SupportSubDir><Type>0</Type></IndexDocument><ErrorDocument><Key>error.html</Key><HttpStatus>404</HttpStatus></ErrorDocument></WebsiteConfiguration>")
 		},
@@ -17839,7 +17839,7 @@ var testMockPutBucketWebsiteErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?website", strUrl)
+			assert.Equal(t, "/bucket/?website", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<WebsiteConfiguration><IndexDocument><Suffix>index.html</Suffix><SupportSubDir>true</SupportSubDir><Type>0</Type></IndexDocument><ErrorDocument><Key>error.html</Key><HttpStatus>404</HttpStatus></ErrorDocument></WebsiteConfiguration>")
 		},
@@ -17910,7 +17910,7 @@ var testMockGetBucketWebsiteSuccessCases = []struct {
 </WebsiteConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?website", r.URL.String())
+			assert.Equal(t, "/bucket/?website", r.URL.String())
 		},
 		&GetBucketWebsiteRequest{
 			Bucket: Ptr("bucket"),
@@ -18008,7 +18008,7 @@ var testMockGetBucketWebsiteSuccessCases = []struct {
 		</WebsiteConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?website", r.URL.String())
+			assert.Equal(t, "/bucket/?website", r.URL.String())
 		},
 		&GetBucketWebsiteRequest{
 			Bucket: Ptr("bucket"),
@@ -18109,7 +18109,7 @@ var testMockGetBucketWebsiteErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?website", r.URL.String())
+			assert.Equal(t, "/bucket/?website", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketWebsiteRequest{
@@ -18147,7 +18147,7 @@ var testMockGetBucketWebsiteErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?website", strUrl)
+			assert.Equal(t, "/bucket/?website", strUrl)
 		},
 		&GetBucketWebsiteRequest{
 			Bucket: Ptr("bucket"),
@@ -18176,7 +18176,7 @@ var testMockGetBucketWebsiteErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?website", strUrl)
+			assert.Equal(t, "/bucket/?website", strUrl)
 		},
 		&GetBucketWebsiteRequest{
 			Bucket: Ptr("bucket"),
@@ -18226,7 +18226,7 @@ var testMockDeleteBucketWebsiteSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?website", strUrl)
+			assert.Equal(t, "/bucket/?website", strUrl)
 		},
 		&DeleteBucketWebsiteRequest{
 			Bucket: Ptr("bucket"),
@@ -18287,7 +18287,7 @@ var testMockDeleteBucketWebsiteErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?website", strUrl)
+			assert.Equal(t, "/bucket/?website", strUrl)
 		},
 		&DeleteBucketWebsiteRequest{
 			Bucket: Ptr("bucket"),
@@ -18323,7 +18323,7 @@ var testMockDeleteBucketWebsiteErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?website", strUrl)
+			assert.Equal(t, "/bucket/?website", strUrl)
 		},
 		&DeleteBucketWebsiteRequest{
 			Bucket: Ptr("bucket"),
@@ -18378,7 +18378,7 @@ var testMockPutBucketHttpsConfigSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?httpsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?httpsConfig", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<HttpsConfiguration><TLS><Enable>true</Enable><TLSVersion>TLSv1.2</TLSVersion><TLSVersion>TLSv1.3</TLSVersion></TLS></HttpsConfiguration>")
 		},
@@ -18406,7 +18406,7 @@ var testMockPutBucketHttpsConfigSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?httpsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?httpsConfig", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<HttpsConfiguration><TLS><Enable>false</Enable></TLS></HttpsConfiguration>")
 		},
@@ -18470,7 +18470,7 @@ var testMockPutBucketHttpsConfigErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?httpsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?httpsConfig", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<HttpsConfiguration><TLS><Enable>false</Enable></TLS></HttpsConfiguration>")
 		},
@@ -18513,7 +18513,7 @@ var testMockPutBucketHttpsConfigErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?httpsConfig", strUrl)
+			assert.Equal(t, "/bucket/?httpsConfig", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<HttpsConfiguration><TLS><Enable>false</Enable></TLS></HttpsConfiguration>")
 		},
@@ -18581,7 +18581,7 @@ var testMockGetBucketHttpsConfigSuccessCases = []struct {
 </HttpsConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?httpsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?httpsConfig", r.URL.String())
 		},
 		&GetBucketHttpsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -18609,7 +18609,7 @@ var testMockGetBucketHttpsConfigSuccessCases = []struct {
 </HttpsConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?httpsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?httpsConfig", r.URL.String())
 		},
 		&GetBucketHttpsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -18668,7 +18668,7 @@ var testMockGetBucketHttpsConfigErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?httpsConfig", r.URL.String())
+			assert.Equal(t, "/bucket/?httpsConfig", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketHttpsConfigRequest{
@@ -18706,7 +18706,7 @@ var testMockGetBucketHttpsConfigErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?httpsConfig", strUrl)
+			assert.Equal(t, "/bucket/?httpsConfig", strUrl)
 		},
 		&GetBucketHttpsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -18735,7 +18735,7 @@ var testMockGetBucketHttpsConfigErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?httpsConfig", strUrl)
+			assert.Equal(t, "/bucket/?httpsConfig", strUrl)
 		},
 		&GetBucketHttpsConfigRequest{
 			Bucket: Ptr("bucket"),
@@ -18784,7 +18784,7 @@ var testMockPutBucketResourceGroupSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?resourceGroup", r.URL.String())
+			assert.Equal(t, "/bucket/?resourceGroup", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketResourceGroupConfiguration><ResourceGroupId>rg-aekz****</ResourceGroupId></BucketResourceGroupConfiguration>")
 		},
@@ -18846,7 +18846,7 @@ var testMockPutBucketResourceGroupErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?resourceGroup", r.URL.String())
+			assert.Equal(t, "/bucket/?resourceGroup", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketResourceGroupConfiguration><ResourceGroupId>rg-aekz****</ResourceGroupId></BucketResourceGroupConfiguration>")
 		},
@@ -18887,7 +18887,7 @@ var testMockPutBucketResourceGroupErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?resourceGroup", strUrl)
+			assert.Equal(t, "/bucket/?resourceGroup", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketResourceGroupConfiguration><ResourceGroupId>rg-aekz****</ResourceGroupId></BucketResourceGroupConfiguration>")
 		},
@@ -18947,7 +18947,7 @@ var testMockGetBucketResourceGroupSuccessCases = []struct {
 		[]byte(`<BucketResourceGroupConfiguration><ResourceGroupId>rg-aekz****</ResourceGroupId></BucketResourceGroupConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?resourceGroup", r.URL.String())
+			assert.Equal(t, "/bucket/?resourceGroup", r.URL.String())
 		},
 		&GetBucketResourceGroupRequest{
 			Bucket: Ptr("bucket"),
@@ -19006,7 +19006,7 @@ var testMockGetBucketResourceGroupErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?resourceGroup", r.URL.String())
+			assert.Equal(t, "/bucket/?resourceGroup", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketResourceGroupRequest{
@@ -19044,7 +19044,7 @@ var testMockGetBucketResourceGroupErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?resourceGroup", strUrl)
+			assert.Equal(t, "/bucket/?resourceGroup", strUrl)
 		},
 		&GetBucketResourceGroupRequest{
 			Bucket: Ptr("bucket"),
@@ -19073,7 +19073,7 @@ var testMockGetBucketResourceGroupErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?resourceGroup", strUrl)
+			assert.Equal(t, "/bucket/?resourceGroup", strUrl)
 		},
 		&GetBucketResourceGroupRequest{
 			Bucket: Ptr("bucket"),
@@ -19122,7 +19122,7 @@ var testMockPutBucketTagsSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?tagging", r.URL.String())
+			assert.Equal(t, "/bucket/?tagging", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<Tagging><TagSet><Tag><Key>key1</Key><Value>value1</Value></Tag><Tag><Key>key2</Key><Value>value2</Value></Tag></TagSet></Tagging>")
 		},
@@ -19195,7 +19195,7 @@ var testMockPutBucketTagsErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?tagging", r.URL.String())
+			assert.Equal(t, "/bucket/?tagging", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<Tagging><TagSet><Tag><Key>key1</Key><Value>value1</Value></Tag><Tag><Key>key2</Key><Value>value2</Value></Tag></TagSet></Tagging>")
 		},
@@ -19247,7 +19247,7 @@ var testMockPutBucketTagsErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?tagging", strUrl)
+			assert.Equal(t, "/bucket/?tagging", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<Tagging><TagSet><Tag><Key>key1</Key><Value>value1</Value></Tag><Tag><Key>key2</Key><Value>value2</Value></Tag></TagSet></Tagging>")
 		},
@@ -19329,7 +19329,7 @@ var testMockGetBucketTagsSuccessCases = []struct {
 </Tagging>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?tagging", r.URL.String())
+			assert.Equal(t, "/bucket/?tagging", r.URL.String())
 		},
 		&GetBucketTagsRequest{
 			Bucket: Ptr("bucket"),
@@ -19390,7 +19390,7 @@ var testMockGetBucketTagsErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?tagging", r.URL.String())
+			assert.Equal(t, "/bucket/?tagging", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketTagsRequest{
@@ -19428,7 +19428,7 @@ var testMockGetBucketTagsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?tagging", strUrl)
+			assert.Equal(t, "/bucket/?tagging", strUrl)
 		},
 		&GetBucketTagsRequest{
 			Bucket: Ptr("bucket"),
@@ -19457,7 +19457,7 @@ var testMockGetBucketTagsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?tagging", strUrl)
+			assert.Equal(t, "/bucket/?tagging", strUrl)
 		},
 		&GetBucketTagsRequest{
 			Bucket: Ptr("bucket"),
@@ -19508,7 +19508,7 @@ var testMockDeleteBucketTagsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?tagging", strUrl)
+			assert.Equal(t, "/bucket/?tagging", strUrl)
 		},
 		&DeleteBucketTagsRequest{
 			Bucket: Ptr("bucket"),
@@ -19531,7 +19531,7 @@ var testMockDeleteBucketTagsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?tagging=k1%2Ck2", strUrl)
+			assert.Equal(t, "/bucket/?tagging=k1%2Ck2", strUrl)
 		},
 		&DeleteBucketTagsRequest{
 			Bucket:  Ptr("bucket"),
@@ -19593,7 +19593,7 @@ var testMockDeleteBucketTagsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?tagging", strUrl)
+			assert.Equal(t, "/bucket/?tagging", strUrl)
 		},
 		&DeleteBucketTagsRequest{
 			Bucket: Ptr("bucket"),
@@ -19629,7 +19629,7 @@ var testMockDeleteBucketTagsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?tagging", strUrl)
+			assert.Equal(t, "/bucket/?tagging", strUrl)
 		},
 		&DeleteBucketTagsRequest{
 			Bucket: Ptr("bucket"),
@@ -19685,7 +19685,7 @@ var testMockPutBucketEncryptionSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?encryption", r.URL.String())
+			assert.Equal(t, "/bucket/?encryption", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ServerSideEncryptionRule><ApplyServerSideEncryptionByDefault><SSEAlgorithm>AES256</SSEAlgorithm></ApplyServerSideEncryptionByDefault></ServerSideEncryptionRule>")
 		},
@@ -19713,7 +19713,7 @@ var testMockPutBucketEncryptionSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?encryption", r.URL.String())
+			assert.Equal(t, "/bucket/?encryption", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ServerSideEncryptionRule><ApplyServerSideEncryptionByDefault><SSEAlgorithm>KMS</SSEAlgorithm><KMSDataEncryption>SM4</KMSDataEncryption></ApplyServerSideEncryptionByDefault></ServerSideEncryptionRule>")
 		},
@@ -19742,7 +19742,7 @@ var testMockPutBucketEncryptionSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?encryption", r.URL.String())
+			assert.Equal(t, "/bucket/?encryption", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ServerSideEncryptionRule><ApplyServerSideEncryptionByDefault><SSEAlgorithm>KMS</SSEAlgorithm><KMSMasterKeyID>9468da86-3509-4f8d-a61e-6eab1eac****</KMSMasterKeyID><KMSDataEncryption>SM4</KMSDataEncryption></ApplyServerSideEncryptionByDefault></ServerSideEncryptionRule>")
 		},
@@ -19809,7 +19809,7 @@ var testMockPutBucketEncryptionErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?encryption", r.URL.String())
+			assert.Equal(t, "/bucket/?encryption", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ServerSideEncryptionRule><ApplyServerSideEncryptionByDefault><SSEAlgorithm>AES256</SSEAlgorithm></ApplyServerSideEncryptionByDefault></ServerSideEncryptionRule>")
 		},
@@ -19853,7 +19853,7 @@ var testMockPutBucketEncryptionErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encryption", strUrl)
+			assert.Equal(t, "/bucket/?encryption", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ServerSideEncryptionRule><ApplyServerSideEncryptionByDefault><SSEAlgorithm>AES256</SSEAlgorithm></ApplyServerSideEncryptionByDefault></ServerSideEncryptionRule>")
 		},
@@ -19920,7 +19920,7 @@ var testMockGetBucketEncryptionSuccessCases = []struct {
 </ServerSideEncryptionRule>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?encryption", r.URL.String())
+			assert.Equal(t, "/bucket/?encryption", r.URL.String())
 		},
 		&GetBucketEncryptionRequest{
 			Bucket: Ptr("bucket"),
@@ -19949,7 +19949,7 @@ var testMockGetBucketEncryptionSuccessCases = []struct {
 </ServerSideEncryptionRule>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?encryption", r.URL.String())
+			assert.Equal(t, "/bucket/?encryption", r.URL.String())
 		},
 		&GetBucketEncryptionRequest{
 			Bucket: Ptr("bucket"),
@@ -19977,7 +19977,7 @@ var testMockGetBucketEncryptionSuccessCases = []struct {
 </ServerSideEncryptionRule>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?encryption", r.URL.String())
+			assert.Equal(t, "/bucket/?encryption", r.URL.String())
 		},
 		&GetBucketEncryptionRequest{
 			Bucket: Ptr("bucket"),
@@ -20036,7 +20036,7 @@ var testMockGetBucketEncryptionErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?encryption", r.URL.String())
+			assert.Equal(t, "/bucket/?encryption", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketEncryptionRequest{
@@ -20074,7 +20074,7 @@ var testMockGetBucketEncryptionErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encryption", strUrl)
+			assert.Equal(t, "/bucket/?encryption", strUrl)
 		},
 		&GetBucketEncryptionRequest{
 			Bucket: Ptr("bucket"),
@@ -20103,7 +20103,7 @@ var testMockGetBucketEncryptionErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encryption", strUrl)
+			assert.Equal(t, "/bucket/?encryption", strUrl)
 		},
 		&GetBucketEncryptionRequest{
 			Bucket: Ptr("bucket"),
@@ -20154,7 +20154,7 @@ var testMockDeleteBucketEncryptionSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encryption", strUrl)
+			assert.Equal(t, "/bucket/?encryption", strUrl)
 		},
 		&DeleteBucketEncryptionRequest{
 			Bucket: Ptr("bucket"),
@@ -20215,7 +20215,7 @@ var testMockDeleteBucketEncryptionErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encryption", strUrl)
+			assert.Equal(t, "/bucket/?encryption", strUrl)
 		},
 		&DeleteBucketEncryptionRequest{
 			Bucket: Ptr("bucket"),
@@ -20251,7 +20251,7 @@ var testMockDeleteBucketEncryptionErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?encryption", strUrl)
+			assert.Equal(t, "/bucket/?encryption", strUrl)
 		},
 		&DeleteBucketEncryptionRequest{
 			Bucket: Ptr("bucket"),
@@ -20307,7 +20307,7 @@ var testMockPutBucketRefererSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?referer", r.URL.String())
+			assert.Equal(t, "/bucket/?referer", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<RefererConfiguration><AllowEmptyReferer>false</AllowEmptyReferer><AllowTruncateQueryString>true</AllowTruncateQueryString><TruncatePath>true</TruncatePath><RefererList><Referer>http://www.aliyun.com</Referer><Referer>https://www.aliyun.com</Referer><Referer>http://www.*.com</Referer><Referer>https://www.?.aliyuncs.com</Referer></RefererList><RefererBlacklist><Referer>http://www.refuse.com</Referer><Referer>https://*.hack.com</Referer><Referer>http://ban.*.com</Referer><Referer>https://www.?.deny.com</Referer></RefererBlacklist></RefererConfiguration>")
 		},
@@ -20345,7 +20345,7 @@ var testMockPutBucketRefererSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?referer", r.URL.String())
+			assert.Equal(t, "/bucket/?referer", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<RefererConfiguration><AllowEmptyReferer>false</AllowEmptyReferer><AllowTruncateQueryString>true</AllowTruncateQueryString><TruncatePath>true</TruncatePath><RefererList><Referer>http://www.aliyun.com</Referer><Referer>https://www.aliyun.com</Referer><Referer>http://www.*.com</Referer><Referer>https://www.?.aliyuncs.com</Referer></RefererList></RefererConfiguration>")
 		},
@@ -20378,7 +20378,7 @@ var testMockPutBucketRefererSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?referer", r.URL.String())
+			assert.Equal(t, "/bucket/?referer", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<RefererConfiguration><AllowEmptyReferer>false</AllowEmptyReferer><RefererList><Referer></Referer></RefererList></RefererConfiguration>")
 		},
@@ -20444,7 +20444,7 @@ var testMockPutBucketRefererErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket?referer", r.URL.String())
+			assert.Equal(t, "/bucket/?referer", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<RefererConfiguration><AllowEmptyReferer>false</AllowEmptyReferer><RefererList><Referer></Referer></RefererList></RefererConfiguration>")
 		},
@@ -20489,7 +20489,7 @@ var testMockPutBucketRefererErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?referer", strUrl)
+			assert.Equal(t, "/bucket/?referer", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<RefererConfiguration><AllowEmptyReferer>false</AllowEmptyReferer><RefererList><Referer></Referer></RefererList></RefererConfiguration>")
 		},
@@ -20554,7 +20554,7 @@ var testMockGetBucketRefererSuccessCases = []struct {
 </RefererConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?referer", r.URL.String())
+			assert.Equal(t, "/bucket/?referer", r.URL.String())
 		},
 		&GetBucketRefererRequest{
 			Bucket: Ptr("bucket"),
@@ -20586,7 +20586,7 @@ var testMockGetBucketRefererSuccessCases = []struct {
 </RefererConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?referer", r.URL.String())
+			assert.Equal(t, "/bucket/?referer", r.URL.String())
 		},
 		&GetBucketRefererRequest{
 			Bucket: Ptr("bucket"),
@@ -20629,7 +20629,7 @@ var testMockGetBucketRefererSuccessCases = []struct {
 </RefererConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?referer", r.URL.String())
+			assert.Equal(t, "/bucket/?referer", r.URL.String())
 		},
 		&GetBucketRefererRequest{
 			Bucket: Ptr("bucket"),
@@ -20694,7 +20694,7 @@ var testMockGetBucketRefererErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?referer", r.URL.String())
+			assert.Equal(t, "/bucket/?referer", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketRefererRequest{
@@ -20732,7 +20732,7 @@ var testMockGetBucketRefererErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?referer", strUrl)
+			assert.Equal(t, "/bucket/?referer", strUrl)
 		},
 		&GetBucketRefererRequest{
 			Bucket: Ptr("bucket"),
@@ -20761,7 +20761,7 @@ var testMockGetBucketRefererErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?referer", strUrl)
+			assert.Equal(t, "/bucket/?referer", strUrl)
 		},
 		&GetBucketRefererRequest{
 			Bucket: Ptr("bucket"),
@@ -20812,7 +20812,7 @@ var testMockPutBucketInventorySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", urlStr)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<InventoryConfiguration><Id>report1</Id><IsEnabled>true</IsEnabled><Destination><OSSBucketDestination><Format>CSV</Format><AccountId>1000000000000000</AccountId><RoleArn>acs:ram::1000000000000000:role/AliyunOSSRole</RoleArn><Bucket>acs:oss:::destination-bucket</Bucket></OSSBucketDestination></Destination><Schedule><Frequency>Daily</Frequency></Schedule><Filter><LastModifyBeginTimeStamp>1637883649</LastModifyBeginTimeStamp><LastModifyEndTimeStamp>1638347592</LastModifyEndTimeStamp><LowerSizeBound>1024</LowerSizeBound><UpperSizeBound>1048576</UpperSizeBound><StorageClass>Standard,IA</StorageClass><Prefix>filterPrefix</Prefix></Filter><IncludedObjectVersions>All</IncludedObjectVersions></InventoryConfiguration>")
 		},
@@ -20861,7 +20861,7 @@ var testMockPutBucketInventorySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", urlStr)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<InventoryConfiguration><Id>report1</Id><IsEnabled>true</IsEnabled><Destination><OSSBucketDestination><Format>CSV</Format><AccountId>1000000000000000</AccountId><RoleArn>acs:ram::1000000000000000:role/AliyunOSSRole</RoleArn><Bucket>acs:oss:::destination-bucket</Bucket><Prefix>prefix1</Prefix><Encryption><SSE-KMS><KeyId>keyId</KeyId></SSE-KMS></Encryption></OSSBucketDestination></Destination><Schedule><Frequency>Daily</Frequency></Schedule><Filter><LastModifyBeginTimeStamp>1637883649</LastModifyBeginTimeStamp><LastModifyEndTimeStamp>1638347592</LastModifyEndTimeStamp><LowerSizeBound>1024</LowerSizeBound><UpperSizeBound>1048576</UpperSizeBound><StorageClass>Standard,IA</StorageClass><Prefix>filterPrefix</Prefix></Filter><IncludedObjectVersions>All</IncludedObjectVersions><OptionalFields><Field>Size</Field><Field>LastModifiedDate</Field><Field>ETag</Field><Field>StorageClass</Field><Field>IsMultipartUploaded</Field><Field>EncryptionStatus</Field></OptionalFields></InventoryConfiguration>")
 		},
@@ -20963,7 +20963,7 @@ var testMockPutBucketInventoryErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", urlStr)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<InventoryConfiguration><Id>report1</Id><IsEnabled>true</IsEnabled><Destination><OSSBucketDestination><Format>CSV</Format><AccountId>1000000000000000</AccountId><RoleArn>acs:ram::1000000000000000:role/AliyunOSSRole</RoleArn><Bucket>acs:oss:::destination-bucket</Bucket></OSSBucketDestination></Destination><Schedule><Frequency>Daily</Frequency></Schedule><Filter><LastModifyBeginTimeStamp>1637883649</LastModifyBeginTimeStamp><LastModifyEndTimeStamp>1638347592</LastModifyEndTimeStamp><LowerSizeBound>1024</LowerSizeBound><UpperSizeBound>1048576</UpperSizeBound><StorageClass>Standard,IA</StorageClass><Prefix>filterPrefix</Prefix></Filter><IncludedObjectVersions>All</IncludedObjectVersions></InventoryConfiguration>")
 		},
@@ -21027,7 +21027,7 @@ var testMockPutBucketInventoryErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", urlStr)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<InventoryConfiguration><Id>report1</Id><IsEnabled>true</IsEnabled><Destination><OSSBucketDestination><Format>CSV</Format><AccountId>1000000000000000</AccountId><RoleArn>acs:ram::1000000000000000:role/AliyunOSSRole</RoleArn><Bucket>acs:oss:::destination-bucket</Bucket></OSSBucketDestination></Destination><Schedule><Frequency>Daily</Frequency></Schedule><Filter><LastModifyBeginTimeStamp>1637883649</LastModifyBeginTimeStamp><LastModifyEndTimeStamp>1638347592</LastModifyEndTimeStamp><LowerSizeBound>1024</LowerSizeBound><UpperSizeBound>1048576</UpperSizeBound><StorageClass>Standard,IA</StorageClass><Prefix>filterPrefix</Prefix></Filter><IncludedObjectVersions>All</IncludedObjectVersions></InventoryConfiguration>")
 		},
@@ -21148,7 +21148,7 @@ var testMockGetBucketInventorySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", urlStr)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", urlStr)
 		},
 		&GetBucketInventoryRequest{
 			Bucket:      Ptr("bucket"),
@@ -21206,7 +21206,7 @@ var testMockGetBucketInventorySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", urlStr)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", urlStr)
 		},
 		&GetBucketInventoryRequest{
 			Bucket:      Ptr("bucket"),
@@ -21274,7 +21274,7 @@ var testMockGetBucketInventoryErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", urlStr)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", urlStr)
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketInventoryRequest{
@@ -21313,7 +21313,7 @@ var testMockGetBucketInventoryErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", strUrl)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", strUrl)
 		},
 		&GetBucketInventoryRequest{
 			Bucket:      Ptr("bucket"),
@@ -21343,7 +21343,7 @@ var testMockGetBucketInventoryErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", strUrl)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", strUrl)
 		},
 		&GetBucketInventoryRequest{
 			Bucket:      Ptr("bucket"),
@@ -21482,7 +21482,7 @@ var testMockListBucketInventorySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory", urlStr)
+			assert.Equal(t, "/bucket/?inventory", urlStr)
 		},
 		&ListBucketInventoryRequest{
 			Bucket: Ptr("bucket"),
@@ -21569,7 +21569,7 @@ var testMockListBucketInventoryErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory", urlStr)
+			assert.Equal(t, "/bucket/?inventory", urlStr)
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListBucketInventoryRequest{
@@ -21607,7 +21607,7 @@ var testMockListBucketInventoryErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory", strUrl)
+			assert.Equal(t, "/bucket/?inventory", strUrl)
 		},
 		&ListBucketInventoryRequest{
 			Bucket: Ptr("bucket"),
@@ -21636,7 +21636,7 @@ var testMockListBucketInventoryErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory", strUrl)
+			assert.Equal(t, "/bucket/?inventory", strUrl)
 		},
 		&ListBucketInventoryRequest{
 			Bucket: Ptr("bucket"),
@@ -21687,7 +21687,7 @@ var testMockDeleteBucketInventorySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", strUrl)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", strUrl)
 		},
 		&DeleteBucketInventoryRequest{
 			Bucket:      Ptr("bucket"),
@@ -21749,7 +21749,7 @@ var testMockDeleteBucketInventoryErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", strUrl)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", strUrl)
 		},
 		&DeleteBucketInventoryRequest{
 			Bucket:      Ptr("bucket"),
@@ -21786,7 +21786,7 @@ var testMockDeleteBucketInventoryErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?inventory&inventoryId=report1", strUrl)
+			assert.Equal(t, "/bucket/?inventory&inventoryId=report1", strUrl)
 		},
 		&DeleteBucketInventoryRequest{
 			Bucket:      Ptr("bucket"),
@@ -21844,7 +21844,7 @@ var testMockPutBucketAccessMonitorSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?accessmonitor", urlStr)
+			assert.Equal(t, "/bucket/?accessmonitor", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<AccessMonitorConfiguration><Status>Enabled</Status></AccessMonitorConfiguration>")
 		},
@@ -21871,7 +21871,7 @@ var testMockPutBucketAccessMonitorSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?accessmonitor", urlStr)
+			assert.Equal(t, "/bucket/?accessmonitor", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<AccessMonitorConfiguration><Status>Disabled</Status></AccessMonitorConfiguration>")
 		},
@@ -21935,7 +21935,7 @@ var testMockPutBucketAccessMonitorErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?accessmonitor", urlStr)
+			assert.Equal(t, "/bucket/?accessmonitor", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<AccessMonitorConfiguration><Status>Enabled</Status></AccessMonitorConfiguration>")
 		},
@@ -21977,7 +21977,7 @@ var testMockPutBucketAccessMonitorErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?accessmonitor", urlStr)
+			assert.Equal(t, "/bucket/?accessmonitor", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<AccessMonitorConfiguration><Status>Enabled</Status></AccessMonitorConfiguration>")
 		},
@@ -22039,7 +22039,7 @@ var testMockGetBucketAccessMonitorSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?accessmonitor", urlStr)
+			assert.Equal(t, "/bucket/?accessmonitor", urlStr)
 		},
 		&GetBucketAccessMonitorRequest{
 			Bucket: Ptr("bucket"),
@@ -22064,7 +22064,7 @@ var testMockGetBucketAccessMonitorSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?accessmonitor", urlStr)
+			assert.Equal(t, "/bucket/?accessmonitor", urlStr)
 		},
 		&GetBucketAccessMonitorRequest{
 			Bucket: Ptr("bucket"),
@@ -22125,7 +22125,7 @@ var testMockGetBucketAccessMonitorErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?accessmonitor", urlStr)
+			assert.Equal(t, "/bucket/?accessmonitor", urlStr)
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketAccessMonitorRequest{
@@ -22163,7 +22163,7 @@ var testMockGetBucketAccessMonitorErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?accessmonitor", strUrl)
+			assert.Equal(t, "/bucket/?accessmonitor", strUrl)
 		},
 		&GetBucketAccessMonitorRequest{
 			Bucket: Ptr("bucket"),
@@ -22192,7 +22192,7 @@ var testMockGetBucketAccessMonitorErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?accessmonitor", strUrl)
+			assert.Equal(t, "/bucket/?accessmonitor", strUrl)
 		},
 		&GetBucketAccessMonitorRequest{
 			Bucket: Ptr("bucket"),
@@ -22243,7 +22243,7 @@ var testMockPutBucketStyleSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?category=image&style&styleName=imageStyle", urlStr)
+			assert.Equal(t, "/bucket/?category=image&style&styleName=imageStyle", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<Style><Content>image/resize,p_50</Content></Style>")
 		},
@@ -22272,7 +22272,7 @@ var testMockPutBucketStyleSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?style&styleName=imageStyle", urlStr)
+			assert.Equal(t, "/bucket/?style&styleName=imageStyle", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<Style><Content>image/resize,p_50</Content></Style>")
 		},
@@ -22337,7 +22337,7 @@ var testMockPutBucketStyleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?style&styleName=imageStyle", urlStr)
+			assert.Equal(t, "/bucket/?style&styleName=imageStyle", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<Style><Content>image/resize,p_50</Content></Style>")
 		},
@@ -22380,7 +22380,7 @@ var testMockPutBucketStyleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?style&styleName=imageStyle", urlStr)
+			assert.Equal(t, "/bucket/?style&styleName=imageStyle", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<Style><Content>image/resize,p_50</Content></Style>")
 		},
@@ -22449,7 +22449,7 @@ var testMockGetBucketStyleSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?style&styleName=imageStyle", urlStr)
+			assert.Equal(t, "/bucket/?style&styleName=imageStyle", urlStr)
 		},
 		&GetStyleRequest{
 			Bucket:    Ptr("bucket"),
@@ -22515,7 +22515,7 @@ var testMockGetBucketStyleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?style&styleName=imageStyle", urlStr)
+			assert.Equal(t, "/bucket/?style&styleName=imageStyle", urlStr)
 		},
 		&GetStyleRequest{
 			Bucket:    Ptr("bucket"),
@@ -22553,7 +22553,7 @@ var testMockGetBucketStyleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?style&styleName=imageStyle", urlStr)
+			assert.Equal(t, "/bucket/?style&styleName=imageStyle", urlStr)
 		},
 		&GetStyleRequest{
 			Bucket:    Ptr("bucket"),
@@ -22583,7 +22583,7 @@ var testMockGetBucketStyleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?style&styleName=imageStyle", urlStr)
+			assert.Equal(t, "/bucket/?style&styleName=imageStyle", urlStr)
 		},
 		&GetStyleRequest{
 			Bucket:    Ptr("bucket"),
@@ -22658,7 +22658,7 @@ var testMockListBucketStyleSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?style", urlStr)
+			assert.Equal(t, "/bucket/?style", urlStr)
 		},
 		&ListStyleRequest{
 			Bucket: Ptr("bucket"),
@@ -22734,7 +22734,7 @@ var testMockListBucketStyleErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?style", urlStr)
+			assert.Equal(t, "/bucket/?style", urlStr)
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListStyleRequest{
@@ -22772,7 +22772,7 @@ var testMockListBucketStyleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?style", strUrl)
+			assert.Equal(t, "/bucket/?style", strUrl)
 		},
 		&ListStyleRequest{
 			Bucket: Ptr("bucket"),
@@ -22801,7 +22801,7 @@ var testMockListBucketStyleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?style", strUrl)
+			assert.Equal(t, "/bucket/?style", strUrl)
 		},
 		&ListStyleRequest{
 			Bucket: Ptr("bucket"),
@@ -22852,7 +22852,7 @@ var testMockDeleteBucketStyleSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?style&styleName=styleName", strUrl)
+			assert.Equal(t, "/bucket/?style&styleName=styleName", strUrl)
 		},
 		&DeleteStyleRequest{
 			Bucket:    Ptr("bucket"),
@@ -22914,7 +22914,7 @@ var testMockDeleteBucketStyleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?style&styleName=styleName", strUrl)
+			assert.Equal(t, "/bucket/?style&styleName=styleName", strUrl)
 		},
 		&DeleteStyleRequest{
 			Bucket:    Ptr("bucket"),
@@ -22951,7 +22951,7 @@ var testMockDeleteBucketStyleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?style&styleName=styleName", strUrl)
+			assert.Equal(t, "/bucket/?style&styleName=styleName", strUrl)
 		},
 		&DeleteStyleRequest{
 			Bucket:    Ptr("bucket"),
@@ -23009,7 +23009,7 @@ var testMockPutBucketReplicationSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?comp=add&replication", urlStr)
+			assert.Equal(t, "/bucket/?comp=add&replication", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationConfiguration><Rule><Destination><Bucket>destbucket</Bucket><Location>oss-cn-beijing</Location><TransferType>oss_acc</TransferType></Destination><SyncRole>aliyunramrole</SyncRole><SourceSelectionCriteria><SseKmsEncryptedObjects><Status>Enabled</Status></SseKmsEncryptedObjects></SourceSelectionCriteria><EncryptionConfiguration><ReplicaKmsKeyID>c4d49f85-ee30-426b-a5ed-95e9139d****</ReplicaKmsKeyID></EncryptionConfiguration><HistoricalObjectReplication>enabled</HistoricalObjectReplication><RTC><Status>enabled</Status></RTC></Rule></ReplicationConfiguration>")
 		},
@@ -23057,7 +23057,7 @@ var testMockPutBucketReplicationSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?comp=add&replication", urlStr)
+			assert.Equal(t, "/bucket/?comp=add&replication", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationConfiguration><Rule><Destination><Bucket>destbucket</Bucket><Location>oss-cn-beijing</Location><TransferType>oss_acc</TransferType></Destination><HistoricalObjectReplication>enabled</HistoricalObjectReplication></Rule></ReplicationConfiguration>")
 		},
@@ -23130,7 +23130,7 @@ var testMockPutBucketReplicationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?comp=add&replication", urlStr)
+			assert.Equal(t, "/bucket/?comp=add&replication", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationConfiguration><Rule><Destination><Bucket>destbucket</Bucket><Location>oss-cn-beijing</Location><TransferType>oss_acc</TransferType></Destination><HistoricalObjectReplication>enabled</HistoricalObjectReplication></Rule></ReplicationConfiguration>")
 		},
@@ -23181,7 +23181,7 @@ var testMockPutBucketReplicationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?comp=add&replication", urlStr)
+			assert.Equal(t, "/bucket/?comp=add&replication", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationConfiguration><Rule><Destination><Bucket>destbucket</Bucket><Location>oss-cn-beijing</Location><TransferType>oss_acc</TransferType></Destination><HistoricalObjectReplication>enabled</HistoricalObjectReplication></Rule></ReplicationConfiguration>")
 		},
@@ -23251,7 +23251,7 @@ var testMockPutBucketRtcSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?rtc", urlStr)
+			assert.Equal(t, "/bucket/?rtc", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationRule><RTC><Status>disabled</Status></RTC><ID>test_replication_rule_1</ID></ReplicationRule>")
 		},
@@ -23281,7 +23281,7 @@ var testMockPutBucketRtcSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?rtc", urlStr)
+			assert.Equal(t, "/bucket/?rtc", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationRule><RTC><Status>enabled</Status></RTC><ID>test_replication_rule_1</ID></ReplicationRule>")
 		},
@@ -23348,7 +23348,7 @@ var testMockPutBucketRtcErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?rtc", urlStr)
+			assert.Equal(t, "/bucket/?rtc", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationRule><RTC><Status>enabled</Status></RTC><ID>test_replication_rule_1</ID></ReplicationRule>")
 		},
@@ -23393,7 +23393,7 @@ var testMockPutBucketRtcErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?rtc", urlStr)
+			assert.Equal(t, "/bucket/?rtc", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationRule><RTC><Status>enabled</Status></RTC><ID>test_replication_rule_1</ID></ReplicationRule>")
 		},
@@ -23478,7 +23478,7 @@ var testMockGetBucketReplicationSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replication", urlStr)
+			assert.Equal(t, "/bucket/?replication", urlStr)
 		},
 		&GetBucketReplicationRequest{
 			Bucket: Ptr("bucket"),
@@ -23550,7 +23550,7 @@ var testMockGetBucketReplicationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replication", urlStr)
+			assert.Equal(t, "/bucket/?replication", urlStr)
 		},
 		&GetBucketReplicationRequest{
 			Bucket: Ptr("bucket"),
@@ -23587,7 +23587,7 @@ var testMockGetBucketReplicationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replication", urlStr)
+			assert.Equal(t, "/bucket/?replication", urlStr)
 		},
 		&GetBucketReplicationRequest{
 			Bucket: Ptr("bucket"),
@@ -23616,7 +23616,7 @@ var testMockGetBucketReplicationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replication", urlStr)
+			assert.Equal(t, "/bucket/?replication", urlStr)
 		},
 		&GetBucketReplicationRequest{
 			Bucket: Ptr("bucket"),
@@ -23688,7 +23688,7 @@ var testMockGetBucketReplicationLocationSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replicationLocation", urlStr)
+			assert.Equal(t, "/bucket/?replicationLocation", urlStr)
 		},
 		&GetBucketReplicationLocationRequest{
 			Bucket: Ptr("bucket"),
@@ -23759,7 +23759,7 @@ var testMockGetBucketReplicationLocationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replicationLocation", urlStr)
+			assert.Equal(t, "/bucket/?replicationLocation", urlStr)
 		},
 		&GetBucketReplicationLocationRequest{
 			Bucket: Ptr("bucket"),
@@ -23796,7 +23796,7 @@ var testMockGetBucketReplicationLocationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replicationLocation", urlStr)
+			assert.Equal(t, "/bucket/?replicationLocation", urlStr)
 		},
 		&GetBucketReplicationLocationRequest{
 			Bucket: Ptr("bucket"),
@@ -23825,7 +23825,7 @@ var testMockGetBucketReplicationLocationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replicationLocation", urlStr)
+			assert.Equal(t, "/bucket/?replicationLocation", urlStr)
 		},
 		&GetBucketReplicationLocationRequest{
 			Bucket: Ptr("bucket"),
@@ -23896,7 +23896,7 @@ var testMockGetBucketReplicationProgressSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replicationProgress&rule-id=test_replication_1", urlStr)
+			assert.Equal(t, "/bucket/?replicationProgress&rule-id=test_replication_1", urlStr)
 		},
 		&GetBucketReplicationProgressRequest{
 			Bucket: Ptr("bucket"),
@@ -23970,7 +23970,7 @@ var testMockGetBucketReplicationProgressErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replicationProgress&rule-id=test_replication_1", urlStr)
+			assert.Equal(t, "/bucket/?replicationProgress&rule-id=test_replication_1", urlStr)
 		},
 		&GetBucketReplicationProgressRequest{
 			Bucket: Ptr("bucket"),
@@ -24008,7 +24008,7 @@ var testMockGetBucketReplicationProgressErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replicationProgress&rule-id=test_replication_1", urlStr)
+			assert.Equal(t, "/bucket/?replicationProgress&rule-id=test_replication_1", urlStr)
 		},
 		&GetBucketReplicationProgressRequest{
 			Bucket: Ptr("bucket"),
@@ -24038,7 +24038,7 @@ var testMockGetBucketReplicationProgressErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?replicationProgress&rule-id=test_replication_1", urlStr)
+			assert.Equal(t, "/bucket/?replicationProgress&rule-id=test_replication_1", urlStr)
 		},
 		&GetBucketReplicationProgressRequest{
 			Bucket: Ptr("bucket"),
@@ -24090,7 +24090,7 @@ var testMockDeleteBucketReplicationSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?comp=delete&replication", strUrl)
+			assert.Equal(t, "/bucket/?comp=delete&replication", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationRules><ID>test_replication_1</ID></ReplicationRules>")
 		},
@@ -24155,7 +24155,7 @@ var testMockDeleteBucketReplicationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?comp=delete&replication", strUrl)
+			assert.Equal(t, "/bucket/?comp=delete&replication", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationRules><ID>test_replication_1</ID></ReplicationRules>")
 		},
@@ -24196,7 +24196,7 @@ var testMockDeleteBucketReplicationErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?comp=delete&replication", strUrl)
+			assert.Equal(t, "/bucket/?comp=delete&replication", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<ReplicationRules><ID>test_replication_1</ID></ReplicationRules>")
 		},
@@ -24258,7 +24258,7 @@ var testMockPutBucketCorsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", urlStr)
+			assert.Equal(t, "/bucket/?cors", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<CORSConfiguration><CORSRule><AllowedOrigin>*</AllowedOrigin><AllowedMethod>PUT</AllowedMethod><AllowedMethod>GET</AllowedMethod><AllowedHeader>Authorization</AllowedHeader></CORSRule><CORSRule><AllowedOrigin>http://example.com</AllowedOrigin><AllowedOrigin>http://example.net</AllowedOrigin><AllowedMethod>GET</AllowedMethod><AllowedHeader>Authorization</AllowedHeader><ExposeHeader>x-oss-test</ExposeHeader><ExposeHeader>x-oss-test1</ExposeHeader><MaxAgeSeconds>100</MaxAgeSeconds></CORSRule><ResponseVary>false</ResponseVary></CORSConfiguration>")
 		},
@@ -24299,7 +24299,7 @@ var testMockPutBucketCorsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", urlStr)
+			assert.Equal(t, "/bucket/?cors", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<CORSConfiguration><CORSRule><AllowedOrigin>*</AllowedOrigin><AllowedMethod>PUT</AllowedMethod><AllowedMethod>GET</AllowedMethod></CORSRule></CORSConfiguration>")
 		},
@@ -24368,7 +24368,7 @@ var testMockPutBucketCorsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", urlStr)
+			assert.Equal(t, "/bucket/?cors", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<CORSConfiguration><CORSRule><AllowedOrigin>*</AllowedOrigin><AllowedMethod>PUT</AllowedMethod><AllowedMethod>GET</AllowedMethod></CORSRule></CORSConfiguration>")
 		},
@@ -24415,7 +24415,7 @@ var testMockPutBucketCorsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", urlStr)
+			assert.Equal(t, "/bucket/?cors", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<CORSConfiguration><CORSRule><AllowedOrigin>*</AllowedOrigin><AllowedMethod>PUT</AllowedMethod><AllowedMethod>GET</AllowedMethod></CORSRule></CORSConfiguration>")
 		},
@@ -24498,7 +24498,7 @@ var testMockGetBucketCorsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", urlStr)
+			assert.Equal(t, "/bucket/?cors", urlStr)
 		},
 		&GetBucketCorsRequest{
 			Bucket: Ptr("bucket"),
@@ -24546,7 +24546,7 @@ var testMockGetBucketCorsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", urlStr)
+			assert.Equal(t, "/bucket/?cors", urlStr)
 		},
 		&GetBucketCorsRequest{
 			Bucket: Ptr("bucket"),
@@ -24612,7 +24612,7 @@ var testMockGetBucketCorsErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", urlStr)
+			assert.Equal(t, "/bucket/?cors", urlStr)
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketCorsRequest{
@@ -24650,7 +24650,7 @@ var testMockGetBucketCorsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", strUrl)
+			assert.Equal(t, "/bucket/?cors", strUrl)
 		},
 		&GetBucketCorsRequest{
 			Bucket: Ptr("bucket"),
@@ -24679,7 +24679,7 @@ var testMockGetBucketCorsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", strUrl)
+			assert.Equal(t, "/bucket/?cors", strUrl)
 		},
 		&GetBucketCorsRequest{
 			Bucket: Ptr("bucket"),
@@ -24730,7 +24730,7 @@ var testMockDeleteBucketCorsSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", strUrl)
+			assert.Equal(t, "/bucket/?cors", strUrl)
 		},
 		&DeleteBucketCorsRequest{
 			Bucket: Ptr("bucket"),
@@ -24791,7 +24791,7 @@ var testMockDeleteBucketCorsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", strUrl)
+			assert.Equal(t, "/bucket/?cors", strUrl)
 		},
 		&DeleteBucketCorsRequest{
 			Bucket: Ptr("bucket"),
@@ -24827,7 +24827,7 @@ var testMockDeleteBucketCorsErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?cors", strUrl)
+			assert.Equal(t, "/bucket/?cors", strUrl)
 		},
 		&DeleteBucketCorsRequest{
 			Bucket: Ptr("bucket"),
@@ -25062,7 +25062,7 @@ var testMockPutBucketLifecycleSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?lifecycle", r.URL.String())
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<LifecycleConfiguration><Rule><Status>Enabled</Status><ID>r0</ID><Prefix>prefix0</Prefix><Expiration><Days>40</Days><ExpiredObjectDeleteMarker>false</ExpiredObjectDeleteMarker></Expiration></Rule><Rule><Status>Enabled</Status><Filter><ObjectSizeGreaterThan>500</ObjectSizeGreaterThan><ObjectSizeLessThan>64500</ObjectSizeLessThan></Filter><ID>r1</ID><Prefix>prefix1</Prefix><Expiration><Days>40</Days><ExpiredObjectDeleteMarker>false</ExpiredObjectDeleteMarker></Expiration></Rule><Rule><Status>Enabled</Status><Filter><ObjectSizeGreaterThan>500</ObjectSizeGreaterThan><ObjectSizeLessThan>64500</ObjectSizeLessThan></Filter><ID>r3</ID><Prefix>prefix3</Prefix><Expiration><Days>40</Days><ExpiredObjectDeleteMarker>false</ExpiredObjectDeleteMarker></Expiration><Transition><Days>30</Days><StorageClass>IA</StorageClass><IsAccessTime>false</IsAccessTime></Transition></Rule><Rule><Status>Enabled</Status><AbortMultipartUpload><CreatedBeforeDate>2015-11-11T00:00:00.000Z</CreatedBeforeDate></AbortMultipartUpload><NoncurrentVersionTransition><IsAccessTime>true</IsAccessTime><ReturnToStdWhenVisit>true</ReturnToStdWhenVisit><NoncurrentDays>10</NoncurrentDays><StorageClass>IA</StorageClass></NoncurrentVersionTransition><ID>r4</ID><Prefix>prefix4</Prefix><Expiration><ExpiredObjectDeleteMarker>true</ExpiredObjectDeleteMarker></Expiration></Rule><Rule><Status>Enabled</Status><Prefix>pre_</Prefix><Expiration><ExpiredObjectDeleteMarker>true</ExpiredObjectDeleteMarker></Expiration></Rule></LifecycleConfiguration>")
 		},
@@ -25156,7 +25156,7 @@ var testMockPutBucketLifecycleSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?lifecycle", r.URL.String())
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<LifecycleConfiguration><Rule><Status>Enabled</Status><ID>rule</ID><Prefix>log/</Prefix><Transition><Days>30</Days><StorageClass>IA</StorageClass></Transition></Rule></LifecycleConfiguration>")
 		},
@@ -25231,7 +25231,7 @@ var testMockPutBucketLifecycleErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?lifecycle", r.URL.String())
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<LifecycleConfiguration><Rule><Status>Enabled</Status><ID>rule</ID><Prefix>log/</Prefix><Transition><Days>30</Days><StorageClass>IA</StorageClass></Transition></Rule></LifecycleConfiguration>")
 		},
@@ -25284,7 +25284,7 @@ var testMockPutBucketLifecycleErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?lifecycle", strUrl)
+			assert.Equal(t, "/bucket/?lifecycle", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<LifecycleConfiguration><Rule><Status>Enabled</Status><ID>rule</ID><Prefix>log/</Prefix><Transition><Days>30</Days><StorageClass>IA</StorageClass></Transition></Rule></LifecycleConfiguration>")
 		},
@@ -25329,7 +25329,7 @@ var testMockPutBucketLifecycleErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?lifecycle", strUrl)
+			assert.Equal(t, "/bucket/?lifecycle", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<LifecycleConfiguration><Rule><Status>Enabled</Status><ID>rule</ID><Prefix>log/</Prefix><Transition><Days>30</Days><StorageClass>IA</StorageClass></Transition></Rule></LifecycleConfiguration>")
 		},
@@ -25424,7 +25424,7 @@ var testMockGetBucketLifecycleSuccessCases = []struct {
 </LifecycleConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?lifecycle", r.URL.String())
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
 		},
 		&GetBucketLifecycleRequest{
 			Bucket: Ptr("bucket"),
@@ -25493,7 +25493,7 @@ var testMockGetBucketLifecycleSuccessCases = []struct {
 </LifecycleConfiguration>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket?lifecycle", r.URL.String())
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
 		},
 		&GetBucketLifecycleRequest{
 			Bucket: Ptr("bucket"),
@@ -25572,7 +25572,7 @@ var testMockGetBucketLifecycleErrorCases = []struct {
   <EC>0015-00000101</EC>
 </Error>`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket?lifecycle", r.URL.String())
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetBucketLifecycleRequest{
@@ -25610,7 +25610,7 @@ var testMockGetBucketLifecycleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?lifecycle", strUrl)
+			assert.Equal(t, "/bucket/?lifecycle", strUrl)
 		},
 		&GetBucketLifecycleRequest{
 			Bucket: Ptr("bucket"),
@@ -25639,7 +25639,7 @@ var testMockGetBucketLifecycleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?lifecycle", strUrl)
+			assert.Equal(t, "/bucket/?lifecycle", strUrl)
 		},
 		&GetBucketLifecycleRequest{
 			Bucket: Ptr("bucket"),
@@ -25689,7 +25689,7 @@ var testMockDeleteBucketLifecycleSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?lifecycle", strUrl)
+			assert.Equal(t, "/bucket/?lifecycle", strUrl)
 		},
 		&DeleteBucketLifecycleRequest{
 			Bucket: Ptr("bucket"),
@@ -25750,7 +25750,7 @@ var testMockDeleteBucketLifecycleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?lifecycle", strUrl)
+			assert.Equal(t, "/bucket/?lifecycle", strUrl)
 		},
 		&DeleteBucketLifecycleRequest{
 			Bucket: Ptr("bucket"),
@@ -25786,7 +25786,7 @@ var testMockDeleteBucketLifecycleErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket?lifecycle", strUrl)
+			assert.Equal(t, "/bucket/?lifecycle", strUrl)
 		},
 		&DeleteBucketLifecycleRequest{
 			Bucket: Ptr("bucket"),
