@@ -218,12 +218,15 @@ func (u *uploaderDelegate) checkSource(filePath string) error {
 		return NewErrParamRequired("filePath")
 	}
 
-	if !FileExists(filePath) {
-		return fmt.Errorf("File not exists, %v", filePath)
-	}
+	// if !FileExists(filePath) {
+	// 	return fmt.Errorf("File not exists, %v", filePath)
+	// }
 
 	info, err := os.Stat(filePath)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("File not exists, %v", filePath)
+		}
 		return err
 	}
 
