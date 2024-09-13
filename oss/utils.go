@@ -386,7 +386,7 @@ func FileExists(filename string) bool {
 	if os.IsNotExist(err) {
 		return false
 	}
-	return !info.IsDir()
+	return (info != nil && !info.IsDir())
 }
 
 // DirExists returns whether the given directory exists or not
@@ -395,7 +395,7 @@ func DirExists(dir string) bool {
 	if os.IsNotExist(err) {
 		return false
 	}
-	return info.IsDir()
+	return (info != nil && info.IsDir())
 }
 
 // EmptyFile changes the size of the named file to zero.

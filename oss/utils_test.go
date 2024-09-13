@@ -2,6 +2,7 @@ package oss
 
 import (
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -153,4 +154,58 @@ func TestCopyRequest(t *testing.T) {
 	assert.Equal(t, "acl-abc", ToString((*string)(&request.Acl)))
 	assert.Equal(t, "hvalue-1", request.Headers["header-1"])
 	assert.Equal(t, "qvalue-1", request.Parameters["query-1"])
+}
+
+func TestFileExists(t *testing.T) {
+	dir := os.TempDir()
+	assert.True(t, DirExists(dir))
+	assert.False(t, FileExists(dir))
+
+	file, err := os.CreateTemp(dir, "")
+	assert.NoError(t, err)
+	file.Close()
+	fileName := file.Name()
+	assert.True(t, FileExists(fileName))
+
+	//symlink
+	linkName := fileName + ".link"
+	err = os.Symlink(fileName, linkName)
+	assert.NoError(t, err)
+	assert.True(t, FileExists(linkName))
+
+	os.Remove(file.Name())
+	assert.False(t, FileExists(fileName))
+	assert.False(t, FileExists(linkName))
+
+	//cycle link
+	linkName1 := fileName + ".link-1"
+	linkName2 := fileName + ".link-2"
+	linkName3 := fileName + ".link-3"
+
+	err = os.Symlink(linkName1, linkName2)
+	assert.NoError(t, err)
+	err = os.Symlink(linkName2, linkName3)
+	assert.NoError(t, err)
+	err = os.Symlink(linkName3, linkName1)
+	assert.NoError(t, err)
+	assert.False(t, FileExists(linkName1))
+
+	specialFileName := dir + "#/:\n123?no-exist"
+	assert.False(t, FileExists(specialFileName))
+
+	os.Remove(linkName)
+	os.Remove(linkName1)
+	os.Remove(linkName2)
+	os.Remove(linkName3)
+}
+
+func TestDirExists(t *testing.T) {
+	dir := os.TempDir()
+	assert.True(t, DirExists(dir))
+
+	no_dir := dir + "no-exist"
+	assert.False(t, DirExists(no_dir))
+
+	special_dir := dir + "#/:\n123?no-exist"
+	assert.False(t, DirExists(special_dir))
 }
