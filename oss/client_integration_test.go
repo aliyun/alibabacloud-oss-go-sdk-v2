@@ -39,8 +39,8 @@ var (
 	accessID_         = os.Getenv("OSS_TEST_ACCESS_KEY_ID")
 	accessKey_        = os.Getenv("OSS_TEST_ACCESS_KEY_SECRET")
 	ramRoleArn_       = os.Getenv("OSS_TEST_RAM_ROLE_ARN")
+	accountID_        = os.Getenv("OSS_TEST_RAM_UID")
 	signatureVersion_ = os.Getenv("OSS_TEST_SIGNATURE_VERSION")
-	accountID_        = os.Getenv("OSS_TEST_ACCOUNT_ID")
 
 	// payer
 	payerAccessID_  = os.Getenv("OSS_TEST_PAYER_ACCESS_KEY_ID")
@@ -901,12 +901,6 @@ func TestPutBucketAcl(t *testing.T) {
 	info, err := client.GetBucketInfo(context.TODO(), infoRequest)
 	assert.Nil(t, err)
 	assert.Equal(t, string(BucketACLPublicRead), *info.BucketInfo.ACL)
-	delRequest := &DeleteBucketRequest{
-		Bucket: Ptr(bucketName),
-	}
-	_, err = client.DeleteBucket(context.TODO(), delRequest)
-	assert.Nil(t, err)
-	time.Sleep(2 * time.Second)
 	request = &PutBucketAclRequest{
 		Bucket: Ptr(bucketName),
 		Acl:    BucketACLPrivate,
@@ -920,11 +914,6 @@ func TestPutBucketAcl(t *testing.T) {
 	info, err = client.GetBucketInfo(context.TODO(), infoRequest)
 	assert.Nil(t, err)
 	assert.Equal(t, string(BucketACLPrivate), *info.BucketInfo.ACL)
-	delRequest = &DeleteBucketRequest{
-		Bucket: Ptr(bucketName),
-	}
-	_, err = client.DeleteBucket(context.TODO(), delRequest)
-	assert.Nil(t, err)
 
 	_, err = client.PutBucketAcl(context.TODO(), nil)
 	assert.NotNil(t, err)
@@ -7527,7 +7516,7 @@ func TestBucketCors(t *testing.T) {
 
 	optionRequest = &OptionObjectRequest{
 		Bucket:                     Ptr(bucketNameNotExist),
-		Key: Ptr(key),
+		Key:                        Ptr(key),
 		Origin:                     Ptr("http://www.example.com"),
 		AccessControlRequestMethod: Ptr("PUT"),
 	}
