@@ -14,7 +14,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -46,6 +45,10 @@ var (
 	payerAccessID_  = os.Getenv("OSS_TEST_PAYER_ACCESS_KEY_ID")
 	payerAccessKey_ = os.Getenv("OSS_TEST_PAYER_ACCESS_KEY_SECRET")
 	payerUID_       = os.Getenv("OSS_TEST_PAYER_UID")
+
+	// path style
+	pathStyleBucket_ = os.Getenv("OSS_TEST_PATHSTYLE_BUCKET")
+	pathStyleRegion_ = os.Getenv("OSS_TEST_PATHSTYLE_REGION")
 
 	instance_ *Client
 	testOnce_ sync.Once
@@ -4928,7 +4931,7 @@ func TestGetObjectWithProcess(t *testing.T) {
 	assert.Nil(t, err)
 	time.Sleep(1 * time.Second)
 
-	content, err := ioutil.ReadFile(downloadFile)
+	content, err := os.ReadFile(downloadFile)
 	assert.Nil(t, err)
 
 	result, err := client.GetObject(context.TODO(), getObjRequest)
@@ -7529,4 +7532,108 @@ func TestBucketCors(t *testing.T) {
 	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
+}
+
+func TestAddressingModePathStyle(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	if pathStyleBucket_ == "" {
+		assert.Fail(t, "Please specify the  bucket that supports the path style request.")
+	}
+
+	region := pathStyleRegion_
+	if pathStyleRegion_ == "" {
+		region = region_
+	}
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessID_, accessKey_)).
+		WithRegion(region).
+		WithSignatureVersion(getSignatrueVersion()).
+		WithUsePathStyle(true)
+
+	client := NewClient(cfg)
+
+	bucketName := pathStyleBucket_
+	objectName := "key-path-style"
+
+	// bucket
+	request := &ListObjectsRequest{
+		Bucket: Ptr(bucketName),
+	}
+	result, err := client.ListObjects(context.TODO(), request)
+	assert.Nil(t, err)
+	assert.Equal(t, *result.Name, bucketName)
+	assert.Equal(t, result.MaxKeys, int32(100))
+	assert.Empty(t, result.Prefix)
+	assert.Empty(t, result.Marker)
+	assert.Empty(t, result.Delimiter)
+
+	// bucket + subresource
+	aclResult, err := client.PutBucketAcl(context.TODO(), &PutBucketAclRequest{
+		Bucket: Ptr(bucketName),
+		Acl:    BucketACLPrivate,
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, aclResult.StatusCode)
+	assert.NotEmpty(t, aclResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(2 * time.Second)
+
+	infoResult, err := client.GetBucketInfo(context.TODO(), &GetBucketInfoRequest{
+		Bucket: Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, string(BucketACLPrivate), *infoResult.BucketInfo.ACL)
+
+	// bucket + key
+	_, err = client.DeleteObject(context.TODO(), &DeleteObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+
+	exist, err := client.IsObjectExist(context.TODO(), bucketName, objectName)
+	assert.Nil(t, err)
+	assert.False(t, exist)
+
+	content := randLowStr(10)
+	_, err = client.PutObject(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Body:   strings.NewReader(content),
+	})
+	assert.Nil(t, err)
+
+	hoResult, err := client.HeadObject(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, hoResult.ContentLength, int64(len(content)))
+
+	// bucket + key subresource
+	goaResult, err := client.GetObjectAcl(context.TODO(), &GetObjectAclRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, goaResult.StatusCode)
+	assert.NotEmpty(t, goaResult.Headers.Get(HeaderOssRequestID))
+
+	// presign HeadObjRequest
+	expiration := time.Now().Add(100 * time.Second)
+	preResult, err := client.Presign(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}, PresignExpiration(expiration))
+	assert.Nil(t, err)
+	req, err := http.NewRequest(preResult.Method, preResult.URL, nil)
+	c := &http.Client{}
+	assert.Nil(t, err)
+	resp, _ := c.Do(req)
+	assert.Equal(t, resp.StatusCode, 200)
+	assert.Equal(t, resp.Header.Get(HTTPHeaderContentLength), strconv.Itoa(len(content)))
+
+	assert.Contains(t, preResult.URL, fmt.Sprintf("oss-%s.aliyuncs.com/%s/%s?", region, bucketName, objectName))
 }

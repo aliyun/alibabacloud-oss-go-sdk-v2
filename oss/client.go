@@ -542,6 +542,9 @@ func buildURL(input *OperationInput, opts *Options) (host string, path string) {
 		case UrlStylePath:
 			host = opts.Endpoint.Host
 			paths = append(paths, *input.Bucket)
+			if input.Key == nil {
+				paths = append(paths, "")
+			}
 		case UrlStyleCName:
 			host = opts.Endpoint.Host
 		}
