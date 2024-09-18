@@ -43,11 +43,13 @@ type LifecycleRule struct {
 
 type LifecycleRuleAbortMultipartUpload struct {
 	// The number of days from when the objects were last modified to when the lifecycle rule takes effect.
+
 	Days *int32 `xml:"Days"`
 
 	// The date based on which the lifecycle rule takes effect. OSS performs the specified operation on data whose last modified date is earlier than this date. Specify the time in the ISO 8601 standard. The time must be at 00:00:00 in UTC.
 	CreatedBeforeDate *string `xml:"CreatedBeforeDate"`
 
+	// Deprecated: please use Days or CreateDateBefore.
 	// The date after which the lifecycle rule takes effect. If the specified time is earlier than the current moment, it'll takes effect immediately. (This fields is NOT RECOMMENDED, please use Days or CreateDateBefore)
 	Date *string `xml:"Date"`
 }
@@ -81,6 +83,7 @@ type LifecycleRuleExpiration struct {
 	// Specifies whether to automatically remove expired delete markers.*   true: Expired delete markers are automatically removed. If you set this parameter to true, you cannot specify the Days or CreatedBeforeDate parameter.*   false: Expired delete markers are not automatically removed. If you set this parameter to false, you must specify the Days or CreatedBeforeDate parameter.
 	ExpiredObjectDeleteMarker *bool `xml:"ExpiredObjectDeleteMarker"`
 
+	// Deprecated: please use Days or CreateDateBefore.
 	// The date after which the lifecycle rule takes effect. If the specified time is earlier than the current moment, it'll takes effect immediately. (This fields is NOT RECOMMENDED, please use Days or CreateDateBefore)
 	Date *string `xml:"Date"`
 }

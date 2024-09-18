@@ -758,6 +758,7 @@ func TestGetBucketInfo(t *testing.T) {
 	assert.Empty(t, info.BucketInfo.BucketPolicy.LogPrefix)
 
 	assert.Equal(t, *info.BucketInfo.SseRule.SSEAlgorithm, "")
+	assert.False(t, *info.BucketInfo.BlockPublicAccess)
 	assert.Nil(t, info.BucketInfo.SseRule.KMSDataEncryption)
 	assert.Nil(t, info.BucketInfo.SseRule.KMSMasterKeyID)
 	delRequest := &DeleteBucketRequest{
@@ -5819,10 +5820,10 @@ func TestBucketLogging(t *testing.T) {
 	putUserRequest := &PutUserDefinedLogFieldsConfigRequest{
 		Bucket: Ptr(bucketName),
 		UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-			HeaderSet: &HeaderSet{
+			HeaderSet: &LoggingHeaderSet{
 				[]string{"header1", "header2", "header3"},
 			},
-			ParamSet: &ParamSet{
+			ParamSet: &LoggingParamSet{
 				[]string{"param1", "param2"},
 			},
 		},
@@ -5903,10 +5904,10 @@ func TestBucketLogging(t *testing.T) {
 	putUserRequest = &PutUserDefinedLogFieldsConfigRequest{
 		Bucket: Ptr(bucketNameNotExist),
 		UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-			HeaderSet: &HeaderSet{
+			HeaderSet: &LoggingHeaderSet{
 				[]string{"header1", "header2", "header3"},
 			},
-			ParamSet: &ParamSet{
+			ParamSet: &LoggingParamSet{
 				[]string{"param1", "param2"},
 			},
 		},

@@ -1913,7 +1913,7 @@ var testMockGetBucketInfoSuccessCases = []struct {
 			assert.Empty(t, *o.BucketInfo.SseRule.KMSMasterKeyID)
 			assert.Equal(t, *o.BucketInfo.SseRule.SSEAlgorithm, "KMS")
 			assert.Equal(t, *o.BucketInfo.SseRule.KMSDataEncryption, "SM4")
-			assert.False(t, o.BucketInfo.BlockPublicAccess)
+			assert.False(t, *o.BucketInfo.BlockPublicAccess)
 			assert.Nil(t, o.BucketInfo.Comment)
 		},
 	},
@@ -1985,7 +1985,7 @@ var testMockGetBucketInfoSuccessCases = []struct {
 			assert.Nil(t, o.BucketInfo.SseRule.SSEAlgorithm)
 			assert.Nil(t, o.BucketInfo.SseRule.KMSDataEncryption)
 
-			assert.True(t, o.BucketInfo.BlockPublicAccess)
+			assert.True(t, *o.BucketInfo.BlockPublicAccess)
 			assert.Equal(t, *o.BucketInfo.Comment, "test")
 		},
 	},
@@ -14698,10 +14698,10 @@ var testMockPutUserDefinedLogFieldsConfigSuccessCases = []struct {
 		&PutUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
 			UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-				HeaderSet: &HeaderSet{
+				HeaderSet: &LoggingHeaderSet{
 					[]string{"header1", "header2", "header3"},
 				},
-				ParamSet: &ParamSet{
+				ParamSet: &LoggingParamSet{
 					[]string{"param1", "param2"},
 				},
 			},
@@ -14728,7 +14728,7 @@ var testMockPutUserDefinedLogFieldsConfigSuccessCases = []struct {
 		&PutUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
 			UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-				HeaderSet: &HeaderSet{
+				HeaderSet: &LoggingHeaderSet{
 					[]string{"header1"},
 				},
 			},
@@ -14793,10 +14793,10 @@ var testMockPutUserDefinedLogFieldsConfigErrorCases = []struct {
 		&PutUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
 			UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-				HeaderSet: &HeaderSet{
+				HeaderSet: &LoggingHeaderSet{
 					[]string{"header1", "header2", "header3"},
 				},
-				ParamSet: &ParamSet{
+				ParamSet: &LoggingParamSet{
 					[]string{"param1", "param2"},
 				},
 			},
@@ -14839,10 +14839,10 @@ var testMockPutUserDefinedLogFieldsConfigErrorCases = []struct {
 		&PutUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
 			UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-				HeaderSet: &HeaderSet{
+				HeaderSet: &LoggingHeaderSet{
 					[]string{"header1", "header2", "header3"},
 				},
-				ParamSet: &ParamSet{
+				ParamSet: &LoggingParamSet{
 					[]string{"param1", "param2"},
 				},
 			},
@@ -14877,10 +14877,10 @@ var testMockPutUserDefinedLogFieldsConfigErrorCases = []struct {
 		&PutUserDefinedLogFieldsConfigRequest{
 			Bucket: Ptr("bucket"),
 			UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-				HeaderSet: &HeaderSet{
+				HeaderSet: &LoggingHeaderSet{
 					[]string{"header1", "header2", "header3"},
 				},
-				ParamSet: &ParamSet{
+				ParamSet: &LoggingParamSet{
 					[]string{"param1", "param2"},
 				},
 			},
@@ -17661,7 +17661,7 @@ var testMockPutBucketWebsiteSuccessCases = []struct {
 							Condition: &RoutingRuleCondition{
 								KeyPrefixEquals:             Ptr("abc/"),
 								HttpErrorCodeReturnedEquals: Ptr(int64(404)),
-								IncludeHeaders: []IncludeHeader{
+								IncludeHeaders: []RoutingRuleIncludeHeader{
 									{
 										Key:    Ptr("host"),
 										Equals: Ptr("test.oss-cn-beijing-internal.aliyuncs.com"),

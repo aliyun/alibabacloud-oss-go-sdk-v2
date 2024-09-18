@@ -42,7 +42,7 @@ func main() {
 	}
 	getResult, err := client.GetBucketAcl(context.TODO(), getRequest)
 	if err != nil {
-		log.Fatalf("failed to put bucket acl %v", err)
+		log.Fatalf("failed to get bucket acl %v", err)
 	}
 	log.Printf("get bucket acl result:%#v\n", getResult)
 }
