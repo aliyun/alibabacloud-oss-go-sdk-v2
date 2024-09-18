@@ -2,7 +2,7 @@
 
 [![GitHub version](https://badge.fury.io/gh/aliyun%2Falibabacloud-oss-go-sdk-v2.svg)](https://badge.fury.io/gh/aliyun%2Falibabacloud-oss-go-sdk-v2)
 
-alibabacloud-oss-go-sdk-v2 is the Developer Preview for the v2 of the OSS SDK for the Go programming language
+alibabacloud-oss-go-sdk-v2 is the v2 of the OSS SDK for the Go programming language
 
 ## [README in Chinese](README-CN.md)
 
