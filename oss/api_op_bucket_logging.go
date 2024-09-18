@@ -19,22 +19,22 @@ type BucketLoggingStatus struct {
 	LoggingEnabled *LoggingEnabled `xml:"LoggingEnabled"`
 }
 
-type HeaderSet struct {
+type LoggingHeaderSet struct {
 	// The list of the custom request headers.
 	Headers []string `xml:"header"`
 }
 
-type ParamSet struct {
+type LoggingParamSet struct {
 	// The list of the custom URL parameters.
 	Parameters []string `xml:"parameter"`
 }
 
 type UserDefinedLogFieldsConfiguration struct {
 	// The container that stores the configurations of custom request headers.
-	HeaderSet *HeaderSet `xml:"HeaderSet"`
+	HeaderSet *LoggingHeaderSet `xml:"HeaderSet"`
 
 	// The container that stores the configurations of custom URL parameters.
-	ParamSet *ParamSet `xml:"ParamSet"`
+	ParamSet *LoggingParamSet `xml:"ParamSet"`
 }
 
 type PutBucketLoggingRequest struct {

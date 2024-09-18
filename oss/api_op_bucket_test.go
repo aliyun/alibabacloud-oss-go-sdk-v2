@@ -1168,6 +1168,7 @@ func TestUnmarshalOutput_GetBucketInfo(t *testing.T) {
       <LogBucket>examplebucket</LogBucket>
       <LogPrefix>log/</LogPrefix>
     </BucketPolicy>
+	<BlockPublicAccess>false</BlockPublicAccess>
   </Bucket>
 </BucketInfo>`
 	output = &OperationOutput{
@@ -1213,7 +1214,7 @@ func TestUnmarshalOutput_GetBucketInfo(t *testing.T) {
 	assert.Empty(t, result.BucketInfo.SseRule.KMSMasterKeyID)
 	assert.Equal(t, *result.BucketInfo.SseRule.SSEAlgorithm, "")
 	assert.Nil(t, result.BucketInfo.SseRule.KMSDataEncryption)
-	assert.False(t, result.BucketInfo.BlockPublicAccess)
+	assert.False(t, *result.BucketInfo.BlockPublicAccess)
 	assert.Nil(t, result.BucketInfo.Comment)
 
 	body = `<?xml version="1.0" encoding="UTF-8"?>
@@ -1247,6 +1248,7 @@ func TestUnmarshalOutput_GetBucketInfo(t *testing.T) {
       <LogBucket>examplebucket</LogBucket>
       <LogPrefix>log/</LogPrefix>
     </BucketPolicy>
+	<BlockPublicAccess>true</BlockPublicAccess>
   </Bucket>
 </BucketInfo>`
 	output = &OperationOutput{
@@ -1283,7 +1285,7 @@ func TestUnmarshalOutput_GetBucketInfo(t *testing.T) {
 	assert.Empty(t, *result.BucketInfo.SseRule.KMSMasterKeyID)
 	assert.Equal(t, *result.BucketInfo.SseRule.SSEAlgorithm, "KMS")
 	assert.Equal(t, *result.BucketInfo.SseRule.KMSDataEncryption, "SM4")
-	assert.True(t, result.BucketInfo.BlockPublicAccess)
+	assert.True(t, *result.BucketInfo.BlockPublicAccess)
 	assert.Equal(t, *result.BucketInfo.Comment, "test")
 
 	output = &OperationOutput{

@@ -61,7 +61,7 @@ type ErrorDocument struct {
 	HttpStatus *int64 `xml:"HttpStatus"`
 }
 
-type IncludeHeader struct {
+type RoutingRuleIncludeHeader struct {
 	// The key of the header. The rule is matched only when the specified header is included in the request and the header value equals the value specified by Equals.
 	Key *string `xml:"Key"`
 
@@ -80,7 +80,7 @@ type RoutingRuleCondition struct {
 	HttpErrorCodeReturnedEquals *int64 `xml:"HttpErrorCodeReturnedEquals"`
 
 	// This rule can only be matched if the request contains the specified header and the value is the specified value. This container can specify up to 10.
-	IncludeHeaders []IncludeHeader `xml:"IncludeHeader"`
+	IncludeHeaders []RoutingRuleIncludeHeader `xml:"IncludeHeader"`
 }
 
 type MirrorHeadersSet struct {

@@ -40,10 +40,10 @@ func main() {
 	request := &oss.PutUserDefinedLogFieldsConfigRequest{
 		Bucket: oss.Ptr(bucketName),
 		UserDefinedLogFieldsConfiguration: &oss.UserDefinedLogFieldsConfiguration{
-			HeaderSet: &oss.HeaderSet{
+			HeaderSet: &oss.LoggingHeaderSet{
 				Headers: []string{"header1", "header2"},
 			},
-			ParamSet: &oss.ParamSet{
+			ParamSet: &oss.LoggingParamSet{
 				Parameters: []string{"param"},
 			},
 		},

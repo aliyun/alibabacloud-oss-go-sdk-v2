@@ -583,7 +583,7 @@ type BucketInfo struct {
 
 	// Indicates whether Block Public Access is enabled for the bucket.
 	// true: Block Public Access is enabled. false: Block Public Access is disabled.
-	BlockPublicAccess bool `xml:"BlockPublicAccess"`
+	BlockPublicAccess *bool `xml:"BlockPublicAccess"`
 }
 
 type SSERule struct {
