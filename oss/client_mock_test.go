@@ -1913,7 +1913,7 @@ var testMockGetBucketInfoSuccessCases = []struct {
 			assert.Empty(t, *o.BucketInfo.SseRule.KMSMasterKeyID)
 			assert.Equal(t, *o.BucketInfo.SseRule.SSEAlgorithm, "KMS")
 			assert.Equal(t, *o.BucketInfo.SseRule.KMSDataEncryption, "SM4")
-			assert.False(t, *o.BucketInfo.BlockPublicAccess)
+			assert.Nil(t, o.BucketInfo.BlockPublicAccess)
 			assert.Nil(t, o.BucketInfo.Comment)
 		},
 	},
@@ -1986,6 +1986,78 @@ var testMockGetBucketInfoSuccessCases = []struct {
 			assert.Nil(t, o.BucketInfo.SseRule.KMSDataEncryption)
 
 			assert.True(t, *o.BucketInfo.BlockPublicAccess)
+			assert.Equal(t, *o.BucketInfo.Comment, "test")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<BucketInfo>
+  <Bucket>
+    <AccessMonitor>Enabled</AccessMonitor>
+    <BlockPublicAccess>false</BlockPublicAccess>
+    <Comment>test</Comment>
+    <CreationDate>2013-07-31T10:56:21.000Z</CreationDate>
+    <ExtranetEndpoint>oss-cn-hangzhou.aliyuncs.com</ExtranetEndpoint>
+    <IntranetEndpoint>oss-cn-hangzhou-internal.aliyuncs.com</IntranetEndpoint>
+    <Location>oss-cn-hangzhou</Location>
+    <StorageClass>Standard</StorageClass>
+    <TransferAcceleration>Disabled</TransferAcceleration>
+    <CrossRegionReplication>Disabled</CrossRegionReplication>
+    <Name>oss-example</Name>
+    <ResourceGroupId>rg-aek27tc********</ResourceGroupId>
+    <Owner>
+      <DisplayName>username</DisplayName>
+      <ID>27183473914****</ID>
+    </Owner>
+    <AccessControlList>
+      <Grant>private</Grant>
+    </AccessControlList>  
+    <BucketPolicy>
+      <LogBucket>examplebucket</LogBucket>
+      <LogPrefix>log/</LogPrefix>
+    </BucketPolicy>
+  </Bucket>
+</BucketInfo>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/bucket/?bucketInfo", r.URL.String())
+		},
+		&GetBucketInfoRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetBucketInfoResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+			assert.Equal(t, *o.BucketInfo.Name, "oss-example")
+			assert.Equal(t, *o.BucketInfo.AccessMonitor, "Enabled")
+			assert.Equal(t, *o.BucketInfo.ExtranetEndpoint, "oss-cn-hangzhou.aliyuncs.com")
+			assert.Equal(t, *o.BucketInfo.IntranetEndpoint, "oss-cn-hangzhou-internal.aliyuncs.com")
+			assert.Equal(t, *o.BucketInfo.Location, "oss-cn-hangzhou")
+			assert.Equal(t, *o.BucketInfo.StorageClass, "Standard")
+			assert.Equal(t, *o.BucketInfo.TransferAcceleration, "Disabled")
+			assert.Equal(t, *o.BucketInfo.CreationDate, time.Date(2013, time.July, 31, 10, 56, 21, 0, time.UTC))
+			assert.Equal(t, *o.BucketInfo.CrossRegionReplication, "Disabled")
+			assert.Equal(t, *o.BucketInfo.ResourceGroupId, "rg-aek27tc********")
+			assert.Equal(t, *o.BucketInfo.Owner.ID, "27183473914****")
+			assert.Equal(t, *o.BucketInfo.Owner.DisplayName, "username")
+			assert.Equal(t, *o.BucketInfo.ACL, "private")
+			assert.Equal(t, *o.BucketInfo.BucketPolicy.LogBucket, "examplebucket")
+			assert.Equal(t, *o.BucketInfo.BucketPolicy.LogPrefix, "log/")
+
+			assert.Empty(t, o.BucketInfo.SseRule.KMSMasterKeyID)
+			assert.Nil(t, o.BucketInfo.SseRule.SSEAlgorithm)
+			assert.Nil(t, o.BucketInfo.SseRule.KMSDataEncryption)
+
+			assert.False(t, *o.BucketInfo.BlockPublicAccess)
 			assert.Equal(t, *o.BucketInfo.Comment, "test")
 		},
 	},
