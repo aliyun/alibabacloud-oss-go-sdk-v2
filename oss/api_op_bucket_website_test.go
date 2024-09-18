@@ -128,7 +128,7 @@ func TestMarshalInput_PutBucketWebsite(t *testing.T) {
 						Condition: &RoutingRuleCondition{
 							KeyPrefixEquals:             Ptr("abc/"),
 							HttpErrorCodeReturnedEquals: Ptr(int64(404)),
-							IncludeHeaders: []IncludeHeader{
+							IncludeHeaders: []RoutingRuleIncludeHeader{
 								{
 									Key:    Ptr("host"),
 									Equals: Ptr("test.oss-cn-beijing-internal.aliyuncs.com"),

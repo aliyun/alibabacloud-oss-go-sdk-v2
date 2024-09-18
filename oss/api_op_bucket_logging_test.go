@@ -448,10 +448,10 @@ func TestMarshalInput_PutUserDefinedLogFieldsConfig(t *testing.T) {
 	request = &PutUserDefinedLogFieldsConfigRequest{
 		Bucket: Ptr("oss-demo"),
 		UserDefinedLogFieldsConfiguration: &UserDefinedLogFieldsConfiguration{
-			HeaderSet: &HeaderSet{
+			HeaderSet: &LoggingHeaderSet{
 				[]string{"header1", "header2", "header3"},
 			},
-			ParamSet: &ParamSet{
+			ParamSet: &LoggingParamSet{
 				[]string{"param1", "param2"},
 			},
 		},

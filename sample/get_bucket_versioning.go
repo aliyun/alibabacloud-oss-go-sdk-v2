@@ -42,7 +42,7 @@ func main() {
 	}
 	getResult, err := client.GetBucketVersioning(context.TODO(), getRequest)
 	if err != nil {
-		log.Fatalf("failed to put bucket versioning %v", err)
+		log.Fatalf("failed to get bucket versioning %v", err)
 	}
 	log.Printf("get bucket versioning result:%#v\n", getResult)
 }
