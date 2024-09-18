@@ -2,7 +2,7 @@
 
 [![GitHub version](https://badge.fury.io/gh/aliyun%2Falibabacloud-oss-go-sdk-v2.svg)](https://badge.fury.io/gh/aliyun%2Falibabacloud-oss-go-sdk-v2)
 
-alibabacloud-oss-go-sdk-v2 是OSS在Go编译语言下的第二版SDK, 处于开发预览版状态
+alibabacloud-oss-go-sdk-v2 是OSS在Go编译语言下的第二版SDK
 
 ## [README in English](README.md)
 
