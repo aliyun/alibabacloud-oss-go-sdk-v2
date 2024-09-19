@@ -7882,3 +7882,112 @@ func TestBucketPublicAccessBlock(t *testing.T) {
 	assert.Equal(t, "0002-00000902", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
 }
+
+func TestAntiDDosInfo(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	request := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), request)
+	assert.Nil(t, err)
+
+	initUserResult, err := client.InitUserAntiDDosInfo(context.TODO(), &InitUserAntiDDosInfoRequest{})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, initUserResult.StatusCode)
+	assert.NotEmpty(t, initUserResult.Headers.Get("X-Oss-Request-Id"))
+	assert.NotEmpty(t, *initUserResult.DefenderInstance)
+	time.Sleep(1 * time.Second)
+
+	getUserResult, err := client.GetUserAntiDDosInfo(context.TODO(), &GetUserAntiDDosInfoRequest{})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getUserResult.StatusCode)
+	assert.NotEmpty(t, getUserResult.Headers.Get("X-Oss-Request-Id"))
+	assert.True(t, len(getUserResult.AntiDDOSConfigurations) > 0)
+	time.Sleep(1 * time.Second)
+
+	listResult, err := client.ListBucketAntiDDosInfo(context.TODO(), &ListBucketAntiDDosInfoRequest{})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, listResult.StatusCode)
+	assert.NotEmpty(t, listResult.Headers.Get("X-Oss-Request-Id"))
+	assert.True(t, len(listResult.AntiDDOSListConfiguration.AntiDDOSConfigurations) == 0)
+	time.Sleep(1 * time.Second)
+
+	updateUserResult, err := client.UpdateUserAntiDDosInfo(context.TODO(), &UpdateUserAntiDDosInfoRequest{
+		DefenderInstance: initUserResult.DefenderInstance,
+		DefenderStatus:   Ptr("HaltDefending"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, updateUserResult.StatusCode)
+	assert.NotEmpty(t, updateUserResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	var serr *ServiceError
+	clientErr := getClientWithCredentialsProvider(region_, endpoint_, credentials.NewStaticCredentialsProvider("not_exist_id", "not_exist_secret"))
+	_, err = clientErr.InitUserAntiDDosInfo(context.TODO(), &InitUserAntiDDosInfoRequest{})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	getUserResult, err = clientErr.GetUserAntiDDosInfo(context.TODO(), &GetUserAntiDDosInfoRequest{})
+	assert.NotNil(t, err)
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = clientErr.InitBucketAntiDDosInfo(context.TODO(), &InitBucketAntiDDosInfoRequest{
+		Bucket:           Ptr(bucketName),
+		DefenderInstance: initUserResult.DefenderInstance,
+		DefenderType:     Ptr("AntiDDosPremimum"),
+	})
+	assert.NotNil(t, err)
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	listResult, err = clientErr.ListBucketAntiDDosInfo(context.TODO(), &ListBucketAntiDDosInfoRequest{})
+	assert.NotNil(t, err)
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = clientErr.UpdateBucketAntiDDosInfo(context.TODO(), &UpdateBucketAntiDDosInfoRequest{
+		Bucket:           Ptr(bucketName),
+		DefenderInstance: initUserResult.DefenderInstance,
+		DefenderStatus:   Ptr("HaltDefending"),
+	})
+	assert.NotNil(t, err)
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	updateUserResult, err = clientErr.UpdateUserAntiDDosInfo(context.TODO(), &UpdateUserAntiDDosInfoRequest{
+		DefenderInstance: initUserResult.DefenderInstance,
+		DefenderStatus:   Ptr("HaltDefending"),
+	})
+	assert.NotNil(t, err)
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+}
