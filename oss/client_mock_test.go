@@ -26925,3 +26925,1278 @@ func TestMockDeleteBucketPublicAccessBlock_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockInitUserAntiDDosInfoSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *InitUserAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *InitUserAntiDDosInfoResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id":        "534B371674E88A4D8906****",
+			"Date":                    "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-defender-instance": "cbcac8d2-4f75-4d6d-9f2e-c3447f73****",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+		},
+		&InitUserAntiDDosInfoRequest{},
+		func(t *testing.T, o *InitUserAntiDDosInfoResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", *o.DefenderInstance)
+		},
+	},
+}
+
+func TestMockInitUserAntiDDosInfo_Success(t *testing.T) {
+	for _, c := range testMockInitUserAntiDDosInfoSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.InitUserAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockInitUserAntiDDosInfoErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *InitUserAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *InitUserAntiDDosInfoResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>DuplicateActiveDefender</Code>
+  <Message>The defender is already actived.</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+  <x-oss-request-id>5C3D8D2A0ACA54D87B43****</x-oss-request-id>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+		},
+		&InitUserAntiDDosInfoRequest{},
+		func(t *testing.T, o *InitUserAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "DuplicateActiveDefender", serr.Code)
+			assert.Equal(t, "The defender is already actived.", serr.Message)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>InvalidAccessKeyId</Code>
+ <Message>The OSS Access Key Id you provided does not exist in our records.</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+ <OSSAccessKeyId>d</OSSAccessKeyId>
+ <EC>0002-00000902</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+		},
+		&InitUserAntiDDosInfoRequest{},
+		func(t *testing.T, o *InitUserAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+			assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+			assert.Equal(t, "0002-00000902", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockInitUserAntiDDosInfo_Error(t *testing.T) {
+	for _, c := range testMockInitUserAntiDDosInfoErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.InitUserAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockUpdateUserAntiDDosInfoSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *UpdateUserAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *UpdateUserAntiDDosInfoResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "HaltDefending", r.Header.Get("x-oss-defender-status"))
+
+		},
+		&UpdateUserAntiDDosInfoRequest{
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderStatus:   Ptr("HaltDefending"),
+		},
+		func(t *testing.T, o *UpdateUserAntiDDosInfoResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockUpdateUserAntiDDosInfo_Success(t *testing.T) {
+	for _, c := range testMockUpdateUserAntiDDosInfoSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.UpdateUserAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockUpdateUserAntiDDosInfoErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *UpdateUserAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *UpdateUserAntiDDosInfoResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>InvalidArgument</Code>
+  <Message>Invalid Argument</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+  <ArgumentName>Status</ArgumentName>
+  <ArgumentValue>Init</ArgumentValue>
+  <EC>0038-00000006</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+		},
+		&UpdateUserAntiDDosInfoRequest{
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderStatus:   Ptr("Init"),
+		},
+		func(t *testing.T, o *UpdateUserAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "Invalid Argument", serr.Message)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+			assert.Equal(t, "0038-00000006", serr.EC)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>InvalidAccessKeyId</Code>
+ <Message>The OSS Access Key Id you provided does not exist in our records.</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+ <EC>0002-00000902</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+		},
+		&UpdateUserAntiDDosInfoRequest{
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderStatus:   Ptr("HaltDefending"),
+		},
+		func(t *testing.T, o *UpdateUserAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+			assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+			assert.Equal(t, "0002-00000902", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>NoSuchDefender</Code>
+  <Message>No such defender exist.</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+  <x-oss-request-id>5C3D8D2A0ACA54D87B43****</x-oss-request-id>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+		},
+		&UpdateUserAntiDDosInfoRequest{
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderStatus:   Ptr("HaltDefending"),
+		},
+		func(t *testing.T, o *UpdateUserAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchDefender", serr.Code)
+			assert.Equal(t, "No such defender exist.", serr.Message)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockUpdateUserAntiDDosInfo_Error(t *testing.T) {
+	for _, c := range testMockUpdateUserAntiDDosInfoErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.UpdateUserAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetUserAntiDDosInfoSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetUserAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *GetUserAntiDDosInfoResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<AntiDDOSListConfiguration>    
+    <AntiDDOSConfiguration>        
+        <InstanceId>cbcac8d2-4f75-4d6d-9f2e-c3447f73****</InstanceId>
+        <Owner>114893010724****</Owner> 
+        <Ctime>12345667</Ctime>
+        <Mtime>12345667</Mtime>
+        <ActiveTime>12345680</ActiveTime>
+        <Status>Init</Status>
+    </AntiDDOSConfiguration>
+ </AntiDDOSListConfiguration>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+		},
+		&GetUserAntiDDosInfoRequest{},
+		func(t *testing.T, o *GetUserAntiDDosInfoResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, len(o.AntiDDOSConfigurations), 1)
+			assert.Equal(t, *o.AntiDDOSConfigurations[0].InstanceId, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****")
+			assert.Equal(t, *o.AntiDDOSConfigurations[0].Owner, "114893010724****")
+			assert.Equal(t, *o.AntiDDOSConfigurations[0].Ctime, int64(12345667))
+			assert.Equal(t, *o.AntiDDOSConfigurations[0].Mtime, int64(12345667))
+			assert.Equal(t, *o.AntiDDOSConfigurations[0].ActiveTime, int64(12345680))
+			assert.Equal(t, *o.AntiDDOSConfigurations[0].Status, "Init")
+		},
+	},
+}
+
+func TestMockGetUserAntiDDosInfo_Success(t *testing.T) {
+	for _, c := range testMockGetUserAntiDDosInfoSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetUserAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetUserAntiDDosInfoErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetUserAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *GetUserAntiDDosInfoResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>InvalidArgument</Code>
+  <Message>Invalid Argument</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+  <ArgumentName>Status</ArgumentName>
+  <ArgumentValue>Init</ArgumentValue>
+  <EC>0038-00000006</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+		},
+		&GetUserAntiDDosInfoRequest{},
+		func(t *testing.T, o *GetUserAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "Invalid Argument", serr.Message)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+			assert.Equal(t, "0038-00000006", serr.EC)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>InvalidAccessKeyId</Code>
+ <Message>The OSS Access Key Id you provided does not exist in our records.</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+ <EC>0002-00000902</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+		},
+		&GetUserAntiDDosInfoRequest{},
+		func(t *testing.T, o *GetUserAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+			assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+			assert.Equal(t, "0002-00000902", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?antiDDos", urlStr)
+		},
+		&GetUserAntiDDosInfoRequest{},
+		func(t *testing.T, o *GetUserAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			assert.Contains(t, err.Error(), "execute GetUserAntiDDosInfo fail")
+		},
+	},
+}
+
+func TestMockGetUserAntiDDosInfo_Error(t *testing.T) {
+	for _, c := range testMockGetUserAntiDDosInfoErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetUserAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockInitBucketAntiDDosInfoSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *InitBucketAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *InitBucketAntiDDosInfoResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id":        "534B371674E88A4D8906****",
+			"Date":                    "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-defender-instance": "cbcac8d2-4f75-4d6d-9f2e-c3447f73****",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "AntiDDosPremimum", r.Header.Get("x-oss-defender-type"))
+		},
+		&InitBucketAntiDDosInfoRequest{
+			Bucket:           Ptr("bucket"),
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderType:     Ptr("AntiDDosPremimum"),
+		},
+		func(t *testing.T, o *InitBucketAntiDDosInfoResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", *o.DefenderInstance)
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id":        "534B371674E88A4D8906****",
+			"Date":                    "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-defender-instance": "cbcac8d2-4f75-4d6d-9f2e-c3447f73****",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "AntiDDosPremimum", r.Header.Get("x-oss-defender-type"))
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<AntiDDOSConfiguration><Cnames><Domain>abc1.example.cn</Domain><Domain>abc2.example.cn</Domain></Cnames></AntiDDOSConfiguration>")
+		},
+		&InitBucketAntiDDosInfoRequest{
+			Bucket:           Ptr("bucket"),
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderType:     Ptr("AntiDDosPremimum"),
+			BucketAntiDDOSConfiguration: &BucketAntiDDOSConfiguration{
+				[]string{
+					"abc1.example.cn",
+					"abc2.example.cn",
+				},
+			},
+		},
+		func(t *testing.T, o *InitBucketAntiDDosInfoResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", *o.DefenderInstance)
+		},
+	},
+}
+
+func TestMockInitBucketAntiDDosInfo_Success(t *testing.T) {
+	for _, c := range testMockInitBucketAntiDDosInfoSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.InitBucketAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockInitBucketAntiDDosInfoErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *InitBucketAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *InitBucketAntiDDosInfoResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>InvalidArgument</Code>
+  <Message>Invalid Argument</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+  <EC>0038-00000006</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "AntiDDosPremimum", r.Header.Get("x-oss-defender-type"))
+		},
+		&InitBucketAntiDDosInfoRequest{
+			Bucket:           Ptr("bucket"),
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderType:     Ptr("AntiDDosPremimum"),
+		},
+		func(t *testing.T, o *InitBucketAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "Invalid Argument", serr.Message)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+			assert.Equal(t, "0038-00000006", serr.EC)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>InvalidAccessKeyId</Code>
+ <Message>The OSS Access Key Id you provided does not exist in our records.</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+ <OSSAccessKeyId>d</OSSAccessKeyId>
+ <EC>0002-00000902</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "AntiDDosPremimum", r.Header.Get("x-oss-defender-type"))
+		},
+		&InitBucketAntiDDosInfoRequest{
+			Bucket:           Ptr("bucket"),
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderType:     Ptr("AntiDDosPremimum"),
+		},
+		func(t *testing.T, o *InitBucketAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+			assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+			assert.Equal(t, "0002-00000902", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>NoSuchDefender</Code>
+  <Message>No such defender exist.</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+  <x-oss-request-id>5C3D8D2A0ACA54D87B43****</x-oss-request-id>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "AntiDDosPremimum", r.Header.Get("x-oss-defender-type"))
+		},
+		&InitBucketAntiDDosInfoRequest{
+			Bucket:           Ptr("bucket"),
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderType:     Ptr("AntiDDosPremimum"),
+		},
+		func(t *testing.T, o *InitBucketAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchDefender", serr.Code)
+			assert.Equal(t, "No such defender exist.", serr.Message)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockInitBucketAntiDDosInfo_Error(t *testing.T) {
+	for _, c := range testMockInitBucketAntiDDosInfoErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.InitBucketAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockUpdateBucketAntiDDosInfoSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *UpdateBucketAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *UpdateBucketAntiDDosInfoResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "Init", r.Header.Get("x-oss-defender-status"))
+		},
+		&UpdateBucketAntiDDosInfoRequest{
+			Bucket:           Ptr("bucket"),
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderStatus:   Ptr("Init"),
+		},
+		func(t *testing.T, o *UpdateBucketAntiDDosInfoResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id":        "534B371674E88A4D8906****",
+			"Date":                    "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-defender-instance": "cbcac8d2-4f75-4d6d-9f2e-c3447f73****",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "Init", r.Header.Get("x-oss-defender-status"))
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<AntiDDOSConfiguration><Cnames><Domain>abc1.example.cn</Domain><Domain>abc2.example.cn</Domain></Cnames></AntiDDOSConfiguration>")
+		},
+		&UpdateBucketAntiDDosInfoRequest{
+			Bucket:           Ptr("bucket"),
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderStatus:   Ptr("Init"),
+			BucketAntiDDOSConfiguration: &BucketAntiDDOSConfiguration{
+				[]string{
+					"abc1.example.cn",
+					"abc2.example.cn",
+				},
+			},
+		},
+		func(t *testing.T, o *UpdateBucketAntiDDosInfoResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockUpdateBucketAntiDDosInfo_Success(t *testing.T) {
+	for _, c := range testMockUpdateBucketAntiDDosInfoSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.UpdateBucketAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockUpdateBucketAntiDDosInfoErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *UpdateBucketAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *UpdateBucketAntiDDosInfoResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>InvalidArgument</Code>
+  <Message>Invalid Argument</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+  <EC>0038-00000006</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "Init", r.Header.Get("x-oss-defender-status"))
+		},
+		&UpdateBucketAntiDDosInfoRequest{
+			Bucket:           Ptr("bucket"),
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderStatus:   Ptr("Init"),
+		},
+		func(t *testing.T, o *UpdateBucketAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "Invalid Argument", serr.Message)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+			assert.Equal(t, "0038-00000006", serr.EC)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>InvalidAccessKeyId</Code>
+ <Message>The OSS Access Key Id you provided does not exist in our records.</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+ <OSSAccessKeyId>d</OSSAccessKeyId>
+ <EC>0002-00000902</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "Init", r.Header.Get("x-oss-defender-status"))
+		},
+		&UpdateBucketAntiDDosInfoRequest{
+			Bucket:           Ptr("bucket"),
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderStatus:   Ptr("Init"),
+		},
+		func(t *testing.T, o *UpdateBucketAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+			assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+			assert.Equal(t, "0002-00000902", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>NoSuchDefender</Code>
+  <Message>No such defender exist.</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+  <x-oss-request-id>5C3D8D2A0ACA54D87B43****</x-oss-request-id>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?antiDDos", urlStr)
+			assert.Equal(t, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****", r.Header.Get("x-oss-defender-instance"))
+			assert.Equal(t, "Init", r.Header.Get("x-oss-defender-status"))
+		},
+		&UpdateBucketAntiDDosInfoRequest{
+			Bucket:           Ptr("bucket"),
+			DefenderInstance: Ptr("cbcac8d2-4f75-4d6d-9f2e-c3447f73****"),
+			DefenderStatus:   Ptr("Init"),
+		},
+		func(t *testing.T, o *UpdateBucketAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchDefender", serr.Code)
+			assert.Equal(t, "No such defender exist.", serr.Message)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockUpdateBucketAntiDDosInfo_Error(t *testing.T) {
+	for _, c := range testMockUpdateBucketAntiDDosInfoErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.UpdateBucketAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListBucketAntiDDosInfoSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListBucketAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *ListBucketAntiDDosInfoResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<AntiDDOSListConfiguration> 
+  <Marker>nextMarker</Marker>
+  <IsTruncated>true</IsTruncated>
+  <AntiDDOSConfiguration>      
+    <InstanceId>cbcac8d2-4f75-4d6d-9f2e-c3447f73****</InstanceId>  
+    <Owner>114893010724****</Owner>  
+    <Bucket>examplebucket</Bucket>  
+    <Ctime>1626769503</Ctime>  
+    <Mtime>1626769840</Mtime>  
+    <ActiveTime>1626769845</ActiveTime>  
+    <Status>Defending</Status>  
+    <Type>AntiDDosPremimum</Type>  
+    <Cnames> 
+      <Domain>abc1.example.cn</Domain>  
+      <Domain>abc2.example.cn</Domain> 
+    </Cnames> 
+  </AntiDDOSConfiguration>  
+  <AntiDDOSConfiguration>      
+    <InstanceId>cbcae8u6-4f75-4d6d-9f2e-c3446g89****</InstanceId>  
+    <Owner>1148930107246818</Owner>  
+    <Bucket>test-antiddos2</Bucket>  
+    <Ctime>1626769993</Ctime>  
+    <Mtime>1626769993</Mtime>  
+    <ActiveTime>0</ActiveTime>  
+    <Status>Init</Status>  
+    <Type>AntiDDosPremimum</Type>  
+    <Cnames> 
+      <Domain>abc3.example.cn</Domain>  
+      <Domain>abc4.example.cn</Domain> 
+    </Cnames> 
+  </AntiDDOSConfiguration> 
+</AntiDDOSListConfiguration>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?bucketAntiDDos", urlStr)
+		},
+		&ListBucketAntiDDosInfoRequest{},
+		func(t *testing.T, o *ListBucketAntiDDosInfoResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.True(t, *o.AntiDDOSListConfiguration.IsTruncated)
+			assert.Equal(t, *o.AntiDDOSListConfiguration.Marker, "nextMarker")
+			assert.Equal(t, len(o.AntiDDOSListConfiguration.AntiDDOSConfigurations), 2)
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].InstanceId, "cbcac8d2-4f75-4d6d-9f2e-c3447f73****")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Owner, "114893010724****")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Bucket, "examplebucket")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Ctime, int64(1626769503))
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Mtime, int64(1626769840))
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].ActiveTime, int64(1626769845))
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Status, "Defending")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Type, "AntiDDosPremimum")
+			assert.Equal(t, len(o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Domains), 2)
+			assert.Equal(t, o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Domains[0], "abc1.example.cn")
+			assert.Equal(t, o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Domains[1], "abc2.example.cn")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].InstanceId, "cbcae8u6-4f75-4d6d-9f2e-c3446g89****")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].Owner, "1148930107246818")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].Bucket, "test-antiddos2")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].Ctime, int64(1626769993))
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].Mtime, int64(1626769993))
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].ActiveTime, int64(0))
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].Status, "Init")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].Type, "AntiDDosPremimum")
+			assert.Equal(t, len(o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].Domains), 2)
+			assert.Equal(t, o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].Domains[0], "abc3.example.cn")
+			assert.Equal(t, o.AntiDDOSListConfiguration.AntiDDOSConfigurations[1].Domains[1], "abc4.example.cn")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id":        "534B371674E88A4D8906****",
+			"Date":                    "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-defender-instance": "cbcac8d2-4f75-4d6d-9f2e-c3447f73****",
+		},
+		[]byte(`<AntiDDOSListConfiguration> 
+  <Marker>nextMarker</Marker>
+  <IsTruncated>true</IsTruncated>
+  <AntiDDOSConfiguration>      
+    <InstanceId>cbcae8u6-4f75-4d6d-9f2e-c3446g89****</InstanceId>  
+    <Owner>1148930107246818</Owner>  
+    <Bucket>test-antiddos2</Bucket>  
+    <Ctime>1626769993</Ctime>  
+    <Mtime>1626769993</Mtime>  
+    <ActiveTime>0</ActiveTime>  
+    <Status>Init</Status>  
+    <Type>AntiDDosPremimum</Type>  
+    <Cnames> 
+      <Domain>abc3.example.cn</Domain>  
+      <Domain>abc4.example.cn</Domain> 
+    </Cnames> 
+  </AntiDDOSConfiguration> 
+</AntiDDOSListConfiguration>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?bucketAntiDDos&marker=marker&max-keys=1", urlStr)
+		},
+		&ListBucketAntiDDosInfoRequest{
+			Marker:  Ptr("marker"),
+			MaxKeys: Ptr("1"),
+		},
+		func(t *testing.T, o *ListBucketAntiDDosInfoResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.True(t, *o.AntiDDOSListConfiguration.IsTruncated)
+			assert.Equal(t, *o.AntiDDOSListConfiguration.Marker, "nextMarker")
+			assert.Equal(t, len(o.AntiDDOSListConfiguration.AntiDDOSConfigurations), 1)
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].InstanceId, "cbcae8u6-4f75-4d6d-9f2e-c3446g89****")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Owner, "1148930107246818")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Bucket, "test-antiddos2")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Ctime, int64(1626769993))
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Mtime, int64(1626769993))
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].ActiveTime, int64(0))
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Status, "Init")
+			assert.Equal(t, *o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Type, "AntiDDosPremimum")
+			assert.Equal(t, len(o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Domains), 2)
+			assert.Equal(t, o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Domains[0], "abc3.example.cn")
+			assert.Equal(t, o.AntiDDOSListConfiguration.AntiDDOSConfigurations[0].Domains[1], "abc4.example.cn")
+		},
+	},
+}
+
+func TestMockListBucketAntiDDosInfo_Success(t *testing.T) {
+	for _, c := range testMockListBucketAntiDDosInfoSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.ListBucketAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListBucketAntiDDosInfoErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListBucketAntiDDosInfoRequest
+	CheckOutputFn  func(t *testing.T, o *ListBucketAntiDDosInfoResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>InvalidArgument</Code>
+  <Message>Invalid Argument</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+  <EC>0038-00000006</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?bucketAntiDDos", urlStr)
+		},
+		&ListBucketAntiDDosInfoRequest{},
+		func(t *testing.T, o *ListBucketAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "Invalid Argument", serr.Message)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+			assert.Equal(t, "0038-00000006", serr.EC)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>InvalidAccessKeyId</Code>
+ <Message>The OSS Access Key Id you provided does not exist in our records.</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>oss-cn-hangzhou.aliyuncs.com</HostId>
+ <OSSAccessKeyId>d</OSSAccessKeyId>
+ <EC>0002-00000902</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?bucketAntiDDos", urlStr)
+		},
+		&ListBucketAntiDDosInfoRequest{},
+		func(t *testing.T, o *ListBucketAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+			assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+			assert.Equal(t, "0002-00000902", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?bucketAntiDDos", urlStr)
+		},
+		&ListBucketAntiDDosInfoRequest{},
+		func(t *testing.T, o *ListBucketAntiDDosInfoResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			assert.Contains(t, err.Error(), "execute ListBucketAntiDDosInfo fail")
+		},
+	},
+}
+
+func TestMockListBucketAntiDDosInfo_Error(t *testing.T) {
+	for _, c := range testMockListBucketAntiDDosInfoErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.ListBucketAntiDDosInfo(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
