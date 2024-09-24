@@ -28368,7 +28368,7 @@ var testMockDoMetaQuerySuccessCases = []struct {
 				Query:      Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
 				Sort:       Ptr("Size"),
 				Order:      MetaQueryOrderAsc,
-				Aggregations: &Aggregations{
+				Aggregations: &MetaQueryAggregations{
 					[]MetaQueryAggregation{
 						{
 							Field:     Ptr("Size"),
@@ -28472,7 +28472,7 @@ var testMockDoMetaQueryErrorCases = []struct {
 				Query:      Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
 				Sort:       Ptr("Size"),
 				Order:      MetaQueryOrderAsc,
-				Aggregations: &Aggregations{
+				Aggregations: &MetaQueryAggregations{
 					[]MetaQueryAggregation{
 						{
 							Field:     Ptr("Size"),
@@ -28529,7 +28529,7 @@ var testMockDoMetaQueryErrorCases = []struct {
 				Query:      Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
 				Sort:       Ptr("Size"),
 				Order:      MetaQueryOrderAsc,
-				Aggregations: &Aggregations{
+				Aggregations: &MetaQueryAggregations{
 					[]MetaQueryAggregation{
 						{
 							Field:     Ptr("Size"),
@@ -28726,6 +28726,1293 @@ func TestMockCloseMetaQuery_Error(t *testing.T) {
 		assert.NotNil(t, c)
 
 		output, err := client.CloseMetaQuery(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockCreateAccessPointSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *CreateAccessPointRequest
+	CheckOutputFn  func(t *testing.T, o *CreateAccessPointResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<CreateAccessPointResult>
+  <AccessPointArn>acs:oss:cn-hangzhou:128364106451xxxx:accesspoint/ap-01</AccessPointArn>
+  <Alias>ap-01-45ee7945007a2f0bcb595f63e2215cxxxx-ossalias</Alias>
+</CreateAccessPointResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<CreateAccessPointConfiguration><AccessPointName>ap-01</AccessPointName><NetworkOrigin>internet</NetworkOrigin></CreateAccessPointConfiguration>")
+		},
+		&CreateAccessPointRequest{
+			Bucket: Ptr("bucket"),
+			CreateAccessPointConfiguration: &CreateAccessPointConfiguration{
+				AccessPointName: Ptr("ap-01"),
+				NetworkOrigin:   Ptr("internet"),
+			},
+		},
+		func(t *testing.T, o *CreateAccessPointResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.AccessPointArn, "acs:oss:cn-hangzhou:128364106451xxxx:accesspoint/ap-01")
+			assert.Equal(t, *o.Alias, "ap-01-45ee7945007a2f0bcb595f63e2215cxxxx-ossalias")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<CreateAccessPointResult>
+  <AccessPointArn>acs:oss:cn-hangzhou:128364106451xxxx:accesspoint/ap-01</AccessPointArn>
+  <Alias>ap-01-45ee7945007a2f0bcb595f63e2215cxxxx-ossalias</Alias>
+</CreateAccessPointResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<CreateAccessPointConfiguration><AccessPointName>ap-01</AccessPointName><NetworkOrigin>vpc</NetworkOrigin><VpcConfiguration><VpcId>vpc-t4nlw426y44rd3iq4xxxx</VpcId></VpcConfiguration></CreateAccessPointConfiguration>")
+		},
+		&CreateAccessPointRequest{
+			Bucket: Ptr("bucket"),
+			CreateAccessPointConfiguration: &CreateAccessPointConfiguration{
+				AccessPointName: Ptr("ap-01"),
+				NetworkOrigin:   Ptr("vpc"),
+				VpcConfiguration: &AccessPointVpcConfiguration{
+					VpcId: Ptr("vpc-t4nlw426y44rd3iq4xxxx"),
+				},
+			},
+		},
+		func(t *testing.T, o *CreateAccessPointResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.AccessPointArn, "acs:oss:cn-hangzhou:128364106451xxxx:accesspoint/ap-01")
+			assert.Equal(t, *o.Alias, "ap-01-45ee7945007a2f0bcb595f63e2215cxxxx-ossalias")
+		},
+	},
+}
+
+func TestMockCreateAccessPoint_Success(t *testing.T) {
+	for _, c := range testMockCreateAccessPointSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.CreateAccessPoint(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockCreateAccessPointErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *CreateAccessPointRequest
+	CheckOutputFn  func(t *testing.T, o *CreateAccessPointResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<CreateAccessPointConfiguration><AccessPointName>ap-01</AccessPointName><NetworkOrigin>internet</NetworkOrigin></CreateAccessPointConfiguration>")
+		},
+		&CreateAccessPointRequest{
+			Bucket: Ptr("bucket"),
+			CreateAccessPointConfiguration: &CreateAccessPointConfiguration{
+				AccessPointName: Ptr("ap-01"),
+				NetworkOrigin:   Ptr("internet"),
+			},
+		},
+		func(t *testing.T, o *CreateAccessPointResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<CreateAccessPointConfiguration><AccessPointName>ap-01</AccessPointName><NetworkOrigin>internet</NetworkOrigin></CreateAccessPointConfiguration>")
+		},
+		&CreateAccessPointRequest{
+			Bucket: Ptr("bucket"),
+			CreateAccessPointConfiguration: &CreateAccessPointConfiguration{
+				AccessPointName: Ptr("ap-01"),
+				NetworkOrigin:   Ptr("internet"),
+			},
+		},
+		func(t *testing.T, o *CreateAccessPointResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockCreateAccessPoint_Error(t *testing.T) {
+	for _, c := range testMockCreateAccessPointErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.CreateAccessPoint(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteAccessPointSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointResult, err error)
+}{
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&DeleteAccessPointRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+var testMockGetAccessPointSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetAccessPointRequest
+	CheckOutputFn  func(t *testing.T, o *GetAccessPointResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<GetAccessPointResult>
+  <AccessPointName>ap-01</AccessPointName>
+  <Bucket>oss-example</Bucket>
+  <AccountId>111933544165xxxx</AccountId>
+  <NetworkOrigin>vpc</NetworkOrigin>
+  <VpcConfiguration>
+     <VpcId>vpc-t4nlw426y44rd3iq4xxxx</VpcId>
+  </VpcConfiguration>
+  <AccessPointArn>arn:acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01</AccessPointArn>
+  <CreationDate>1626769503</CreationDate>
+  <Alias>ap-01-ossalias</Alias>
+  <Status>enable</Status>
+  <Endpoints>
+    <PublicEndpoint>ap-01.oss-cn-hangzhou.oss-accesspoint.aliyuncs.com</PublicEndpoint>
+    <InternalEndpoint>ap-01.oss-cn-hangzhou-internal.oss-accesspoint.aliyuncs.com</InternalEndpoint>
+  </Endpoints>
+  <PublicAccessBlockConfiguration>
+    <BlockPublicAccess>true</BlockPublicAccess>
+  </PublicAccessBlockConfiguration>
+</GetAccessPointResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&GetAccessPointRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.AccessPointName, "ap-01")
+			assert.Equal(t, *o.Bucket, "oss-example")
+			assert.Equal(t, *o.AccountId, "111933544165xxxx")
+			assert.Equal(t, *o.NetworkOrigin, "vpc")
+			assert.Equal(t, *o.VpcConfiguration.VpcId, "vpc-t4nlw426y44rd3iq4xxxx")
+			assert.Equal(t, *o.AccessPointArn, "arn:acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01")
+			assert.Equal(t, *o.CreationDate, "1626769503")
+			assert.Equal(t, *o.Alias, "ap-01-ossalias")
+			assert.Equal(t, *o.AccessPointStatus, "enable")
+			assert.Equal(t, *o.PublicEndpoint, "ap-01.oss-cn-hangzhou.oss-accesspoint.aliyuncs.com")
+			assert.Equal(t, *o.InternalEndpoint, "ap-01.oss-cn-hangzhou-internal.oss-accesspoint.aliyuncs.com")
+			assert.True(t, *o.PublicAccessBlockConfiguration.BlockPublicAccess)
+		},
+	},
+}
+
+func TestMockGetAccessPoint_Success(t *testing.T) {
+	for _, c := range testMockGetAccessPointSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetAccessPoint(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetAccessPointErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetAccessPointRequest
+	CheckOutputFn  func(t *testing.T, o *GetAccessPointResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&GetAccessPointRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&GetAccessPointRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockGetAccessPoint_Error(t *testing.T) {
+	for _, c := range testMockGetAccessPointErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetAccessPoint(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+func TestMockDeleteAccessPoint_Success(t *testing.T) {
+	for _, c := range testMockDeleteAccessPointSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteAccessPoint(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteAccessPointErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&DeleteAccessPointRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&DeleteAccessPointRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDeleteAccessPoint_Error(t *testing.T) {
+	for _, c := range testMockDeleteAccessPointErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteAccessPoint(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListAccessPointsSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListAccessPointsRequest
+	CheckOutputFn  func(t *testing.T, o *ListAccessPointsResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListAccessPointsResult>
+  <IsTruncated>true</IsTruncated>
+  <NextContinuationToken>abc</NextContinuationToken>
+  <AccountId>111933544165****</AccountId>
+  <MaxKeys>3</MaxKeys>
+  <AccessPoints>
+    <AccessPoint>
+      <Bucket>oss-example</Bucket>
+      <AccessPointName>ap-01</AccessPointName>
+      <Alias>ap-01-ossalias</Alias>
+      <NetworkOrigin>vpc</NetworkOrigin>
+      <VpcConfiguration>
+        <VpcId>vpc-t4nlw426y44rd3iq4****</VpcId>
+      </VpcConfiguration>
+      <Status>enable</Status>
+    </AccessPoint>
+    <AccessPoint>
+      <Bucket>oss-example</Bucket>
+      <AccessPointName>ap-02</AccessPointName>
+      <Alias>ap-02-ossalias</Alias>
+      <NetworkOrigin>vpc</NetworkOrigin>
+      <VpcConfiguration>
+        <VpcId>vpc-t4nlw426y44rd3iq2****</VpcId>
+      </VpcConfiguration>
+      <Status>enable</Status>
+    </AccessPoint>
+	<AccessPoint>
+      <Bucket>oss-example</Bucket>
+      <AccessPointName>ap-03</AccessPointName>
+      <Alias>ap-03-ossalias</Alias>
+      <NetworkOrigin>internet</NetworkOrigin>
+      <VpcConfiguration>
+        <VpcId></VpcId>
+      </VpcConfiguration>
+      <Status>enable</Status>
+    </AccessPoint>
+  </AccessPoints>
+</ListAccessPointsResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?accessPoint", strUrl)
+		},
+		&ListAccessPointsRequest{},
+		func(t *testing.T, o *ListAccessPointsResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.AccountId, "111933544165****")
+			assert.Equal(t, *o.NextContinuationToken, "abc")
+			assert.True(t, *o.IsTruncated)
+			assert.Equal(t, *o.MaxKeys, int32(3))
+			assert.Equal(t, len(o.AccessPoints), 3)
+			assert.Equal(t, *o.AccessPoints[0].Bucket, "oss-example")
+			assert.Equal(t, *o.AccessPoints[0].AccessPointName, "ap-01")
+			assert.Equal(t, *o.AccessPoints[0].Alias, "ap-01-ossalias")
+			assert.Equal(t, *o.AccessPoints[0].NetworkOrigin, "vpc")
+			assert.Equal(t, *o.AccessPoints[0].VpcConfiguration.VpcId, "vpc-t4nlw426y44rd3iq4****")
+			assert.Equal(t, *o.AccessPoints[0].Status, "enable")
+			assert.Equal(t, *o.AccessPoints[1].Bucket, "oss-example")
+			assert.Equal(t, *o.AccessPoints[1].AccessPointName, "ap-02")
+			assert.Equal(t, *o.AccessPoints[1].Alias, "ap-02-ossalias")
+			assert.Equal(t, *o.AccessPoints[1].NetworkOrigin, "vpc")
+			assert.Equal(t, *o.AccessPoints[1].VpcConfiguration.VpcId, "vpc-t4nlw426y44rd3iq2****")
+			assert.Equal(t, *o.AccessPoints[1].Status, "enable")
+			assert.Equal(t, *o.AccessPoints[2].Bucket, "oss-example")
+			assert.Equal(t, *o.AccessPoints[2].AccessPointName, "ap-03")
+			assert.Equal(t, *o.AccessPoints[2].Alias, "ap-03-ossalias")
+			assert.Equal(t, *o.AccessPoints[2].NetworkOrigin, "internet")
+			assert.Equal(t, *o.AccessPoints[2].VpcConfiguration.VpcId, "")
+			assert.Equal(t, *o.AccessPoints[2].Status, "enable")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListAccessPointsResult>
+  <IsTruncated>true</IsTruncated>
+  <NextContinuationToken>abc</NextContinuationToken>
+  <AccountId>111933544165****</AccountId>
+  <MaxKeys>2</MaxKeys>
+  <AccessPoints>
+    <AccessPoint>
+      <Bucket>bucket</Bucket>
+      <AccessPointName>ap-01</AccessPointName>
+      <Alias>ap-01-ossalias</Alias>
+      <NetworkOrigin>vpc</NetworkOrigin>
+      <VpcConfiguration>
+        <VpcId>vpc-t4nlw426y44rd3iq4****</VpcId>
+      </VpcConfiguration>
+      <Status>enable</Status>
+    </AccessPoint>
+    <AccessPoint>
+      <Bucket>bucket</Bucket>
+      <AccessPointName>ap-02</AccessPointName>
+      <Alias>ap-02-ossalias</Alias>
+      <NetworkOrigin>vpc</NetworkOrigin>
+      <VpcConfiguration>
+        <VpcId>vpc-t4nlw426y44rd3iq2****</VpcId>
+      </VpcConfiguration>
+      <Status>enable</Status>
+    </AccessPoint>
+  </AccessPoints>
+</ListAccessPointsResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint&max-keys=2", strUrl)
+		},
+		&ListAccessPointsRequest{
+			Bucket:  Ptr("bucket"),
+			MaxKeys: int64(2),
+		},
+		func(t *testing.T, o *ListAccessPointsResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.AccountId, "111933544165****")
+			assert.Equal(t, *o.NextContinuationToken, "abc")
+			assert.True(t, *o.IsTruncated)
+			assert.Equal(t, *o.MaxKeys, int32(2))
+			assert.Equal(t, len(o.AccessPoints), 2)
+			assert.Equal(t, *o.AccessPoints[0].Bucket, "bucket")
+			assert.Equal(t, *o.AccessPoints[0].AccessPointName, "ap-01")
+			assert.Equal(t, *o.AccessPoints[0].Alias, "ap-01-ossalias")
+			assert.Equal(t, *o.AccessPoints[0].NetworkOrigin, "vpc")
+			assert.Equal(t, *o.AccessPoints[0].VpcConfiguration.VpcId, "vpc-t4nlw426y44rd3iq4****")
+			assert.Equal(t, *o.AccessPoints[0].Status, "enable")
+			assert.Equal(t, *o.AccessPoints[1].Bucket, "bucket")
+			assert.Equal(t, *o.AccessPoints[1].AccessPointName, "ap-02")
+			assert.Equal(t, *o.AccessPoints[1].Alias, "ap-02-ossalias")
+			assert.Equal(t, *o.AccessPoints[1].NetworkOrigin, "vpc")
+			assert.Equal(t, *o.AccessPoints[1].VpcConfiguration.VpcId, "vpc-t4nlw426y44rd3iq2****")
+			assert.Equal(t, *o.AccessPoints[1].Status, "enable")
+		},
+	},
+}
+
+func TestMockListAccessPoints_Success(t *testing.T) {
+	for _, c := range testMockListAccessPointsSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.ListAccessPoints(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListAccessPointsErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListAccessPointsRequest
+	CheckOutputFn  func(t *testing.T, o *ListAccessPointsResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+		},
+		&ListAccessPointsRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *ListAccessPointsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+		},
+		&ListAccessPointsRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *ListAccessPointsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockListAccessPoints_Error(t *testing.T) {
+	for _, c := range testMockListAccessPointsErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.ListAccessPoints(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutAccessPointPolicySuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutAccessPointPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *PutAccessPointPolicyResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicy", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), `{"Version":"1","Statement":[{"Action":["oss:PutObject","oss:GetObject"],"Effect":"Deny","Principal":["27737962156157xxxx"],"Resource":["acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01","acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01/object/*"]}]}`)
+		},
+		&PutAccessPointPolicyRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+			Body:            strings.NewReader(`{"Version":"1","Statement":[{"Action":["oss:PutObject","oss:GetObject"],"Effect":"Deny","Principal":["27737962156157xxxx"],"Resource":["acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01","acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01/object/*"]}]}`),
+		},
+		func(t *testing.T, o *PutAccessPointPolicyResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockPutAccessPointPolicy_Success(t *testing.T) {
+	for _, c := range testMockPutAccessPointPolicySuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.PutAccessPointPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutAccessPointPolicyErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutAccessPointPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *PutAccessPointPolicyResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicy", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), `{"Version":"1","Statement":[{"Action":["oss:PutObject","oss:GetObject"],"Effect":"Deny","Principal":["27737962156157xxxx"],"Resource":["acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01","acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01/object/*"]}]}`)
+		},
+		&PutAccessPointPolicyRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+			Body:            strings.NewReader(`{"Version":"1","Statement":[{"Action":["oss:PutObject","oss:GetObject"],"Effect":"Deny","Principal":["27737962156157xxxx"],"Resource":["acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01","acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01/object/*"]}]}`),
+		},
+		func(t *testing.T, o *PutAccessPointPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicy", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), `{"Version":"1","Statement":[{"Action":["oss:PutObject","oss:GetObject"],"Effect":"Deny","Principal":["27737962156157xxxx"],"Resource":["acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01","acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01/object/*"]}]}`)
+		},
+		&PutAccessPointPolicyRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+			Body:            strings.NewReader(`{"Version":"1","Statement":[{"Action":["oss:PutObject","oss:GetObject"],"Effect":"Deny","Principal":["27737962156157xxxx"],"Resource":["acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01","acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01/object/*"]}]}`),
+		},
+		func(t *testing.T, o *PutAccessPointPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockPutAccessPointPolicy_Error(t *testing.T) {
+	for _, c := range testMockPutAccessPointPolicyErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.PutAccessPointPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetAccessPointPolicySuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetAccessPointPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *GetAccessPointPolicyResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{"Version":"1","Statement":[{"Action":["oss:GetObject","oss:GetObject"],"Effect":"Deny","Principal":["27737962156157xxxx"],"Resource":["acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01","acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01/object/*"]}]}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicy", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&GetAccessPointPolicyRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointPolicyResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, string(o.Body), `{"Version":"1","Statement":[{"Action":["oss:GetObject","oss:GetObject"],"Effect":"Deny","Principal":["27737962156157xxxx"],"Resource":["acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01","acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/ap-01/object/*"]}]}`)
+		},
+	},
+}
+
+func TestMockGetAccessPointPolicy_Success(t *testing.T) {
+	for _, c := range testMockGetAccessPointPolicySuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetAccessPointPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetAccessPointPolicyErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetAccessPointPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *GetAccessPointPolicyResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicy", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&GetAccessPointPolicyRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicy", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&GetAccessPointPolicyRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockGetAccessPointPolicy_Error(t *testing.T) {
+	for _, c := range testMockGetAccessPointPolicyErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetAccessPointPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteAccessPointPolicySuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointPolicyResult, err error)
+}{
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicy", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&DeleteAccessPointPolicyRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointPolicyResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockDeleteAccessPointPolicy_Success(t *testing.T) {
+	for _, c := range testMockDeleteAccessPointPolicySuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteAccessPointPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteAccessPointPolicyErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointPolicyResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicy", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&DeleteAccessPointPolicyRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicy", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&DeleteAccessPointPolicyRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDeleteAccessPointPolicy_Error(t *testing.T) {
+	for _, c := range testMockDeleteAccessPointPolicyErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteAccessPointPolicy(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
