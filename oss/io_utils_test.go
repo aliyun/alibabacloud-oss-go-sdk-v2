@@ -401,6 +401,158 @@ func TestAsyncRangeReaderOffsetAndLimiterRange(t *testing.T) {
 	assert.Equal(t, data[3:], string(dst[:7]))
 }
 
+func TestAsyncRangeReaderOffsetAndResume(t *testing.T) {
+	ctx := context.Background()
+	data := "Testbuffer"
+	errCount := 0
+	getFn := func(ctx context.Context, range_ HTTPRange) (output *ReaderRangeGetOutput, err error) {
+		b := []byte(data)
+		var range_count int64
+		if range_.Count > 0 {
+			range_count = range_.Count
+		} else {
+			range_count = int64(len(data)) - range_.Offset
+		}
+		contentRange := fmt.Sprintf("bytes %v-%v/%v", range_.Offset, range_.Offset+range_count-1, len(data))
+
+		body := io.NopCloser(bytes.NewBuffer(b[range_.Offset : range_.Offset+range_count]))
+		if errCount > 0 {
+			body = io.NopCloser(iotest.TimeoutReader(iotest.OneByteReader(body)))
+			errCount -= 1
+		}
+		return &ReaderRangeGetOutput{
+			Body:         body,
+			ContentRange: Ptr(contentRange),
+			ETag:         Ptr("etag"),
+		}, nil
+	}
+
+	// read fail and resume read
+	// has range count, read pattern, 1 byte, 2 bytes
+	httpRange := HTTPRange{
+		Offset: 2,
+		Count:  3,
+	}
+	errCount = 1
+	ar, err := NewAsyncRangeReader(ctx, getFn, &httpRange, "etag", 4)
+	require.NoError(t, err)
+	got := 0
+	dst := make([]byte, 100)
+	n, err := ar.Read(dst)
+	assert.Equal(t, 1, n)
+	got += n
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 2, n)
+	got += n
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 0, n)
+
+	assert.Equal(t, data[2:5], string(dst[:3]))
+
+	// range count is 0 or < 0
+	httpRange = HTTPRange{
+		Offset: 2,
+		Count:  0,
+	}
+	errCount = 2
+	ar, err = NewAsyncRangeReader(ctx, getFn, &httpRange, "etag", 4)
+	require.NoError(t, err)
+
+	dst = make([]byte, 100)
+	got = 0
+	n, err = ar.Read(dst)
+	assert.Equal(t, 1, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 1, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 6, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 0, n)
+
+	assert.Equal(t, data[2:], string(dst[:8]))
+
+	httpRange = HTTPRange{
+		Offset: 3,
+		Count:  -1,
+	}
+	errCount = 2
+	ar, err = NewAsyncRangeReader(ctx, getFn, &httpRange, "etag", 4)
+	require.NoError(t, err)
+
+	dst = make([]byte, 100)
+	got = 0
+	n, err = ar.Read(dst)
+	assert.Equal(t, 1, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 1, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 5, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 0, n)
+
+	assert.Equal(t, data[3:], string(dst[:7]))
+
+	// not fail
+	// has range count
+	httpRange = HTTPRange{
+		Offset: 2,
+		Count:  3,
+	}
+
+	ar, err = NewAsyncRangeReader(ctx, getFn, &httpRange, "etag", 4)
+	require.NoError(t, err)
+
+	dst = make([]byte, 100)
+	n, err = ar.Read(dst)
+	assert.Equal(t, 3, n)
+	n, err = ar.Read(dst[n:])
+	assert.Equal(t, 0, n)
+	assert.Equal(t, data[2:5], string(dst[:3]))
+
+	// range count is 0 or < 0
+	httpRange = HTTPRange{
+		Offset: 2,
+		Count:  0,
+	}
+
+	ar, err = NewAsyncRangeReader(ctx, getFn, &httpRange, "etag", 4)
+	require.NoError(t, err)
+
+	dst = make([]byte, 100)
+	n, err = ar.Read(dst)
+	assert.Equal(t, 8, n)
+	n, err = ar.Read(dst[n:])
+	assert.Equal(t, 0, n)
+	assert.Equal(t, data[2:], string(dst[:8]))
+
+	httpRange = HTTPRange{
+		Offset: 3,
+		Count:  -1,
+	}
+
+	ar, err = NewAsyncRangeReader(ctx, getFn, &httpRange, "etag", 4)
+	require.NoError(t, err)
+
+	dst = make([]byte, 100)
+	n, err = ar.Read(dst)
+	assert.Equal(t, 7, n)
+	n, err = ar.Read(dst[n:])
+	assert.Equal(t, 0, n)
+	assert.Equal(t, data[3:], string(dst[:7]))
+}
+
 func TestAsyncRangeReaderGetError(t *testing.T) {
 	ctx := context.Background()
 	data := "Testbuffer"
@@ -882,6 +1034,182 @@ func TestRangeReaderOffsetAndLimiterRange(t *testing.T) {
 
 	dst := make([]byte, 100)
 	n, err := ar.Read(dst)
+	assert.Equal(t, 3, n)
+	n, err = ar.Read(dst[n:])
+	assert.Equal(t, 0, n)
+	assert.Equal(t, data[2:5], string(dst[:3]))
+
+	// range count is 0 or < 0
+	httpRange = HTTPRange{
+		Offset: 2,
+		Count:  0,
+	}
+
+	ar, err = NewRangeReader(ctx, getFn, &httpRange, "etag")
+	require.NoError(t, err)
+
+	dst = make([]byte, 100)
+	n, err = ar.Read(dst)
+	assert.Equal(t, 8, n)
+	n, err = ar.Read(dst[n:])
+	assert.Equal(t, 0, n)
+	assert.Equal(t, data[2:], string(dst[:8]))
+
+	httpRange = HTTPRange{
+		Offset: 3,
+		Count:  -1,
+	}
+
+	ar, err = NewRangeReader(ctx, getFn, &httpRange, "etag")
+	require.NoError(t, err)
+
+	dst = make([]byte, 100)
+	n, err = ar.Read(dst)
+	assert.Equal(t, 7, n)
+	n, err = ar.Read(dst[n:])
+	assert.Equal(t, 0, n)
+	assert.Equal(t, data[3:], string(dst[:7]))
+}
+
+func TestRangeReaderOffsetAndResume(t *testing.T) {
+	ctx := context.Background()
+	data := "Testbuffer"
+	errCount := 0
+	getFn := func(ctx context.Context, range_ HTTPRange) (output *ReaderRangeGetOutput, err error) {
+		b := []byte(data)
+		var range_count int64
+		if range_.Count > 0 {
+			range_count = range_.Count
+		} else {
+			range_count = int64(len(data)) - range_.Offset
+		}
+		contentRange := fmt.Sprintf("bytes %v-%v/%v", range_.Offset, range_.Offset+range_count-1, len(data))
+
+		body := io.NopCloser(bytes.NewBuffer(b[range_.Offset : range_.Offset+range_count]))
+		if errCount > 0 {
+			body = io.NopCloser(iotest.TimeoutReader(iotest.OneByteReader(body)))
+			errCount -= 1
+		}
+		return &ReaderRangeGetOutput{
+			Body:         body,
+			ContentRange: Ptr(contentRange),
+			ETag:         Ptr("etag"),
+		}, nil
+	}
+
+	// read fail and resume read
+	// has range count, read pattern, 1 byte, 0 byts, 2 bytes
+	httpRange := HTTPRange{
+		Offset: 2,
+		Count:  3,
+	}
+	errCount = 1
+	ar, err := NewRangeReader(ctx, getFn, &httpRange, "etag")
+	require.NoError(t, err)
+	got := 0
+	dst := make([]byte, 100)
+	n, err := ar.Read(dst)
+	assert.Equal(t, 1, n)
+	got += n
+	n, err = ar.Read(dst[got:])
+	require.NoError(t, err)
+	assert.Equal(t, 0, n)
+	got += n
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 2, n)
+	got += n
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 0, n)
+
+	assert.Equal(t, data[2:5], string(dst[:3]))
+
+	// range count is 0 or < 0
+	httpRange = HTTPRange{
+		Offset: 2,
+		Count:  0,
+	}
+	errCount = 2
+	ar, err = NewRangeReader(ctx, getFn, &httpRange, "etag")
+	require.NoError(t, err)
+
+	dst = make([]byte, 100)
+	got = 0
+	n, err = ar.Read(dst)
+	assert.Equal(t, 1, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	require.NoError(t, err)
+	assert.Equal(t, 0, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 1, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	require.NoError(t, err)
+	assert.Equal(t, 0, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 6, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 0, n)
+
+	assert.Equal(t, data[2:], string(dst[:8]))
+
+	httpRange = HTTPRange{
+		Offset: 3,
+		Count:  -1,
+	}
+	errCount = 2
+	ar, err = NewRangeReader(ctx, getFn, &httpRange, "etag")
+	require.NoError(t, err)
+
+	dst = make([]byte, 100)
+	got = 0
+	n, err = ar.Read(dst)
+	assert.Equal(t, 1, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	require.NoError(t, err)
+	assert.Equal(t, 0, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 1, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	require.NoError(t, err)
+	assert.Equal(t, 0, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 5, n)
+	got += n
+
+	n, err = ar.Read(dst[got:])
+	assert.Equal(t, 0, n)
+
+	assert.Equal(t, data[3:], string(dst[:7]))
+
+	// not fail
+	// has range count
+	httpRange = HTTPRange{
+		Offset: 2,
+		Count:  3,
+	}
+
+	ar, err = NewRangeReader(ctx, getFn, &httpRange, "etag")
+	require.NoError(t, err)
+
+	dst = make([]byte, 100)
+	n, err = ar.Read(dst)
 	assert.Equal(t, 3, n)
 	n, err = ar.Read(dst[n:])
 	assert.Equal(t, 0, n)

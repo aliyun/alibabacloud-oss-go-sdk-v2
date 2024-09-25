@@ -575,6 +575,110 @@ func TestMockOpenFile_MixRead(t *testing.T) {
 
 }
 
+func TestMockOpenFile_PrefetchRead_Resume(t *testing.T) {
+	length := 11*1024*1024 + 13435
+	data := []byte(randStr(length))
+	gmtTime := getNowGMT()
+	datasum := func() uint64 {
+		h := NewCRC64(0)
+		h.Write(data)
+		return h.Sum64()
+	}()
+	halfBodyErr := false
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		switch r.Method {
+		case "HEAD":
+			// header
+			w.Header().Set(HTTPHeaderLastModified, gmtTime)
+			w.Header().Set(HTTPHeaderContentLength, fmt.Sprint(length))
+			w.Header().Set(HTTPHeaderETag, "fba9dede5f27731c9771645a3986****")
+			w.Header().Set(HTTPHeaderContentType, "text/plain")
+
+			//status code
+			w.WriteHeader(200)
+
+			//body
+			w.Write(nil)
+		case "GET":
+			// header
+			var httpRange *HTTPRange
+			if r.Header.Get("Range") != "" {
+				httpRange, _ = ParseRange(r.Header.Get("Range"))
+			}
+
+			offset := int64(0)
+			statusCode := 200
+			sendLen := int64(length)
+			if httpRange != nil {
+				offset = httpRange.Offset
+				sendLen = int64(length) - httpRange.Offset
+				if httpRange.Count > 0 {
+					sendLen = httpRange.Count
+				}
+				cr := httpContentRange{
+					Offset: httpRange.Offset,
+					Count:  sendLen,
+					Total:  int64(length),
+				}
+				w.Header().Set("Content-Range", ToString(cr.FormatHTTPContentRange()))
+				statusCode = 206
+			}
+
+			w.Header().Set(HTTPHeaderContentLength, fmt.Sprint(sendLen))
+			w.Header().Set(HTTPHeaderLastModified, gmtTime)
+			w.Header().Set(HTTPHeaderETag, "fba9dede5f27731c9771645a3986****")
+			w.Header().Set(HTTPHeaderContentType, "text/plain")
+
+			//status code
+			w.WriteHeader(statusCode)
+
+			//body
+			sendData := data[int(offset):int(offset+sendLen)]
+
+			if halfBodyErr {
+				sendData = sendData[0 : len(sendData)/2]
+				halfBodyErr = false
+			}
+
+			//fmt.Printf("sendData offset%d, len:%d, total:%d\n", offset, len(sendData), length)
+
+			w.Write(sendData)
+		}
+	}))
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+	f, err := NewReadOnlyFile(context.TODO(), client, "bucket", "key", func(oo *OpenOptions) {
+		oo.EnablePrefetch = true
+		oo.ChunkSize = 2 * 1024 * 1024
+		oo.PrefetchNum = 3
+		oo.PrefetchThreshold = int64(0)
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, f)
+	assert.Equal(t, true, f.enablePrefetch)
+	assert.Equal(t, int64(2*1024*1024), f.chunkSize)
+	assert.Equal(t, 3, f.prefetchNum)
+	assert.Equal(t, int64(0), f.prefetchThreshold)
+
+	//read all
+	halfBodyErr = true
+	f.Seek(0, io.SeekStart)
+	hash := NewCRC64(0)
+	written, err := io.Copy(io.MultiWriter(io.Discard, hash), f)
+	assert.Equal(t, datasum, hash.Sum64())
+	assert.Equal(t, int64(length), written)
+}
+
 func TestMockOpenFile_DirectRead_Fail(t *testing.T) {
 	length := 1234
 	data := []byte(randStr(length))

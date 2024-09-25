@@ -37,6 +37,8 @@ type downloaderMockTracker struct {
 	rStart            int64
 	headReqeustCRCErr bool
 
+	halfBodyErr bool
+
 	mu sync.Mutex
 }
 
@@ -128,6 +130,10 @@ func testSetupDownloaderMockServer(_ *testing.T, tracker *downloaderMockTracker)
 
 				//body
 				sendData := data[int(offset):int(offset+sendLen)]
+				if tracker.halfBodyErr {
+					sendData = sendData[0 : len(sendData)/2]
+					tracker.halfBodyErr = false
+				}
 				//fmt.Printf("sendData offset%d, len:%d, total:%d\n", offset, len(sendData), length)
 				w.Write(sendData)
 			}
@@ -1179,6 +1185,56 @@ func TestMockDownloaderCRCCheck(t *testing.T) {
 	// Disable CRC
 	d.featureFlags = d.featureFlags & ^FeatureEnableCRC64CheckDownload
 	result, err = d.DownloadFile(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")}, localFile)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	hash := NewCRC64(0)
+	rfile, err := os.Open(localFile)
+	assert.Nil(t, err)
+
+	defer func() {
+		rfile.Close()
+		os.Remove(localFile)
+	}()
+
+	io.Copy(hash, rfile)
+	assert.Equal(t, datasum, hash.Sum64())
+}
+
+func TestMockDownloaderCRCCheckWithResume(t *testing.T) {
+	length := 5*100*1024 + 1234
+	data := []byte(randStr(length))
+	gmtTime := getNowGMT()
+	datasum := func() uint64 {
+		h := NewCRC64(0)
+		h.Write(data)
+		return h.Sum64()
+	}()
+	tracker := &downloaderMockTracker{
+		lastModified: gmtTime,
+		data:         data,
+		halfBodyErr:  true,
+	}
+	server := testSetupDownloaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+	d := NewDownloader(client, func(do *DownloaderOptions) {
+		do.ParallelNum = 3
+		do.PartSize = 100 * 1024
+	})
+	assert.NotNil(t, d)
+	assert.NotNil(t, d.client)
+
+	localFile := randStr(8) + "-no-surfix"
+
+	result, err := d.DownloadFile(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")}, localFile)
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	hash := NewCRC64(0)
