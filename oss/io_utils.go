@@ -286,7 +286,14 @@ func (a *AsyncRangeReader) init(buffers int) {
 				}
 
 				if a.in == nil {
-					output, err := a.rangeGet(a.context, a.httpRange)
+					httpRangeRemains := a.httpRange
+					if a.httpRange.Count > 0 {
+						gotNum := a.httpRange.Offset - a.oriHttpRange.Offset
+						if gotNum > 0 && a.httpRange.Count > gotNum {
+							httpRangeRemains.Count = a.httpRange.Count - gotNum
+						}
+					}
+					output, err := a.rangeGet(a.context, httpRangeRemains)
 					if err == nil {
 						etag := ToString(output.ETag)
 						if a.etag == "" {
@@ -303,8 +310,8 @@ func (a *AsyncRangeReader) init(buffers int) {
 						} else {
 							off, _, _, _ = ParseContentRange(*output.ContentRange)
 						}
-						if off != a.httpRange.Offset {
-							err = fmt.Errorf("Range get fail, expect offset:%v, got offset:%v", a.httpRange.Offset, off)
+						if off != httpRangeRemains.Offset {
+							err = fmt.Errorf("Range get fail, expect offset:%v, got offset:%v", httpRangeRemains.Offset, off)
 						}
 					}
 					if err != nil {
@@ -318,11 +325,11 @@ func (a *AsyncRangeReader) init(buffers int) {
 						return
 					}
 					body := output.Body
-					if a.httpRange.Count > 0 {
-						body = NewLimitedReadCloser(output.Body, a.httpRange.Count)
+					if httpRangeRemains.Count > 0 {
+						body = NewLimitedReadCloser(output.Body, httpRangeRemains.Count)
 					}
 					a.in = body
-					//fmt.Printf("call getFunc done, range:%s\n", ToString(a.httpRange.FormatHTTPRange()))
+					//fmt.Printf("call getFunc done, range:%s\n", ToString(httpRangeRemains.FormatHTTPRange()))
 				}
 
 				// ignore err from read
@@ -663,7 +670,14 @@ func (r *RangeReader) read(p []byte) (int, error) {
 
 	// open stream
 	if r.in == nil {
-		output, err := r.rangeGet(r.context, r.httpRange)
+		httpRangeRemains := r.httpRange
+		if r.httpRange.Count > 0 {
+			gotNum := r.httpRange.Offset - r.oriHttpRange.Offset
+			if gotNum > 0 && r.httpRange.Count > gotNum {
+				httpRangeRemains.Count = r.httpRange.Count - gotNum
+			}
+		}
+		output, err := r.rangeGet(r.context, httpRangeRemains)
 		if err == nil {
 			etag := ToString(output.ETag)
 			if r.etag == "" {
@@ -682,8 +696,8 @@ func (r *RangeReader) read(p []byte) (int, error) {
 			} else {
 				off, _, r.totalSize, _ = ParseContentRange(*output.ContentRange)
 			}
-			if off != r.httpRange.Offset {
-				err = fmt.Errorf("Range get fail, expect offset:%v, got offset:%v", r.httpRange.Offset, off)
+			if off != httpRangeRemains.Offset {
+				err = fmt.Errorf("Range get fail, expect offset:%v, got offset:%v", httpRangeRemains.Offset, off)
 			}
 		}
 		if err != nil {
@@ -693,8 +707,8 @@ func (r *RangeReader) read(p []byte) (int, error) {
 			return 0, err
 		}
 		body := output.Body
-		if r.httpRange.Count > 0 {
-			body = NewLimitedReadCloser(output.Body, r.httpRange.Count)
+		if httpRangeRemains.Count > 0 {
+			body = NewLimitedReadCloser(output.Body, httpRangeRemains.Count)
 		}
 		r.in = body
 	}
