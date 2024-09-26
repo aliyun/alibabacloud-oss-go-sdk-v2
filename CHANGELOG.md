@@ -1,5 +1,10 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.1.1 日期：2024-09-26
+### 变更内容
+- Fix：Adjust range count when resuming from the last read offset.
+- Feature：Add bucket cname api
+
 ## 版本号：v1.1.0 日期：2024-09-18
 ### 变更内容
 - Feature：Add bucket logging api
