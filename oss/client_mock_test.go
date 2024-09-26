@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -27972,6 +27973,759 @@ func TestMockDeleteCname_Error(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 		output, err := client.DeleteCname(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockOpenMetaQuerySuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *OpenMetaQueryRequest
+	CheckOutputFn  func(t *testing.T, o *OpenMetaQueryResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?comp=add&metaQuery", strUrl)
+		},
+		&OpenMetaQueryRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *OpenMetaQueryResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+		},
+	},
+}
+
+func TestMockOpenMetaQuery_Success(t *testing.T) {
+	for _, c := range testMockOpenMetaQuerySuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.OpenMetaQuery(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockOpenMetaQueryErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *OpenMetaQueryRequest
+	CheckOutputFn  func(t *testing.T, o *OpenMetaQueryResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?comp=add&metaQuery", strUrl)
+		},
+		&OpenMetaQueryRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *OpenMetaQueryResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?comp=add&metaQuery", strUrl)
+		},
+		&OpenMetaQueryRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *OpenMetaQueryResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockOpenMetaQuery_Error(t *testing.T) {
+	for _, c := range testMockOpenMetaQueryErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.OpenMetaQuery(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetMetaQueryStatusSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetMetaQueryStatusRequest
+	CheckOutputFn  func(t *testing.T, o *GetMetaQueryStatusResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<MetaQueryStatus>
+  <State>Running</State>
+  <Phase>FullScanning</Phase>
+  <CreateTime>2021-08-02T10:49:17.289372919+08:00</CreateTime>
+  <UpdateTime>2021-08-02T10:49:17.289372919+08:00</UpdateTime>
+</MetaQueryStatus>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?metaQuery", strUrl)
+		},
+		&GetMetaQueryStatusRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetMetaQueryStatusResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.MetaQueryStatus.State, "Running")
+			assert.Equal(t, *o.MetaQueryStatus.Phase, "FullScanning")
+			assert.Equal(t, *o.MetaQueryStatus.CreateTime, "2021-08-02T10:49:17.289372919+08:00")
+			assert.Equal(t, *o.MetaQueryStatus.UpdateTime, "2021-08-02T10:49:17.289372919+08:00")
+		},
+	},
+}
+
+func TestMockGetMetaQueryStatus_Success(t *testing.T) {
+	for _, c := range testMockGetMetaQueryStatusSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetMetaQueryStatus(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetMetaQueryStatusErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetMetaQueryStatusRequest
+	CheckOutputFn  func(t *testing.T, o *GetMetaQueryStatusResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?metaQuery", strUrl)
+		},
+		&GetMetaQueryStatusRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetMetaQueryStatusResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?metaQuery", strUrl)
+		},
+		&GetMetaQueryStatusRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetMetaQueryStatusResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockGetMetaQueryStatus_Error(t *testing.T) {
+	for _, c := range testMockGetMetaQueryStatusErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetMetaQueryStatus(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDoMetaQuerySuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DoMetaQueryRequest
+	CheckOutputFn  func(t *testing.T, o *DoMetaQueryResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<MetaQuery>
+  <NextToken>MTIzNDU2Nzg6aW1tdGVzdDpleGFtcGxlYnVja2V0OmRhdGFzZXQwMDE6b3NzOi8vZXhhbXBsZWJ1Y2tldC9zYW1wbGVvYmplY3QxLmpw****</NextToken>
+  <Files>
+    <File>
+      <Filename>exampleobject.txt</Filename>
+      <Size>120</Size>
+      <FileModifiedTime>2021-06-29T15:04:05.000000000Z07:00</FileModifiedTime>
+      <OSSObjectType>Normal</OSSObjectType>
+      <OSSStorageClass>Standard</OSSStorageClass>
+      <ObjectACL>default</ObjectACL>
+      <ETag>"fba9dede5f27731c9771645a3986****"</ETag>
+      <OSSCRC64>4858A48BD1466884</OSSCRC64>
+      <OSSTaggingCount>2</OSSTaggingCount>
+      <OSSTagging>
+        <Tagging>
+          <Key>owner</Key>
+          <Value>John</Value>
+        </Tagging>
+        <Tagging>
+          <Key>type</Key>
+          <Value>document</Value>
+        </Tagging>
+      </OSSTagging>
+      <OSSUserMeta>
+        <UserMeta>
+          <Key>x-oss-meta-location</Key>
+          <Value>hangzhou</Value>
+        </UserMeta>
+      </OSSUserMeta>
+    </File>
+  </Files>
+  <Aggregations>
+    <Aggregation>
+      <Field>Size</Field>
+      <Operation>sum</Operation>
+      <Value>4859250309</Value>
+    </Aggregation>
+    <Aggregation>
+      <Field>Size</Field>
+      <Operation>max</Operation>
+      <Value>2235483240</Value>
+    </Aggregation>
+  </Aggregations>
+</MetaQuery>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?comp=query&metaQuery", strUrl)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, html.UnescapeString(string(body)), "<MetaQuery><MaxResults>5</MaxResults><Query>{\"Field\": \"Size\",\"Value\": \"1048576\",\"Operation\": \"gt\"}</Query><Sort>Size</Sort><Order>asc</Order><Aggregations><Aggregation><Field>Size</Field><Operation>sum</Operation></Aggregation><Aggregation><Field>Size</Field><Operation>max</Operation></Aggregation></Aggregations><NextToken>MTIzNDU2Nzg6aW1tdGVzdDpleGFtcGxlYnVja2V0OmRhdGFzZXQwMDE6b3NzOi8vZXhhbXBsZWJ1Y2tldC9zYW1wbGVvYmplY3QxLmpw****</NextToken></MetaQuery>")
+		},
+		&DoMetaQueryRequest{
+			Bucket: Ptr("bucket"),
+			MetaQuery: &MetaQuery{
+				NextToken:  Ptr("MTIzNDU2Nzg6aW1tdGVzdDpleGFtcGxlYnVja2V0OmRhdGFzZXQwMDE6b3NzOi8vZXhhbXBsZWJ1Y2tldC9zYW1wbGVvYmplY3QxLmpw****"),
+				MaxResults: Ptr(int64(5)),
+				Query:      Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
+				Sort:       Ptr("Size"),
+				Order:      MetaQueryOrderAsc,
+				Aggregations: &Aggregations{
+					[]MetaQueryAggregation{
+						{
+							Field:     Ptr("Size"),
+							Operation: Ptr("sum"),
+						},
+						{
+							Field:     Ptr("Size"),
+							Operation: Ptr("max"),
+						},
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *DoMetaQueryResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, len(o.Files), 1)
+			assert.Equal(t, *o.Files[0].Filename, "exampleobject.txt")
+			assert.Equal(t, *o.Files[0].Size, int64(120))
+			assert.Equal(t, *o.Files[0].FileModifiedTime, "2021-06-29T15:04:05.000000000Z07:00")
+			assert.Equal(t, *o.Files[0].OSSObjectType, "Normal")
+			assert.Equal(t, *o.Files[0].OSSStorageClass, "Standard")
+			assert.Equal(t, *o.Files[0].ObjectACL, "default")
+			assert.Equal(t, *o.Files[0].ETag, "\"fba9dede5f27731c9771645a3986****\"")
+			assert.Equal(t, *o.Files[0].OSSTaggingCount, int64(2))
+			assert.Equal(t, *o.Files[0].OSSTagging[0].Key, "owner")
+			assert.Equal(t, *o.Files[0].OSSTagging[0].Value, "John")
+			assert.Equal(t, *o.Files[0].OSSTagging[1].Key, "type")
+			assert.Equal(t, *o.Files[0].OSSTagging[1].Value, "document")
+			assert.Equal(t, len(o.Files[0].OSSUserMeta), 1)
+			assert.Equal(t, *o.Files[0].OSSUserMeta[0].Key, "x-oss-meta-location")
+			assert.Equal(t, *o.Files[0].OSSUserMeta[0].Value, "hangzhou")
+			assert.Equal(t, len(o.Aggregations), 2)
+			assert.Equal(t, *o.Aggregations[0].Field, "Size")
+			assert.Equal(t, *o.Aggregations[0].Operation, "sum")
+			assert.Equal(t, *o.Aggregations[0].Value, float64(4859250309))
+			assert.Equal(t, *o.Aggregations[1].Field, "Size")
+			assert.Equal(t, *o.Aggregations[1].Operation, "max")
+			assert.Equal(t, *o.Aggregations[1].Value, float64(2235483240))
+		},
+	},
+}
+
+func TestMockDoMetaQuery_Success(t *testing.T) {
+	for _, c := range testMockDoMetaQuerySuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.DoMetaQuery(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDoMetaQueryErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DoMetaQueryRequest
+	CheckOutputFn  func(t *testing.T, o *DoMetaQueryResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?comp=query&metaQuery", strUrl)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, html.UnescapeString(string(body)), "<MetaQuery><MaxResults>5</MaxResults><Query>{\"Field\": \"Size\",\"Value\": \"1048576\",\"Operation\": \"gt\"}</Query><Sort>Size</Sort><Order>asc</Order><Aggregations><Aggregation><Field>Size</Field><Operation>sum</Operation></Aggregation><Aggregation><Field>Size</Field><Operation>max</Operation></Aggregation></Aggregations><NextToken>MTIzNDU2Nzg6aW1tdGVzdDpleGFtcGxlYnVja2V0OmRhdGFzZXQwMDE6b3NzOi8vZXhhbXBsZWJ1Y2tldC9zYW1wbGVvYmplY3QxLmpw****</NextToken></MetaQuery>")
+		},
+		&DoMetaQueryRequest{
+			Bucket: Ptr("bucket"),
+			MetaQuery: &MetaQuery{
+				NextToken:  Ptr("MTIzNDU2Nzg6aW1tdGVzdDpleGFtcGxlYnVja2V0OmRhdGFzZXQwMDE6b3NzOi8vZXhhbXBsZWJ1Y2tldC9zYW1wbGVvYmplY3QxLmpw****"),
+				MaxResults: Ptr(int64(5)),
+				Query:      Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
+				Sort:       Ptr("Size"),
+				Order:      MetaQueryOrderAsc,
+				Aggregations: &Aggregations{
+					[]MetaQueryAggregation{
+						{
+							Field:     Ptr("Size"),
+							Operation: Ptr("sum"),
+						},
+						{
+							Field:     Ptr("Size"),
+							Operation: Ptr("max"),
+						},
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *DoMetaQueryResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?comp=query&metaQuery", strUrl)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, html.UnescapeString(string(body)), "<MetaQuery><MaxResults>5</MaxResults><Query>{\"Field\": \"Size\",\"Value\": \"1048576\",\"Operation\": \"gt\"}</Query><Sort>Size</Sort><Order>asc</Order><Aggregations><Aggregation><Field>Size</Field><Operation>sum</Operation></Aggregation><Aggregation><Field>Size</Field><Operation>max</Operation></Aggregation></Aggregations><NextToken>MTIzNDU2Nzg6aW1tdGVzdDpleGFtcGxlYnVja2V0OmRhdGFzZXQwMDE6b3NzOi8vZXhhbXBsZWJ1Y2tldC9zYW1wbGVvYmplY3QxLmpw****</NextToken></MetaQuery>")
+		},
+		&DoMetaQueryRequest{
+			Bucket: Ptr("bucket"),
+			MetaQuery: &MetaQuery{
+				NextToken:  Ptr("MTIzNDU2Nzg6aW1tdGVzdDpleGFtcGxlYnVja2V0OmRhdGFzZXQwMDE6b3NzOi8vZXhhbXBsZWJ1Y2tldC9zYW1wbGVvYmplY3QxLmpw****"),
+				MaxResults: Ptr(int64(5)),
+				Query:      Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
+				Sort:       Ptr("Size"),
+				Order:      MetaQueryOrderAsc,
+				Aggregations: &Aggregations{
+					[]MetaQueryAggregation{
+						{
+							Field:     Ptr("Size"),
+							Operation: Ptr("sum"),
+						},
+						{
+							Field:     Ptr("Size"),
+							Operation: Ptr("max"),
+						},
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *DoMetaQueryResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDoMetaQuery_Error(t *testing.T) {
+	for _, c := range testMockDoMetaQueryErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.DoMetaQuery(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockCloseMetaQuerySuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *CloseMetaQueryRequest
+	CheckOutputFn  func(t *testing.T, o *CloseMetaQueryResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?comp=delete&metaQuery", strUrl)
+		},
+		&CloseMetaQueryRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *CloseMetaQueryResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockCloseMetaQuery_Success(t *testing.T) {
+	for _, c := range testMockCloseMetaQuerySuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.CloseMetaQuery(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockCloseMetaQueryErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *CloseMetaQueryRequest
+	CheckOutputFn  func(t *testing.T, o *CloseMetaQueryResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?comp=delete&metaQuery", strUrl)
+		},
+		&CloseMetaQueryRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *CloseMetaQueryResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?comp=delete&metaQuery", strUrl)
+		},
+		&CloseMetaQueryRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *CloseMetaQueryResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockCloseMetaQuery_Error(t *testing.T) {
+	for _, c := range testMockCloseMetaQueryErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.CloseMetaQuery(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }

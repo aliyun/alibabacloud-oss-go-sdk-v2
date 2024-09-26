@@ -151,7 +151,7 @@ type HistoricalObjectReplicationType string
 
 // Enum values for HistoricalObjectReplicationType
 const (
-	HistoricalObjectReplicationEnabled HistoricalObjectReplicationType = "enabled"
+	HistoricalObjectReplicationEnabled  HistoricalObjectReplicationType = "enabled"
 	HistoricalObjectReplicationDisabled HistoricalObjectReplicationType = "disabled"
 )
 
@@ -160,15 +160,23 @@ type TransferTypeType string
 // Enum values for TransferTypeType
 const (
 	TransferTypeInternal TransferTypeType = "internal"
-	TransferTypeOssAcc TransferTypeType = "oss_acc"
+	TransferTypeOssAcc   TransferTypeType = "oss_acc"
 )
 
 type StatusType string
 
 // Enum values for StatusType
 const (
-	StatusEnabled StatusType = "Enabled"
+	StatusEnabled  StatusType = "Enabled"
 	StatusDisabled StatusType = "Disabled"
+)
+
+type MetaQueryOrderType string
+
+// Enum values for MetaQueryOrderType
+const (
+	MetaQueryOrderAsc  MetaQueryOrderType = "asc"
+	MetaQueryOrderDesc MetaQueryOrderType = "desc"
 )
 
 // OSS headers
