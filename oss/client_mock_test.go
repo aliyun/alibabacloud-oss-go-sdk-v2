@@ -28368,7 +28368,7 @@ var testMockDoMetaQuerySuccessCases = []struct {
 				Query:      Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
 				Sort:       Ptr("Size"),
 				Order:      MetaQueryOrderAsc,
-				Aggregations: &Aggregations{
+				Aggregations: &MetaQueryAggregations{
 					[]MetaQueryAggregation{
 						{
 							Field:     Ptr("Size"),
@@ -28472,7 +28472,7 @@ var testMockDoMetaQueryErrorCases = []struct {
 				Query:      Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
 				Sort:       Ptr("Size"),
 				Order:      MetaQueryOrderAsc,
-				Aggregations: &Aggregations{
+				Aggregations: &MetaQueryAggregations{
 					[]MetaQueryAggregation{
 						{
 							Field:     Ptr("Size"),
@@ -28529,7 +28529,7 @@ var testMockDoMetaQueryErrorCases = []struct {
 				Query:      Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
 				Sort:       Ptr("Size"),
 				Order:      MetaQueryOrderAsc,
-				Aggregations: &Aggregations{
+				Aggregations: &MetaQueryAggregations{
 					[]MetaQueryAggregation{
 						{
 							Field:     Ptr("Size"),
