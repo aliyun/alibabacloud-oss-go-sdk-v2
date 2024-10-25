@@ -28938,39 +28938,6 @@ func TestMockCreateAccessPoint_Error(t *testing.T) {
 	}
 }
 
-var testMockDeleteAccessPointSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *DeleteAccessPointRequest
-	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointResult, err error)
-}{
-	{
-		204,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "DELETE", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?accessPoint", strUrl)
-			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
-		},
-		&DeleteAccessPointRequest{
-			Bucket:          Ptr("bucket"),
-			AccessPointName: Ptr("ap-01"),
-		},
-		func(t *testing.T, o *DeleteAccessPointResult, err error) {
-			assert.Equal(t, 204, o.StatusCode)
-			assert.Equal(t, "204 No Content", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-		},
-	},
-}
 var testMockGetAccessPointSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
@@ -29155,6 +29122,41 @@ func TestMockGetAccessPoint_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockDeleteAccessPointSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointResult, err error)
+}{
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPoint", strUrl)
+			assert.Equal(t, "ap-01", r.Header.Get("x-oss-access-point-name"))
+		},
+		&DeleteAccessPointRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
 func TestMockDeleteAccessPoint_Success(t *testing.T) {
 	for _, c := range testMockDeleteAccessPointSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
@@ -30562,6 +30564,1360 @@ func TestMockDeleteAccessPointPublicAccessBlock_Error(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 		output, err := client.DeleteAccessPointPublicAccessBlock(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockCreateAccessPointForObjectProcessSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *CreateAccessPointForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *CreateAccessPointForObjectProcessResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<CreateAccessPointForObjectProcessResult>
+  <AccessPointForObjectProcessArn>acs:oss:cn-hangzhou:128364106451xxxx:accesspoint/ap-01</AccessPointForObjectProcessArn>
+  <Alias>ap-01-45ee7945007a2f0bcb595f63e2215cxxxx-ossalias</Alias>
+</CreateAccessPointForObjectProcessResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointForObjectProcess", strUrl)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<CreateAccessPointForObjectProcessConfiguration><AccessPointName>ap-01</AccessPointName><ObjectProcessConfiguration><AllowedFeatures><AllowedFeature>GetObject-Range</AllowedFeature></AllowedFeatures><TransformationConfigurations><TransformationConfiguration><Actions><Action>GetObject</Action></Actions><ContentTransformation><FunctionCompute><FunctionAssumeRoleArn>acs:ram::111933544165****:role/aliyunfcdefaultrole</FunctionAssumeRoleArn><FunctionArn>acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01</FunctionArn></FunctionCompute></ContentTransformation></TransformationConfiguration></TransformationConfigurations></ObjectProcessConfiguration></CreateAccessPointForObjectProcessConfiguration>")
+		},
+		&CreateAccessPointForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+			CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
+				AccessPointName: Ptr("ap-01"),
+				ObjectProcessConfiguration: &ObjectProcessConfiguration{
+					AllowedFeatures: []string{"GetObject-Range"},
+					TransformationConfigurations: []TransformationConfiguration{
+						{
+							Actions: &Actions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
+								FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+							},
+						},
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *CreateAccessPointForObjectProcessResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.AccessPointForObjectProcessArn, "acs:oss:cn-hangzhou:128364106451xxxx:accesspoint/ap-01")
+		},
+	},
+}
+
+func TestMockCreateAccessPointForObjectProcess_Success(t *testing.T) {
+	for _, c := range testMockCreateAccessPointForObjectProcessSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.CreateAccessPointForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockCreateAccessPointForObjectProcessErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *CreateAccessPointForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *CreateAccessPointForObjectProcessResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointForObjectProcess", strUrl)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<CreateAccessPointForObjectProcessConfiguration><AccessPointName>ap-01</AccessPointName><ObjectProcessConfiguration><AllowedFeatures><AllowedFeature>GetObject-Range</AllowedFeature></AllowedFeatures><TransformationConfigurations><TransformationConfiguration><Actions><Action>GetObject</Action></Actions><ContentTransformation><FunctionCompute><FunctionAssumeRoleArn>acs:ram::111933544165****:role/aliyunfcdefaultrole</FunctionAssumeRoleArn><FunctionArn>acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01</FunctionArn></FunctionCompute></ContentTransformation></TransformationConfiguration></TransformationConfigurations></ObjectProcessConfiguration></CreateAccessPointForObjectProcessConfiguration>")
+		},
+		&CreateAccessPointForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+			CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
+				AccessPointName: Ptr("ap-01"),
+				ObjectProcessConfiguration: &ObjectProcessConfiguration{
+					AllowedFeatures: []string{"GetObject-Range"},
+					TransformationConfigurations: []TransformationConfiguration{
+						{
+							Actions: &Actions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
+								FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+							},
+						},
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *CreateAccessPointForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointForObjectProcess", strUrl)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<CreateAccessPointForObjectProcessConfiguration><AccessPointName>ap-01</AccessPointName><ObjectProcessConfiguration><AllowedFeatures><AllowedFeature>GetObject-Range</AllowedFeature></AllowedFeatures><TransformationConfigurations><TransformationConfiguration><Actions><Action>GetObject</Action></Actions><ContentTransformation><FunctionCompute><FunctionAssumeRoleArn>acs:ram::111933544165****:role/aliyunfcdefaultrole</FunctionAssumeRoleArn><FunctionArn>acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01</FunctionArn></FunctionCompute></ContentTransformation></TransformationConfiguration></TransformationConfigurations></ObjectProcessConfiguration></CreateAccessPointForObjectProcessConfiguration>")
+		},
+		&CreateAccessPointForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+			CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
+				AccessPointName: Ptr("ap-01"),
+				ObjectProcessConfiguration: &ObjectProcessConfiguration{
+					AllowedFeatures: []string{"GetObject-Range"},
+					TransformationConfigurations: []TransformationConfiguration{
+						{
+							Actions: &Actions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
+								FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+							},
+						},
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *CreateAccessPointForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockCreateAccessPointForObjectProcess_Error(t *testing.T) {
+	for _, c := range testMockCreateAccessPointForObjectProcessErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.CreateAccessPointForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetAccessPointForObjectProcessSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetAccessPointForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *GetAccessPointForObjectProcessResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<GetAccessPointForObjectProcessResult>
+  <AccessPointNameForObjectProcess>fc-ap-01</AccessPointNameForObjectProcess>
+  <AccessPointForObjectProcessAlias>fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias</AccessPointForObjectProcessAlias>
+  <AccessPointName>ap-01</AccessPointName>
+  <AccountId>111933544165****</AccountId>
+  <AccessPointForObjectProcessArn>acs:oss:cn-qingdao:11933544165****:accesspointforobjectprocess/fc-ap-01</AccessPointForObjectProcessArn>
+  <CreationDate>1626769503</CreationDate>
+  <Status>enable</Status>
+  <Endpoints>
+    <PublicEndpoint>fc-ap-01-111933544165****.oss-cn-qingdao.oss-object-process.aliyuncs.com</PublicEndpoint>
+    <InternalEndpoint>fc-ap-01-111933544165****.oss-cn-qingdao-internal.oss-object-process.aliyuncs.com</InternalEndpoint>
+  </Endpoints>
+  <PublicAccessBlockConfiguration>
+    <BlockPublicAccess>true</BlockPublicAccess>
+  </PublicAccessBlockConfiguration>
+</GetAccessPointForObjectProcessResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&GetAccessPointForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointForObjectProcessResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.True(t, *o.PublicAccessBlockConfiguration.BlockPublicAccess)
+			assert.Equal(t, *o.AccessPointNameForObjectProcess, "fc-ap-01")
+			assert.Equal(t, *o.AccessPointForObjectProcessAlias, "fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias")
+			assert.Equal(t, *o.AccessPointName, "ap-01")
+			assert.Equal(t, *o.AccountId, "111933544165****")
+			assert.Equal(t, *o.AccessPointForObjectProcessArn, "acs:oss:cn-qingdao:11933544165****:accesspointforobjectprocess/fc-ap-01")
+			assert.Equal(t, *o.CreationDate, "1626769503")
+			assert.Equal(t, *o.AccessPointForObjectProcessStatus, "enable")
+			assert.Equal(t, *o.Endpoints.PublicEndpoint, "fc-ap-01-111933544165****.oss-cn-qingdao.oss-object-process.aliyuncs.com")
+			assert.Equal(t, *o.Endpoints.InternalEndpoint, "fc-ap-01-111933544165****.oss-cn-qingdao-internal.oss-object-process.aliyuncs.com")
+			assert.True(t, *o.PublicAccessBlockConfiguration.BlockPublicAccess)
+		},
+	},
+}
+
+func TestMockGetAccessPointForObjectProcess_Success(t *testing.T) {
+	for _, c := range testMockGetAccessPointForObjectProcessSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetAccessPointForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetAccessPointForObjectProcessErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetAccessPointForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *GetAccessPointForObjectProcessResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&GetAccessPointForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&GetAccessPointForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockGetAccessPointForObjectProcess_Error(t *testing.T) {
+	for _, c := range testMockGetAccessPointForObjectProcessErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetAccessPointForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteAccessPointForObjectProcessSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointForObjectProcessResult, err error)
+}{
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&DeleteAccessPointForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointForObjectProcessResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockDeleteAccessPointForObjectProcess_Success(t *testing.T) {
+	for _, c := range testMockDeleteAccessPointForObjectProcessSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteAccessPointForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteAccessPointForObjectProcessErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointForObjectProcessResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&DeleteAccessPointForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&DeleteAccessPointForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDeleteAccessPointForObjectProcess_Error(t *testing.T) {
+	for _, c := range testMockDeleteAccessPointForObjectProcessErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteAccessPointForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListAccessPointsForObjectProcessSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListAccessPointsForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *ListAccessPointsForObjectProcessResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListAccessPointsForObjectProcessResult>
+   <IsTruncated>true</IsTruncated>
+   <NextContinuationToken>abc</NextContinuationToken>
+   <AccountId>111933544165****</AccountId>
+   <AccessPointsForObjectProcess>
+      <AccessPointForObjectProcess>
+          <AccessPointNameForObjectProcess>fc-ap-01</AccessPointNameForObjectProcess>
+          <AccessPointForObjectProcessAlias>fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias</AccessPointForObjectProcessAlias>
+          <AccessPointName>fc-01</AccessPointName>
+          <Status>enable</Status>
+      </AccessPointForObjectProcess>
+   </AccessPointsForObjectProcess>
+</ListAccessPointsForObjectProcessResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?accessPointForObjectProcess", strUrl)
+		},
+		&ListAccessPointsForObjectProcessRequest{},
+		func(t *testing.T, o *ListAccessPointsForObjectProcessResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.NextContinuationToken, "abc")
+			assert.True(t, *o.IsTruncated)
+			assert.Equal(t, *o.AccountId, "111933544165****")
+			assert.Equal(t, len(o.AccessPointsForObjectProcess.AccessPointForObjectProcesss), 1)
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointNameForObjectProcess, "fc-ap-01")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointNameForObjectProcess, "fc-ap-01")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointForObjectProcessAlias, "fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointName, "fc-01")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].Status, "enable")
+		},
+	},
+}
+
+func TestMockListAccessPointsForObjectProcess_Success(t *testing.T) {
+	for _, c := range testMockListAccessPointsForObjectProcessSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.ListAccessPointsForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListAccessPointsForObjectProcessErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListAccessPointsForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *ListAccessPointsForObjectProcessResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?accessPointForObjectProcess", strUrl)
+		},
+		&ListAccessPointsForObjectProcessRequest{},
+		func(t *testing.T, o *ListAccessPointsForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?accessPointForObjectProcess", strUrl)
+		},
+		&ListAccessPointsForObjectProcessRequest{},
+		func(t *testing.T, o *ListAccessPointsForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockListAccessPointsForObjectProcess_Error(t *testing.T) {
+	for _, c := range testMockListAccessPointsForObjectProcessErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.ListAccessPointsForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutAccessPointPolicyForObjectProcessSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutAccessPointPolicyForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *PutAccessPointPolicyForObjectProcessResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicyForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), `{"Version":"1","Statement":[{"Effect":"Allow","Action":["oss:GetObject"],"Principal":["23721626365841xxxx"],"Resource":["acs:oss:cn-qingdao:111933544165xxxx:accesspointforobjectprocess/fc-ap-001/object/*"]}]}`)
+		},
+		&PutAccessPointPolicyForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+			Body:                            strings.NewReader(`{"Version":"1","Statement":[{"Effect":"Allow","Action":["oss:GetObject"],"Principal":["23721626365841xxxx"],"Resource":["acs:oss:cn-qingdao:111933544165xxxx:accesspointforobjectprocess/fc-ap-001/object/*"]}]}`),
+		},
+		func(t *testing.T, o *PutAccessPointPolicyForObjectProcessResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockPutAccessPointPolicyForObjectProcess_Success(t *testing.T) {
+	for _, c := range testMockPutAccessPointPolicyForObjectProcessSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.PutAccessPointPolicyForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutAccessPointPolicyForObjectProcessErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutAccessPointPolicyForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *PutAccessPointPolicyForObjectProcessResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicyForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), `{"Version":"1","Statement":[{"Effect":"Allow","Action":["oss:GetObject"],"Principal":["23721626365841xxxx"],"Resource":["acs:oss:cn-qingdao:111933544165xxxx:accesspointforobjectprocess/fc-ap-01/object/*"]}]}`)
+		},
+		&PutAccessPointPolicyForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+			Body:                            strings.NewReader(`{"Version":"1","Statement":[{"Effect":"Allow","Action":["oss:GetObject"],"Principal":["23721626365841xxxx"],"Resource":["acs:oss:cn-qingdao:111933544165xxxx:accesspointforobjectprocess/fc-ap-01/object/*"]}]}`),
+		},
+		func(t *testing.T, o *PutAccessPointPolicyForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicyForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), `{"Version":"1","Statement":[{"Effect":"Allow","Action":["oss:GetObject"],"Principal":["23721626365841xxxx"],"Resource":["acs:oss:cn-qingdao:111933544165xxxx:accesspointforobjectprocess/fc-ap-01/object/*"]}]}`)
+		},
+		&PutAccessPointPolicyForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+			Body:                            strings.NewReader(`{"Version":"1","Statement":[{"Effect":"Allow","Action":["oss:GetObject"],"Principal":["23721626365841xxxx"],"Resource":["acs:oss:cn-qingdao:111933544165xxxx:accesspointforobjectprocess/fc-ap-01/object/*"]}]}`),
+		},
+		func(t *testing.T, o *PutAccessPointPolicyForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockPutAccessPointPolicyForObjectProcess_Error(t *testing.T) {
+	for _, c := range testMockPutAccessPointPolicyForObjectProcessErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.PutAccessPointPolicyForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetAccessPointPolicyForObjectProcessSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetAccessPointPolicyForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *GetAccessPointPolicyForObjectProcessResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+					   "Version":"1",
+					   "Statement":[
+					   {
+						 "Action":[
+						   "oss:PutObject",
+						   "oss:GetObject"
+						],
+						"Effect":"Deny",
+						"Principal":["27737962156157xxxx"],
+						"Resource":[
+						   "acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/$ap-01",
+						   "acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/$ap-01/object/*"
+						 ]
+					   }
+					  ]
+					 }`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicyForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&GetAccessPointPolicyForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointPolicyForObjectProcessResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, string(o.Body), "{\n\t\t\t\t\t   \"Version\":\"1\",\n\t\t\t\t\t   \"Statement\":[\n\t\t\t\t\t   {\n\t\t\t\t\t\t \"Action\":[\n\t\t\t\t\t\t   \"oss:PutObject\",\n\t\t\t\t\t\t   \"oss:GetObject\"\n\t\t\t\t\t\t],\n\t\t\t\t\t\t\"Effect\":\"Deny\",\n\t\t\t\t\t\t\"Principal\":[\"27737962156157xxxx\"],\n\t\t\t\t\t\t\"Resource\":[\n\t\t\t\t\t\t   \"acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/$ap-01\",\n\t\t\t\t\t\t   \"acs:oss:cn-hangzhou:111933544165xxxx:accesspoint/$ap-01/object/*\"\n\t\t\t\t\t\t ]\n\t\t\t\t\t   }\n\t\t\t\t\t  ]\n\t\t\t\t\t }")
+		},
+	},
+}
+
+func TestMockGetAccessPointPolicyForObjectProcess_Success(t *testing.T) {
+	for _, c := range testMockGetAccessPointPolicyForObjectProcessSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetAccessPointPolicyForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetAccessPointPolicyForObjectProcessErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetAccessPointPolicyForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *GetAccessPointPolicyForObjectProcessResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicyForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&GetAccessPointPolicyForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointPolicyForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicyForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&GetAccessPointPolicyForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *GetAccessPointPolicyForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockGetAccessPointPolicyForObjectProcess_Error(t *testing.T) {
+	for _, c := range testMockGetAccessPointPolicyForObjectProcessErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetAccessPointPolicyForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteAccessPointPolicyForObjectProcessSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointPolicyForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointPolicyForObjectProcessResult, err error)
+}{
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicyForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&DeleteAccessPointPolicyForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointPolicyForObjectProcessResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockDeleteAccessPointPolicyForObjectProcess_Success(t *testing.T) {
+	for _, c := range testMockDeleteAccessPointPolicyForObjectProcessSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteAccessPointPolicyForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteAccessPointPolicyForObjectProcessErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointPolicyForObjectProcessRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointPolicyForObjectProcessResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicyForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&DeleteAccessPointPolicyForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointPolicyForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessPointPolicyForObjectProcess", strUrl)
+			assert.Equal(t, "fc-ap-01", r.Header.Get("x-oss-access-point-for-object-process-name"))
+		},
+		&DeleteAccessPointPolicyForObjectProcessRequest{
+			Bucket:                          Ptr("bucket"),
+			AccessPointForObjectProcessName: Ptr("fc-ap-01"),
+		},
+		func(t *testing.T, o *DeleteAccessPointPolicyForObjectProcessResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDeleteAccessPointPolicyForObjectProcess_Error(t *testing.T) {
+	for _, c := range testMockDeleteAccessPointPolicyForObjectProcessErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteAccessPointPolicyForObjectProcess(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockWriteGetObjectResponseSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *WriteGetObjectResponseRequest
+	CheckOutputFn  func(t *testing.T, o *WriteGetObjectResponseResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?x-oss-write-get-object-response", strUrl)
+			assert.Equal(t, "fc-ap-01-***-opap.oss-cn-hangzhou.oss-object-process.aliyuncs.com", r.Header.Get("x-oss-request-route"))
+			assert.Equal(t, "token", r.Header.Get("x-oss-request-token"))
+			assert.Equal(t, "200", r.Header.Get("x-oss-fwd-status"))
+		},
+		&WriteGetObjectResponseRequest{
+			RequestRoute: Ptr("fc-ap-01-***-opap.oss-cn-hangzhou.oss-object-process.aliyuncs.com"),
+			RequestToken: Ptr("token"),
+			FwdStatus:    Ptr("200"),
+		},
+		func(t *testing.T, o *WriteGetObjectResponseResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockWriteGetObjectResponse_Success(t *testing.T) {
+	for _, c := range testMockWriteGetObjectResponseSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.WriteGetObjectResponse(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockWriteGetObjectResponseErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *WriteGetObjectResponseRequest
+	CheckOutputFn  func(t *testing.T, o *WriteGetObjectResponseResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?x-oss-write-get-object-response", strUrl)
+			assert.Equal(t, "fc-ap-01-***-opap.oss-cn-hangzhou.oss-object-process.aliyuncs.com", r.Header.Get("x-oss-request-route"))
+			assert.Equal(t, "token", r.Header.Get("x-oss-request-token"))
+			assert.Equal(t, "200", r.Header.Get("x-oss-fwd-status"))
+		},
+		&WriteGetObjectResponseRequest{
+			RequestRoute: Ptr("fc-ap-01-***-opap.oss-cn-hangzhou.oss-object-process.aliyuncs.com"),
+			RequestToken: Ptr("token"),
+			FwdStatus:    Ptr("200"),
+		},
+		func(t *testing.T, o *WriteGetObjectResponseResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?x-oss-write-get-object-response", strUrl)
+			assert.Equal(t, "fc-ap-01-***-opap.oss-cn-hangzhou.oss-object-process.aliyuncs.com", r.Header.Get("x-oss-request-route"))
+			assert.Equal(t, "token", r.Header.Get("x-oss-request-token"))
+			assert.Equal(t, "200", r.Header.Get("x-oss-fwd-status"))
+		},
+		&WriteGetObjectResponseRequest{
+			RequestRoute: Ptr("fc-ap-01-***-opap.oss-cn-hangzhou.oss-object-process.aliyuncs.com"),
+			RequestToken: Ptr("token"),
+			FwdStatus:    Ptr("200"),
+		},
+		func(t *testing.T, o *WriteGetObjectResponseResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockWriteGetObjectResponse_Error(t *testing.T) {
+	for _, c := range testMockWriteGetObjectResponseErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.WriteGetObjectResponse(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
