@@ -30016,3 +30016,552 @@ func TestMockDeleteAccessPointPolicy_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockPutAccessPointPublicAccessBlockSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutAccessPointPublicAccessBlockRequest
+	CheckOutputFn  func(t *testing.T, o *PutAccessPointPublicAccessBlockResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<PublicAccessBlockConfiguration><BlockPublicAccess>true</BlockPublicAccess></PublicAccessBlockConfiguration>")
+		},
+		&PutAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+			PublicAccessBlockConfiguration: &PublicAccessBlockConfiguration{
+				Ptr(true),
+			},
+		},
+		func(t *testing.T, o *PutAccessPointPublicAccessBlockResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<PublicAccessBlockConfiguration><BlockPublicAccess>false</BlockPublicAccess></PublicAccessBlockConfiguration>")
+		},
+		&PutAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+			PublicAccessBlockConfiguration: &PublicAccessBlockConfiguration{
+				Ptr(false),
+			},
+		},
+		func(t *testing.T, o *PutAccessPointPublicAccessBlockResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockPutAccessPointPublicAccessBlock_Success(t *testing.T) {
+	for _, c := range testMockPutAccessPointPublicAccessBlockSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.PutAccessPointPublicAccessBlock(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutAccessPointPublicAccessBlockErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutAccessPointPublicAccessBlockRequest
+	CheckOutputFn  func(t *testing.T, o *PutAccessPointPublicAccessBlockResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>NoSuchBucket</Code>
+  <Message>The specified bucket does not exist.</Message>
+  <RequestId>5C3D9175B6FC201293AD****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<PublicAccessBlockConfiguration><BlockPublicAccess>true</BlockPublicAccess></PublicAccessBlockConfiguration>")
+		},
+		&PutAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+			PublicAccessBlockConfiguration: &PublicAccessBlockConfiguration{
+				Ptr(true),
+			},
+		},
+		func(t *testing.T, o *PutAccessPointPublicAccessBlockResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>UserDisable</Code>
+  <Message>UserDisable</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<PublicAccessBlockConfiguration><BlockPublicAccess>true</BlockPublicAccess></PublicAccessBlockConfiguration>")
+		},
+		&PutAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+			PublicAccessBlockConfiguration: &PublicAccessBlockConfiguration{
+				Ptr(true),
+			},
+		},
+		func(t *testing.T, o *PutAccessPointPublicAccessBlockResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockPutAccessPointPublicAccessBlock_Error(t *testing.T) {
+	for _, c := range testMockPutAccessPointPublicAccessBlockErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.PutAccessPointPublicAccessBlock(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetAccessPointPublicAccessBlockSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetAccessPointPublicAccessBlockRequest
+	CheckOutputFn  func(t *testing.T, o *GetAccessPointPublicAccessBlockResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+			<PublicAccessBlockConfiguration>
+  <BlockPublicAccess>true</BlockPublicAccess>
+</PublicAccessBlockConfiguration>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", urlStr)
+		},
+		&GetAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+		},
+		func(t *testing.T, o *GetAccessPointPublicAccessBlockResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.True(t, *o.PublicAccessBlockConfiguration.BlockPublicAccess)
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+			<PublicAccessBlockConfiguration>
+  <BlockPublicAccess>false</BlockPublicAccess>
+</PublicAccessBlockConfiguration>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", urlStr)
+		},
+		&GetAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+		},
+		func(t *testing.T, o *GetAccessPointPublicAccessBlockResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.False(t, *o.PublicAccessBlockConfiguration.BlockPublicAccess)
+		},
+	},
+}
+
+func TestMockGetAccessPointPublicAccessBlock_Success(t *testing.T) {
+	for _, c := range testMockGetAccessPointPublicAccessBlockSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetAccessPointPublicAccessBlock(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetAccessPointPublicAccessBlockErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetAccessPointPublicAccessBlockRequest
+	CheckOutputFn  func(t *testing.T, o *GetAccessPointPublicAccessBlockResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>NoSuchBucket</Code>
+  <Message>The specified bucket does not exist.</Message>
+  <RequestId>5C3D9175B6FC201293AD****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", urlStr)
+		},
+		&GetAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+		},
+		func(t *testing.T, o *GetAccessPointPublicAccessBlockResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>UserDisable</Code>
+  <Message>UserDisable</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", urlStr)
+		},
+		&GetAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+		},
+		func(t *testing.T, o *GetAccessPointPublicAccessBlockResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/text",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", urlStr)
+		},
+		&GetAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+		},
+		func(t *testing.T, o *GetAccessPointPublicAccessBlockResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			assert.Contains(t, err.Error(), "execute GetAccessPointPublicAccessBlock fail")
+		},
+	},
+}
+
+func TestMockGetAccessPointPublicAccessBlock_Error(t *testing.T) {
+	for _, c := range testMockGetAccessPointPublicAccessBlockErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetAccessPointPublicAccessBlock(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteAccessPointPublicAccessBlockSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointPublicAccessBlockRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointPublicAccessBlockResult, err error)
+}{
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", strUrl)
+		},
+		&DeleteAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+		},
+		func(t *testing.T, o *DeleteAccessPointPublicAccessBlockResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockDeleteAccessPointPublicAccessBlock_Success(t *testing.T) {
+	for _, c := range testMockDeleteAccessPointPublicAccessBlockSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteAccessPointPublicAccessBlock(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteAccessPointPublicAccessBlockErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteAccessPointPublicAccessBlockRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteAccessPointPublicAccessBlockResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>NoSuchBucket</Code>
+  <Message>The specified bucket does not exist.</Message>
+  <RequestId>5C3D9175B6FC201293AD****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", strUrl)
+		},
+		&DeleteAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+		},
+		func(t *testing.T, o *DeleteAccessPointPublicAccessBlockResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>UserDisable</Code>
+  <Message>UserDisable</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?publicAccessBlock&x-oss-access-point-name=ap", strUrl)
+		},
+		&DeleteAccessPointPublicAccessBlockRequest{
+			Bucket:          Ptr("bucket"),
+			AccessPointName: Ptr("ap"),
+		},
+		func(t *testing.T, o *DeleteAccessPointPublicAccessBlockResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDeleteAccessPointPublicAccessBlock_Error(t *testing.T) {
+	for _, c := range testMockDeleteAccessPointPublicAccessBlockErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteAccessPointPublicAccessBlock(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}

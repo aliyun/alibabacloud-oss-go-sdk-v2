@@ -7902,7 +7902,7 @@ func TestBucketPublicAccessBlock(t *testing.T) {
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
-	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
 	time.Sleep(1 * time.Second)
 
 	delResult, err := client.DeleteBucketPublicAccessBlock(context.TODO(), &DeleteBucketPublicAccessBlockRequest{
@@ -8414,4 +8414,124 @@ func TestAccessPoint(t *testing.T) {
 	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
+}
+
+func TestAccessPointPublicAccessBlock(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	client := getDefaultClient()
+	bucketName := bucketNamePrefix + randLowStr(6)
+	request := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	_, err := client.PutBucket(context.TODO(), request)
+	assert.Nil(t, err)
+
+	accessPointName := "ap-01-" + randLowStr(5)
+	createResult, err := client.CreateAccessPoint(context.TODO(), &CreateAccessPointRequest{
+		Bucket: Ptr(bucketName),
+		CreateAccessPointConfiguration: &CreateAccessPointConfiguration{
+			AccessPointName: Ptr(accessPointName),
+			NetworkOrigin:   Ptr("internet"),
+		},
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, createResult.StatusCode)
+	assert.NotEmpty(t, createResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	putResult, err := client.PutAccessPointPublicAccessBlock(context.TODO(), &PutAccessPointPublicAccessBlockRequest{
+		Bucket:          Ptr(bucketName),
+		AccessPointName: Ptr(accessPointName),
+		PublicAccessBlockConfiguration: &PublicAccessBlockConfiguration{
+			Ptr(true),
+		},
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getResult, err := client.GetAccessPointPublicAccessBlock(context.TODO(), &GetAccessPointPublicAccessBlockRequest{
+		Bucket:          Ptr(bucketName),
+		AccessPointName: Ptr(accessPointName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	assert.True(t, *getResult.PublicAccessBlockConfiguration.BlockPublicAccess)
+	time.Sleep(1 * time.Second)
+
+	delResult, err := client.DeleteAccessPointPublicAccessBlock(context.TODO(), &DeleteAccessPointPublicAccessBlockRequest{
+		Bucket:          Ptr(bucketName),
+		AccessPointName: Ptr(accessPointName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delResult.StatusCode)
+	time.Sleep(1 * time.Second)
+
+	var serr *ServiceError
+	bucketNameNotExist := bucketName + "-not-exist"
+	putResult, err = client.PutAccessPointPublicAccessBlock(context.TODO(), &PutAccessPointPublicAccessBlockRequest{
+		Bucket:          Ptr(bucketNameNotExist),
+		AccessPointName: Ptr(accessPointName),
+		PublicAccessBlockConfiguration: &PublicAccessBlockConfiguration{
+			Ptr(true),
+		},
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	getResult, err = client.GetAccessPointPublicAccessBlock(context.TODO(), &GetAccessPointPublicAccessBlockRequest{
+		Bucket:          Ptr(bucketNameNotExist),
+		AccessPointName: Ptr(accessPointName),
+	})
+	assert.NotNil(t, err)
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	delResult, err = client.DeleteAccessPointPublicAccessBlock(context.TODO(), &DeleteAccessPointPublicAccessBlockRequest{
+		Bucket:          Ptr(bucketNameNotExist),
+		AccessPointName: Ptr(accessPointName),
+	})
+	assert.NotNil(t, err)
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	for {
+		getPointResult, err := client.GetAccessPoint(context.TODO(), &GetAccessPointRequest{
+			Bucket:          Ptr(bucketName),
+			AccessPointName: Ptr(accessPointName),
+		})
+		assert.Nil(t, err)
+		if *getPointResult.AccessPointStatus != "creating" {
+			break
+		} else {
+			time.Sleep(3 * time.Second)
+		}
+	}
+	delPointResult, err := client.DeleteAccessPoint(context.TODO(), &DeleteAccessPointRequest{
+		Bucket:          Ptr(bucketName),
+		AccessPointName: Ptr(accessPointName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delPointResult.StatusCode)
+	time.Sleep(1 * time.Second)
 }
