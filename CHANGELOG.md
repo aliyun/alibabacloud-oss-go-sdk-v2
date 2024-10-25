@@ -1,5 +1,11 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.1.2 日期：2024-10-25
+### 变更内容
+- Feature：Add bucket meta query api
+- Feature：Add access point api
+- Feature：Add access point public access block api
+ 
 ## 版本号：v1.1.1 日期：2024-09-26
 ### 变更内容
 - Fix：Adjust range count when resuming from the last read offset.
