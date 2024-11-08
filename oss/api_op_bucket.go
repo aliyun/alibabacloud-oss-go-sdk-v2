@@ -204,6 +204,9 @@ type ObjectProperties struct {
 
 	// The restoration status of the object.
 	RestoreInfo *string `xml:"RestoreInfo"`
+
+	// The time when the storage class of the object is converted to Cold Archive or Deep Cold Archive based on lifecycle rules.
+	TransitionTime *time.Time `xml:"TransitionTime"`
 }
 
 type Owner struct {
@@ -478,6 +481,9 @@ type ListObjectsV2Result struct {
 
 	// The number of objects returned for this request. If Delimiter is specified, KeyCount is the sum of the values of Key and CommonPrefixes.
 	KeyCount int `xml:"KeyCount"`
+
+	// The time when the storage class of the object is converted to Cold Archive or Deep Cold Archive based on lifecycle rules.
+	TransitionTime *time.Time `xml:"TransitionTime"`
 
 	ResultCommon
 }
@@ -1135,6 +1141,9 @@ type ObjectVersionProperties struct {
 
 	// The restoration status of the object.
 	RestoreInfo *string `xml:"RestoreInfo"`
+
+	// The time when the storage class of the object is converted to Cold Archive or Deep Cold Archive based on lifecycle rules.
+	TransitionTime *time.Time `xml:"TransitionTime"`
 }
 
 // ListObjectVersions Lists the versions of all objects in a bucket, including delete markers.

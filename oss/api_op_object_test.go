@@ -1933,6 +1933,38 @@ func TestUnmarshalOutput_HeadObject(t *testing.T) {
 		StatusCode: 200,
 		Status:     "OK",
 		Headers: http.Header{
+			"X-Oss-Request-Id":      {"6555A936CA31DC333143****"},
+			"Date":                  {"Thu, 16 Nov 2023 05:31:34 GMT"},
+			"x-oss-object-type":     {"Normal"},
+			"x-oss-storage-class":   {"ColdArchive"},
+			"Last-Modified":         {"Fri, 24 Feb 2018 09:41:56 GMT"},
+			"Content-Length":        {"344606"},
+			"Content-Type":          {"image/jpg"},
+			"ETag":                  {"\"fba9dede5f27731c9771645a3986****\""},
+			"x-oss-transition-time": {"Thu, 31 Oct 2024 00:24:17 GMT"},
+			"x-oss-restore":         {"ongoing-request=\"false\", expiry-date=\"Fri, 08 Nov 2024 08:15:52 GMT\""},
+		},
+	}
+	result = &HeadObjectResult{}
+	err = c.unmarshalOutput(result, output, discardBody, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "6555A936CA31DC333143****")
+	assert.Equal(t, result.Headers.Get("Date"), "Thu, 16 Nov 2023 05:31:34 GMT")
+	assert.Equal(t, *result.ETag, "\"fba9dede5f27731c9771645a3986****\"")
+	assert.Equal(t, *result.ObjectType, "Normal")
+	assert.Equal(t, *result.LastModified, time.Date(2018, time.February, 24, 9, 41, 56, 0, time.UTC))
+	assert.Equal(t, *result.StorageClass, "ColdArchive")
+	assert.Equal(t, result.ContentLength, int64(344606))
+	assert.Equal(t, *result.ContentType, "image/jpg")
+	assert.Equal(t, *result.TransitionTime, time.Date(2024, time.October, 31, 00, 24, 17, 0, time.UTC))
+	assert.Equal(t, *result.Restore, "ongoing-request=\"false\", expiry-date=\"Fri, 08 Nov 2024 08:15:52 GMT\"")
+
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Headers: http.Header{
 			"X-Oss-Request-Id":    {"5CAC3B40B7AEADE01700****"},
 			"Date":                {"Tue, 04 Dec 2018 15:56:38 GMT"},
 			"Content-Type":        {"text/xml"},
@@ -2181,6 +2213,31 @@ func TestUnmarshalOutput_GetObjectMeta(t *testing.T) {
 	assert.Equal(t, *result.ETag, "\"fba9dede5f27731c9771645a3986****\"")
 	assert.Equal(t, *result.LastModified, time.Date(2018, time.February, 24, 9, 41, 56, 0, time.UTC))
 	assert.Equal(t, result.ContentLength, int64(344606))
+
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Headers: http.Header{
+			"X-Oss-Request-Id":      {"6555A936CA31DC333143****"},
+			"Date":                  {"Thu, 16 Nov 2023 05:31:34 GMT"},
+			"x-oss-object-type":     {"Normal"},
+			"Last-Modified":         {"Fri, 24 Feb 2018 09:41:56 GMT"},
+			"Content-Length":        {"344606"},
+			"ETag":                  {"\"fba9dede5f27731c9771645a3986****\""},
+			"x-oss-transition-time": {"Thu, 31 Oct 2024 00:24:17 GMT"},
+		},
+	}
+	result = &GetObjectMetaResult{}
+	err = c.unmarshalOutput(result, output, discardBody, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "6555A936CA31DC333143****")
+	assert.Equal(t, result.Headers.Get("Date"), "Thu, 16 Nov 2023 05:31:34 GMT")
+	assert.Equal(t, *result.ETag, "\"fba9dede5f27731c9771645a3986****\"")
+	assert.Equal(t, *result.LastModified, time.Date(2018, time.February, 24, 9, 41, 56, 0, time.UTC))
+	assert.Equal(t, result.ContentLength, int64(344606))
+	assert.Equal(t, *result.TransitionTime, time.Date(2024, time.October, 31, 00, 24, 17, 0, time.UTC))
 
 	output = &OperationOutput{
 		StatusCode: 200,
@@ -6172,4 +6229,168 @@ func TestMarshalInput_GetObjectRequest_Process(t *testing.T) {
 	assert.Equal(t, *input.Bucket, "oss-bucket")
 	assert.Equal(t, *input.Key, "oss-key")
 	assert.Equal(t, input.Parameters["x-oss-process"], "image/resize,m_fixed,w_100,h_100")
+}
+
+func TestMarshalInput_CleanRestoredObject(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var request *CleanRestoredObjectRequest
+	var input *OperationInput
+	var err error
+
+	request = &CleanRestoredObjectRequest{}
+	input = &OperationInput{
+		OpName: "CleanRestoredObject",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cleanRestoredObject": "",
+		},
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Bucket")
+
+	request = &CleanRestoredObjectRequest{
+		Bucket: Ptr("oss-bucket"),
+	}
+	input = &OperationInput{
+		OpName: "CleanRestoredObject",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cleanRestoredObject": "",
+		},
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Key")
+
+	request = &CleanRestoredObjectRequest{
+		Bucket: Ptr("oss-bucket"),
+		Key:    Ptr("oss-key"),
+	}
+	input = &OperationInput{
+		OpName: "CleanRestoredObject",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cleanRestoredObject": "",
+		},
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+
+	request = &CleanRestoredObjectRequest{
+		Bucket:    Ptr("oss-bucket"),
+		Key:       Ptr("oss-key"),
+		VersionId: Ptr("version-id"),
+	}
+	input = &OperationInput{
+		OpName: "CleanRestoredObject",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cleanRestoredObject": "",
+		},
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Parameters["versionId"], "version-id")
+}
+
+func TestUnmarshalOutput_CleanRestoredObject(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var output *OperationOutput
+	var err error
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"5C06A3B67B8B5A3DA422****"},
+			"Date":             {"Tue, 04 Dec 2018 15:56:38 GMT"},
+		},
+	}
+	result := &CleanRestoredObjectResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "5C06A3B67B8B5A3DA422****")
+	assert.Equal(t, result.Headers.Get("Date"), "Tue, 04 Dec 2018 15:56:38 GMT")
+
+	output = &OperationOutput{
+		StatusCode: 404,
+		Status:     "NoSuchBucket",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 404)
+	assert.Equal(t, result.Status, "NoSuchBucket")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+
+	output = &OperationOutput{
+		StatusCode: 403,
+		Status:     "AccessDenied",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 403)
+	assert.Equal(t, result.Status, "AccessDenied")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+
+	output = &OperationOutput{
+		StatusCode: 409,
+		Status:     "Conflict",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+		Body: io.NopCloser(strings.NewReader(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>ArchiveRestoreNotFinished</Code>
+  <Message>The archive file's restore is not finished.</Message>
+  <RequestId>672C880CDF727138392C****</RequestId>
+  <HostId>bucket.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <EC>0016-00000719</EC>
+  <RecommendDoc>https://api.aliyun.com/troubleshoot?q=0016-00000719</RecommendDoc>
+</Error>`)),
+	}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 409)
+	assert.Equal(t, result.Status, "Conflict")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 }
