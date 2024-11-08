@@ -136,6 +136,7 @@ const (
 	InventoryOptionalFieldStorageClass        InventoryOptionalFieldType = "StorageClass"
 	InventoryOptionalFieldIsMultipartUploaded InventoryOptionalFieldType = "IsMultipartUploaded"
 	InventoryOptionalFieldEncryptionStatus    InventoryOptionalFieldType = "EncryptionStatus"
+	InventoryOptionalFieldTransitionTime      InventoryOptionalFieldType = "TransitionTime"
 )
 
 // AccessMonitorStatusType The type of access monitor status

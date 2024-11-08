@@ -541,6 +541,20 @@ func TestUnmarshalOutput_ListObjects(t *testing.T) {
             <DisplayName>user-example</DisplayName>
         </Owner>
   </Contents>
+  <Contents>
+    <Key>demo.jpg</Key>
+    <LastModified>2024-10-23T05:25:24.000Z</LastModified>
+    <ETag>"1C71822C6C732797FA709920F142****"</ETag>
+    <Type>Normal</Type>
+    <Size>21839</Size>
+    <StorageClass>ColdArchive</StorageClass>
+    <RestoreInfo>ongoing-request="false", expiry-date="Fri, 08 Nov 2024 08:15:52 GMT"</RestoreInfo>
+    <TransitionTime>2024-10-31T00:24:17.000Z</TransitionTime>
+	<Owner>
+		<ID>0022012****</ID>
+		<DisplayName>user-example</DisplayName>
+	</Owner>
+  </Contents>
 </ListBucketResult>`
 	output = &OperationOutput{
 		StatusCode: 200,
@@ -563,7 +577,7 @@ func TestUnmarshalOutput_ListObjects(t *testing.T) {
 	assert.Equal(t, *result.Marker, "test1.txt")
 	assert.Equal(t, *result.Delimiter, "/")
 	assert.Equal(t, result.IsTruncated, true)
-	assert.Equal(t, len(result.Contents), 3)
+	assert.Equal(t, len(result.Contents), 4)
 	assert.Equal(t, *result.Contents[0].Key, "exampleobject1.txt")
 	assert.Equal(t, *result.Contents[1].LastModified, time.Date(2020, time.June, 22, 11, 42, 32, 0, time.UTC))
 	assert.Equal(t, *result.Contents[2].ETag, "\"5B3C1A2E053D763E1B002CC607C5A0FE1****\"")
@@ -575,6 +589,10 @@ func TestUnmarshalOutput_ListObjects(t *testing.T) {
 	assert.Empty(t, result.Contents[0].RestoreInfo)
 	assert.Equal(t, *result.Contents[1].RestoreInfo, "ongoing-request=\"true\"")
 	assert.Equal(t, *result.Contents[2].RestoreInfo, "ongoing-request=\"false\", expiry-date=\"Thu, 24 Sep 2020 12:40:33 GMT\"")
+
+	assert.Equal(t, *result.Contents[3].RestoreInfo, "ongoing-request=\"false\", expiry-date=\"Fri, 08 Nov 2024 08:15:52 GMT\"")
+	assert.Equal(t, *result.Contents[3].TransitionTime, time.Date(2024, time.October, 31, 00, 24, 17, 0, time.UTC))
+
 	output = &OperationOutput{
 		StatusCode: 409,
 		Status:     "Conflict",
@@ -947,7 +965,21 @@ func TestUnmarshalOutput_ListObjectsV2(t *testing.T) {
             <DisplayName>1686240967192623</DisplayName>
         </Owner>
     </Contents>
-    <KeyCount>3</KeyCount>
+	<Contents>
+		<Key>demo.jpg</Key>
+		<LastModified>2024-10-23T05:25:24.000Z</LastModified>
+		<ETag>"1C71822C6C732797FA709920F142****"</ETag>
+		<Type>Normal</Type>
+		<Size>21839</Size>
+		<StorageClass>ColdArchive</StorageClass>
+		<Owner>
+		  <ID>1686240967192623</ID>
+		  <DisplayName>1686240967192623</DisplayName>
+		</Owner>
+		<RestoreInfo>ongoing-request="false", expiry-date="Fri, 08 Nov 2024 08:15:52 GMT"</RestoreInfo>
+		<TransitionTime>2024-10-31T00:24:17.000Z</TransitionTime>
+	</Contents>
+    <KeyCount>4</KeyCount>
 </ListBucketResult>`
 	output = &OperationOutput{
 		StatusCode: 200,
@@ -969,11 +1001,11 @@ func TestUnmarshalOutput_ListObjectsV2(t *testing.T) {
 	assert.Empty(t, result.Prefix)
 	assert.Equal(t, *result.StartAfter, "b")
 	assert.Equal(t, result.MaxKeys, int32(3))
-	assert.Equal(t, len(result.Contents), 3)
+	assert.Equal(t, len(result.Contents), 4)
 	assert.Equal(t, *result.EncodingType, "url")
 	assert.Equal(t, result.IsTruncated, true)
 	assert.Equal(t, *result.NextContinuationToken, "CgJiYw--")
-	assert.Equal(t, result.KeyCount, 3)
+	assert.Equal(t, result.KeyCount, 4)
 	assert.Equal(t, *result.Contents[0].Key, "b/c")
 	assert.Equal(t, *result.Contents[0].LastModified, time.Date(2020, time.May, 18, 5, 45, 54, 0, time.UTC))
 	assert.Equal(t, *result.Contents[0].ETag, "\"35A27C2B9EAEEB6F48FD7FB5861D****\"")
@@ -981,6 +1013,16 @@ func TestUnmarshalOutput_ListObjectsV2(t *testing.T) {
 	assert.Equal(t, *result.Contents[0].StorageClass, "STANDARD")
 	assert.Equal(t, *result.Contents[0].Owner.DisplayName, "1686240967192623")
 	assert.Equal(t, *result.Contents[0].Owner.ID, "1686240967192623")
+
+	assert.Equal(t, *result.Contents[3].Key, "demo.jpg")
+	assert.Equal(t, *result.Contents[3].LastModified, time.Date(2024, time.October, 23, 05, 25, 24, 0, time.UTC))
+	assert.Equal(t, *result.Contents[3].ETag, "\"1C71822C6C732797FA709920F142****\"")
+	assert.Equal(t, result.Contents[3].Size, int64(21839))
+	assert.Equal(t, *result.Contents[3].StorageClass, "ColdArchive")
+	assert.Equal(t, *result.Contents[3].Owner.DisplayName, "1686240967192623")
+	assert.Equal(t, *result.Contents[3].Owner.ID, "1686240967192623")
+	assert.Equal(t, *result.Contents[3].RestoreInfo, "ongoing-request=\"false\", expiry-date=\"Fri, 08 Nov 2024 08:15:52 GMT\"")
+	assert.Equal(t, *result.Contents[3].TransitionTime, time.Date(2024, time.October, 31, 00, 24, 17, 0, time.UTC))
 
 	body = `<?xml version="1.0" encoding="UTF-8"?>
 <Error>
@@ -2321,6 +2363,22 @@ func TestUnmarshalOutput_ListObjectVersions(t *testing.T) {
             <DisplayName>1250000000</DisplayName>
         </Owner>
     </Version>
+	<Version>
+		<Key>demo.jpg</Key>
+		<VersionId>null</VersionId>
+		<IsLatest>true</IsLatest>
+		<LastModified>2024-10-23T05:25:24.000Z</LastModified>
+		<ETag>"1C71822C6C732797FA709920F142****"</ETag>
+		<Type>Normal</Type>
+		<Size>21839</Size>
+		<StorageClass>ColdArchive</StorageClass>
+		<RestoreInfo>ongoing-request="false", expiry-date="Fri, 08 Nov 2024 08:15:52 GMT"</RestoreInfo>
+		<TransitionTime>2024-10-31T00:24:17.000Z</TransitionTime>
+		<Owner>
+		  <ID>1250000000</ID>
+		  <DisplayName>1250000000</DisplayName>
+		</Owner>
+	  </Version>
 </ListVersionsResult>`
 	output = &OperationOutput{
 		StatusCode: 200,
@@ -2344,7 +2402,7 @@ func TestUnmarshalOutput_ListObjectVersions(t *testing.T) {
 	assert.Equal(t, *result.VersionIdMarker, "")
 	assert.Equal(t, result.MaxKeys, int32(1000))
 	assert.False(t, result.IsTruncated)
-	assert.Len(t, result.ObjectVersions, 3)
+	assert.Len(t, result.ObjectVersions, 4)
 	assert.Equal(t, *result.ObjectVersions[0].Key, "example-object-1.jpg")
 	assert.Empty(t, *result.ObjectVersions[1].VersionId)
 	assert.True(t, result.ObjectVersions[2].IsLatest)
@@ -2353,6 +2411,17 @@ func TestUnmarshalOutput_ListObjectVersions(t *testing.T) {
 	assert.Equal(t, result.ObjectVersions[2].Size, int64(20))
 	assert.Equal(t, *result.ObjectVersions[2].Owner.ID, "1250000000")
 	assert.Equal(t, *result.ObjectVersions[2].Owner.DisplayName, "1250000000")
+
+	assert.Equal(t, *result.ObjectVersions[3].Key, "demo.jpg")
+	assert.True(t, result.ObjectVersions[3].IsLatest)
+	assert.Equal(t, *result.ObjectVersions[3].LastModified, time.Date(2024, time.October, 23, 05, 25, 24, 0, time.UTC))
+	assert.Equal(t, *result.ObjectVersions[3].ETag, "\"1C71822C6C732797FA709920F142****\"")
+	assert.Equal(t, result.ObjectVersions[3].Size, int64(21839))
+	assert.Equal(t, *result.ObjectVersions[3].StorageClass, "ColdArchive")
+	assert.Equal(t, *result.ObjectVersions[3].Owner.DisplayName, "1250000000")
+	assert.Equal(t, *result.ObjectVersions[3].Owner.ID, "1250000000")
+	assert.Equal(t, *result.ObjectVersions[3].RestoreInfo, "ongoing-request=\"false\", expiry-date=\"Fri, 08 Nov 2024 08:15:52 GMT\"")
+	assert.Equal(t, *result.ObjectVersions[3].TransitionTime, time.Date(2024, time.October, 31, 00, 24, 17, 0, time.UTC))
 	body = `<?xml version="1.0" encoding="UTF-8"?>
 <ListVersionsResult>
   <Name>demo-bucket</Name>

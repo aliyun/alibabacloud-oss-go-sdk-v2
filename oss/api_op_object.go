@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 )
 
 type PutObjectRequest struct {
@@ -983,6 +985,9 @@ type HeadObjectResult struct {
 	// The expiration time of the cache in UTC.
 	Expires *string `output:"header,Expires"`
 
+	// The time when the storage class of the object is converted to Cold Archive or Deep Cold Archive based on lifecycle rules.
+	TransitionTime *time.Time `output:"header,x-oss-transition-time,time"`
+
 	ResultCommon
 }
 
@@ -1049,6 +1054,9 @@ type GetObjectMetaResult struct {
 	// The 64-bit CRC value of the object.
 	// This value is calculated based on the ECMA-182 standard.
 	HashCRC64 *string `output:"header,x-oss-hash-crc64ecma"`
+
+	// The time when the storage class of the object is converted to Cold Archive or Deep Cold Archive based on lifecycle rules.
+	TransitionTime *time.Time `output:"header,x-oss-transition-time,time"`
 
 	ResultCommon
 }
@@ -2457,6 +2465,61 @@ func (c *Client) AsyncProcessObject(ctx context.Context, request *AsyncProcessOb
 
 	result := &AsyncProcessObjectResult{}
 	if err = c.unmarshalOutput(result, output, unmarshalBodyDefault, unmarshalHeader); err != nil {
+		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
+	}
+
+	return result, err
+}
+
+type CleanRestoredObjectRequest struct {
+	// The name of the bucket
+	Bucket *string `input:"host,bucket,required"`
+
+	// The name of the object.
+	Key *string `input:"path,key,required"`
+
+	// Version of the object.
+	VersionId *string `input:"query,versionId"`
+
+	RequestCommon
+}
+
+type CleanRestoredObjectResult struct {
+	ResultCommon
+}
+
+// CleanRestoredObject You can call this operation to clean an object restored from Archive or Cold Archive state. After that, the restored object returns to the frozen state.
+func (c *Client) CleanRestoredObject(ctx context.Context, request *CleanRestoredObjectRequest, optFns ...func(*Options)) (*CleanRestoredObjectResult, error) {
+	var err error
+	if request == nil {
+		request = &CleanRestoredObjectRequest{}
+	}
+	input := &OperationInput{
+		OpName: "CleanRestoredObject",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cleanRestoredObject": "",
+		},
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+
+	input.OpMetadata.Set(signer.SubResource, []string{"cleanRestoredObject"})
+
+	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
+		return nil, err
+	}
+	output, err := c.invokeOperation(ctx, input, optFns)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &CleanRestoredObjectResult{}
+
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 

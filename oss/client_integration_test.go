@@ -8535,3 +8535,45 @@ func TestAccessPointPublicAccessBlock(t *testing.T) {
 	assert.Equal(t, 204, delPointResult.StatusCode)
 	time.Sleep(1 * time.Second)
 }
+
+func TestCleanRestoredObject(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	client := getDefaultClient()
+	bucketName := bucketNamePrefix + randLowStr(6)
+	request := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	_, err := client.PutBucket(context.TODO(), request)
+	assert.Nil(t, err)
+
+	objectName := objectNamePrefix + randLowStr(6)
+	objectRequest := &PutObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		StorageClass: StorageClassColdArchive,
+	}
+	_, err = client.PutObject(context.TODO(), objectRequest)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	_, err = client.RestoreObject(context.TODO(), &RestoreObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+
+	var serr *ServiceError
+	_, err = client.CleanRestoredObject(context.TODO(), &CleanRestoredObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(409), serr.StatusCode)
+	assert.Equal(t, "ArchiveRestoreNotFinished", serr.Code)
+	assert.Equal(t, "The archive file's restore is not finished.", serr.Message)
+	assert.Equal(t, "0016-00000719", serr.EC)
+}

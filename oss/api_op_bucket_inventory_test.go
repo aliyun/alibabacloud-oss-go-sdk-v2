@@ -113,6 +113,7 @@ func TestMarshalInput_PutBucketInventory(t *testing.T) {
 					InventoryOptionalFieldStorageClass,
 					InventoryOptionalFieldIsMultipartUploaded,
 					InventoryOptionalFieldEncryptionStatus,
+					InventoryOptionalFieldTransitionTime,
 				},
 			},
 		},
@@ -132,7 +133,7 @@ func TestMarshalInput_PutBucketInventory(t *testing.T) {
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "<InventoryConfiguration><Id>report1</Id><IsEnabled>true</IsEnabled><Destination><OSSBucketDestination><Format>CSV</Format><AccountId>1000000000000000</AccountId><RoleArn>acs:ram::1000000000000000:role/AliyunOSSRole</RoleArn><Bucket>acs:oss:::destination-bucket</Bucket><Prefix>prefix1</Prefix><Encryption><SSE-KMS><KeyId>keyId</KeyId></SSE-KMS></Encryption></OSSBucketDestination></Destination><Schedule><Frequency>Daily</Frequency></Schedule><Filter><LastModifyBeginTimeStamp>1637883649</LastModifyBeginTimeStamp><LastModifyEndTimeStamp>1638347592</LastModifyEndTimeStamp><LowerSizeBound>1024</LowerSizeBound><UpperSizeBound>1048576</UpperSizeBound><StorageClass>Standard,IA</StorageClass><Prefix>filterPrefix</Prefix></Filter><IncludedObjectVersions>All</IncludedObjectVersions><OptionalFields><Field>Size</Field><Field>LastModifiedDate</Field><Field>ETag</Field><Field>StorageClass</Field><Field>IsMultipartUploaded</Field><Field>EncryptionStatus</Field></OptionalFields></InventoryConfiguration>")
+	assert.Equal(t, string(body), "<InventoryConfiguration><Id>report1</Id><IsEnabled>true</IsEnabled><Destination><OSSBucketDestination><Format>CSV</Format><AccountId>1000000000000000</AccountId><RoleArn>acs:ram::1000000000000000:role/AliyunOSSRole</RoleArn><Bucket>acs:oss:::destination-bucket</Bucket><Prefix>prefix1</Prefix><Encryption><SSE-KMS><KeyId>keyId</KeyId></SSE-KMS></Encryption></OSSBucketDestination></Destination><Schedule><Frequency>Daily</Frequency></Schedule><Filter><LastModifyBeginTimeStamp>1637883649</LastModifyBeginTimeStamp><LastModifyEndTimeStamp>1638347592</LastModifyEndTimeStamp><LowerSizeBound>1024</LowerSizeBound><UpperSizeBound>1048576</UpperSizeBound><StorageClass>Standard,IA</StorageClass><Prefix>filterPrefix</Prefix></Filter><IncludedObjectVersions>All</IncludedObjectVersions><OptionalFields><Field>Size</Field><Field>LastModifiedDate</Field><Field>ETag</Field><Field>StorageClass</Field><Field>IsMultipartUploaded</Field><Field>EncryptionStatus</Field><Field>TransitionTime</Field></OptionalFields></InventoryConfiguration>")
 
 	request = &PutBucketInventoryRequest{
 		Bucket:      Ptr("oss-demo"),
@@ -370,6 +371,7 @@ func TestUnmarshalOutput_GetBucketInventory(t *testing.T) {
         <Field>StorageClass</Field>
         <Field>IsMultipartUploaded</Field>
         <Field>EncryptionStatus</Field>
+		<Field>TransitionTime</Field>
      </OptionalFields>
   </InventoryConfiguration>`
 	output = &OperationOutput{
@@ -396,8 +398,9 @@ func TestUnmarshalOutput_GetBucketInventory(t *testing.T) {
 	assert.Equal(t, *result.InventoryConfiguration.Destination.OSSBucketDestination.Encryption.SseKms.KeyId, "keyId")
 	assert.Equal(t, result.InventoryConfiguration.Schedule.Frequency, InventoryFrequencyDaily)
 	assert.Equal(t, *result.InventoryConfiguration.IncludedObjectVersions, "All")
-	assert.Equal(t, len(result.InventoryConfiguration.OptionalFields.Fields), 6)
+	assert.Equal(t, len(result.InventoryConfiguration.OptionalFields.Fields), 7)
 	assert.Equal(t, result.InventoryConfiguration.OptionalFields.Fields[3], InventoryOptionalFieldStorageClass)
+	assert.Equal(t, result.InventoryConfiguration.OptionalFields.Fields[6], InventoryOptionalFieldTransitionTime)
 
 	assert.Equal(t, *result.InventoryConfiguration.Filter.Prefix, "myprefix/")
 	assert.Equal(t, *result.InventoryConfiguration.Filter.LastModifyBeginTimeStamp, int64(1637883649))
