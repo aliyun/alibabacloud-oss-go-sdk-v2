@@ -6296,9 +6296,10 @@ func TestMarshalInput_CleanRestoredObject(t *testing.T) {
 	assert.Equal(t, *input.Key, "oss-key")
 
 	request = &CleanRestoredObjectRequest{
-		Bucket:    Ptr("oss-bucket"),
-		Key:       Ptr("oss-key"),
-		VersionId: Ptr("version-id"),
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		VersionId:    Ptr("version-id"),
+		RequestPayer: Ptr("requester"),
 	}
 	input = &OperationInput{
 		OpName: "CleanRestoredObject",
@@ -6317,6 +6318,7 @@ func TestMarshalInput_CleanRestoredObject(t *testing.T) {
 	assert.Equal(t, *input.Bucket, "oss-bucket")
 	assert.Equal(t, *input.Key, "oss-key")
 	assert.Equal(t, input.Parameters["versionId"], "version-id")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 }
 
 func TestUnmarshalOutput_CleanRestoredObject(t *testing.T) {
