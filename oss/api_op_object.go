@@ -2481,6 +2481,9 @@ type CleanRestoredObjectRequest struct {
 	// Version of the object.
 	VersionId *string `input:"query,versionId"`
 
+	// To indicate that the requester is aware that the request and data download will incur costs
+	RequestPayer *string `input:"header,x-oss-request-payer"`
+
 	RequestCommon
 }
 
