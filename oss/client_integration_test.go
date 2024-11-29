@@ -8613,7 +8613,7 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 				AllowedFeatures: []string{"GetObject-Range"},
 				TransformationConfigurations: []TransformationConfiguration{
 					{
-						Actions: &Actions{
+						Actions: &AccessPointActions{
 							[]string{"GetObject"},
 						},
 						ContentTransformation: &ContentTransformation{
@@ -8677,7 +8677,7 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 				AllowedFeatures: []string{"GetObject-Range"},
 				TransformationConfigurations: []TransformationConfiguration{
 					{
-						Actions: &Actions{
+						Actions: &AccessPointActions{
 							[]string{"GetObject"},
 						},
 						ContentTransformation: &ContentTransformation{
@@ -8768,7 +8768,7 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 				AllowedFeatures: []string{"GetObject-Range"},
 				TransformationConfigurations: []TransformationConfiguration{
 					{
-						Actions: &Actions{
+						Actions: &AccessPointActions{
 							[]string{"GetObject"},
 						},
 						ContentTransformation: &ContentTransformation{
@@ -8857,7 +8857,7 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 				AllowedFeatures: []string{"GetObject-Range"},
 				TransformationConfigurations: []TransformationConfiguration{
 					{
-						Actions: &Actions{
+						Actions: &AccessPointActions{
 							[]string{"GetObject"},
 						},
 						ContentTransformation: &ContentTransformation{

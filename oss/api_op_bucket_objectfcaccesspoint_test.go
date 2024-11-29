@@ -2,13 +2,14 @@ package oss
 
 import (
 	"bytes"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMarshalInput_CreateAccessPointForObjectProcess(t *testing.T) {
@@ -83,7 +84,7 @@ func TestMarshalInput_CreateAccessPointForObjectProcess(t *testing.T) {
 				AllowedFeatures: []string{"GetObject-Range"},
 				TransformationConfigurations: []TransformationConfiguration{
 					{
-						Actions: &Actions{
+						Actions: &AccessPointActions{
 							[]string{"GetObject"},
 						},
 						ContentTransformation: &ContentTransformation{
@@ -1175,7 +1176,7 @@ func TestMarshalInput_PutAccessPointConfigForObjectProcess(t *testing.T) {
 				AllowedFeatures: []string{"GetObject-Range"},
 				TransformationConfigurations: []TransformationConfiguration{
 					{
-						Actions: &Actions{
+						Actions: &AccessPointActions{
 							[]string{"GetObject"},
 						},
 						ContentTransformation: &ContentTransformation{
