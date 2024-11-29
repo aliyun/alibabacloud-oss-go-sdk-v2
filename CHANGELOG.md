@@ -1,5 +1,11 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.1.3 日期：2024-11-29
+### 变更内容
+- Feature：Add clean restored object api
+- Feature：Add add access point for object process
+- Update：Add transition time filed for some api.
+  
 ## 版本号：v1.1.2 日期：2024-10-25
 ### 变更内容
 - Feature：Add bucket meta query api
