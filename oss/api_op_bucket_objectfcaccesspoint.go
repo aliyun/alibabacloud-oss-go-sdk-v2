@@ -3,7 +3,6 @@ package oss
 import (
 	"context"
 	"io"
-	"io/ioutil"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 )
@@ -15,7 +14,7 @@ type AccessPointsForObjectProcess struct {
 
 type TransformationConfiguration struct {
 	// The container that stores the operations.
-	Actions *Actions `xml:"Actions"`
+	Actions *AccessPointActions `xml:"Actions"`
 
 	// The container that stores the content of the transformation configurations.
 	ContentTransformation *ContentTransformation `xml:"ContentTransformation"`
@@ -40,7 +39,7 @@ type CreateAccessPointForObjectProcessConfiguration struct {
 	ObjectProcessConfiguration *ObjectProcessConfiguration `xml:"ObjectProcessConfiguration"`
 }
 
-type Endpoints struct {
+type AccessPointEndpoints struct {
 	// The internal endpoint of the Object FC Access Point.
 	InternalEndpoint *string `xml:"InternalEndpoint"`
 
@@ -65,7 +64,7 @@ type AccessPointForObjectProcess struct {
 	AccessPointName *string `xml:"AccessPointName"`
 }
 
-type Actions struct {
+type AccessPointActions struct {
 	// The supported OSS API operations. Only the GetObject operation is supported.
 	Actions []string `xml:"Action"`
 }
@@ -185,7 +184,7 @@ type GetAccessPointForObjectProcessResult struct {
 	AccessPointForObjectProcessStatus *string `xml:"Status"`
 
 	//  The container that stores the endpoints of the Object FC Access Point.
-	Endpoints *Endpoints `xml:"Endpoints"`
+	Endpoints *AccessPointEndpoints `xml:"Endpoints"`
 
 	// The alias of the Object FC Access Point.
 	AccessPointForObjectProcessAlias *string `xml:"AccessPointForObjectProcessAlias"`
@@ -562,7 +561,7 @@ func (c *Client) GetAccessPointPolicyForObjectProcess(ctx context.Context, reque
 		return nil, err
 	}
 
-	body, err := ioutil.ReadAll(output.Body)
+	body, err := io.ReadAll(output.Body)
 	defer output.Body.Close()
 	if err != nil {
 		return nil, err

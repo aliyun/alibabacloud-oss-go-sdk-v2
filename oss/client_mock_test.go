@@ -30672,7 +30672,7 @@ var testMockCleanRestoredObjectErrorCases = []struct {
 		},
 		&CleanRestoredObjectRequest{
 			Bucket: Ptr("bucket"),
-			Key: Ptr("key"),
+			Key:    Ptr("key"),
 		},
 		func(t *testing.T, o *CleanRestoredObjectResult, err error) {
 			assert.Nil(t, o)
@@ -30709,7 +30709,7 @@ var testMockCleanRestoredObjectErrorCases = []struct {
 		},
 		&CleanRestoredObjectRequest{
 			Bucket: Ptr("bucket"),
-			Key: Ptr("key"),
+			Key:    Ptr("key"),
 		},
 		func(t *testing.T, o *CleanRestoredObjectResult, err error) {
 			assert.Nil(t, o)
@@ -30747,7 +30747,7 @@ var testMockCleanRestoredObjectErrorCases = []struct {
 		},
 		&CleanRestoredObjectRequest{
 			Bucket: Ptr("bucket"),
-			Key: Ptr("key"),
+			Key:    Ptr("key"),
 		},
 		func(t *testing.T, o *CleanRestoredObjectResult, err error) {
 			assert.Nil(t, o)
@@ -30815,7 +30815,7 @@ var testMockCreateAccessPointForObjectProcessSuccessCases = []struct {
 					AllowedFeatures: []string{"GetObject-Range"},
 					TransformationConfigurations: []TransformationConfiguration{
 						{
-							Actions: &Actions{
+							Actions: &AccessPointActions{
 								[]string{"GetObject"},
 							},
 							ContentTransformation: &ContentTransformation{
@@ -30893,7 +30893,7 @@ var testMockCreateAccessPointForObjectProcessErrorCases = []struct {
 					AllowedFeatures: []string{"GetObject-Range"},
 					TransformationConfigurations: []TransformationConfiguration{
 						{
-							Actions: &Actions{
+							Actions: &AccessPointActions{
 								[]string{"GetObject"},
 							},
 							ContentTransformation: &ContentTransformation{
@@ -30949,7 +30949,7 @@ var testMockCreateAccessPointForObjectProcessErrorCases = []struct {
 					AllowedFeatures: []string{"GetObject-Range"},
 					TransformationConfigurations: []TransformationConfiguration{
 						{
-							Actions: &Actions{
+							Actions: &AccessPointActions{
 								[]string{"GetObject"},
 							},
 							ContentTransformation: &ContentTransformation{
