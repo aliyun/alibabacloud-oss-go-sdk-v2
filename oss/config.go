@@ -99,7 +99,7 @@ type Config struct {
 	// Set this to `true` to disable this feature.
 	DisableUploadCRC64Check *bool
 
-	// Check data integrity of uploads via the crc64 by default.
+	// Check data integrity of download via the crc64 by default.
 	// This feature only takes effect for Downloader.DownloadFile, GetObjectToFile
 	// Set this to `true` to disable this feature.
 	DisableDownloadCRC64Check *bool
