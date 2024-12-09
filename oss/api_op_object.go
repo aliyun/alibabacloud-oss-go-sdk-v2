@@ -40,8 +40,10 @@ type PutObjectRequest struct {
 	// The expiration time of the cache in UTC.
 	Expires *string `input:"header,Expires"`
 
-	// Specifies whether the object that is uploaded by calling the PutObject operation
-	// overwrites an existing object that has the same name. Valid values: true and false
+	// Specifies whether the object that is uploaded by calling the PutObject operation overwrites the existing object that has the same name.
+	// When versioning is enabled or suspended for the bucket to which you want to upload the object, the x-oss-forbid-overwrite header does not take effect. In this case, the object that is uploaded by calling the PutObject operation overwrites the existing object that has the same name. Default value: false.
+	// If you do not specify the x-oss-forbid-overwrite header or you set the x-oss-forbid-overwrite header to false, the object that is uploaded by calling the PutObject operation overwrites the existing object that has the same name.
+	// If you set the x-oss-forbid-overwrite header to true, an existing object that has the same name cannot be overwritten.
 	ForbidOverwrite *string `input:"header,x-oss-forbid-overwrite"`
 
 	// The encryption method on the server side when an object is created.
@@ -390,8 +392,9 @@ type CopyObjectRequest struct {
 	// The version ID of the source object.
 	SourceVersionId *string `input:"nop,versionId"`
 
-	// Specifies whether the object that is uploaded by calling the CopyObject operation
-	// overwrites an existing object that has the same name. Valid values: true and false
+	// Specifies whether the CopyObject operation overwrites objects with the same name. The x-oss-forbid-overwrite request header does not take effect when versioning is enabled or suspended for the destination bucket. In this case, the CopyObject operation overwrites the existing object that has the same name as the destination object.
+	// If you do not specify the x-oss-forbid-overwrite header or set the header to false, an existing object that has the same name as the object that you want to copy is overwritten.
+	// If you set the x-oss-forbid-overwrite header to true, an existing object that has the same name as the object that you want to copy is not overwritten.
 	ForbidOverwrite *string `input:"header,x-oss-forbid-overwrite"`
 
 	// If the ETag specified in the request matches the ETag value of the object,
@@ -575,8 +578,9 @@ type AppendObjectRequest struct {
 	// A standard MIME type describing the format of the contents.
 	ContentType *string `input:"header,Content-Type"`
 
-	// Specifies whether the object that is uploaded by calling the PutObject operation
-	// overwrites an existing object that has the same name. Valid values: true and false
+	// Specifies whether the AppendObject operation overwrites objects with the same name. The x-oss-forbid-overwrite request header does not take effect when versioning is enabled or suspended for the destination bucket. In this case, the AppendObject operation overwrites the existing object that has the same name as the destination object.
+	// If you do not specify the x-oss-forbid-overwrite header or set the header to false, an existing object that has the same name as the object that you want to copy is overwritten.
+	// If you set the x-oss-forbid-overwrite header to true, an existing object that has the same name as the object that you want to copy is not overwritten.
 	ForbidOverwrite *string `input:"header,x-oss-forbid-overwrite"`
 
 	// The encryption method on the server side when an object is created.
@@ -1307,9 +1311,9 @@ type InitiateMultipartUploadRequest struct {
 	// The expiration time of the cache in UTC.
 	Expires *string `input:"header,Expires"`
 
-	// Specifies whether the InitiateMultipartUpload operation overwrites
-	// the existing object that has the same name as the object that you want to upload.
-	// Valid values: true and false
+	// Specifies whether the InitiateMultipartUpload operation overwrites the existing object that has the same name as the object that you want to upload. If versioning is enabled or suspended for the bucket to which you want to upload the object, the x-oss-forbid-overwrite header does not take effect. As a result, the object that is uploaded by calling the InitiateMultipartUpload operation overwrites the existing object that has the same name.
+	// If you do not specify the x-oss-forbid-overwrite header or you set the x-oss-forbid-overwrite header to false, the operation overwrites an existing object that has the same name.
+	// If you set the x-oss-forbid-overwrite header to true, an existing object that has the same name cannot be overwritten.
 	ForbidOverwrite *string `input:"header,x-oss-forbid-overwrite"`
 
 	// The encryption method on the server side when an object is created.
@@ -1607,8 +1611,9 @@ type CompleteMultipartUploadRequest struct {
 	// The encoding type of the object names in the response. Valid value: url
 	EncodingType *string `input:"query,encoding-type"`
 
-	// Specifies whether the object that is uploaded by calling the PutObject operation
-	// overwrites an existing object that has the same name. Valid values: true and false
+	// Specifies whether the object with the same object name is overwritten when you call the CompleteMultipartUpload operation.
+	// If x-oss-forbid-overwrite is not specified or set to false, existing objects can be overwritten by objects that have the same names.
+	// If x-oss-forbid-overwrite is set to true, existing objects cannot be overwritten by objects that have the same names.
 	ForbidOverwrite *string `input:"header,x-oss-forbid-overwrite"`
 
 	// Specifies whether to list all parts that are uploaded by using the current upload ID. Valid value: yes
@@ -2050,8 +2055,9 @@ type PutSymlinkRequest struct {
 	// The destination object to which the symbolic link points.
 	Target *string `input:"header,x-oss-symlink-target,required"`
 
-	// Specifies whether the object that is uploaded by calling the PutObject operation
-	// overwrites an existing object that has the same name. Valid values: true and false
+	// Specifies whether the PutSymlink operation overwrites the object that has the same name.
+	// If you do not specify the x-oss-forbid-overwrite header or if you set the x-oss-forbid-overwrite header to false, the object that has the same name is overwritten.
+	// If you set the x-oss-forbid-overwrite header to true, the object that has the same name cannot be overwritten.
 	ForbidOverwrite *string `input:"header,x-oss-forbid-overwrite"`
 
 	// The ACL of the object. Default value: default.

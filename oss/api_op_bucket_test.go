@@ -298,7 +298,7 @@ func TestUnmarshalOutput_DeleteBucket(t *testing.T) {
 	var err error
 
 	output = &OperationOutput{
-		StatusCode: 209,
+		StatusCode: 204,
 		Status:     "No Content",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"5C3D9778CC1C2AEDF85B****"},
@@ -308,7 +308,7 @@ func TestUnmarshalOutput_DeleteBucket(t *testing.T) {
 	result := &DeleteBucketResult{}
 	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
-	assert.Equal(t, result.StatusCode, 209)
+	assert.Equal(t, result.StatusCode, 204)
 	assert.Equal(t, result.Status, "No Content")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "5C3D9778CC1C2AEDF85B****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
