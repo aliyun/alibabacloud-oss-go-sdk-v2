@@ -8904,3 +8904,124 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
 }
+
+func TestRedundancyTransition(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	request := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+		CreateBucketConfiguration: &CreateBucketConfiguration{
+			StorageClass:       StorageClassStandard,
+			DataRedundancyType: DataRedundancyLRS,
+		},
+	}
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), request)
+	assert.Nil(t, err)
+	createResult, err := client.CreateBucketDataRedundancyTransition(context.TODO(), &CreateBucketDataRedundancyTransitionRequest{
+		Bucket:               Ptr(bucketName),
+		TargetRedundancyType: Ptr("ZRS"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, createResult.StatusCode)
+	assert.NotEmpty(t, createResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getResult, err := client.GetBucketDataRedundancyTransition(context.TODO(), &GetBucketDataRedundancyTransitionRequest{
+		Bucket:                     Ptr(bucketName),
+		RedundancyTransitionTaskid: createResult.BucketDataRedundancyTransition.TaskId,
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	listResult, err := client.ListBucketDataRedundancyTransition(context.TODO(), &ListBucketDataRedundancyTransitionRequest{
+		Bucket: Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, listResult.StatusCode)
+	assert.NotEmpty(t, listResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	listUserResult, err := client.ListUserDataRedundancyTransition(context.TODO(), &ListUserDataRedundancyTransitionRequest{})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, listUserResult.StatusCode)
+	assert.NotEmpty(t, listUserResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	delResult, err := client.DeleteBucketDataRedundancyTransition(context.TODO(), &DeleteBucketDataRedundancyTransitionRequest{
+		Bucket:                     Ptr(bucketName),
+		RedundancyTransitionTaskid: createResult.BucketDataRedundancyTransition.TaskId,
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delResult.StatusCode)
+	assert.NotEmpty(t, delResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	bucketNameNotExist := bucketName + "-not-exist"
+	_, err = client.CreateBucketDataRedundancyTransition(context.TODO(), &CreateBucketDataRedundancyTransitionRequest{
+		Bucket:               Ptr(bucketNameNotExist),
+		TargetRedundancyType: Ptr("ZRS"),
+	})
+	serr := &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	_, err = client.GetBucketDataRedundancyTransition(context.TODO(), &GetBucketDataRedundancyTransitionRequest{
+		Bucket:                     Ptr(bucketNameNotExist),
+		RedundancyTransitionTaskid: createResult.BucketDataRedundancyTransition.TaskId,
+	})
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	_, err = client.DeleteBucketDataRedundancyTransition(context.TODO(), &DeleteBucketDataRedundancyTransitionRequest{
+		Bucket:                     Ptr(bucketNameNotExist),
+		RedundancyTransitionTaskid: createResult.BucketDataRedundancyTransition.TaskId,
+	})
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	_, err = client.ListBucketDataRedundancyTransition(context.TODO(), &ListBucketDataRedundancyTransitionRequest{
+		Bucket: Ptr(bucketNameNotExist),
+	})
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	noPermClient := getClientWithCredentialsProvider(region_, endpoint_,
+		credentials.NewStaticCredentialsProvider("ak", "sk"))
+	_, err = noPermClient.ListUserDataRedundancyTransition(context.TODO(), &ListUserDataRedundancyTransitionRequest{})
+	serr = &ServiceError{}
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.Equal(t, "0002-00000902", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+}
