@@ -32133,3 +32133,1096 @@ func TestMockWriteGetObjectResponse_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockGetBucketDataRedundancyTransitionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetBucketDataRedundancyTransitionRequest
+	CheckOutputFn  func(t *testing.T, o *GetBucketDataRedundancyTransitionResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket</Bucket>
+  <TaskId>751f5243f8ac4ae89f34726534d1****</TaskId>
+  <Status>Queueing</Status>
+  <CreateTime>2023-11-17T09:11:58.000Z</CreateTime>
+</BucketDataRedundancyTransition>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-redundancy-transition-taskid=751f5243f8ac4ae89f34726534d1%2A%2A%2A%2A", strUrl)
+		},
+		&GetBucketDataRedundancyTransitionRequest{
+			Bucket:                     Ptr("bucket"),
+			RedundancyTransitionTaskid: Ptr("751f5243f8ac4ae89f34726534d1****"),
+		},
+		func(t *testing.T, o *GetBucketDataRedundancyTransitionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.Headers.Get("Content-Type"), "application/xml")
+
+			assert.Equal(t, *o.BucketDataRedundancyTransition.Bucket, "examplebucket")
+			assert.Equal(t, *o.BucketDataRedundancyTransition.TaskId, "751f5243f8ac4ae89f34726534d1****")
+			assert.Equal(t, *o.BucketDataRedundancyTransition.Status, "Queueing")
+			assert.Equal(t, *o.BucketDataRedundancyTransition.CreateTime, "2023-11-17T09:11:58.000Z")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket</Bucket>
+  <TaskId>909c6c818dd041d1a44e0fdc66aa****</TaskId>
+  <Status>Finished</Status>
+  <CreateTime>2023-11-17T09:14:39.000Z</CreateTime>
+  <StartTime>2023-11-17T09:14:39.000Z</StartTime>
+  <ProcessPercentage>100</ProcessPercentage>
+  <EstimatedRemainingTime>0</EstimatedRemainingTime>
+  <EndTime>2023-11-18T09:14:39.000Z</EndTime>
+</BucketDataRedundancyTransition>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-redundancy-transition-taskid=909c6c818dd041d1a44e0fdc66aa%2A%2A%2A%2A", strUrl)
+		},
+		&GetBucketDataRedundancyTransitionRequest{
+			Bucket:                     Ptr("bucket"),
+			RedundancyTransitionTaskid: Ptr("909c6c818dd041d1a44e0fdc66aa****"),
+		},
+		func(t *testing.T, o *GetBucketDataRedundancyTransitionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.Headers.Get("Content-Type"), "application/xml")
+
+			assert.Equal(t, *o.BucketDataRedundancyTransition.Bucket, "examplebucket")
+			assert.Equal(t, *o.BucketDataRedundancyTransition.TaskId, "909c6c818dd041d1a44e0fdc66aa****")
+			assert.Equal(t, *o.BucketDataRedundancyTransition.Status, "Finished")
+			assert.Equal(t, *o.BucketDataRedundancyTransition.CreateTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.BucketDataRedundancyTransition.StartTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.BucketDataRedundancyTransition.ProcessPercentage, int32(100))
+			assert.Equal(t, *o.BucketDataRedundancyTransition.EstimatedRemainingTime, int64(0))
+			assert.Equal(t, *o.BucketDataRedundancyTransition.EndTime, "2023-11-18T09:14:39.000Z")
+		},
+	},
+}
+
+func TestMockGetBucketDataRedundancyTransition_Success(t *testing.T) {
+	for _, c := range testMockGetBucketDataRedundancyTransitionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetBucketDataRedundancyTransition(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetBucketDataRedundancyTransitionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetBucketDataRedundancyTransitionRequest
+	CheckOutputFn  func(t *testing.T, o *GetBucketDataRedundancyTransitionResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-redundancy-transition-taskid=909c6c818dd041d1a44e0fdc66aa%2A%2A%2A%2A", strUrl)
+		},
+		&GetBucketDataRedundancyTransitionRequest{
+			Bucket:                     Ptr("bucket"),
+			RedundancyTransitionTaskid: Ptr("909c6c818dd041d1a44e0fdc66aa****"),
+		},
+		func(t *testing.T, o *GetBucketDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-redundancy-transition-taskid=909c6c818dd041d1a44e0fdc66aa%2A%2A%2A%2A", strUrl)
+		},
+		&GetBucketDataRedundancyTransitionRequest{
+			Bucket:                     Ptr("bucket"),
+			RedundancyTransitionTaskid: Ptr("909c6c818dd041d1a44e0fdc66aa****"),
+		},
+		func(t *testing.T, o *GetBucketDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockGetBucketDataRedundancyTransition_Error(t *testing.T) {
+	for _, c := range testMockGetBucketDataRedundancyTransitionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.GetBucketDataRedundancyTransition(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockCreateBucketDataRedundancyTransitionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *CreateBucketDataRedundancyTransitionRequest
+	CheckOutputFn  func(t *testing.T, o *CreateBucketDataRedundancyTransitionResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-target-redundancy-type=ZRS", urlStr)
+		},
+		&CreateBucketDataRedundancyTransitionRequest{
+			Bucket:               Ptr("bucket"),
+			TargetRedundancyType: Ptr("ZRS"),
+		},
+		func(t *testing.T, o *CreateBucketDataRedundancyTransitionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockCreateBucketDataRedundancyTransition_Success(t *testing.T) {
+	for _, c := range testMockCreateBucketDataRedundancyTransitionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.CreateBucketDataRedundancyTransition(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockCreateBucketDataRedundancyTransitionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *CreateBucketDataRedundancyTransitionRequest
+	CheckOutputFn  func(t *testing.T, o *CreateBucketDataRedundancyTransitionResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<Error>
+  <Code>TooManyCnameToken</Code>
+  <Message>You have attempted to create more cname token than allowed.</Message>
+  <RequestId>6215FD21DA0E27393F004E9E</RequestId>
+  <HostId>127.0.0.1</HostId>
+  <Bucket>bucket</Bucket>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-target-redundancy-type=ZRS", urlStr)
+		},
+		&CreateBucketDataRedundancyTransitionRequest{
+			Bucket:               Ptr("bucket"),
+			TargetRedundancyType: Ptr("ZRS"),
+		},
+		func(t *testing.T, o *CreateBucketDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "TooManyCnameToken", serr.Code)
+			assert.Equal(t, "You have attempted to create more cname token than allowed.", serr.Message)
+		},
+	},
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-target-redundancy-type=ZRS", urlStr)
+		},
+		&CreateBucketDataRedundancyTransitionRequest{
+			Bucket:               Ptr("bucket"),
+			TargetRedundancyType: Ptr("ZRS"),
+		},
+		func(t *testing.T, o *CreateBucketDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-target-redundancy-type=ZRS", urlStr)
+		},
+		&CreateBucketDataRedundancyTransitionRequest{
+			Bucket:               Ptr("bucket"),
+			TargetRedundancyType: Ptr("ZRS"),
+		},
+		func(t *testing.T, o *CreateBucketDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-target-redundancy-type=ZRS", urlStr)
+		},
+		&CreateBucketDataRedundancyTransitionRequest{
+			Bucket:               Ptr("bucket"),
+			TargetRedundancyType: Ptr("ZRS"),
+		},
+		func(t *testing.T, o *CreateBucketDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			assert.Contains(t, err.Error(), "execute CreateBucketDataRedundancyTransition fail")
+		},
+	},
+}
+
+func TestMockCreateBucketDataRedundancyTransition_Error(t *testing.T) {
+	for _, c := range testMockCreateBucketDataRedundancyTransitionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.CreateBucketDataRedundancyTransition(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteBucketDataRedundancyTransitionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteBucketDataRedundancyTransitionRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteBucketDataRedundancyTransitionResult, err error)
+}{
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-redundancy-transition-taskid=123", strUrl)
+		},
+		&DeleteBucketDataRedundancyTransitionRequest{
+			Bucket:                     Ptr("bucket"),
+			RedundancyTransitionTaskid: Ptr("123"),
+		},
+		func(t *testing.T, o *DeleteBucketDataRedundancyTransitionResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockDeleteBucketDataRedundancyTransition_Success(t *testing.T) {
+	for _, c := range testMockDeleteBucketDataRedundancyTransitionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteBucketDataRedundancyTransition(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteBucketDataRedundancyTransitionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteBucketDataRedundancyTransitionRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteBucketDataRedundancyTransitionResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-redundancy-transition-taskid=123", strUrl)
+		},
+		&DeleteBucketDataRedundancyTransitionRequest{
+			Bucket:                     Ptr("bucket"),
+			RedundancyTransitionTaskid: Ptr("123"),
+		},
+		func(t *testing.T, o *DeleteBucketDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition&x-oss-redundancy-transition-taskid=123", strUrl)
+		},
+		&DeleteBucketDataRedundancyTransitionRequest{
+			Bucket:                     Ptr("bucket"),
+			RedundancyTransitionTaskid: Ptr("123"),
+		},
+		func(t *testing.T, o *DeleteBucketDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDeleteBucketDataRedundancyTransition_Error(t *testing.T) {
+	for _, c := range testMockDeleteBucketDataRedundancyTransitionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteBucketDataRedundancyTransition(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListBucketDataRedundancyTransitionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListBucketDataRedundancyTransitionRequest
+	CheckOutputFn  func(t *testing.T, o *ListBucketDataRedundancyTransitionResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketDataRedundancyTransition>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket</Bucket>
+  <TaskId>4be5beb0f74f490186311b268bf6****</TaskId>
+  <Status>Queueing</Status>
+  <CreateTime>2023-11-17T09:11:58.000Z</CreateTime>
+</BucketDataRedundancyTransition>
+</ListBucketDataRedundancyTransition>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition", strUrl)
+		},
+		&ListBucketDataRedundancyTransitionRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *ListBucketDataRedundancyTransitionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.Headers.Get("Content-Type"), "application/xml")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].Bucket, "examplebucket")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].TaskId, "4be5beb0f74f490186311b268bf6****")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].Status, "Queueing")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].CreateTime, "2023-11-17T09:11:58.000Z")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketDataRedundancyTransition>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket</Bucket>
+  <TaskId>909c6c818dd041d1a44e0fdc66aa****</TaskId>
+  <Status>Processing</Status>
+  <CreateTime>2023-11-17T09:14:39.000Z</CreateTime>
+  <StartTime>2023-11-17T09:14:39.000Z</StartTime>
+  <ProcessPercentage>0</ProcessPercentage>
+  <EstimatedRemainingTime>100</EstimatedRemainingTime>
+</BucketDataRedundancyTransition>
+</ListBucketDataRedundancyTransition>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition", strUrl)
+		},
+		&ListBucketDataRedundancyTransitionRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *ListBucketDataRedundancyTransitionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.Headers.Get("Content-Type"), "application/xml")
+
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].Bucket, "examplebucket")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].TaskId, "909c6c818dd041d1a44e0fdc66aa****")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].Status, "Processing")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].CreateTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].StartTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].ProcessPercentage, int32(0))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].EstimatedRemainingTime, int64(100))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketDataRedundancyTransition>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket</Bucket>
+  <TaskId>909c6c818dd041d1a44e0fdc66aa****</TaskId>
+  <Status>Finished</Status>
+  <CreateTime>2023-11-17T09:14:39.000Z</CreateTime>
+  <StartTime>2023-11-17T09:14:39.000Z</StartTime>
+  <ProcessPercentage>100</ProcessPercentage>
+  <EstimatedRemainingTime>0</EstimatedRemainingTime>
+  <EndTime>2023-11-18T09:14:39.000Z</EndTime>
+</BucketDataRedundancyTransition>
+</ListBucketDataRedundancyTransition>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition", strUrl)
+		},
+		&ListBucketDataRedundancyTransitionRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *ListBucketDataRedundancyTransitionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.Headers.Get("Content-Type"), "application/xml")
+
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].Bucket, "examplebucket")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].TaskId, "909c6c818dd041d1a44e0fdc66aa****")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].Status, "Finished")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].CreateTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].StartTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].ProcessPercentage, int32(100))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].EstimatedRemainingTime, int64(0))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].EndTime, "2023-11-18T09:14:39.000Z")
+		},
+	},
+}
+
+func TestMockListBucketDataRedundancyTransition_Success(t *testing.T) {
+	for _, c := range testMockListBucketDataRedundancyTransitionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.ListBucketDataRedundancyTransition(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListBucketDataRedundancyTransitionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListBucketDataRedundancyTransitionRequest
+	CheckOutputFn  func(t *testing.T, o *ListBucketDataRedundancyTransitionResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition", strUrl)
+		},
+		&ListBucketDataRedundancyTransitionRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *ListBucketDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?redundancyTransition", strUrl)
+		},
+		&ListBucketDataRedundancyTransitionRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *ListBucketDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockListBucketDataRedundancyTransition_Error(t *testing.T) {
+	for _, c := range testMockListBucketDataRedundancyTransitionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.ListBucketDataRedundancyTransition(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListUserDataRedundancyTransitionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListUserDataRedundancyTransitionRequest
+	CheckOutputFn  func(t *testing.T, o *ListUserDataRedundancyTransitionResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketDataRedundancyTransition>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket</Bucket>
+  <TaskId>4be5beb0f74f490186311b268bf6****</TaskId>
+  <Status>Queueing</Status>
+  <CreateTime>2023-11-17T09:11:58.000Z</CreateTime>
+</BucketDataRedundancyTransition>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket1</Bucket>
+  <TaskId>909c6c818dd041d1a44e0fdc66aa****</TaskId>
+  <Status>Processing</Status>
+  <CreateTime>2023-11-17T09:14:39.000Z</CreateTime>
+  <StartTime>2023-11-17T09:14:39.000Z</StartTime>
+  <ProcessPercentage>0</ProcessPercentage>
+  <EstimatedRemainingTime>100</EstimatedRemainingTime>
+</BucketDataRedundancyTransition>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket2</Bucket>
+  <TaskId>909c6c818dd041d1a44e0fdc66aa****</TaskId>
+  <Status>Finished</Status>
+  <CreateTime>2023-11-17T09:14:39.000Z</CreateTime>
+  <StartTime>2023-11-17T09:14:39.000Z</StartTime>
+  <ProcessPercentage>100</ProcessPercentage>
+  <EstimatedRemainingTime>0</EstimatedRemainingTime>
+  <EndTime>2023-11-18T09:14:39.000Z</EndTime>
+</BucketDataRedundancyTransition>
+<IsTruncated>false</IsTruncated>
+<NextContinuationToken></NextContinuationToken>
+</ListBucketDataRedundancyTransition>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?redundancyTransition", strUrl)
+		},
+		&ListUserDataRedundancyTransitionRequest{},
+		func(t *testing.T, o *ListUserDataRedundancyTransitionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.Headers.Get("Content-Type"), "application/xml")
+			assert.Equal(t, "", *o.ListBucketDataRedundancyTransition.NextContinuationToken)
+			assert.False(t, *o.ListBucketDataRedundancyTransition.IsTruncated)
+			assert.Equal(t, 3, len(o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].Bucket, "examplebucket")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].TaskId, "4be5beb0f74f490186311b268bf6****")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].Status, "Queueing")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].CreateTime, "2023-11-17T09:11:58.000Z")
+
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].Bucket, "examplebucket1")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].TaskId, "909c6c818dd041d1a44e0fdc66aa****")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].Status, "Processing")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].CreateTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].StartTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].ProcessPercentage, int32(0))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].EstimatedRemainingTime, int64(100))
+
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].Bucket, "examplebucket2")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].TaskId, "909c6c818dd041d1a44e0fdc66aa****")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].Status, "Finished")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].CreateTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].StartTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].ProcessPercentage, int32(100))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].EstimatedRemainingTime, int64(0))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].EndTime, "2023-11-18T09:14:39.000Z")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketDataRedundancyTransition>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket</Bucket>
+  <TaskId>4be5beb0f74f490186311b268bf6****</TaskId>
+  <Status>Queueing</Status>
+  <CreateTime>2023-11-17T09:11:58.000Z</CreateTime>
+</BucketDataRedundancyTransition>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket1</Bucket>
+  <TaskId>909c6c818dd041d1a44e0fdc66aa****</TaskId>
+  <Status>Processing</Status>
+  <CreateTime>2023-11-17T09:14:39.000Z</CreateTime>
+  <StartTime>2023-11-17T09:14:39.000Z</StartTime>
+  <ProcessPercentage>0</ProcessPercentage>
+  <EstimatedRemainingTime>100</EstimatedRemainingTime>
+</BucketDataRedundancyTransition>
+<BucketDataRedundancyTransition>
+  <Bucket>examplebucket2</Bucket>
+  <TaskId>909c6c818dd041d1a44e0fdc66aa****</TaskId>
+  <Status>Finished</Status>
+  <CreateTime>2023-11-17T09:14:39.000Z</CreateTime>
+  <StartTime>2023-11-17T09:14:39.000Z</StartTime>
+  <ProcessPercentage>100</ProcessPercentage>
+  <EstimatedRemainingTime>0</EstimatedRemainingTime>
+  <EndTime>2023-11-18T09:14:39.000Z</EndTime>
+</BucketDataRedundancyTransition>
+<IsTruncated>false</IsTruncated>
+<NextContinuationToken></NextContinuationToken>
+</ListBucketDataRedundancyTransition>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?continuation-token=123&max-keys=3&redundancyTransition", strUrl)
+		},
+		&ListUserDataRedundancyTransitionRequest{
+			ContinuationToken: Ptr("123"),
+			MaxKeys:           int32(3),
+		},
+		func(t *testing.T, o *ListUserDataRedundancyTransitionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.Headers.Get("Content-Type"), "application/xml")
+
+			assert.Equal(t, "", *o.ListBucketDataRedundancyTransition.NextContinuationToken)
+			assert.False(t, *o.ListBucketDataRedundancyTransition.IsTruncated)
+			assert.Equal(t, 3, len(o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].Bucket, "examplebucket")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].TaskId, "4be5beb0f74f490186311b268bf6****")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].Status, "Queueing")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[0].CreateTime, "2023-11-17T09:11:58.000Z")
+
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].Bucket, "examplebucket1")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].TaskId, "909c6c818dd041d1a44e0fdc66aa****")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].Status, "Processing")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].CreateTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].StartTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].ProcessPercentage, int32(0))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[1].EstimatedRemainingTime, int64(100))
+
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].Bucket, "examplebucket2")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].TaskId, "909c6c818dd041d1a44e0fdc66aa****")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].Status, "Finished")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].CreateTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].StartTime, "2023-11-17T09:14:39.000Z")
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].ProcessPercentage, int32(100))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].EstimatedRemainingTime, int64(0))
+			assert.Equal(t, *o.ListBucketDataRedundancyTransition.BucketDataRedundancyTransitions[2].EndTime, "2023-11-18T09:14:39.000Z")
+		},
+	},
+}
+
+func TestMockListUserDataRedundancyTransition_Success(t *testing.T) {
+	for _, c := range testMockListUserDataRedundancyTransitionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.ListUserDataRedundancyTransition(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListUserDataRedundancyTransitionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListUserDataRedundancyTransitionRequest
+	CheckOutputFn  func(t *testing.T, o *ListUserDataRedundancyTransitionResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?redundancyTransition", strUrl)
+		},
+		&ListUserDataRedundancyTransitionRequest{},
+		func(t *testing.T, o *ListUserDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?redundancyTransition", strUrl)
+		},
+		&ListUserDataRedundancyTransitionRequest{},
+		func(t *testing.T, o *ListUserDataRedundancyTransitionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockListUserDataRedundancyTransition_Error(t *testing.T) {
+	for _, c := range testMockListUserDataRedundancyTransitionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.ListUserDataRedundancyTransition(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
