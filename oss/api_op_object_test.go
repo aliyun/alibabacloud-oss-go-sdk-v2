@@ -113,20 +113,20 @@ func TestMarshalInput_PutObject(t *testing.T) {
 
 	body := randLowStr(1000)
 	request = &PutObjectRequest{
-		Bucket:                   Ptr("oss-bucket"),
-		Key:                      Ptr("oss-key"),
-		CacheControl:             Ptr("no-cache"),
-		ContentDisposition:       Ptr("attachment"),
-		ContentEncoding:          Ptr("utf-8"),
-		ContentMD5:               Ptr("eB5eJF1ptWaXm4bijSPyxw=="),
-		ContentLength:            Ptr(int64(100)),
-		Expires:                  Ptr("2022-10-12T00:00:00.000Z"),
-		ForbidOverwrite:          Ptr("false"),
-		ServerSideEncryption:     Ptr("KMS"),
-		ServerSideDataEncryption: Ptr("SM4"),
-		SSEKMSKeyId:              Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
-		Acl:                      ObjectACLPrivate,
-		StorageClass:             StorageClassStandard,
+		Bucket:                    Ptr("oss-bucket"),
+		Key:                       Ptr("oss-key"),
+		CacheControl:              Ptr("no-cache"),
+		ContentDisposition:        Ptr("attachment"),
+		ContentEncoding:           Ptr("utf-8"),
+		ContentMD5:                Ptr("eB5eJF1ptWaXm4bijSPyxw=="),
+		ContentLength:             Ptr(int64(100)),
+		Expires:                   Ptr("2022-10-12T00:00:00.000Z"),
+		ForbidOverwrite:           Ptr("false"),
+		ServerSideEncryption:      Ptr("KMS"),
+		ServerSideDataEncryption:  Ptr("SM4"),
+		ServerSideEncryptionKeyId: Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
+		Acl:                       ObjectACLPrivate,
+		StorageClass:              StorageClassStandard,
 		Metadata: map[string]string{
 			"name":  "walker",
 			"email": "demo@aliyun.com",
@@ -621,7 +621,7 @@ func TestUnmarshalOutput_GetObject(t *testing.T) {
 	assert.Equal(t, result.Body, io.NopCloser(bytes.NewReader([]byte(body))))
 	assert.Equal(t, *result.ServerSideDataEncryption, "SM4")
 	assert.Equal(t, *result.ServerSideEncryption, "KMS")
-	assert.Equal(t, *result.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+	assert.Equal(t, *result.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 	assert.Equal(t, result.TaggingCount, int32(2))
 	assert.Equal(t, result.Metadata["name"], "demo")
 	assert.Equal(t, result.Metadata["email"], "demo@aliyun.com")
@@ -825,22 +825,22 @@ func TestMarshalInput_CopyObject(t *testing.T) {
 	assert.Nil(t, input.OpMetadata.values)
 
 	request = &CopyObjectRequest{
-		Bucket:                   Ptr("oss-copy-bucket"),
-		Key:                      Ptr("oss-copy-key"),
-		SourceKey:                Ptr("oss-key"),
-		IfMatch:                  Ptr("\"D41D8CD98F00B204E9800998ECF8****\""),
-		IfNoneMatch:              Ptr("\"D41D8CD98F00B204E9800998ECF9****\""),
-		IfModifiedSince:          Ptr("Fri, 13 Nov 2023 14:47:53 GMT"),
-		IfUnmodifiedSince:        Ptr("Fri, 13 Nov 2015 14:47:53 GMT"),
-		SourceVersionId:          Ptr("CAEQNhiBgM0BYiIDc4MGZjZGI2OTBjOTRmNTE5NmU5NmFhZjhjYmY*****"),
-		ForbidOverwrite:          Ptr("false"),
-		ServerSideEncryption:     Ptr("KMS"),
-		ServerSideDataEncryption: Ptr("SM4"),
-		SSEKMSKeyId:              Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
-		MetadataDirective:        Ptr("REPLACE"),
-		TaggingDirective:         Ptr("Replace"),
-		Acl:                      ObjectACLPrivate,
-		StorageClass:             StorageClassStandard,
+		Bucket:                    Ptr("oss-copy-bucket"),
+		Key:                       Ptr("oss-copy-key"),
+		SourceKey:                 Ptr("oss-key"),
+		IfMatch:                   Ptr("\"D41D8CD98F00B204E9800998ECF8****\""),
+		IfNoneMatch:               Ptr("\"D41D8CD98F00B204E9800998ECF9****\""),
+		IfModifiedSince:           Ptr("Fri, 13 Nov 2023 14:47:53 GMT"),
+		IfUnmodifiedSince:         Ptr("Fri, 13 Nov 2015 14:47:53 GMT"),
+		SourceVersionId:           Ptr("CAEQNhiBgM0BYiIDc4MGZjZGI2OTBjOTRmNTE5NmU5NmFhZjhjYmY*****"),
+		ForbidOverwrite:           Ptr("false"),
+		ServerSideEncryption:      Ptr("KMS"),
+		ServerSideDataEncryption:  Ptr("SM4"),
+		ServerSideEncryptionKeyId: Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
+		MetadataDirective:         Ptr("REPLACE"),
+		TaggingDirective:          Ptr("Replace"),
+		Acl:                       ObjectACLPrivate,
+		StorageClass:              StorageClassStandard,
 		Metadata: map[string]string{
 			"name":  "walker",
 			"email": "demo@aliyun.com",
@@ -973,7 +973,7 @@ func TestUnmarshalOutput_CopyObject(t *testing.T) {
 	assert.Equal(t, *result.LastModified, time.Date(2023, time.February, 24, 9, 41, 56, 0, time.UTC))
 	assert.Equal(t, *result.ServerSideDataEncryption, "SM4")
 	assert.Equal(t, *result.ServerSideEncryption, "KMS")
-	assert.Equal(t, *result.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+	assert.Equal(t, *result.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 	assert.Equal(t, *result.HashCRC64, "870718044876840****")
 	assert.Equal(t, *result.VersionId, "CAEQHxiBgMD4qOWz3hgiIDUyMWIzNTBjMWM4NjQ5MDJiNTM4YzEwZGQxM2Rk****")
 	assert.Equal(t, *result.SourceVersionId, "CAEQHxiBgICDvseg3hgiIGZmOGNjNWJiZDUzNjQxNDM4MWM2NDc1YjhkYTk3****")
@@ -1131,21 +1131,21 @@ func TestMarshalInput_AppendObject(t *testing.T) {
 
 	body := randLowStr(1000)
 	request = &AppendObjectRequest{
-		Bucket:                   Ptr("oss-bucket"),
-		Key:                      Ptr("oss-key"),
-		Position:                 Ptr(int64(0)),
-		CacheControl:             Ptr("no-cache"),
-		ContentDisposition:       Ptr("attachment"),
-		ContentEncoding:          Ptr("utf-8"),
-		ContentMD5:               Ptr("eB5eJF1ptWaXm4bijSPyxw=="),
-		ContentLength:            Ptr(int64(100)),
-		Expires:                  Ptr("2022-10-12T00:00:00.000Z"),
-		ForbidOverwrite:          Ptr("false"),
-		ServerSideEncryption:     Ptr("KMS"),
-		ServerSideDataEncryption: Ptr("SM4"),
-		SSEKMSKeyId:              Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
-		Acl:                      ObjectACLPrivate,
-		StorageClass:             StorageClassStandard,
+		Bucket:                    Ptr("oss-bucket"),
+		Key:                       Ptr("oss-key"),
+		Position:                  Ptr(int64(0)),
+		CacheControl:              Ptr("no-cache"),
+		ContentDisposition:        Ptr("attachment"),
+		ContentEncoding:           Ptr("utf-8"),
+		ContentMD5:                Ptr("eB5eJF1ptWaXm4bijSPyxw=="),
+		ContentLength:             Ptr(int64(100)),
+		Expires:                   Ptr("2022-10-12T00:00:00.000Z"),
+		ForbidOverwrite:           Ptr("false"),
+		ServerSideEncryption:      Ptr("KMS"),
+		ServerSideDataEncryption:  Ptr("SM4"),
+		ServerSideEncryptionKeyId: Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
+		Acl:                       ObjectACLPrivate,
+		StorageClass:              StorageClassStandard,
 		Metadata: map[string]string{
 			"name":  "walker",
 			"email": "demo@aliyun.com",
@@ -1301,8 +1301,6 @@ func TestUnmarshalOutput_AppendObject(t *testing.T) {
 			"x-oss-hash-crc64ecma":       {"316181249502703****"},
 			"x-oss-version-id":           {"CAEQNhiBgMDJgZCA0BYiIDc4MGZjZGI2OTBjOTRmNTE5NmU5NmFhZjhjYmY0****"},
 			"x-oss-next-append-position": {"1717"},
-			"x-oss-meta-name":            {"demo"},
-			"x-oss-meta-email":           {"demo@aliyun.com"},
 		},
 	}
 	result = &AppendObjectResult{}
@@ -1316,8 +1314,6 @@ func TestUnmarshalOutput_AppendObject(t *testing.T) {
 	assert.Equal(t, *result.HashCRC64, "316181249502703****")
 	assert.Equal(t, *result.VersionId, "CAEQNhiBgMDJgZCA0BYiIDc4MGZjZGI2OTBjOTRmNTE5NmU5NmFhZjhjYmY0****")
 	assert.Equal(t, result.NextPosition, int64(1717))
-	assert.Equal(t, result.Metadata["name"], "demo")
-	assert.Equal(t, result.Metadata["email"], "demo@aliyun.com")
 	output = &OperationOutput{
 		StatusCode: 200,
 		Status:     "OK",
@@ -1346,7 +1342,7 @@ func TestUnmarshalOutput_AppendObject(t *testing.T) {
 	assert.Equal(t, result.NextPosition, int64(1717))
 	assert.Equal(t, *result.ServerSideDataEncryption, "SM4")
 	assert.Equal(t, *result.ServerSideEncryption, "KMS")
-	assert.Equal(t, *result.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+	assert.Equal(t, *result.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 
 	output = &OperationOutput{
 		StatusCode: 404,
@@ -1824,7 +1820,7 @@ func TestMarshalInput_HeadObject(t *testing.T) {
 	request = &HeadObjectRequest{}
 	input = &OperationInput{
 		OpName: "HeadObject",
-		Method: "GET",
+		Method: "HEAD",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -1837,7 +1833,7 @@ func TestMarshalInput_HeadObject(t *testing.T) {
 	}
 	input = &OperationInput{
 		OpName: "HeadObject",
-		Method: "GET",
+		Method: "HEAD",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -1851,7 +1847,7 @@ func TestMarshalInput_HeadObject(t *testing.T) {
 	}
 	input = &OperationInput{
 		OpName: "HeadObject",
-		Method: "GET",
+		Method: "HEAD",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -1868,7 +1864,7 @@ func TestMarshalInput_HeadObject(t *testing.T) {
 	}
 	input = &OperationInput{
 		OpName: "HeadObject",
-		Method: "GET",
+		Method: "HEAD",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -1885,7 +1881,7 @@ func TestMarshalInput_HeadObject(t *testing.T) {
 	}
 	input = &OperationInput{
 		OpName: "HeadObject",
-		Method: "GET",
+		Method: "HEAD",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -2055,7 +2051,7 @@ func TestUnmarshalOutput_HeadObject(t *testing.T) {
 	assert.Equal(t, *result.Restore, "ongoing-request=\"false\", expiry-date=\"Sun, 16 Apr 2017 08:12:33 GMT\"")
 	assert.Equal(t, *result.ServerSideEncryption, "KMS")
 	assert.Equal(t, *result.ServerSideDataEncryption, "SM4")
-	assert.Equal(t, *result.SSEKMSKeyId, "9468da86-3509-4f8d-a61e-6eab1eac****")
+	assert.Equal(t, *result.ServerSideEncryptionKeyId, "9468da86-3509-4f8d-a61e-6eab1eac****")
 
 	output = &OperationOutput{
 		StatusCode: 404,
@@ -2971,17 +2967,17 @@ func TestMarshalInput_InitiateMultipartUpload(t *testing.T) {
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	request = &InitiateMultipartUploadRequest{
-		Bucket:                   Ptr("oss-bucket"),
-		Key:                      Ptr("oss-key"),
-		CacheControl:             Ptr("no-cache"),
-		ContentDisposition:       Ptr("attachment"),
-		ContentEncoding:          Ptr("utf-8"),
-		Expires:                  Ptr("2022-10-12T00:00:00.000Z"),
-		ForbidOverwrite:          Ptr("false"),
-		ServerSideEncryption:     Ptr("KMS"),
-		ServerSideDataEncryption: Ptr("SM4"),
-		SSEKMSKeyId:              Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
-		StorageClass:             StorageClassStandard,
+		Bucket:                    Ptr("oss-bucket"),
+		Key:                       Ptr("oss-key"),
+		CacheControl:              Ptr("no-cache"),
+		ContentDisposition:        Ptr("attachment"),
+		ContentEncoding:           Ptr("utf-8"),
+		Expires:                   Ptr("2022-10-12T00:00:00.000Z"),
+		ForbidOverwrite:           Ptr("false"),
+		ServerSideEncryption:      Ptr("KMS"),
+		ServerSideDataEncryption:  Ptr("SM4"),
+		ServerSideEncryptionKeyId: Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
+		StorageClass:              StorageClassStandard,
 		Metadata: map[string]string{
 			"name":  "walker",
 			"email": "demo@aliyun.com",
@@ -5683,7 +5679,7 @@ func TestMarshalInput_PutObject_ContentType(t *testing.T) {
 	assert.Equal(t, "set-by-user", input.Headers[HTTPHeaderContentType])
 }
 
-func TestMarshalInput_AppanedObject_ContentType(t *testing.T) {
+func TestMarshalInput_AppendObject_ContentType(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
 	var err error
@@ -5700,7 +5696,7 @@ func TestMarshalInput_AppanedObject_ContentType(t *testing.T) {
 	// No auto detect content-type
 	input = &OperationInput{
 		OpName: "AppendObject",
-		Method: "PUT",
+		Method: "POST",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -5727,7 +5723,7 @@ func TestMarshalInput_AppanedObject_ContentType(t *testing.T) {
 	}
 	input = &OperationInput{
 		OpName: "AppendObject",
-		Method: "PUT",
+		Method: "POST",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -5744,7 +5740,7 @@ func TestMarshalInput_AppanedObject_ContentType(t *testing.T) {
 	}
 	input = &OperationInput{
 		OpName: "AppendObject",
-		Method: "PUT",
+		Method: "POST",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}

@@ -710,7 +710,7 @@ func (f *AppendOnlyFile) applyCreateParamIfNeed(request *AppendObjectRequest) {
 	request.ContentType = f.createParam.ContentType
 	request.ServerSideEncryption = f.createParam.ServerSideEncryption
 	request.ServerSideDataEncryption = f.createParam.ServerSideDataEncryption
-	request.SSEKMSKeyId = f.createParam.SSEKMSKeyId
+	request.ServerSideEncryptionKeyId = f.createParam.ServerSideEncryptionKeyId
 	request.Metadata = f.createParam.Metadata
 	request.Tagging = f.createParam.Tagging
 }
