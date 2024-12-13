@@ -25,10 +25,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/crypto"
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -133,7 +133,7 @@ func getKmsID(region string) string {
 		if result, err := client.HeadObject(context.TODO(), &HeadObjectRequest{
 			Bucket: Ptr(bucketName),
 			Key:    Ptr("kms-id")}); err == nil {
-			kmdId = ToString(result.SSEKMSKeyId)
+			kmdId = ToString(result.ServerSideEncryptionKeyId)
 			kmdIdMap_[region] = kmdId
 		}
 	}
@@ -540,7 +540,7 @@ func TestInvokeOperation_BucketPolicy(t *testing.T) {
 		Body:   strings.NewReader(policy),
 		Bucket: Ptr(bucketName),
 	}
-
+	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
 	output, err := client.InvokeOperation(context.TODO(), input)
 	assert.NoError(t, err)
 
@@ -553,7 +553,7 @@ func TestInvokeOperation_BucketPolicy(t *testing.T) {
 		},
 		Bucket: Ptr(bucketName),
 	}
-
+	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
 	output, err = client.InvokeOperation(context.TODO(), input)
 	assert.NoError(t, err)
 	policy1, err := io.ReadAll(output.Body)
@@ -572,6 +572,7 @@ func TestInvokeOperation_BucketPolicy(t *testing.T) {
 		},
 		Bucket: Ptr(bucketName),
 	}
+	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
 	output, err = client.InvokeOperation(context.TODO(), input)
 	assert.NoError(t, err)
 	// discard body
@@ -1379,7 +1380,7 @@ func TestAppendObject(t *testing.T) {
 	}
 	result, err = client.AppendObject(context.TODO(), request)
 	assert.Nil(t, err)
-	assert.Nil(t, result.SSEKMSKeyId)
+	assert.Nil(t, result.ServerSideEncryptionKeyId)
 	assert.Nil(t, result.VersionId)
 	assert.Equal(t, result.NextPosition, int64(len(content)))
 	assert.NotEmpty(t, result.HashCRC64)
@@ -1394,7 +1395,7 @@ func TestAppendObject(t *testing.T) {
 	}
 	result, err = client.AppendObject(context.TODO(), request)
 	assert.Nil(t, err)
-	assert.Nil(t, result.SSEKMSKeyId)
+	assert.Nil(t, result.ServerSideEncryptionKeyId)
 	assert.Nil(t, result.VersionId)
 	assert.Equal(t, result.NextPosition, int64(len(content)*2))
 	assert.NotEmpty(t, result.HashCRC64)
@@ -1410,7 +1411,7 @@ func TestAppendObject(t *testing.T) {
 	}
 	result, err = client.AppendObject(context.TODO(), request)
 	assert.Nil(t, err)
-	assert.Nil(t, result.SSEKMSKeyId)
+	assert.Nil(t, result.ServerSideEncryptionKeyId)
 	assert.Nil(t, result.VersionId)
 	assert.Equal(t, result.NextPosition, int64(len(content)*3))
 	assert.NotEmpty(t, result.HashCRC64)
@@ -1428,7 +1429,7 @@ func TestAppendObject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, *result.ServerSideEncryption, "KMS")
 	assert.Equal(t, *result.ServerSideDataEncryption, "SM4")
-	assert.NotEmpty(t, result.SSEKMSKeyId)
+	assert.NotEmpty(t, result.ServerSideEncryptionKeyId)
 	assert.Nil(t, result.VersionId)
 	assert.Equal(t, result.NextPosition, int64(len(content)))
 	assert.NotEmpty(t, result.HashCRC64)
@@ -1447,7 +1448,7 @@ func TestAppendObject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, *result.ServerSideEncryption, "KMS")
 	assert.Equal(t, *result.ServerSideDataEncryption, "SM4")
-	assert.NotEmpty(t, result.SSEKMSKeyId)
+	assert.NotEmpty(t, result.ServerSideEncryptionKeyId)
 	assert.Nil(t, result.VersionId)
 	assert.Equal(t, result.NextPosition, int64(len(content)*2))
 	assert.NotEmpty(t, result.HashCRC64)

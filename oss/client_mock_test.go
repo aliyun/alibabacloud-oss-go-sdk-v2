@@ -3917,7 +3917,7 @@ var testMockGetObjectSuccessCases = []struct {
 			assert.Equal(t, string(content), "hi oss")
 			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
 			assert.Equal(t, *o.ServerSideEncryption, "KMS")
-			assert.Equal(t, *o.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 			assert.Equal(t, o.TaggingCount, int32(2))
 			assert.Equal(t, o.Metadata["name"], "demo")
 			assert.Equal(t, o.Metadata["email"], "demo@aliyun.com")
@@ -3975,7 +3975,7 @@ var testMockGetObjectSuccessCases = []struct {
 			assert.Equal(t, string(content), "hi oss")
 			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
 			assert.Equal(t, *o.ServerSideEncryption, "KMS")
-			assert.Equal(t, *o.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 			assert.Equal(t, o.TaggingCount, int32(2))
 			assert.Equal(t, o.Metadata["name"], "demo")
 			assert.Equal(t, o.Metadata["email"], "demo@aliyun.com")
@@ -4344,7 +4344,7 @@ var testMockCopyObjectSuccessCases = []struct {
 			assert.Equal(t, *o.ETag, "\"F2064A169EE92E9775EE5324D0B1****\"")
 			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
 			assert.Equal(t, *o.ServerSideEncryption, "KMS")
-			assert.Equal(t, *o.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 			assert.Equal(t, *o.HashCRC64, "870718044876841****")
 			assert.Equal(t, *o.VersionId, "CAEQHxiBgMD0ooWf3hgiIDcyMzYzZTJkZjgwYzRmN2FhNTZkMWZlMGY0YTVj****")
 			assert.Equal(t, *o.SourceVersionId, "CAEQHxiBgICDvseg3hgiIGZmOGNjNWJiZDUzNjQxNDM4MWM2NDc1YjhkYTk4****")
@@ -4391,7 +4391,7 @@ var testMockCopyObjectSuccessCases = []struct {
 			assert.Equal(t, *o.ETag, "\"F2064A169EE92E9775EE5324D0B1****\"")
 			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
 			assert.Equal(t, *o.ServerSideEncryption, "KMS")
-			assert.Equal(t, *o.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 			assert.Equal(t, *o.HashCRC64, "870718044876841****")
 			assert.Equal(t, *o.VersionId, "CAEQHxiBgMD0ooWf3hgiIDcyMzYzZTJkZjgwYzRmN2FhNTZkMWZlMGY0YTVj****")
 			assert.Equal(t, *o.SourceVersionId, "CAEQHxiBgICDvseg3hgiIGZmOGNjNWJiZDUzNjQxNDM4MWM2NDc1YjhkYTk4****")
@@ -4440,7 +4440,7 @@ var testMockCopyObjectSuccessCases = []struct {
 			assert.Equal(t, *o.ETag, "\"F2064A169EE92E9775EE5324D0B1****\"")
 			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
 			assert.Equal(t, *o.ServerSideEncryption, "KMS")
-			assert.Equal(t, *o.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 			assert.Equal(t, *o.HashCRC64, "870718044876841****")
 			assert.Equal(t, *o.VersionId, "CAEQHxiBgMD0ooWf3hgiIDcyMzYzZTJkZjgwYzRmN2FhNTZkMWZlMGY0YTVj****")
 			assert.Equal(t, *o.SourceVersionId, "CAEQHxiBgICDvseg3hgiIGZmOGNjNWJiZDUzNjQxNDM4MWM2NDc1YjhkYTk4****")
@@ -4700,13 +4700,13 @@ var testMockAppendObjectSuccessCases = []struct {
 			assert.Equal(t, "/bucket/object?append&position=100", strUrl)
 		},
 		&AppendObjectRequest{
-			Bucket:                   Ptr("bucket"),
-			Key:                      Ptr("object"),
-			Position:                 Ptr(int64(100)),
-			Body:                     strings.NewReader("hi oss,append object,this is a demo"),
-			ServerSideEncryption:     Ptr("KMS"),
-			ServerSideDataEncryption: Ptr("SM4"),
-			SSEKMSKeyId:              Ptr("12f8711f-90df-4e0d-903d-ab972b0f****"),
+			Bucket:                    Ptr("bucket"),
+			Key:                       Ptr("object"),
+			Position:                  Ptr(int64(100)),
+			Body:                      strings.NewReader("hi oss,append object,this is a demo"),
+			ServerSideEncryption:      Ptr("KMS"),
+			ServerSideDataEncryption:  Ptr("SM4"),
+			ServerSideEncryptionKeyId: Ptr("12f8711f-90df-4e0d-903d-ab972b0f****"),
 		},
 		func(t *testing.T, o *AppendObjectResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -4718,7 +4718,7 @@ var testMockAppendObjectSuccessCases = []struct {
 			assert.Equal(t, o.NextPosition, int64(1717))
 			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
 			assert.Equal(t, *o.ServerSideEncryption, "KMS")
-			assert.Equal(t, *o.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 		},
 	},
 	{
@@ -4747,14 +4747,14 @@ var testMockAppendObjectSuccessCases = []struct {
 			assert.Equal(t, r.Header.Get("x-oss-traffic-limit"), strconv.FormatInt(100*1024*8, 10))
 		},
 		&AppendObjectRequest{
-			Bucket:                   Ptr("bucket"),
-			Key:                      Ptr("object"),
-			Position:                 Ptr(int64(100)),
-			Body:                     strings.NewReader("hi oss,append object,this is a demo"),
-			ServerSideEncryption:     Ptr("KMS"),
-			ServerSideDataEncryption: Ptr("SM4"),
-			SSEKMSKeyId:              Ptr("12f8711f-90df-4e0d-903d-ab972b0f****"),
-			TrafficLimit:             int64(100 * 1024 * 8),
+			Bucket:                    Ptr("bucket"),
+			Key:                       Ptr("object"),
+			Position:                  Ptr(int64(100)),
+			Body:                      strings.NewReader("hi oss,append object,this is a demo"),
+			ServerSideEncryption:      Ptr("KMS"),
+			ServerSideDataEncryption:  Ptr("SM4"),
+			ServerSideEncryptionKeyId: Ptr("12f8711f-90df-4e0d-903d-ab972b0f****"),
+			TrafficLimit:              int64(100 * 1024 * 8),
 		},
 		func(t *testing.T, o *AppendObjectResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -4766,7 +4766,7 @@ var testMockAppendObjectSuccessCases = []struct {
 			assert.Equal(t, o.NextPosition, int64(1717))
 			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
 			assert.Equal(t, *o.ServerSideEncryption, "KMS")
-			assert.Equal(t, *o.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 		},
 	},
 	{
@@ -4796,15 +4796,15 @@ var testMockAppendObjectSuccessCases = []struct {
 			assert.Equal(t, r.Header.Get("x-oss-request-payer"), "requester")
 		},
 		&AppendObjectRequest{
-			Bucket:                   Ptr("bucket"),
-			Key:                      Ptr("object"),
-			Position:                 Ptr(int64(100)),
-			Body:                     strings.NewReader("hi oss,append object,this is a demo"),
-			ServerSideEncryption:     Ptr("KMS"),
-			ServerSideDataEncryption: Ptr("SM4"),
-			SSEKMSKeyId:              Ptr("12f8711f-90df-4e0d-903d-ab972b0f****"),
-			TrafficLimit:             int64(100 * 1024 * 8),
-			RequestPayer:             Ptr("requester"),
+			Bucket:                    Ptr("bucket"),
+			Key:                       Ptr("object"),
+			Position:                  Ptr(int64(100)),
+			Body:                      strings.NewReader("hi oss,append object,this is a demo"),
+			ServerSideEncryption:      Ptr("KMS"),
+			ServerSideDataEncryption:  Ptr("SM4"),
+			ServerSideEncryptionKeyId: Ptr("12f8711f-90df-4e0d-903d-ab972b0f****"),
+			TrafficLimit:              int64(100 * 1024 * 8),
+			RequestPayer:              Ptr("requester"),
 		},
 		func(t *testing.T, o *AppendObjectResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -4816,7 +4816,7 @@ var testMockAppendObjectSuccessCases = []struct {
 			assert.Equal(t, o.NextPosition, int64(1717))
 			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
 			assert.Equal(t, *o.ServerSideEncryption, "KMS")
-			assert.Equal(t, *o.SSEKMSKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
 		},
 	},
 }
@@ -5985,7 +5985,7 @@ var testMockHeadObjectSuccessCases = []struct {
 			assert.Equal(t, *o.Restore, "ongoing-request=\"false\", expiry-date=\"Sun, 16 Apr 2017 08:12:33 GMT\"")
 			assert.Equal(t, *o.ServerSideEncryption, "KMS")
 			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
-			assert.Equal(t, *o.SSEKMSKeyId, "9468da86-3509-4f8d-a61e-6eab1eac****")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "9468da86-3509-4f8d-a61e-6eab1eac****")
 		},
 	},
 	{
@@ -6029,7 +6029,7 @@ var testMockHeadObjectSuccessCases = []struct {
 			assert.Equal(t, *o.Restore, "ongoing-request=\"false\", expiry-date=\"Sun, 16 Apr 2017 08:12:33 GMT\"")
 			assert.Equal(t, *o.ServerSideEncryption, "KMS")
 			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
-			assert.Equal(t, *o.SSEKMSKeyId, "9468da86-3509-4f8d-a61e-6eab1eac****")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "9468da86-3509-4f8d-a61e-6eab1eac****")
 		},
 	},
 }
@@ -7368,17 +7368,17 @@ var testMockInitiateMultipartUploadSuccessCases = []struct {
 			assert.Equal(t, "text/plain", r.Header.Get(HTTPHeaderContentType))
 		},
 		&InitiateMultipartUploadRequest{
-			Bucket:                   Ptr("bucket"),
-			Key:                      Ptr("object.txt"),
-			CacheControl:             Ptr("no-cache"),
-			ContentDisposition:       Ptr("attachment"),
-			ContentEncoding:          Ptr("utf-8"),
-			Expires:                  Ptr("2022-10-12T00:00:00.000Z"),
-			ForbidOverwrite:          Ptr("false"),
-			ServerSideEncryption:     Ptr("KMS"),
-			ServerSideDataEncryption: Ptr("SM4"),
-			SSEKMSKeyId:              Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
-			StorageClass:             StorageClassStandard,
+			Bucket:                    Ptr("bucket"),
+			Key:                       Ptr("object.txt"),
+			CacheControl:              Ptr("no-cache"),
+			ContentDisposition:        Ptr("attachment"),
+			ContentEncoding:           Ptr("utf-8"),
+			Expires:                   Ptr("2022-10-12T00:00:00.000Z"),
+			ForbidOverwrite:           Ptr("false"),
+			ServerSideEncryption:      Ptr("KMS"),
+			ServerSideDataEncryption:  Ptr("SM4"),
+			ServerSideEncryptionKeyId: Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
+			StorageClass:              StorageClassStandard,
 			Metadata: map[string]string{
 				"name":  "walker",
 				"email": "demo@aliyun.com",
@@ -7430,17 +7430,17 @@ var testMockInitiateMultipartUploadSuccessCases = []struct {
 			assert.Equal(t, r.Header.Get("x-oss-request-payer"), "requester")
 		},
 		&InitiateMultipartUploadRequest{
-			Bucket:                   Ptr("bucket"),
-			Key:                      Ptr("object.txt"),
-			CacheControl:             Ptr("no-cache"),
-			ContentDisposition:       Ptr("attachment"),
-			ContentEncoding:          Ptr("utf-8"),
-			Expires:                  Ptr("2022-10-12T00:00:00.000Z"),
-			ForbidOverwrite:          Ptr("false"),
-			ServerSideEncryption:     Ptr("KMS"),
-			ServerSideDataEncryption: Ptr("SM4"),
-			SSEKMSKeyId:              Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
-			StorageClass:             StorageClassStandard,
+			Bucket:                    Ptr("bucket"),
+			Key:                       Ptr("object.txt"),
+			CacheControl:              Ptr("no-cache"),
+			ContentDisposition:        Ptr("attachment"),
+			ContentEncoding:           Ptr("utf-8"),
+			Expires:                   Ptr("2022-10-12T00:00:00.000Z"),
+			ForbidOverwrite:           Ptr("false"),
+			ServerSideEncryption:      Ptr("KMS"),
+			ServerSideDataEncryption:  Ptr("SM4"),
+			ServerSideEncryptionKeyId: Ptr("9468da86-3509-4f8d-a61e-6eab1eac****"),
+			StorageClass:              StorageClassStandard,
 			Metadata: map[string]string{
 				"name":  "walker",
 				"email": "demo@aliyun.com",

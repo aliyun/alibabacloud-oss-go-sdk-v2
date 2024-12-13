@@ -46,16 +46,23 @@ type PutObjectRequest struct {
 	// If you set the x-oss-forbid-overwrite header to true, an existing object that has the same name cannot be overwritten.
 	ForbidOverwrite *string `input:"header,x-oss-forbid-overwrite"`
 
-	// The encryption method on the server side when an object is created.
-	// Valid values: AES256 and KMS
+	// The encryption method on the server side when an object is created. Valid values: AES256, KMS, SM4.
+	// If you specify the header, the header is returned in the response.
+	// OSS uses the method that is specified by this header to encrypt the uploaded object.
+	// When you download the encrypted object, the x-oss-server-side-encryption header is included in the response and the header value is set to the algorithm that is used to encrypt the object.
 	ServerSideEncryption *string `input:"header,x-oss-server-side-encryption"`
+
+	// Specify the encryption algorithm for the object. Valid values: SM4.
+	// If this option is not specified, it indicates that the Object uses AES256 encryption algorithm.
+	// This option is only valid when x-oss-ser-side-encryption is KMS.
+	ServerSideDataEncryption *string `input:"header,x-oss-server-side-data-encryption"`
+
+	// Deprecated: Please use ServerSideEncryptionKeyId
+	SSEKMSKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
 
 	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
 	// This header is valid only when the x-oss-server-side-encryption header is set to KMS.
-	ServerSideDataEncryption *string `input:"header,x-oss-server-side-data-encryption"`
-
-	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
-	SSEKMSKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
+	ServerSideEncryptionKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
 
 	// The access control list (ACL) of the object.
 	Acl ObjectACLType `input:"header,x-oss-object-acl"`
@@ -300,11 +307,15 @@ type GetObjectResult struct {
 	// the encryption algorithm used to encrypt the object on the server.
 	ServerSideEncryption *string `output:"header,x-oss-server-side-encryption"`
 
-	//The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// The server side data encryption algorithm.
 	ServerSideDataEncryption *string `output:"header,x-oss-server-side-data-encryption"`
 
-	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// Deprecated: Please use ServerSideEncryptionKeyId
 	SSEKMSKeyId *string `output:"header,x-oss-server-side-encryption-key-id"`
+
+	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// This header is valid only when the x-oss-server-side-encryption header is set to KMS.
+	ServerSideEncryptionKeyId *string `output:"header,x-oss-server-side-encryption-key-id"`
 
 	// The type of the object.
 	ObjectType *string `output:"header,x-oss-object-type"`
@@ -424,16 +435,19 @@ type CopyObjectRequest struct {
 	// REPLACE: The metadata specified in the request is used as the metadata of the destination object.
 	MetadataDirective *string `input:"header,x-oss-metadata-directive"`
 
-	// The encryption method on the server side when an object is created.
-	// Valid values: AES256 and KMS
+	// The entropy coding-based encryption algorithm that OSS uses to encrypt an object when you create the object.
+	// Valid values: AES256, KMS, SM4
 	ServerSideEncryption *string `input:"header,x-oss-server-side-encryption"`
+
+	// The server side data encryption algorithm. Invalid value: SM4
+	ServerSideDataEncryption *string `input:"header,x-oss-server-side-data-encryption"`
+
+	// Deprecated: Please use ServerSideEncryptionKeyId
+	SSEKMSKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
 
 	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
 	// This header is valid only when the x-oss-server-side-encryption header is set to KMS.
-	ServerSideDataEncryption *string `input:"header,x-oss-server-side-data-encryption"`
-
-	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
-	SSEKMSKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
+	ServerSideEncryptionKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
 
 	// The access control list (ACL) of the object.
 	Acl ObjectACLType `input:"header,x-oss-object-acl"`
@@ -497,11 +511,15 @@ type CopyObjectResult struct {
 	// the encryption algorithm used to encrypt the object on the server.
 	ServerSideEncryption *string `output:"header,x-oss-server-side-encryption"`
 
-	//The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// The server side data encryption algorithm.
 	ServerSideDataEncryption *string `output:"header,x-oss-server-side-data-encryption"`
 
-	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// Deprecated: Please use ServerSideEncryptionKeyId
 	SSEKMSKeyId *string `output:"header,x-oss-server-side-encryption-key-id"`
+
+	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// This header is valid only when the x-oss-server-side-encryption header is set to KMS.
+	ServerSideEncryptionKeyId *string `output:"header,x-oss-server-side-encryption-key-id"`
 
 	// The time when the returned objects were last modified.
 	LastModified *time.Time `xml:"LastModified"`
@@ -583,16 +601,23 @@ type AppendObjectRequest struct {
 	// If you set the x-oss-forbid-overwrite header to true, an existing object that has the same name as the object that you want to copy is not overwritten.
 	ForbidOverwrite *string `input:"header,x-oss-forbid-overwrite"`
 
-	// The encryption method on the server side when an object is created.
-	// Valid values: AES256 and KMS
+	// The method used to encrypt objects on the specified OSS server.Valid values: AES256, KMS, SM4
+	// AES256: Keys managed by OSS are used for encryption and decryption (SSE-OSS).
+	// KMS: Keys managed by Key Management Service (KMS) are used for encryption and decryption.
+	// SM4: The SM4 block cipher algorithm is used for encryption and decryption.
 	ServerSideEncryption *string `input:"header,x-oss-server-side-encryption"`
 
-	//The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
-	//This header is valid only when the x-oss-server-side-encryption header is set to KMS.
+	// Specify the encryption algorithm for the object. Valid values: SM4.
+	// If this option is not specified, it indicates that the Object uses AES256 encryption algorithm.
+	// This option is only valid when x-oss-ser-side-encryption is KMS.
 	ServerSideDataEncryption *string `input:"header,x-oss-server-side-data-encryption"`
 
-	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// Deprecated: Please use ServerSideEncryptionKeyId
 	SSEKMSKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
+
+	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// This header is valid only when the x-oss-server-side-encryption header is set to KMS.
+	ServerSideEncryptionKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
 
 	// The access control list (ACL) of the object.
 	Acl ObjectACLType `input:"header,x-oss-object-acl"`
@@ -637,18 +662,18 @@ type AppendObjectResult struct {
 	NextPosition int64 `output:"header,x-oss-next-append-position"`
 
 	// The encryption method on the server side when an object is created.
-	// Valid values: AES256 and KMS
+	// Valid values: AES256, KMS, SM4
 	ServerSideEncryption *string `output:"header,x-oss-server-side-encryption"`
+
+	// The server side data encryption algorithm.
+	ServerSideDataEncryption *string `output:"header,x-oss-server-side-data-encryption"`
+
+	// Deprecated: Please use ServerSideEncryptionKeyId
+	SSEKMSKeyId *string `output:"header,x-oss-server-side-encryption-key-id"`
 
 	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
 	// This header is valid only when the x-oss-server-side-encryption header is set to KMS.
-	ServerSideDataEncryption *string `output:"header,x-oss-server-side-data-encryption"`
-
-	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
-	SSEKMSKeyId *string `output:"header,x-oss-server-side-encryption-key-id"`
-
-	// A map of metadata to store with the object.
-	Metadata map[string]string `output:"header,x-oss-meta-,usermeta"`
+	ServerSideEncryptionKeyId *string `output:"header,x-oss-server-side-encryption-key-id"`
 
 	ResultCommon
 }
@@ -914,11 +939,15 @@ type HeadObjectResult struct {
 	// the encryption algorithm used to encrypt the object on the server.
 	ServerSideEncryption *string `output:"header,x-oss-server-side-encryption"`
 
-	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// The server side data encryption algorithm.
 	ServerSideDataEncryption *string `output:"header,x-oss-server-side-data-encryption"`
 
-	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// Deprecated: Please use ServerSideEncryptionKeyId
 	SSEKMSKeyId *string `output:"header,x-oss-server-side-encryption-key-id"`
+
+	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
+	// This header is valid only when the x-oss-server-side-encryption header is set to KMS.
+	ServerSideEncryptionKeyId *string `output:"header,x-oss-server-side-encryption-key-id"`
 
 	// The type of the object.
 	ObjectType *string `output:"header,x-oss-object-type"`
@@ -1316,16 +1345,23 @@ type InitiateMultipartUploadRequest struct {
 	// If you set the x-oss-forbid-overwrite header to true, an existing object that has the same name cannot be overwritten.
 	ForbidOverwrite *string `input:"header,x-oss-forbid-overwrite"`
 
-	// The encryption method on the server side when an object is created.
-	// Valid values: AES256 and KMS
+	// The server-side encryption method that is used to encrypt each part of the object that you want to upload.Valid values: AES256, KMS, SM4.
+	// If you specify this header in the request, this header is included in the response.
+	// OSS uses the method specified by this header to encrypt each uploaded part.
+	// When you download the object, the x-oss-server-side-encryption header is included in the response and the header value is set to the method that is used to encrypt the object.
 	ServerSideEncryption *string `input:"header,x-oss-server-side-encryption"`
+
+	// The server side data encryption algorithm. Valid values: SM4
+	// If this option is not specified, it indicates that the Object uses AES256 encryption algorithm.
+	// This option is only valid when x-oss-ser-side-encryption is KMS.
+	ServerSideDataEncryption *string `input:"header,x-oss-server-side-data-encryption"`
+
+	// Deprecated: Please use ServerSideEncryptionKeyId
+	SSEKMSKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
 
 	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
 	// This header is valid only when the x-oss-server-side-encryption header is set to KMS.
-	ServerSideDataEncryption *string `input:"header,x-oss-server-side-data-encryption"`
-
-	// The ID of the customer master key (CMK) that is managed by Key Management Service (KMS).
-	SSEKMSKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
+	ServerSideEncryptionKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
 
 	// The storage class of the object.
 	StorageClass StorageClassType `input:"header,x-oss-storage-class"`
