@@ -53,8 +53,8 @@ func main() {
 				AllowedFeatures: []string{"GetObject-Range"},
 				TransformationConfigurations: []oss.TransformationConfiguration{
 					{
-						Actions: &oss.Actions{
-							[]string{"GetObject"},
+						Actions: &oss.AccessPointActions{
+							Actions: []string{"GetObject"},
 						},
 						ContentTransformation: &oss.ContentTransformation{
 							FunctionArn:           oss.Ptr(arn),
