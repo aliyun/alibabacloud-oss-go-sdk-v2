@@ -2730,8 +2730,8 @@ func TestMarshalInput_GetObjectAcl(t *testing.T) {
 
 	request = &GetObjectAclRequest{}
 	input = &OperationInput{
-		OpName: "PutObjectAcl",
-		Method: "PUT",
+		OpName: "GetObjectAcl",
+		Method: "GET",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -2743,8 +2743,8 @@ func TestMarshalInput_GetObjectAcl(t *testing.T) {
 		Bucket: Ptr("oss-demo"),
 	}
 	input = &OperationInput{
-		OpName: "PutObjectAcl",
-		Method: "PUT",
+		OpName: "GetObjectAcl",
+		Method: "GET",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -2757,8 +2757,8 @@ func TestMarshalInput_GetObjectAcl(t *testing.T) {
 		Key:    Ptr("oss-object"),
 	}
 	input = &OperationInput{
-		OpName: "PutObjectAcl",
-		Method: "PUT",
+		OpName: "GetObjectAcl",
+		Method: "GET",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -2771,8 +2771,8 @@ func TestMarshalInput_GetObjectAcl(t *testing.T) {
 		VersionId: Ptr("CAEQMhiBgMC1qpSD0BYiIGQ0ZmI5ZDEyYWVkNTQwMjBiNTliY2NjNmY3ZTVk****"),
 	}
 	input = &OperationInput{
-		OpName: "PutObjectAcl",
-		Method: "PUT",
+		OpName: "GetObjectAcl",
+		Method: "GET",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
@@ -2784,8 +2784,8 @@ func TestMarshalInput_GetObjectAcl(t *testing.T) {
 		RequestPayer: Ptr("requester"),
 	}
 	input = &OperationInput{
-		OpName: "PutObjectAcl",
-		Method: "PUT",
+		OpName: "GetObjectAcl",
+		Method: "GET",
 		Bucket: request.Bucket,
 		Key:    request.Key,
 	}
