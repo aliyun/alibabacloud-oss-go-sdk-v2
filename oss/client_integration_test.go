@@ -9026,3 +9026,48 @@ func TestRedundancyTransition(t *testing.T) {
 	assert.Equal(t, "0002-00000902", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
 }
+
+func TestRegions(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	client := getDefaultClient()
+	result, err := client.DescribeRegions(context.TODO(), &DescribeRegionsRequest{})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, result.StatusCode)
+	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	result, err = client.DescribeRegions(context.TODO(), &DescribeRegionsRequest{
+		Regions: Ptr("oss-cn-hangzhou"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, result.StatusCode)
+	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
+	assert.Equal(t, len(result.RegionInfoList.RegionInfos), 1)
+	time.Sleep(1 * time.Second)
+
+	serr := &ServiceError{}
+	noPermClient := getClientWithCredentialsProvider(region_, endpoint_,
+		credentials.NewStaticCredentialsProvider("ak", "sk"))
+	_, err = noPermClient.DescribeRegions(context.TODO(), &DescribeRegionsRequest{})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.Equal(t, "0002-00000902", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = noPermClient.DescribeRegions(context.TODO(), &DescribeRegionsRequest{
+		Regions: Ptr("oss-cn-hangzhou"),
+	})
+	serr = &ServiceError{}
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.Equal(t, "0002-00000902", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+}
