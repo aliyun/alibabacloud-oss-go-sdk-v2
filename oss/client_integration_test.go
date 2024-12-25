@@ -3862,6 +3862,7 @@ func TestPresignExtra(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "GET", result.Method)
 	assert.NotEmpty(t, result.Expiration)
+	assert.Equal(t, map[string]string(nil), result.SignedHeaders)
 	req, err = http.NewRequest(result.Method, result.URL, nil)
 	assert.Nil(t, err)
 	resp, _ = c.Do(req)
@@ -3878,13 +3879,26 @@ func TestPresignExtra(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "GET", result.Method)
 	assert.NotEmpty(t, result.Expiration)
+	assert.Equal(t, map[string]string(nil), result.SignedHeaders)
+
 	req, err = http.NewRequest(result.Method, result.URL, nil)
 	assert.Nil(t, err)
 	resp, _ = c.Do(req)
 	assert.Equal(t, resp.StatusCode, 403)
 
+	putObjRequest = &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		RequestCommon: RequestCommon{
+			Headers: map[string]string{
+				"content-length": "1000",
+			},
+		},
+	}
 	result, err = clientV1.Presign(context.TODO(), putObjRequest)
 	assert.Nil(t, err)
+	assert.Equal(t, map[string]string(nil), result.SignedHeaders)
+	assert.NotEmpty(t, result.Expiration)
 	req, err = http.NewRequest(result.Method, result.URL, strings.NewReader(body))
 	assert.Nil(t, err)
 	resp, err = c.Do(req)
@@ -3906,6 +3920,7 @@ func TestPresignExtra(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "GET", result.Method)
 	assert.NotEmpty(t, result.Expiration)
+	assert.Equal(t, map[string]string(nil), result.SignedHeaders)
 	req, err = http.NewRequest(result.Method, result.URL, nil)
 	assert.Nil(t, err)
 	resp, _ = c.Do(req)
@@ -3933,6 +3948,8 @@ func TestPresignExtra(t *testing.T) {
 	}
 	result, err = clientV4.Presign(context.TODO(), putObjRequest)
 	assert.Nil(t, err)
+	assert.Equal(t, map[string]string{"Content-Length": "1000"}, result.SignedHeaders)
+	assert.NotEmpty(t, result.Expiration)
 	req, err = http.NewRequest(result.Method, result.URL, strings.NewReader(body))
 	assert.Nil(t, err)
 	resp, err = c.Do(req)
@@ -3943,6 +3960,43 @@ func TestPresignExtra(t *testing.T) {
 	resp, err = c.Do(req)
 	assert.Equal(t, resp.StatusCode, 403)
 
+	cfgV4 = LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessID_, accessKey_)).
+		WithRegion(region_).
+		WithEndpoint(endpoint_).
+		WithSignatureVersion(SignatureVersionV4).WithAdditionalHeaders([]string{"email", "name"})
+
+	putObjRequest = &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		RequestCommon: RequestCommon{
+			Headers: map[string]string{
+				"email": "demo@aliyun.com",
+				"name":  "aliyun",
+			},
+		},
+	}
+	clientV4 = NewClient(cfgV4)
+	result, err = clientV4.Presign(context.TODO(), putObjRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, map[string]string{"Email": "demo@aliyun.com",
+		"Name": "aliyun"}, result.SignedHeaders)
+	assert.NotEmpty(t, result.Expiration)
+
+	req, err = http.NewRequest(result.Method, result.URL, strings.NewReader(body))
+	assert.Nil(t, err)
+	resp, err = c.Do(req)
+	assert.Equal(t, resp.StatusCode, 400)
+	req, err = http.NewRequest(result.Method, result.URL, strings.NewReader(body))
+	assert.Nil(t, err)
+
+	header := make(http.Header)
+	for key, value := range result.SignedHeaders {
+		header[key] = []string{value}
+	}
+	req.Header = header
+	resp, err = c.Do(req)
+	assert.Equal(t, resp.StatusCode, 200)
 	deleteBucket(bucketName, t)
 }
 
