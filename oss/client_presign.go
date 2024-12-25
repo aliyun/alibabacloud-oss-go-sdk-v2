@@ -138,10 +138,10 @@ func (c *Client) marshalPresignInput(request any, input *OperationInput) error {
 }
 
 func (c *Client) unmarshalPresignOutput(result *PresignResult, output *OperationOutput) error {
-	if chk, ok := c.options.Signer.(interface{ IsSignedHeader(string) bool }); ok {
+	if chk, ok := c.options.Signer.(interface{ IsSignedHeader([]string, string) bool }); ok {
 		header := map[string]string{}
 		for k, v := range output.httpRequest.Header {
-			if chk.IsSignedHeader(k) {
+			if chk.IsSignedHeader(c.options.AdditionalHeaders, k) {
 				header[k] = v[0]
 			}
 		}

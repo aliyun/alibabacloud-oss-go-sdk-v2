@@ -375,6 +375,16 @@ func (s *SignerV4) Sign(ctx context.Context, signingCtx *SigningContext) error {
 	return s.authHeader(ctx, signingCtx)
 }
 
-func (*SignerV4) IsSignedHeader(h string) bool {
-	return isDefaultSignedHeader(strings.ToLower(h))
+func (s *SignerV4) IsSignedHeader(additionalHeaders []string, h string) bool {
+	return isDefaultSignedHeader(strings.ToLower(h)) || ContainsStr(additionalHeaders, h)
+}
+
+// ContainsStr Used to check if the string is in the slice
+func ContainsStr(slice []string, str string) bool {
+	for _, item := range slice {
+		if strings.ToLower(str) == strings.ToLower(item) {
+			return true
+		}
+	}
+	return false
 }
