@@ -211,6 +211,76 @@ func TestPresignWithHeader(t *testing.T) {
 	assert.Contains(t, result.URL, fmt.Sprintf("x-oss-expires=%v", (1*time.Hour).Seconds()))
 }
 
+func TestPresignWithAdditionalHeaders(t *testing.T) {
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider("ak", "sk")).
+		WithRegion("cn-hangzhou").
+		WithEndpoint("oss-cn-hangzhou.aliyuncs.com").
+		WithSignatureVersion(SignatureVersionV1).
+		WithAdditionalHeaders([]string{"email", "name"})
+
+	client := NewClient(cfg)
+
+	request := &GetObjectRequest{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("key"),
+		RequestCommon: RequestCommon{
+			Headers: map[string]string{
+				"Content-Type": "application/octet-stream",
+				"email":        "demo@aliyun.com",
+				"name":         "aliyun",
+			},
+		},
+	}
+
+	expiration := time.Now().Add(1 * time.Hour)
+	result, err := client.Presign(context.TODO(), request, PresignExpiration(expiration))
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", result.Method)
+	assert.NotEmpty(t, result.Expiration)
+	assert.Len(t, result.SignedHeaders, 1)
+	assert.Equal(t, "application/octet-stream", result.SignedHeaders["Content-Type"])
+	assert.Contains(t, result.URL, "bucket.oss-cn-hangzhou.aliyuncs.com/key?")
+	assert.Contains(t, result.URL, "OSSAccessKeyId=ak")
+	assert.Contains(t, result.URL, fmt.Sprintf("Expires=%v", expiration.Unix()))
+	assert.Contains(t, result.URL, "Signature=")
+
+	cfgV4 := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider("ak", "sk")).
+		WithRegion("cn-hangzhou").
+		WithEndpoint("oss-cn-hangzhou.aliyuncs.com").
+		WithSignatureVersion(SignatureVersionV4).
+		WithAdditionalHeaders([]string{"email", "name"})
+
+	client = NewClient(cfgV4)
+	request = &GetObjectRequest{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("key"),
+		RequestCommon: RequestCommon{
+			Headers: map[string]string{
+				"email": "demo@aliyun.com",
+				"name":  "aliyun",
+			},
+		},
+	}
+	expiration = time.Now().Add(1 * time.Hour)
+	result, err = client.Presign(context.TODO(), request, PresignExpiration(expiration))
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", result.Method)
+	assert.NotEmpty(t, result.Expiration)
+	assert.Len(t, result.SignedHeaders, 2)
+	assert.Equal(t, "demo@aliyun.com", result.SignedHeaders["Email"])
+	assert.Equal(t, "aliyun", result.SignedHeaders["Name"])
+	assert.Contains(t, result.URL, fmt.Sprintf("x-oss-date=%v", expiration.Add(-1*time.Hour).UTC().Format("20060102T150405Z")))
+	credential := fmt.Sprintf("ak/%v/cn-hangzhou/oss/aliyun_v4_request", expiration.Add(-1*time.Hour).UTC().Format("20060102"))
+	assert.Contains(t, result.URL, "x-oss-credential="+url.QueryEscape(credential))
+	assert.Contains(t, result.URL, "x-oss-signature=")
+	assert.Contains(t, result.URL, "x-oss-signature-version=OSS4-HMAC-SHA256")
+	assert.Contains(t, result.URL, fmt.Sprintf("x-oss-expires=%v", (1*time.Hour).Seconds()))
+	assert.Contains(t, result.URL, "x-oss-additional-headers=email%3Bname")
+
+}
+
 func TestPresignWithQuery(t *testing.T) {
 	cfg := LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewStaticCredentialsProvider("ak", "sk")).

@@ -252,7 +252,7 @@ func (s *SignerV1) Sign(ctx context.Context, signingCtx *SigningContext) error {
 	return s.authHeader(ctx, signingCtx)
 }
 
-func (*SignerV1) IsSignedHeader(h string) bool {
+func (*SignerV1) IsSignedHeader(additionalHeaders []string, h string) bool {
 	lowerCaseKey := strings.ToLower(h)
 	if strings.HasPrefix(lowerCaseKey, ossHeaderPreifx) ||
 		lowerCaseKey == "date" ||
