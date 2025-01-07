@@ -334,6 +334,11 @@ func (e *EncryptionClient) validEncryptionContext(request *InitiateMultipartUplo
 		return NewErrParamInvalid("request.CSEPartSize")
 	}
 
+	dataSize := ToInt64(request.CSEDataSize)
+	if dataSize <= 0 {
+		return NewErrParamInvalid("request.CSEDataSize")
+	}
+
 	if partSize%int64(e.alignLen) != 0 {
 		return fmt.Errorf("request.CSEPartSize must aligned to the %v", e.alignLen)
 	}
