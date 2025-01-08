@@ -9125,3 +9125,88 @@ func TestRegions(t *testing.T) {
 	assert.Equal(t, "0002-00000902", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
 }
+
+func TestDownloaderTruncate(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	//TODO
+	client := getDefaultClient()
+	bucketName := bucketNamePrefix + randLowStr(6)
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	objectName := objectNamePrefix + randLowStr(6)
+	objectLen := 100*1024*4 + 123
+	content := randLowStr(objectLen)
+	request := &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Body:   strings.NewReader(content),
+	}
+	result, err := client.PutObject(context.TODO(), request)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, result.StatusCode)
+
+	d := client.NewDownloader(func(do *DownloaderOptions) {
+		do.ParallelNum = 3
+		do.PartSize = 100 * 1024
+		do.UseTempFile = false
+	})
+	assert.NotNil(t, d)
+	assert.Equal(t, 3, d.options.ParallelNum)
+	localFile := randStr(8) + "-downloader"
+	defer os.Remove(localFile)
+
+	// file size is 0, file size < get size
+	dResult, err := d.DownloadFile(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+		},
+		localFile)
+
+	assert.Nil(t, err)
+
+	assert.Equal(t, objectLen, (int)(dResult.Written))
+	gotCotent, err := os.ReadFile(localFile)
+	assert.Nil(t, err)
+	assert.Equal(t, []byte(content), gotCotent)
+
+	//range get
+	// file size > get size
+	dResult, err = d.DownloadFile(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+			Range:  Ptr("bytes=123-123456"),
+		},
+		localFile)
+
+	gotCotent, err = os.ReadFile(localFile)
+	assert.Nil(t, err)
+	assert.Equal(t, 123456-123+1, (int)(dResult.Written))
+	assert.Equal(t, []byte(content[123:123456+1]), []byte(gotCotent))
+
+	// file size == get size
+	content1 := randLowStr(123456 - 123 + 1)
+	os.WriteFile(localFile, []byte(content1), 0644)
+	gotCotent, err = os.ReadFile(localFile)
+	assert.Equal(t, []byte(content1), []byte(gotCotent))
+	dResult, err = d.DownloadFile(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+			Range:  Ptr("bytes=123-123456"),
+		},
+		localFile)
+
+	gotCotent, err = os.ReadFile(localFile)
+	assert.Nil(t, err)
+	assert.Equal(t, 123456-123+1, (int)(dResult.Written))
+	assert.Equal(t, []byte(content[123:123456+1]), []byte(gotCotent))
+}
