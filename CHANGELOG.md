@@ -1,5 +1,13 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.2.0 日期：2025-01-08
+### 变更内容
+- Feature：Add redundancy transition api
+- Feature：Add describe regions api
+- Break Change：Rename SSEKMSKeyId to ServerSideEncryptionKeyId
+- Update：Check the file size before calling truncate
+- Fix：Returns all signed header when additional headers is set
+
 ## 版本号：v1.1.3 日期：2024-11-29
 ### 变更内容
 - Feature：Add clean restored object api
