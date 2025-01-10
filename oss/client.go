@@ -124,6 +124,17 @@ func resolveEndpoint(cfg *Config, o *Options) {
 	disableSSL := ToBool(cfg.DisableSSL)
 	endpoint := ToString(cfg.Endpoint)
 	region := ToString(cfg.Region)
+	if isCloudBoxEndpointSuffix(endpoint) {
+		if cfg.CloudBoxId != nil {
+			region = ToString(cfg.CloudBoxId)
+		} else {
+			region = getCloudBoxId(endpoint)
+		}
+		if strings.HasPrefix(region, "cb-") {
+			o.Product = CloudBoxProduct
+			o.Region = region
+		}
+	}
 	if len(endpoint) > 0 {
 		endpoint = addEndpointScheme(endpoint, disableSSL)
 	} else if isValidRegion(region) {
@@ -259,6 +270,31 @@ func buildUserAgent(cfg *Config) string {
 	}
 
 	return fmt.Sprintf("%s/%s", defaultUserAgent, ToString(cfg.UserAgent))
+}
+
+func isCloudBoxEndpointSuffix(endpoint string) bool {
+	if endpoint == "" {
+		return false
+	}
+	if strings.HasSuffix(endpoint, "oss-cloudbox.aliyuncs.com") ||
+		strings.HasSuffix(endpoint, "oss-cloudbox-control.aliyuncs.com") {
+		return true
+	}
+	return false
+}
+
+func getCloudBoxId(endpoint string) string {
+	if endpoint == "" {
+		return ""
+	}
+	endpointUrl, _ := url.Parse(endpoint)
+	keys := strings.Split(endpointUrl.Host, ".")
+	if keys != nil && len(keys) == 5 {
+		if strings.HasPrefix(keys[0], "cb-") {
+			return keys[0]
+		}
+	}
+	return ""
 }
 
 func (c *Client) invokeOperation(ctx context.Context, input *OperationInput, optFns []func(*Options)) (output *OperationOutput, err error) {
