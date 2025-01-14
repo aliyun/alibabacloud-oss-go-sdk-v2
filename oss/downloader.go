@@ -151,6 +151,7 @@ type downloaderDelegate struct {
 	//Destination's Info
 	filePath     string
 	tempFilePath string
+	fileInfo     os.FileInfo
 
 	//crc
 	calcCRC  bool
@@ -273,12 +274,19 @@ func (d *downloaderDelegate) checkDestination(filePath string) (*os.File, error)
 		return nil, err
 	}
 
+	if d.fileInfo, err = file.Stat(); err != nil {
+		return nil, err
+	}
+
 	return file, nil
 }
 
 func (d *downloaderDelegate) adjustWriter(file *os.File) error {
-	if err := file.Truncate(d.pos - d.rstart); err != nil {
-		return err
+	expectSize := d.epos - d.rstart
+	if d.fileInfo != nil && d.fileInfo.Size() > expectSize {
+		if err := file.Truncate(d.pos - d.rstart); err != nil {
+			return err
+		}
 	}
 	d.w = file
 	return nil

@@ -50,6 +50,8 @@ var (
 	pathStyleBucket_ = os.Getenv("OSS_TEST_PATHSTYLE_BUCKET")
 	pathStyleRegion_ = os.Getenv("OSS_TEST_PATHSTYLE_REGION")
 
+	apEnable = os.Getenv("OSS_TEST_AP_ENABLE")
+
 	instance_ *Client
 	testOnce_ sync.Once
 
@@ -174,7 +176,6 @@ func cleanBucket(bucketInfo BucketProperties, t *testing.T) {
 		c = getClient(*bucketInfo.Region, *bucketInfo.ExtranetEndpoint)
 	}
 	assert.NotNil(t, c)
-	deleteAccessPoint(c, *bucketInfo.Name, t)
 	cleanObjects(c, *bucketInfo.Name, t)
 }
 
@@ -321,30 +322,41 @@ func deleteAccessPoint(c *Client, bucketName string, t *testing.T) {
 		}
 		lap, err = c.ListAccessPoints(context.TODO(), listRequest)
 		assert.Nil(t, err)
-		for _, accessPoint := range lap.AccessPoints {
-			switch *accessPoint.Status {
-			case "creating":
-				time.Sleep(3 * time.Second)
-				for {
-					getResult, err = c.GetAccessPoint(context.TODO(), &GetAccessPointRequest{
+		if len(lap.AccessPoints) > 0 {
+			for _, accessPoint := range lap.AccessPoints {
+				switch *accessPoint.Status {
+				case "creating":
+					time.Sleep(3 * time.Second)
+					for {
+						getResult, err = c.GetAccessPoint(context.TODO(), &GetAccessPointRequest{
+							Bucket:          Ptr(bucketName),
+							AccessPointName: accessPoint.AccessPointName,
+						})
+						assert.Nil(t, err)
+						if *getResult.AccessPointStatus != "creating" {
+							break
+						} else {
+							time.Sleep(3 * time.Second)
+						}
+					}
+					delRequest = &DeleteAccessPointRequest{
 						Bucket:          Ptr(bucketName),
 						AccessPointName: accessPoint.AccessPointName,
-					})
-					assert.Nil(t, err)
-					if *getResult.AccessPointStatus != "creating" {
-						break
-					} else {
-						time.Sleep(3 * time.Second)
 					}
+					_, err = c.DeleteAccessPoint(context.TODO(), delRequest)
+					assert.Nil(t, err)
+				case "deleting":
+					time.Sleep(5 * time.Second)
+				default:
+					delRequest = &DeleteAccessPointRequest{
+						Bucket:          Ptr(bucketName),
+						AccessPointName: accessPoint.AccessPointName,
+					}
+					_, err = c.DeleteAccessPoint(context.TODO(), delRequest)
+					assert.Nil(t, err)
+					time.Sleep(3 * time.Second)
+
 				}
-				delRequest = &DeleteAccessPointRequest{
-					Bucket:          Ptr(bucketName),
-					AccessPointName: accessPoint.AccessPointName,
-				}
-				_, err = c.DeleteAccessPoint(context.TODO(), delRequest)
-				assert.Nil(t, err)
-			case "deleting":
-				time.Sleep(5 * time.Second)
 				for {
 					getResult, err = c.GetAccessPoint(context.TODO(), &GetAccessPointRequest{
 						Bucket:          Ptr(bucketName),
@@ -358,22 +370,18 @@ func deleteAccessPoint(c *Client, bucketName string, t *testing.T) {
 					}
 					time.Sleep(3 * time.Second)
 				}
-			default:
-				delRequest = &DeleteAccessPointRequest{
-					Bucket:          Ptr(bucketName),
-					AccessPointName: accessPoint.AccessPointName,
-				}
-				_, err = c.DeleteAccessPoint(context.TODO(), delRequest)
-				assert.Nil(t, err)
 			}
-		}
 
-		if !*lap.IsTruncated {
+			if !*lap.IsTruncated {
+				break
+			}
+			if lap.NextContinuationToken != nil {
+				token = *lap.NextContinuationToken
+			}
+		} else {
 			break
 		}
-		if lap.NextContinuationToken != nil {
-			token = *lap.NextContinuationToken
-		}
+
 	}
 }
 
@@ -476,6 +484,26 @@ func before(_ *testing.T) func(t *testing.T) {
 func after(t *testing.T) {
 	cleanBuckets(bucketNamePrefix, t)
 	//fmt.Println("teardown  test case")
+}
+
+func clearAp(t *testing.T) {
+	c := getDefaultClient()
+	for {
+		request := &ListBucketsRequest{
+			Prefix: Ptr(bucketNamePrefix),
+		}
+		result, err := c.ListBuckets(context.TODO(), request)
+		assert.Nil(t, err)
+		if len(result.Buckets) == 0 {
+			return
+		}
+		for _, b := range result.Buckets {
+			deleteAccessPoint(c, *b.Name, t)
+		}
+		if !result.IsTruncated {
+			break
+		}
+	}
 }
 
 func dumpErrIfNotNil(err error) {
@@ -5204,6 +5232,7 @@ func TestPaymentWithRequester(t *testing.T) {
 		},
 		Body: strings.NewReader(policyInfo),
 	}
+	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
 	_, err = client.InvokeOperation(context.TODO(), input)
 	assert.Nil(t, err)
 	time.Sleep(1 * time.Second)
@@ -5598,6 +5627,7 @@ func TestClientExtensionWithPayer(t *testing.T) {
 		},
 		Body: strings.NewReader(policyInfo),
 	}
+	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
 	_, err = client.InvokeOperation(context.TODO(), input)
 	assert.Nil(t, err)
 	time.Sleep(1 * time.Second)
@@ -7766,7 +7796,7 @@ func TestAddressingModePathStyle(t *testing.T) {
 	defer after(t)
 
 	if pathStyleBucket_ == "" {
-		assert.Fail(t, "Please specify the  bucket that supports the path style request.")
+		assert.Fail(t, "Please specify the bucket that supports the path style request.")
 	}
 
 	region := pathStyleRegion_
@@ -8286,8 +8316,12 @@ func TestMetaQuery(t *testing.T) {
 }
 
 func TestAccessPoint(t *testing.T) {
+	if apEnable == "" {
+		return
+	}
 	after := before(t)
 	defer after(t)
+	defer clearAp(t)
 	//TODO
 	bucketName := bucketNamePrefix + randLowStr(6)
 	request := &PutBucketRequest{
@@ -8472,8 +8506,12 @@ func TestAccessPoint(t *testing.T) {
 }
 
 func TestAccessPointPublicAccessBlock(t *testing.T) {
+	if apEnable == "" {
+		return
+	}
 	after := before(t)
 	defer after(t)
+	defer clearAp(t)
 	//TODO
 	client := getDefaultClient()
 	bucketName := bucketNamePrefix + randLowStr(6)
@@ -8634,8 +8672,12 @@ func TestCleanRestoredObject(t *testing.T) {
 }
 
 func TestAccessPointForObjectProcess(t *testing.T) {
+	if apEnable == "" {
+		return
+	}
 	after := before(t)
 	defer after(t)
+	defer clearAp(t)
 	//TODO
 	bucketName := bucketNamePrefix + randLowStr(6)
 	request := &PutBucketRequest{
@@ -9124,4 +9166,89 @@ func TestRegions(t *testing.T) {
 	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
 	assert.Equal(t, "0002-00000902", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
+}
+
+func TestDownloaderTruncate(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	//TODO
+	client := getDefaultClient()
+	bucketName := bucketNamePrefix + randLowStr(6)
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	objectName := objectNamePrefix + randLowStr(6)
+	objectLen := 100*1024*4 + 123
+	content := randLowStr(objectLen)
+	request := &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Body:   strings.NewReader(content),
+	}
+	result, err := client.PutObject(context.TODO(), request)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, result.StatusCode)
+
+	d := client.NewDownloader(func(do *DownloaderOptions) {
+		do.ParallelNum = 3
+		do.PartSize = 100 * 1024
+		do.UseTempFile = false
+	})
+	assert.NotNil(t, d)
+	assert.Equal(t, 3, d.options.ParallelNum)
+	localFile := randStr(8) + "-downloader"
+	defer os.Remove(localFile)
+
+	// file size is 0, file size < get size
+	dResult, err := d.DownloadFile(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+		},
+		localFile)
+
+	assert.Nil(t, err)
+
+	assert.Equal(t, objectLen, (int)(dResult.Written))
+	gotCotent, err := os.ReadFile(localFile)
+	assert.Nil(t, err)
+	assert.Equal(t, []byte(content), gotCotent)
+
+	//range get
+	// file size > get size
+	dResult, err = d.DownloadFile(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+			Range:  Ptr("bytes=123-123456"),
+		},
+		localFile)
+
+	gotCotent, err = os.ReadFile(localFile)
+	assert.Nil(t, err)
+	assert.Equal(t, 123456-123+1, (int)(dResult.Written))
+	assert.Equal(t, []byte(content[123:123456+1]), []byte(gotCotent))
+
+	// file size == get size
+	content1 := randLowStr(123456 - 123 + 1)
+	os.WriteFile(localFile, []byte(content1), 0644)
+	gotCotent, err = os.ReadFile(localFile)
+	assert.Equal(t, []byte(content1), []byte(gotCotent))
+	dResult, err = d.DownloadFile(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+			Range:  Ptr("bytes=123-123456"),
+		},
+		localFile)
+
+	gotCotent, err = os.ReadFile(localFile)
+	assert.Nil(t, err)
+	assert.Equal(t, 123456-123+1, (int)(dResult.Written))
+	assert.Equal(t, []byte(content[123:123456+1]), []byte(gotCotent))
 }
