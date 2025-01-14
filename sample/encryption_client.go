@@ -97,9 +97,15 @@ func main() {
 	log.Printf("put object with encryption client result:%#v\n", putObjRequestResult)
 
 	// case 2: Mutlipart Upload
+	length := 3 * 100 * 1024
+	partSize := 100 * 1024
+	count := length / partSize
+
 	initRequest := &oss.InitiateMultipartUploadRequest{
-		Bucket: oss.Ptr(bucketName),
-		Key:    oss.Ptr(objectName),
+		Bucket:      oss.Ptr(bucketName),
+		Key:         oss.Ptr(objectName),
+		CSEDataSize: oss.Ptr(int64(length)),
+		CSEPartSize: oss.Ptr(int64(partSize)),
 	}
 	initResult, err := eclient.InitiateMultipartUpload(context.TODO(), initRequest)
 	if err != nil {
@@ -107,12 +113,10 @@ func main() {
 	}
 	var wg sync.WaitGroup
 	var parts oss.UploadParts
-	count := 3
-	body := randStr(400000)
+	body := randStr(length)
 	reader := strings.NewReader(body)
 	bufReader := bufio.NewReader(reader)
 	content, _ := io.ReadAll(bufReader)
-	partSize := len(body) / count
 	var mu sync.Mutex
 	for i := 0; i < count; i++ {
 		wg.Add(1)

@@ -1079,6 +1079,25 @@ func TestEncryptionClientMultiPartErrorTest(t *testing.T) {
 		CSEPartSize: Ptr(partSize),
 	})
 	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "invalid field, request.CSEDataSize")
+
+	partSize = 12
+	_, err = eclient.InitiateMultipartUpload(context.TODO(), &InitiateMultipartUploadRequest{
+		Bucket:      Ptr("bucket"),
+		Key:         Ptr("key"),
+		CSEPartSize: Ptr(partSize),
+	})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "invalid field, request.CSEDataSize")
+
+	partSize = 12
+	_, err = eclient.InitiateMultipartUpload(context.TODO(), &InitiateMultipartUploadRequest{
+		Bucket:      Ptr("bucket"),
+		Key:         Ptr("key"),
+		CSEPartSize: Ptr(partSize),
+		CSEDataSize: Ptr(int64(partSize * 10)),
+	})
+	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "request.CSEPartSize must aligned to the")
 
 	partSize = 16
@@ -1086,6 +1105,7 @@ func TestEncryptionClientMultiPartErrorTest(t *testing.T) {
 		Bucket:      Ptr("bucket"),
 		Key:         Ptr("key"),
 		CSEPartSize: Ptr(partSize),
+		CSEDataSize: Ptr(int64(partSize * 10)),
 	})
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "operation error InitiateMultipartUpload")
