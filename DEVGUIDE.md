@@ -2346,7 +2346,7 @@ cfg := oss.LoadDefaultConfig().
   // Set the timeout period of an HTTP connection to 20. Unit: seconds.
   WithConnectTimeout(20 * time.Second).
   // Set the read or write timeout period of an HTTP connection to 60. Unit: seconds.
-  ReadWriteTimeout(60 * time.Second).
+  WithReadWriteTimeout(60 * time.Second).
   // Do not verify SSL certificates.
   WithInsecureSkipVerify(true).
   // Specify logs.

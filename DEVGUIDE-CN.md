@@ -2345,7 +2345,7 @@ cfg := oss.LoadDefaultConfig().
   // 设置HTTP连接超时时间为20秒
   WithConnectTimeout(20 * time.Second).
   // HTTP读取或写入超时时间为60秒
-  ReadWriteTimeout(60 * time.Second).
+  WithReadWriteTimeout(60 * time.Second).
   // 不校验SSL证书校验
   WithInsecureSkipVerify(true).
   // 设置日志
