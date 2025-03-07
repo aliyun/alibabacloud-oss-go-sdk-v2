@@ -2508,7 +2508,7 @@ Changes to default values
 | Object download-default value for concurrency | 3 | 1 |
 | Object download-size threshold | The size of the part. | None |
 | Object download-record download progress in the checkpoint file | Supported | Supported |
-| Object copy-part size | 64 MiB | Bucket.UploadFile |
+| Object copy-part size | 64 MiB | None |
 | Object copy-default value for concurrency | 3 | 1 |
 | Object copy-size threshold | 200 MiB | None |
 | Object copy-record copy progress in the checkpoint file | Not supported | Supported |

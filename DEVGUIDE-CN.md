@@ -2012,7 +2012,7 @@ result, err := client.GetObjectToFile(context.TODO(),
 |:-------|:-------
 |Client.PutObject|简单上传, 最大支持5GiB</br>支持CRC64数据校验(默认启用)</br>支持进度条</br>请求body类型为io.Reader, 当支持io.Seeker类型时，具备失败重传
 |Client.PutObjectFromFile|与Client.PutObject接口能力一致</br>请求body数据来源于文件路径
-|分片上传接口</br>Client.InitiateMultipartUpload</br>Client.UploadPar</br>Client.CompleteMultipartUpload|分片上传，单个分片最大5GiB，文件最大48.8TiB</br>UploadPart接口支持CRC64校验(默认启用)</br>UploadPart接口支持进度条</br>UploadPart>请求body类型为io.Reader, 当支持io.Seeker类型时，具备失败重传
+|分片上传接口</br>Client.InitiateMultipartUpload</br>Client.UploadPart</br>Client.CompleteMultipartUpload|分片上传，单个分片最大5GiB，文件最大48.8TiB</br>UploadPart接口支持CRC64校验(默认启用)</br>UploadPart接口支持进度条</br>UploadPart请求body类型为io.Reader, 当支持io.Seeker类型时，具备失败重传
 |Uploader.UploadFrom|封装了简单上传 和 分片上传接口，最大支持48.8TiB</br>支持CRC64数据校验(默认启用)</br>支持进度条</br>请求body参数类型为io.Reader，当同时支持 io.Reader, io.Seeker 和 io.ReaderAt 类型时，不需要把数据缓存在内存里，否则 必须先把数据缓冲在内存中，然后才能上传该部分
 |Uploader.UploadFile|与Uploader.UploadFrom接口能力一致</br>请求body数据来源于文件路径</br>支持断点续传
 |Client.AppendObject|追加上传, 最终文件最大支持5GiB</br>支持CRC64数据校验(默认启用)</br>支持进度条</br>请求body类型为io.Reader, 当支持io.Seeker类型时，具备失败重传(该接口为非幂等接口，重传时可能出现失败)
@@ -2061,7 +2061,7 @@ type ProgressFunc func(increment, transferred, total int64)
 
 示例
 
-1. 上传时，设置进度条，以GetObject 为例
+1. 上传时，设置进度条，以PutObject 为例
 
 ```
 ...
@@ -2507,7 +2507,7 @@ V2 版本使用 传输管理器 'Uploader'，'Downloader' 和 'Copier' 分别 �
 |下载-并发默认值|3|1
 |下载-阈值|分片大小|无
 |下载-记录checkpoint|支持|支持
-|拷贝-分片默认值|64 MiB|Bucket.UploadFile
+|拷贝-分片默认值|64 MiB|无
 |拷贝-并发默认值|3|1
 |拷贝-阈值|200 MiB|无
 |拷贝-记录checkpoint|不支持|支持
