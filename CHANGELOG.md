@@ -1,5 +1,11 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.2.1 日期：2025-03-07
+### 变更内容
+- Feature：Add list cloudbox api
+- Feature：Supports cloudbox
+- Update：Read all the response data before retrying for list api, e.g. ListObjectsV2
+
 ## 版本号：v1.2.0 日期：2025-01-08
 ### 变更内容
 - Feature：Add redundancy transition api
