@@ -733,8 +733,8 @@ func TestUnmarshalOutput_DeleteUserDefinedLogFieldsConfig(t *testing.T) {
 	var output *OperationOutput
 	var err error
 	output = &OperationOutput{
-		StatusCode: 200,
-		Status:     "OK",
+		StatusCode: 204,
+		Status:     "No Content",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 			"Content-Type":     {"application/xml"},
@@ -743,8 +743,8 @@ func TestUnmarshalOutput_DeleteUserDefinedLogFieldsConfig(t *testing.T) {
 	result := &DeleteUserDefinedLogFieldsConfigResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
-	assert.Equal(t, result.StatusCode, 200)
-	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.StatusCode, 204)
+	assert.Equal(t, result.Status, "No Content")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 

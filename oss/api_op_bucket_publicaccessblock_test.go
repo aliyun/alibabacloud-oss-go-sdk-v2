@@ -211,9 +211,9 @@ func TestUnmarshalOutput_GetBucketPublicAccessBlock(t *testing.T) {
 	var output *OperationOutput
 	var err error
 	body := `<?xml version="1.0" encoding="UTF-8"?>
-			<BucketPublicAccessBlockConfiguration>
+			<PublicAccessBlockConfiguration>
 			  <BlockPublicAccess>true</BlockPublicAccess>
-			</BucketPublicAccessBlockConfiguration>`
+			</PublicAccessBlockConfiguration>`
 	output = &OperationOutput{
 		StatusCode: 200,
 		Status:     "OK",
