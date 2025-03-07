@@ -649,6 +649,22 @@ func tryConvertServiceError(response *http.Response) (err error) {
 	return se
 }
 
+func nonStreamResponseHandler(response *http.Response) error {
+	body := response.Body
+	if body == nil {
+		return nil
+	}
+
+	defer body.Close()
+	val, err := io.ReadAll(body)
+
+	if err == nil {
+		response.Body = io.NopCloser(bytes.NewReader(val))
+	}
+
+	return err
+}
+
 func checkResponseHeaderCRC64(ccrc string, header http.Header) (err error) {
 	if scrc := header.Get(HeaderOssCRC64); scrc != "" {
 		if scrc != ccrc {
@@ -1318,6 +1334,13 @@ func addCrcCheck(_ any, input *OperationInput) error {
 
 func addCallback(_ any, input *OperationInput) error {
 	input.OpMetadata.Add(OpMetaKeyResponsHandler, callbackErrorResponseHandler)
+	return nil
+}
+
+func enableNonStream(_ any, input *OperationInput) error {
+	input.OpMetadata.Add(OpMetaKeyResponsHandler, func(response *http.Response) error {
+		return nonStreamResponseHandler(response)
+	})
 	return nil
 }
 
