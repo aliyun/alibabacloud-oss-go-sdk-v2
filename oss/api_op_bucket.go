@@ -239,7 +239,7 @@ func (c *Client) ListObjects(ctx context.Context, request *ListObjectsRequest, o
 		},
 		Bucket: request.Bucket,
 	}
-	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
+	if err = c.marshalInput(request, input, updateContentMd5, enableNonStream); err != nil {
 		return nil, err
 	}
 
@@ -506,7 +506,7 @@ func (c *Client) ListObjectsV2(ctx context.Context, request *ListObjectsV2Reques
 		},
 		Bucket: request.Bucket,
 	}
-	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
+	if err = c.marshalInput(request, input, updateContentMd5, enableNonStream); err != nil {
 		return nil, err
 	}
 	output, err := c.invokeOperation(ctx, input, optFns)
@@ -1161,7 +1161,7 @@ func (c *Client) ListObjectVersions(ctx context.Context, request *ListObjectVers
 		},
 		Bucket: request.Bucket,
 	}
-	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
+	if err = c.marshalInput(request, input, updateContentMd5, enableNonStream); err != nil {
 		return nil, err
 	}
 	output, err := c.invokeOperation(ctx, input, optFns)

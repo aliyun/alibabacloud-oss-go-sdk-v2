@@ -862,7 +862,7 @@ func (c *Client) DeleteMultipleObjects(ctx context.Context, request *DeleteMulti
 		},
 		Bucket: request.Bucket,
 	}
-	if err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5); err != nil {
+	if err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5, enableNonStream); err != nil {
 		return nil, err
 	}
 
@@ -1924,7 +1924,7 @@ func (c *Client) ListMultipartUploads(ctx context.Context, request *ListMultipar
 			"uploads":       "",
 		},
 	}
-	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
+	if err = c.marshalInput(request, input, updateContentMd5, enableNonStream); err != nil {
 		return nil, err
 	}
 	output, err := c.invokeOperation(ctx, input, optFns)
@@ -2065,7 +2065,7 @@ func (c *Client) ListParts(ctx context.Context, request *ListPartsRequest, optFn
 			"encoding-type": "url",
 		},
 	}
-	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
+	if err = c.marshalInput(request, input, updateContentMd5, enableNonStream); err != nil {
 		return nil, err
 	}
 	output, err := c.invokeOperation(ctx, input, optFns)
