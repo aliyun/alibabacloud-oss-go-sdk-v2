@@ -1203,3 +1203,136 @@ func TestUserAgent(t *testing.T) {
 	c = NewClient(cfg)
 	assert.Equal(t, defaultUserAgent+"/my-user-agent", c.inner.UserAgent)
 }
+
+func TestCloudBoxId(t *testing.T) {
+	//default product
+	cfg := NewConfig()
+	c := NewClient(cfg)
+	assert.Equal(t, "oss", c.options.Product)
+
+	// default region, endpiont
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("test-endpoint")
+	c = NewClient(cfg)
+	assert.Equal(t, "oss", c.options.Product)
+	assert.Equal(t, "test-region", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "test-endpoint", c.options.Endpoint.Host)
+
+	// set cloudbox id
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("test-endpoint")
+	cfg.WithCloudBoxId("test-cloudbox-id")
+	c = NewClient(cfg)
+	assert.Equal(t, "oss-cloudbox", c.options.Product)
+	assert.Equal(t, "test-cloudbox-id", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "test-endpoint", c.options.Endpoint.Host)
+
+	//cb-***.{region}.oss-cloudbox-control.aliyuncs.com
+	//cb-***.{region}.oss-cloudbox.aliyuncs.com
+
+	// auto detect cloudbox id default
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("cb-123.test-region.oss-cloudbox-control.aliyuncs.com")
+	c = NewClient(cfg)
+	assert.Equal(t, "oss", c.options.Product)
+	assert.Equal(t, "test-region", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "cb-123.test-region.oss-cloudbox-control.aliyuncs.com", c.options.Endpoint.Host)
+
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("cb-123.test-region.oss-cloudbox.aliyuncs.com")
+	c = NewClient(cfg)
+	assert.Equal(t, "oss", c.options.Product)
+	assert.Equal(t, "test-region", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "cb-123.test-region.oss-cloudbox.aliyuncs.com", c.options.Endpoint.Host)
+
+	// auto detect cloudbox id set false
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("cb-123.test-region.oss-cloudbox-control.aliyuncs.com")
+	cfg.WithEnableAutoDetectCloudBoxId(false)
+	c = NewClient(cfg)
+	assert.Equal(t, "oss", c.options.Product)
+	assert.Equal(t, "test-region", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "cb-123.test-region.oss-cloudbox-control.aliyuncs.com", c.options.Endpoint.Host)
+
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("cb-123.test-region.oss-cloudbox.aliyuncs.com")
+	cfg.WithEnableAutoDetectCloudBoxId(false)
+	c = NewClient(cfg)
+	assert.Equal(t, "oss", c.options.Product)
+	assert.Equal(t, "test-region", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "cb-123.test-region.oss-cloudbox.aliyuncs.com", c.options.Endpoint.Host)
+
+	// auto detect cloudbox id set true
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("cb-123.test-region.oss-cloudbox-control.aliyuncs.com")
+	cfg.WithEnableAutoDetectCloudBoxId(true)
+	c = NewClient(cfg)
+	assert.Equal(t, "oss-cloudbox", c.options.Product)
+	assert.Equal(t, "cb-123", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "cb-123.test-region.oss-cloudbox-control.aliyuncs.com", c.options.Endpoint.Host)
+
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("cb-123.test-region.oss-cloudbox.aliyuncs.com")
+	cfg.WithEnableAutoDetectCloudBoxId(true)
+	c = NewClient(cfg)
+	assert.Equal(t, "oss-cloudbox", c.options.Product)
+	assert.Equal(t, "cb-123", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "cb-123.test-region.oss-cloudbox.aliyuncs.com", c.options.Endpoint.Host)
+
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("cb-123.test-region.oss-cloudbox.aliyuncs.com/test?123")
+	cfg.WithEnableAutoDetectCloudBoxId(true)
+	c = NewClient(cfg)
+	assert.Equal(t, "oss-cloudbox", c.options.Product)
+	assert.Equal(t, "cb-123", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "cb-123.test-region.oss-cloudbox.aliyuncs.com", c.options.Endpoint.Host)
+
+	// auto detect cloudbox id set true + non cloud box endpoint
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("cb-123.test-region.oss.aliyuncs.com")
+	cfg.WithEnableAutoDetectCloudBoxId(true)
+	c = NewClient(cfg)
+	assert.Equal(t, "oss", c.options.Product)
+	assert.Equal(t, "test-region", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "cb-123.test-region.oss.aliyuncs.com", c.options.Endpoint.Host)
+
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("ncb-123.test-region.oss-cloudbox.aliyuncs.com")
+	cfg.WithEnableAutoDetectCloudBoxId(true)
+	c = NewClient(cfg)
+	assert.Equal(t, "oss", c.options.Product)
+	assert.Equal(t, "test-region", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "ncb-123.test-region.oss-cloudbox.aliyuncs.com", c.options.Endpoint.Host)
+
+	cfg = NewConfig()
+	cfg.WithRegion("test-region")
+	cfg.WithEndpoint("cb-123.oss-cloudbox.aliyuncs.com")
+	cfg.WithEnableAutoDetectCloudBoxId(true)
+	c = NewClient(cfg)
+	assert.Equal(t, "oss", c.options.Product)
+	assert.Equal(t, "test-region", c.options.Region)
+	assert.NotNil(t, c.options.Endpoint)
+	assert.Equal(t, "cb-123.oss-cloudbox.aliyuncs.com", c.options.Endpoint.Host)
+}

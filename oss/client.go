@@ -107,6 +107,7 @@ func NewClient(cfg *Config, optFns ...func(*Options)) *Client {
 	resolveSigner(cfg, &options)
 	resolveUrlStyle(cfg, &options)
 	resolveFeatureFlags(cfg, &options)
+	resolveCloudBox(cfg, &options)
 
 	for _, fn := range optFns {
 		fn(&options)
@@ -251,6 +252,39 @@ func resolveFeatureFlags(cfg *Config, o *Options) {
 	if ToBool(cfg.DisableUploadCRC64Check) {
 		o.FeatureFlags = o.FeatureFlags & ^FeatureEnableCRC64CheckUpload
 	}
+}
+
+func resolveCloudBox(cfg *Config, o *Options) {
+	if cfg.CloudBoxId != nil {
+		o.Region = ToString(cfg.CloudBoxId)
+		o.Product = CloudBoxProduct
+		return
+	}
+
+	if !ToBool(cfg.EnableAutoDetectCloudBoxId) {
+		return
+	}
+
+	if o.Endpoint == nil {
+		return
+	}
+
+	//cb-***.{region}.oss-cloudbox-control.aliyuncs.com
+	//cb-***.{region}.oss-cloudbox.aliyuncs.com
+	host := o.Endpoint.Host
+	if !(strings.HasSuffix(host, ".oss-cloudbox.aliyuncs.com") ||
+		strings.HasSuffix(host, ".oss-cloudbox-control.aliyuncs.com")) {
+		return
+	}
+
+	keys := strings.Split(host, ".")
+	if keys == nil ||
+		len(keys) != 5 ||
+		!strings.HasPrefix(keys[0], "cb-") {
+		return
+	}
+	o.Region = keys[0]
+	o.Product = CloudBoxProduct
 }
 
 func buildUserAgent(cfg *Config) string {
