@@ -44,6 +44,9 @@ func TestConfigDefault(t *testing.T) {
 	assert.Nil(t, config.AdditionalHeaders)
 	assert.Nil(t, config.UserAgent)
 
+	assert.Nil(t, config.CloudBoxId)
+	assert.Nil(t, config.EnableAutoDetectCloudBoxId)
+
 	config.WithSignatureVersion(SignatureVersionV1)
 	assert.Equal(t, SignatureVersionV1, *config.SignatureVersion)
 
@@ -128,6 +131,15 @@ func TestConfigDefault(t *testing.T) {
 	config.WithUserAgent("custom-ua")
 	assert.NotNil(t, config.UserAgent)
 	assert.Equal(t, "custom-ua", *config.UserAgent)
+
+	config.WithCloudBoxId("cb-1234")
+	assert.Equal(t, "cb-1234", *config.CloudBoxId)
+
+	config.WithEnableAutoDetectCloudBoxId(true)
+	assert.Equal(t, true, *config.EnableAutoDetectCloudBoxId)
+
+	config.WithEnableAutoDetectCloudBoxId(false)
+	assert.Equal(t, false, *config.EnableAutoDetectCloudBoxId)
 }
 
 func TestLogLevelEnvironmentVariable(t *testing.T) {

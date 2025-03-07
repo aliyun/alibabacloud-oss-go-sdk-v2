@@ -33430,3 +33430,167 @@ func TestMockDescribeRegions_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockListCloudBoxesSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListCloudBoxesRequest
+	CheckOutputFn  func(t *testing.T, o *ListCloudBoxesResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListCloudBoxResult>
+  <Owner>
+     <ID>51264</ID>
+    <DisplayName>51264</DisplayName>
+  </Owner>
+  <CloudBoxes>
+    <CloudBox>
+      <ID>cb-f8z7yvzgwfkl9q0h****</ID>
+      <Name>bucket1</Name>
+      <Region>cn-shanghai</Region>
+      <ControlEndpoint>cb-f8z7yvzgwfkl9q0h****.cn-shanghai.oss-cloudbox-control.aliyuncs.com</ControlEndpoint>
+      <DataEndpoint>cb-f8z7yvzgwfkl9q0h****.cn-shanghai.oss-cloudbox.aliyuncs.com</DataEndpoint>
+    </CloudBox>
+    <CloudBox>
+      <ID>cb-f9z7yvzgwfkl9q0h****</ID>
+      <Name>bucket2</Name>
+      <Region>cn-hangzhou</Region>
+      <ControlEndpoint>cb-f9z7yvzgwfkl9q0h****.cn-hangzhou.oss-cloudbox-control.aliyuncs.com</ControlEndpoint>
+      <DataEndpoint>cb-f9z7yvzgwfkl9q0h****.cn-hangzhou.oss-cloudbox.aliyuncs.com</DataEndpoint>
+    </CloudBox>
+  </CloudBoxes>
+</ListCloudBoxResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/?cloudboxes", r.URL.String())
+		},
+		nil,
+		func(t *testing.T, o *ListCloudBoxesResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.Owner.DisplayName, "51264")
+			assert.Equal(t, *o.Owner.ID, "51264")
+			assert.Equal(t, len(o.CloudBoxes), 2)
+			assert.Equal(t, *o.CloudBoxes[0].ID, "cb-f8z7yvzgwfkl9q0h****")
+			assert.Equal(t, *o.CloudBoxes[0].ControlEndpoint, "cb-f8z7yvzgwfkl9q0h****.cn-shanghai.oss-cloudbox-control.aliyuncs.com")
+			assert.Equal(t, *o.CloudBoxes[0].DataEndpoint, "cb-f8z7yvzgwfkl9q0h****.cn-shanghai.oss-cloudbox.aliyuncs.com")
+			assert.Equal(t, *o.CloudBoxes[0].Name, "bucket1")
+			assert.Equal(t, *o.CloudBoxes[0].Region, "cn-shanghai")
+			assert.Equal(t, *o.CloudBoxes[1].ID, "cb-f9z7yvzgwfkl9q0h****")
+			assert.Equal(t, *o.CloudBoxes[1].ControlEndpoint, "cb-f9z7yvzgwfkl9q0h****.cn-hangzhou.oss-cloudbox-control.aliyuncs.com")
+			assert.Equal(t, *o.CloudBoxes[1].DataEndpoint, "cb-f9z7yvzgwfkl9q0h****.cn-hangzhou.oss-cloudbox.aliyuncs.com")
+			assert.Equal(t, *o.CloudBoxes[1].Name, "bucket2")
+			assert.Equal(t, *o.CloudBoxes[1].Region, "cn-hangzhou")
+		},
+	},
+}
+
+func TestMockListCloudBoxes_Success(t *testing.T) {
+	for _, c := range testMockListCloudBoxesSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.ListCloudBoxes(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListCloudBoxesErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListCloudBoxesRequest
+	CheckOutputFn  func(t *testing.T, o *ListCloudBoxesResult, err error)
+}{
+	{
+		403,
+		map[string]string{
+			"x-oss-request-id": "65467C42E001B4333337****",
+			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(
+			`<?xml version="1.0" encoding="UTF-8"?>
+			<Error>
+				<Code>InvalidAccessKeyId</Code>
+				<Message>The OSS Access Key Id you provided does not exist in our records.</Message>
+				<RequestId>65467C42E001B4333337****</RequestId>
+				<SignatureProvided>RizTbeKC/QlwxINq8xEdUPowc84=</SignatureProvided>
+				<EC>0002-00000040</EC>
+			</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/?cloudboxes", r.URL.String())
+		},
+		&ListCloudBoxesRequest{},
+		func(t *testing.T, o *ListCloudBoxesResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+			assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+			assert.Equal(t, "0002-00000040", serr.EC)
+			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/text",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/?cloudboxes", r.URL.String())
+		},
+		&ListCloudBoxesRequest{},
+		func(t *testing.T, o *ListCloudBoxesResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			assert.Contains(t, err.Error(), "execute ListCloudBoxes fail")
+		},
+	},
+}
+
+func TestMockListCloudBoxes_Error(t *testing.T) {
+	for _, c := range testMockListCloudBoxesErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.ListCloudBoxes(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}

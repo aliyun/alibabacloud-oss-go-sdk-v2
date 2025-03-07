@@ -109,6 +109,12 @@ type Config struct {
 
 	// The optional user specific identifier appended to the User-Agent header.
 	UserAgent *string
+
+	// The cloud box id
+	CloudBoxId *string
+
+	// The cloud box id is automatically extracted from endpoint.
+	EnableAutoDetectCloudBoxId *bool
 }
 
 func NewConfig() *Config {
@@ -266,5 +272,15 @@ func (c *Config) WithAdditionalHeaders(value []string) *Config {
 
 func (c *Config) WithUserAgent(value string) *Config {
 	c.UserAgent = Ptr(value)
+	return c
+}
+
+func (c *Config) WithCloudBoxId(value string) *Config {
+	c.CloudBoxId = Ptr(value)
+	return c
+}
+
+func (c *Config) WithEnableAutoDetectCloudBoxId(value bool) *Config {
+	c.EnableAutoDetectCloudBoxId = Ptr(value)
 	return c
 }
