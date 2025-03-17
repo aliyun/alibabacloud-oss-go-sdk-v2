@@ -529,7 +529,7 @@ cfg := oss.LoadDefaultConfig().
 ```
 cfg := oss.LoadDefaultConfig().
   WithConnectTimeout(10 * time.Second).
-  UploadBandwidthlimit(10*1024)
+  WithUploadBandwidthlimit(10*1024)
 ```
 
 ### 自定义HTTP客户端
@@ -864,9 +864,9 @@ func (c *Client) Presign(ctx context.Context, request any, optFns ...func(*Presi
 |*PutObjectRequest|PutObject
 |*HeadObjectRequest|HeadObject
 |*InitiateMultipartUploadRequest|InitiateMultipartUpload
-|*UploadPartRequest|UploadPartRequest
-|*CompleteMultipartUploadRequest|CompleteMultipartUploadRequest
-|*AbortMultipartUploadRequest|AbortMultipartUploadRequest
+|*UploadPartRequest|UploadPart
+|*CompleteMultipartUploadRequest|CompleteMultipartUpload
+|*AbortMultipartUploadRequest|AbortMultipartUpload
 
 **PresignOptions选项**
 |选项值|类型|说明
@@ -1192,7 +1192,7 @@ d := client.NewDownloader(func(do *oss.DownloaderOptions) {
 })
 ```
 
-设置每次上传请求的配置参数
+设置每次下载请求的配置参数
 ```
 request := &oss.GetObjectRequest{Bucket: oss.Ptr("bucket"), Key: oss.Ptr("key")}
 d.DownloadFile(context.TODO(), request, "/local/dir/example", func(do *oss.DownloaderOptions) {

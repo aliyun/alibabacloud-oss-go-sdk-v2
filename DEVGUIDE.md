@@ -529,7 +529,7 @@ Example
 ```
 cfg := oss.LoadDefaultConfig().
   WithConnectTimeout(10 * time.Second).
-  UploadBandwidthlimit(10*1024)
+  WithUploadBandwidthlimit(10*1024)
 ```
 
 ### Specify a custom HTTP client
@@ -865,9 +865,9 @@ func (c *Client) Presign(ctx context.Context, request any, optFns ...func(*Presi
 |*PutObjectRequest|PutObject
 |*HeadObjectRequest|HeadObject
 |*InitiateMultipartUploadRequest|InitiateMultipartUpload
-|*UploadPartRequest|UploadPartRequest
-|*CompleteMultipartUploadRequest|CompleteMultipartUploadRequest
-|*AbortMultipartUploadRequest|AbortMultipartUploadRequest
+|*UploadPartRequest|UploadPart
+|*CompleteMultipartUploadRequest|CompleteMultipartUpload
+|*AbortMultipartUploadRequest|AbortMultipartUpload
 
 **PressignOptions**
 |Option|Type|Description
