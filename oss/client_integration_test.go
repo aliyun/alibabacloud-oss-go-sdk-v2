@@ -9252,3 +9252,64 @@ func TestDownloaderTruncate(t *testing.T) {
 	assert.Equal(t, 123456-123+1, (int)(dResult.Written))
 	assert.Equal(t, []byte(content[123:123456+1]), []byte(gotCotent))
 }
+
+func TestUploaderWithSequential(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	//TODO
+	client := getDefaultClient()
+	bucketName := bucketNamePrefix + randLowStr(6)
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	objectName := objectNamePrefix + randLowStr(6)
+	objectLen := 100*1024*4 + 123
+	content := randLowStr(objectLen)
+	partSize := int64(100 * 1024)
+
+	u := NewUploader(client,
+		func(uo *UploaderOptions) {
+			uo.PartSize = partSize
+		},
+	)
+
+	result, err := u.UploadFrom(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}, strings.NewReader(content))
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	request := &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	headResult, err := client.HeadObject(context.TODO(), request)
+	assert.Nil(t, err)
+	assert.Nil(t, headResult.ContentMD5)
+
+	result, err = u.UploadFrom(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		RequestCommon: RequestCommon{
+			Parameters: map[string]string{
+				"sequential": "",
+			},
+		},
+	}, strings.NewReader(content))
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	request = &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	headResult, err = client.HeadObject(context.TODO(), request)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, headResult.ContentMD5)
+}
