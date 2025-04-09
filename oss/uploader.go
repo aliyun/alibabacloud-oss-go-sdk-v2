@@ -210,6 +210,10 @@ func (u *Uploader) newDelegate(ctx context.Context, request *PutObjectRequest, o
 		d.options.PartSize = DefaultUploadPartSize
 	}
 
+	if _, ok := d.request.Parameters["sequential"]; ok {
+		d.options.ParallelNum = 1
+	}
+
 	return &d, nil
 }
 
