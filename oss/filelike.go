@@ -421,6 +421,8 @@ func (f *ReadOnlyFile) readFromPrefetcher(offset int64, buf []byte) (bytesRead i
 		if len(buf) == 0 {
 			return
 		}
+		// Update offset for the next read
+		offset += int64(nread)
 	}
 
 	return
