@@ -42,6 +42,7 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
+	// case 1: meta search
 	request := &oss.OpenMetaQueryRequest{
 		Bucket: oss.Ptr(bucketName),
 	}
@@ -51,4 +52,16 @@ func main() {
 	}
 
 	log.Printf("open meta query result:%#v\n", result)
+
+	// case 2: ai search
+	//request = &oss.OpenMetaQueryRequest{
+	//	Bucket: oss.Ptr(bucketName),
+	//	Mode:   oss.Ptr("semantic"),
+	//}
+	//result, err = client.OpenMetaQuery(context.TODO(), request)
+	//if err != nil {
+	//	log.Fatalf("failed to open meta query %v", err)
+	//}
+	//
+	//log.Printf("open meta query result:%#v\n", result)
 }
