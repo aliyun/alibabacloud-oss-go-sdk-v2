@@ -24,6 +24,8 @@ type OpenOptions struct {
 
 	PrefetchThreshold int64
 	RequestPayer      *string
+
+	OutOfOrderReadThreshold int64
 }
 
 type ReadOnlyFile struct {
@@ -60,17 +62,20 @@ type ReadOnlyFile struct {
 	numOOORead    int64 // number of out of order read
 
 	closed bool // whether we have closed the file
+
+	oooReadThreshold int64
 }
 
 // NewReadOnlyFile OpenFile opens the named file for reading.
 // If successful, methods on the returned file can be used for reading.
 func NewReadOnlyFile(ctx context.Context, c OpenFileAPIClient, bucket string, key string, optFns ...func(*OpenOptions)) (*ReadOnlyFile, error) {
 	options := OpenOptions{
-		Offset:            0,
-		EnablePrefetch:    false,
-		PrefetchNum:       DefaultPrefetchNum,
-		ChunkSize:         DefaultPrefetchChunkSize,
-		PrefetchThreshold: DefaultPrefetchThreshold,
+		Offset:                  0,
+		EnablePrefetch:          false,
+		PrefetchNum:             DefaultPrefetchNum,
+		ChunkSize:               DefaultPrefetchChunkSize,
+		PrefetchThreshold:       DefaultPrefetchThreshold,
+		OutOfOrderReadThreshold: DefaultOutOfOrderReadThreshold,
 	}
 
 	for _, fn := range optFns {
@@ -89,6 +94,10 @@ func NewReadOnlyFile(ctx context.Context, c OpenFileAPIClient, bucket string, ke
 		if options.PrefetchNum <= 0 {
 			options.PrefetchNum = DefaultPrefetchNum
 		}
+
+		if options.OutOfOrderReadThreshold <= int64(0) {
+			options.OutOfOrderReadThreshold = DefaultOutOfOrderReadThreshold
+		}
 	}
 
 	f := &ReadOnlyFile{
@@ -106,6 +115,7 @@ func NewReadOnlyFile(ctx context.Context, c OpenFileAPIClient, bucket string, ke
 		prefetchNum:       options.PrefetchNum,
 		chunkSize:         options.ChunkSize,
 		prefetchThreshold: options.PrefetchThreshold,
+		oooReadThreshold:  options.OutOfOrderReadThreshold,
 	}
 
 	result, err := f.client.HeadObject(f.context, &HeadObjectRequest{
@@ -314,7 +324,7 @@ func (f *ReadOnlyFile) readInternal(offset int64, p []byte) (bytesRead int, err 
 		f.asyncReaders = nil
 	}
 
-	if f.enablePrefetch && f.seqReadAmount >= f.prefetchThreshold && f.numOOORead < 3 {
+	if f.enablePrefetch && f.seqReadAmount >= f.prefetchThreshold && f.numOOORead < f.oooReadThreshold {
 		//swith to async reader
 		if f.reader != nil {
 			f.reader.Close()

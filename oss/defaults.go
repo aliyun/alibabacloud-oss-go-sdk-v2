@@ -73,4 +73,7 @@ const (
 
 	// DefaultSignatureVersion Default signature version is v4
 	DefaultSignatureVersion = SignatureVersionV4
+
+	// DefaultOutOfOrderReadThreshold Default out of order read threshold is 3
+	DefaultOutOfOrderReadThreshold int64 = 3
 )
