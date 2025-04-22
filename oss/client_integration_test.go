@@ -8177,6 +8177,12 @@ func TestMetaQuery(t *testing.T) {
 	})
 	assert.Nil(t, err)
 
+	bucketNameAiSearch := bucketNamePrefix + randLowStr(6)
+	_, err = client.PutBucket(context.TODO(), &PutBucketRequest{
+		Bucket: Ptr(bucketNameAiSearch),
+	})
+	assert.Nil(t, err)
+
 	openRequest := &OpenMetaQueryRequest{
 		Bucket: Ptr(bucketName),
 	}
@@ -8199,7 +8205,7 @@ func TestMetaQuery(t *testing.T) {
 		MetaQuery: &MetaQuery{
 			Query: Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
 			Sort:  Ptr("Size"),
-			Order: MetaQueryOrderAsc,
+			Order: Ptr(MetaQueryOrderAsc),
 			Aggregations: &MetaQueryAggregations{
 				[]MetaQueryAggregation{
 					{
@@ -8228,6 +8234,31 @@ func TestMetaQuery(t *testing.T) {
 	closeResult, err := client.CloseMetaQuery(context.TODO(), closeRequest)
 	assert.Nil(t, err)
 	assert.Equal(t, 200, closeResult.StatusCode)
+	time.Sleep(1 * time.Second)
+
+	openRequest = &OpenMetaQueryRequest{
+		Bucket: Ptr(bucketNameAiSearch),
+		Mode:   Ptr("semantic"),
+	}
+	openResult, err = client.OpenMetaQuery(context.TODO(), openRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, openResult.StatusCode)
+	assert.NotEmpty(t, openResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	doRequest = &DoMetaQueryRequest{
+		Bucket: Ptr(bucketNameAiSearch),
+		Mode:   Ptr("semantic"),
+		MetaQuery: &MetaQuery{
+			MaxResults:  Ptr(int64(99)),
+			Query:       Ptr("Overlook the snow-covered forest"),
+			MediaType:   Ptr("image"),
+			SimpleQuery: Ptr(`{"Operation":"gt", "Field": "Size", "Value": "30"}`),
+		},
+	}
+	doResult, err = client.DoMetaQuery(context.TODO(), doRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, doResult.StatusCode)
 	time.Sleep(1 * time.Second)
 
 	var serr *ServiceError
@@ -8276,7 +8307,7 @@ func TestMetaQuery(t *testing.T) {
 		MetaQuery: &MetaQuery{
 			Query: Ptr(`{"Field": "Size","Value": "1048576","Operation": "gt"}`),
 			Sort:  Ptr("Size"),
-			Order: MetaQueryOrderAsc,
+			Order: Ptr(MetaQueryOrderAsc),
 			Aggregations: &MetaQueryAggregations{
 				[]MetaQueryAggregation{
 					{
