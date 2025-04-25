@@ -1,5 +1,11 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.2.2 日期：2025-04-25
+### 变更内容
+- Update：meta query api supports more search condition settings
+- Update：uploader supports sequential parameter
+- Update：ReadOnlyFile supports OutOfOrderReadThreshold option
+
 ## 版本号：v1.2.1 日期：2025-03-07
 ### 变更内容
 - Feature：Add list cloudbox api
