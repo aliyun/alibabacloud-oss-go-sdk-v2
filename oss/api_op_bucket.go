@@ -272,13 +272,18 @@ func unmarshalEncodeType(result any, output *OperationOutput) error {
 				}
 			}
 			for i := 0; i < len(r.Contents); i++ {
-				if *r.Contents[i].Key, err = url.QueryUnescape(*r.Contents[i].Key); err != nil {
-					return err
+				if r.Contents[i].Key != nil {
+					if *r.Contents[i].Key, err = url.QueryUnescape(*r.Contents[i].Key); err != nil {
+						return err
+					}
 				}
+
 			}
 			for i := 0; i < len(r.CommonPrefixes); i++ {
-				if *r.CommonPrefixes[i].Prefix, err = url.QueryUnescape(*r.CommonPrefixes[i].Prefix); err != nil {
-					return err
+				if r.CommonPrefixes[i].Prefix != nil {
+					if *r.CommonPrefixes[i].Prefix, err = url.QueryUnescape(*r.CommonPrefixes[i].Prefix); err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -296,13 +301,17 @@ func unmarshalEncodeType(result any, output *OperationOutput) error {
 				}
 			}
 			for i := 0; i < len(r.Contents); i++ {
-				if *r.Contents[i].Key, err = url.QueryUnescape(*r.Contents[i].Key); err != nil {
-					return err
+				if r.Contents[i].Key != nil {
+					if *r.Contents[i].Key, err = url.QueryUnescape(*r.Contents[i].Key); err != nil {
+						return err
+					}
 				}
 			}
 			for i := 0; i < len(r.CommonPrefixes); i++ {
-				if *r.CommonPrefixes[i].Prefix, err = url.QueryUnescape(*r.CommonPrefixes[i].Prefix); err != nil {
-					return err
+				if r.CommonPrefixes[i].Prefix != nil {
+					if *r.CommonPrefixes[i].Prefix, err = url.QueryUnescape(*r.CommonPrefixes[i].Prefix); err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -310,23 +319,29 @@ func unmarshalEncodeType(result any, output *OperationOutput) error {
 		if r.EncodingType != nil && strings.EqualFold(*r.EncodingType, "url") {
 			var err error
 			for i := 0; i < len(r.DeletedObjects); i++ {
-				if *r.DeletedObjects[i].Key, err = url.QueryUnescape(*r.DeletedObjects[i].Key); err != nil {
-					return err
+				if r.DeletedObjects[i].Key != nil {
+					if *r.DeletedObjects[i].Key, err = url.QueryUnescape(*r.DeletedObjects[i].Key); err != nil {
+						return err
+					}
 				}
 			}
 		}
 	case *InitiateMultipartUploadResult:
 		if r.EncodingType != nil && strings.EqualFold(*r.EncodingType, "url") {
 			var err error
-			if *r.Key, err = url.QueryUnescape(*r.Key); err != nil {
-				return err
+			if r.Key != nil {
+				if *r.Key, err = url.QueryUnescape(*r.Key); err != nil {
+					return err
+				}
 			}
 		}
 	case *CompleteMultipartUploadResult:
 		if r.EncodingType != nil && strings.EqualFold(*r.EncodingType, "url") {
 			var err error
-			if *r.Key, err = url.QueryUnescape(*r.Key); err != nil {
-				return err
+			if r.Key != nil {
+				if *r.Key, err = url.QueryUnescape(*r.Key); err != nil {
+					return err
+				}
 			}
 		}
 	case *ListMultipartUploadsResult:
@@ -343,8 +358,10 @@ func unmarshalEncodeType(result any, output *OperationOutput) error {
 				}
 			}
 			for i := 0; i < len(r.Uploads); i++ {
-				if *r.Uploads[i].Key, err = url.QueryUnescape(*r.Uploads[i].Key); err != nil {
-					return err
+				if r.Uploads[i].Key != nil {
+					if *r.Uploads[i].Key, err = url.QueryUnescape(*r.Uploads[i].Key); err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -376,23 +393,32 @@ func unmarshalEncodeType(result any, output *OperationOutput) error {
 				}
 			}
 			for i := 0; i < len(r.ObjectVersions); i++ {
-				if *r.ObjectVersions[i].Key, err = url.QueryUnescape(*r.ObjectVersions[i].Key); err != nil {
-					return err
+				if r.ObjectVersions[i].Key != nil {
+					if *r.ObjectVersions[i].Key, err = url.QueryUnescape(*r.ObjectVersions[i].Key); err != nil {
+						return err
+					}
 				}
+
 			}
 			for i := 0; i < len(r.ObjectDeleteMarkers); i++ {
-				if *r.ObjectDeleteMarkers[i].Key, err = url.QueryUnescape(*r.ObjectDeleteMarkers[i].Key); err != nil {
-					return err
+				if r.ObjectDeleteMarkers[i].Key != nil {
+					if *r.ObjectDeleteMarkers[i].Key, err = url.QueryUnescape(*r.ObjectDeleteMarkers[i].Key); err != nil {
+						return err
+					}
 				}
 			}
 			for i := 0; i < len(r.ObjectVersionsDeleteMarkers); i++ {
-				if *r.ObjectVersionsDeleteMarkers[i].Key, err = url.QueryUnescape(*r.ObjectVersionsDeleteMarkers[i].Key); err != nil {
-					return err
+				if r.ObjectVersionsDeleteMarkers[i].Key != nil {
+					if *r.ObjectVersionsDeleteMarkers[i].Key, err = url.QueryUnescape(*r.ObjectVersionsDeleteMarkers[i].Key); err != nil {
+						return err
+					}
 				}
 			}
 			for i := 0; i < len(r.CommonPrefixes); i++ {
-				if *r.CommonPrefixes[i].Prefix, err = url.QueryUnescape(*r.CommonPrefixes[i].Prefix); err != nil {
-					return err
+				if r.CommonPrefixes[i].Prefix != nil {
+					if *r.CommonPrefixes[i].Prefix, err = url.QueryUnescape(*r.CommonPrefixes[i].Prefix); err != nil {
+						return err
+					}
 				}
 			}
 		}
