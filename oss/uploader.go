@@ -626,8 +626,7 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 
 		reader, nextChunkLen, cleanup, qerr = u.nextReader()
 		// check err
-		if (qerr != nil && qerr != io.EOF) ||
-			nextChunkLen == 0 {
+		if qerr != nil && qerr != io.EOF {
 			cleanup()
 			saveErrFn(qerr)
 			break
