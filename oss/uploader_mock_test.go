@@ -385,6 +385,77 @@ func TestMockUploadSequential(t *testing.T) {
 	assert.Equal(t, int32(partsNum), atomic.LoadInt32(&tracker.uploadPartCnt))
 }
 
+func TestMockUploadSequentialWithTeeReader(t *testing.T) {
+	partSize := int64(10 * 1024 * 1024)
+	length := 20 * 1024 * 1024
+	partsNum := length/int(partSize) + 1
+	tracker := &uploaderMockTracker{
+		partNum:       partsNum,
+		saveDate:      make([][]byte, partsNum),
+		checkTime:     make([]time.Time, partsNum),
+		timeout:       make([]time.Duration, partsNum),
+		uploadPartErr: make([]bool, partsNum),
+	}
+
+	data := []byte(randStr(length))
+	hash := NewCRC64(0)
+	hash.Write(data)
+	dataCrc64ecma := fmt.Sprint(hash.Sum64())
+
+	server := testSetupUploaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+
+	u := NewUploader(client,
+		func(uo *UploaderOptions) {
+			uo.ParallelNum = 1
+			uo.PartSize = partSize
+		},
+	)
+	assert.Equal(t, 1, u.options.ParallelNum)
+	assert.Equal(t, partSize, u.options.PartSize)
+	pReader := io.TeeReader(bytes.NewReader(data), md5.New())
+	result, err := u.UploadFrom(
+		context.TODO(),
+		&PutObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("key")},
+		pReader)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, "uploadId-1234", *result.UploadId)
+	assert.Equal(t, dataCrc64ecma, *result.HashCRC64)
+
+	mr := NewMultiBytesReader(tracker.saveDate)
+	all, err := io.ReadAll(mr)
+	assert.Nil(t, err)
+
+	hashall := NewCRC64(0)
+	hashall.Write(all)
+	allCrc64ecma := fmt.Sprint(hashall.Sum64())
+	assert.Equal(t, dataCrc64ecma, allCrc64ecma)
+
+	index := 2
+	ctime := tracker.checkTime[index]
+	for i, t := range tracker.checkTime {
+		if t.After(ctime) {
+			index = i
+			ctime = t
+		}
+	}
+	assert.Equal(t, partsNum-1, index)
+	assert.Equal(t, int32(0), atomic.LoadInt32(&tracker.putObjectCnt))
+	assert.Equal(t, int32(partsNum), atomic.LoadInt32(&tracker.uploadPartCnt))
+}
+
 func TestMockUploadParallel(t *testing.T) {
 	partSize := int64(100 * 1024)
 	length := 5*100*1024 + 123
@@ -433,6 +504,85 @@ func TestMockUploadParallel(t *testing.T) {
 			Key:    Ptr("key"),
 		},
 		bytes.NewReader(data))
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, "uploadId-1234", *result.UploadId)
+	assert.Equal(t, dataCrc64ecma, *result.HashCRC64)
+
+	mr := NewMultiBytesReader(tracker.saveDate)
+	all, err := io.ReadAll(mr)
+	assert.Nil(t, err)
+
+	hashall := NewCRC64(0)
+	hashall.Write(all)
+	allCrc64ecma := fmt.Sprint(hashall.Sum64())
+	assert.Equal(t, dataCrc64ecma, allCrc64ecma)
+
+	index := 3
+	ctime := tracker.checkTime[index]
+	for i, t := range tracker.checkTime {
+		if t.After(ctime) {
+			index = i
+			ctime = t
+		}
+	}
+	assert.Equal(t, 0, index)
+	assert.Equal(t, int32(0), atomic.LoadInt32(&tracker.putObjectCnt))
+	assert.Equal(t, int32(partsNum), atomic.LoadInt32(&tracker.uploadPartCnt))
+}
+
+func TestMockUploadParallelWithTeeReader(t *testing.T) {
+	partSize := int64(10 * 1024 * 1024)
+	length := 40 * 1024 * 1024
+	partsNum := length/int(partSize) + 1
+	tracker := &uploaderMockTracker{
+		partNum:       partsNum,
+		saveDate:      make([][]byte, partsNum),
+		checkTime:     make([]time.Time, partsNum),
+		timeout:       make([]time.Duration, partsNum),
+		uploadPartErr: make([]bool, partsNum),
+	}
+
+	data := []byte(randStr(length))
+	hash := NewCRC64(0)
+	hash.Write(data)
+	dataCrc64ecma := fmt.Sprint(hash.Sum64())
+
+	server := testSetupUploaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+
+	u := NewUploader(client,
+		func(uo *UploaderOptions) {
+			uo.ParallelNum = 4
+			uo.PartSize = partSize
+		},
+	)
+	assert.Equal(t, 4, u.options.ParallelNum)
+	assert.Equal(t, partSize, u.options.PartSize)
+
+	tracker.timeout[0] = 1 * time.Second
+	tracker.timeout[2] = 500 * time.Millisecond
+
+	pReader := io.TeeReader(bytes.NewReader(data), md5.New())
+	result, err := u.UploadFrom(
+		context.TODO(),
+		&PutObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("key"),
+		},
+		pReader)
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 
