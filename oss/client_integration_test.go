@@ -104,6 +104,25 @@ func getClientUseStsToken(region, endpoint string) *Client {
 	return NewClient(cfg)
 }
 
+func getClientUseStsTokenV2(cfg *Config) *Client {
+	resp, err := stsAssumeRole(accessID_, accessKey_, ramRoleArn_)
+	if err != nil {
+		return nil
+	}
+	accessId := resp.Credentials.AccessKeyId
+	accessKey := resp.Credentials.AccessKeySecret
+	token := resp.Credentials.SecurityToken
+	cfg.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessId, accessKey, token))
+	/*
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessId, accessKey, token)).
+			WithRegion(region).
+			WithEndpoint(endpoint).
+			WithSignatureVersion(getSignatrueVersion())
+	*/
+	return NewClient(cfg)
+}
+
 func getClientWithCredentialsProvider(region, endpoint string, cred credentials.CredentialsProvider) *Client {
 	cfg := LoadDefaultConfig().
 		WithCredentialsProvider(cred).
@@ -5005,7 +5024,13 @@ func TestAsyncProcessObject(t *testing.T) {
 	}
 	videoUrl := "https://oss-console-img-demo-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/video.mp4?spm=a2c4g.64555.0.0.515675979u4B8w&file=video.mp4"
 	fileName := "video.mp4"
-	resp, err := http.Get(videoUrl)
+	var resp *http.Response
+	for i := 0; i < 3; i++ {
+		resp, err = http.Get(videoUrl)
+		if err != nil {
+			continue
+		}
+	}
 	assert.Nil(t, err)
 	defer resp.Body.Close()
 	defer os.Remove(fileName)
@@ -7363,7 +7388,7 @@ func TestBucketReplication(t *testing.T) {
 	request = &PutBucketRequest{
 		Bucket: Ptr(targetBucketName),
 	}
-	client1 := getClient("cn-beijing", "http://oss-cn-beijing.aliyuncs.com")
+	client1 := getClient("cn-beijing", "https://oss-cn-beijing.aliyuncs.com")
 	_, err = client1.PutBucket(context.TODO(), request)
 	assert.Nil(t, err)
 
@@ -7805,12 +7830,11 @@ func TestAddressingModePathStyle(t *testing.T) {
 	}
 
 	cfg := LoadDefaultConfig().
-		WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessID_, accessKey_)).
 		WithRegion(region).
 		WithSignatureVersion(getSignatrueVersion()).
 		WithUsePathStyle(true)
 
-	client := NewClient(cfg)
+	client := getClientUseStsTokenV2(cfg)
 
 	bucketName := pathStyleBucket_
 	objectName := "key-path-style"
@@ -9343,4 +9367,65 @@ func TestUploaderWithSequential(t *testing.T) {
 	headResult, err = client.HeadObject(context.TODO(), request)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, headResult.ContentMD5)
+}
+
+func TestUploaderUploadFromTeeReader(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	//TODO
+	client := getDefaultClient()
+	bucketName := bucketNamePrefix + randLowStr(6)
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	objectName := objectNamePrefix + randLowStr(6)
+	partSize := int64(100 * 1024)
+
+	u := NewUploader(client,
+		func(uo *UploaderOptions) {
+			uo.PartSize = partSize
+		},
+	)
+
+	// empty reader
+	content := strings.Repeat("a", 0)
+	reader := io.TeeReader(strings.NewReader(content), io.Discard)
+
+	result, err := u.UploadFrom(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}, reader)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	request := &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	headResult, err := client.HeadObject(context.TODO(), request)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(0), headResult.ContentLength)
+
+	// 2 * part-size
+	content = strings.Repeat("a", 200*1024)
+	reader = io.TeeReader(strings.NewReader(content), io.Discard)
+	result, err = u.UploadFrom(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}, strings.NewReader(content))
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	request = &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	headResult, err = client.HeadObject(context.TODO(), request)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(200*1024), headResult.ContentLength)
 }

@@ -505,6 +505,16 @@ func (slice uploadPartCRCs) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
+type saveErr struct {
+	Err error
+}
+
+func (e saveErr) Error() string {
+	return fmt.Sprintf("saveErr: %v", e.Err)
+}
+
+func (e saveErr) Unwrap() error { return e.Err }
+
 func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 	release := func() {
 		if u.partPool != nil {
@@ -538,7 +548,10 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 	}
 
 	saveErrFn := func(e error) {
-		errValue.Store(e)
+		if e == nil {
+			return
+		}
+		errValue.Store(saveErr{Err: e})
 	}
 
 	getErrFn := func() error {
@@ -546,8 +559,8 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 		if v == nil {
 			return nil
 		}
-		e, _ := v.(error)
-		return e
+		e, _ := v.(saveErr)
+		return e.Unwrap()
 	}
 
 	// readChunk runs in worker goroutines to pull chunks off of the ch channel
@@ -626,12 +639,18 @@ func (u *uploaderDelegate) multiPart() (*UploadResult, error) {
 
 		reader, nextChunkLen, cleanup, qerr = u.nextReader()
 		// check err
-		if (qerr != nil && qerr != io.EOF) ||
-			nextChunkLen == 0 {
+		if qerr != nil && qerr != io.EOF {
 			cleanup()
 			saveErrFn(qerr)
 			break
 		}
+
+		// No need to upload empty part
+		if nextChunkLen == 0 {
+			cleanup()
+			break
+		}
+
 		qnum++
 		//fmt.Printf("send chunk: %d\n", qnum)
 		ch <- uploaderChunk{body: reader, partNum: qnum, cleanup: cleanup, size: nextChunkLen}
