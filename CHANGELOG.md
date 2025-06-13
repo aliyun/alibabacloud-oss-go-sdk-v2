@@ -1,5 +1,9 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.2.3 日期：2025-06-13
+### 变更内容
+- Fix：Uploader upload from stream fail in special scenarios
+
 ## 版本号：v1.2.2 日期：2025-04-25
 ### 变更内容
 - Update：meta query api supports more search condition settings
