@@ -132,9 +132,8 @@ func LoadDefaultConfig() *Config {
 	// load from env
 	str := os.Getenv("OSS_SDK_LOG_LEVEL")
 	if str != "" {
-		if level := ToLogLevel(str); level > LogOff {
-			config.LogLevel = Ptr(level)
-		}
+		level := ToLogLevel(str)
+		config.LogLevel = Ptr(level)
 	}
 
 	return config
