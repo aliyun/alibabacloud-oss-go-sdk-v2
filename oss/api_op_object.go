@@ -1165,6 +1165,7 @@ type RestoreObjectResult struct {
 }
 
 // RestoreObject Restores Archive, Cold Archive, or Deep Cold Archive objects.
+// You are charged based on tier(restoration priority) when you restore object. For more information, see OSS document.
 func (c *Client) RestoreObject(ctx context.Context, request *RestoreObjectRequest, optFns ...func(*Options)) (*RestoreObjectResult, error) {
 	var err error
 	if request == nil {
