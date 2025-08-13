@@ -15,7 +15,8 @@ var (
 	DefaultExpectContinueTimeout = 1 * time.Second
 	DefaultKeepAliveTimeout      = 30 * time.Second
 
-	DefaultMaxConnections = 100
+	DefaultMaxConnections      = 100
+	DefaultMaxIdleConnsPerHost = 10
 
 	// Default to TLS 1.2 for all HTTPS requests.
 	DefaultTLSMinVersion uint16 = tls.VersionTLS12
@@ -45,6 +46,7 @@ func newTransportCustom(cfg *Config, fns ...func(*http.Transport)) http.RoundTri
 		TLSHandshakeTimeout:   *cfg.ConnectTimeout,
 		IdleConnTimeout:       *cfg.IdleConnectionTimeout,
 		MaxConnsPerHost:       DefaultMaxConnections,
+		MaxIdleConnsPerHost:   DefaultMaxIdleConnsPerHost,
 		ExpectContinueTimeout: DefaultExpectContinueTimeout,
 		TLSClientConfig: &tls.Config{
 			MinVersion: DefaultTLSMinVersion,
