@@ -205,6 +205,9 @@ func resolveHTTPClient(cfg *Config, o *Options, inner *innerOptions) {
 		})
 		inner.BwTokenBuckets[BwTokenBucketSlotRx] = tb
 	}
+	if cfg.BindAddress != nil {
+		tcfg.BindAddr = cfg.BindAddress
+	}
 
 	o.HttpClient = transport.NewHttpClient(tcfg, custom...)
 }
