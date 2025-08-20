@@ -2,6 +2,7 @@ package transport
 
 import (
 	"crypto/tls"
+	"net"
 	"net/http"
 	"net/url"
 	"time"
@@ -35,6 +36,7 @@ type Config struct {
 	IdleConnectionTimeout *time.Duration
 	KeepAliveTimeout      *time.Duration
 	EnabledRedirect       *bool
+	BindAddr              net.IP
 
 	PostRead  []func(n int, err error)
 	PostWrite []func(n int, err error)
@@ -100,6 +102,10 @@ func mergeInConfig(dst *Config, other *Config) {
 
 	if other.EnabledRedirect != nil {
 		dst.EnabledRedirect = other.EnabledRedirect
+	}
+
+	if other.BindAddr != nil {
+		dst.BindAddr = other.BindAddr
 	}
 
 	if other.PostRead != nil {
