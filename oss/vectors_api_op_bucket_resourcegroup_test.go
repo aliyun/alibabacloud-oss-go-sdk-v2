@@ -10,14 +10,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMarshalInput_PutBucketResourceGroup(t *testing.T) {
-	c := Client{}
+func TestMarshalInput_PutBucketResourceGroup_ForVectorBucket(t *testing.T) {
+	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var request *PutBucketResourceGroupRequest
 	var input *OperationInput
 	var err error
 
 	request = &PutBucketResourceGroupRequest{}
+	if request.Headers == nil {
+		request.Headers = make(map[string]string)
+	}
+	request.Headers[HTTPHeaderContentType] = contentTypeJSON
 	input = &OperationInput{
 		OpName: "PutBucketResourceGroup",
 		Method: "PUT",
@@ -35,13 +39,17 @@ func TestMarshalInput_PutBucketResourceGroup(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"resourceGroup"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
 
 	request = &PutBucketResourceGroupRequest{
 		Bucket: Ptr("oss-demo"),
 	}
+	if request.Headers == nil {
+		request.Headers = make(map[string]string)
+	}
+	request.Headers[HTTPHeaderContentType] = contentTypeJSON
 	input = &OperationInput{
 		OpName: "PutBucketResourceGroup",
 		Method: "PUT",
@@ -58,8 +66,7 @@ func TestMarshalInput_PutBucketResourceGroup(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"resourceGroup"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.Contains(t, err.Error(), "missing required field, BucketResourceGroupConfiguration.")
 	request = &PutBucketResourceGroupRequest{
 		Bucket: Ptr("oss-demo"),
@@ -67,6 +74,10 @@ func TestMarshalInput_PutBucketResourceGroup(t *testing.T) {
 			Ptr("rg-aekz****"),
 		},
 	}
+	if request.Headers == nil {
+		request.Headers = make(map[string]string)
+	}
+	request.Headers[HTTPHeaderContentType] = contentTypeJSON
 	input = &OperationInput{
 		OpName: "PutBucketResourceGroup",
 		Method: "PUT",
@@ -84,14 +95,14 @@ func TestMarshalInput_PutBucketResourceGroup(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"resourceGroup"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "<BucketResourceGroupConfiguration><ResourceGroupId>rg-aekz****</ResourceGroupId></BucketResourceGroupConfiguration>")
+	assert.Equal(t, string(body), "{\"BucketResourceGroupConfiguration\":{\"ResourceGroupId\":\"rg-aekz****\"}}")
 }
 
-func TestUnmarshalOutput_PutBucketResourceGroup(t *testing.T) {
-	c := Client{}
+func TestUnmarshalOutput_PutBucketResourceGroup_ForVectorBucket(t *testing.T) {
+	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *OperationOutput
 	var err error
@@ -103,7 +114,7 @@ func TestUnmarshalOutput_PutBucketResourceGroup(t *testing.T) {
 		},
 	}
 	result := &PutBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -114,59 +125,60 @@ func TestUnmarshalOutput_PutBucketResourceGroup(t *testing.T) {
 		Status:     "NoSuchBucket",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	result = &PutBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 	output = &OperationOutput{
 		StatusCode: 400,
 		Status:     "InvalidArgument",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	result = &PutBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 
-	body := `<?xml version="1.0" encoding="UTF-8"?>
-<Error>
-  <Code>AccessDenied</Code>
-  <Message>AccessDenied</Message>
-  <RequestId>568D5566F2D0F89F5C0E****</RequestId>
-  <HostId>test.oss.aliyuncs.com</HostId>
-</Error>`
+	body := `{
+  "Error": {
+    "Code": "AccessDenied",
+    "Message": "AccessDenied",
+    "RequestId": "568D5566F2D0F89F5C0E****",
+    "HostId": "test.oss.aliyuncs.com"
+  }
+}`
 	output = &OperationOutput{
 		StatusCode: 403,
 		Status:     "AccessDenied",
 		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	result = &PutBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 }
 
-func TestMarshalInput_GetBucketResourceGroup(t *testing.T) {
-	c := Client{}
+func TestMarshalInput_GetBucketResourceGroup_ForVectorBucket(t *testing.T) {
+	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var request *GetBucketResourceGroupRequest
 	var input *OperationInput
@@ -176,21 +188,13 @@ func TestMarshalInput_GetBucketResourceGroup(t *testing.T) {
 	input = &OperationInput{
 		OpName: "GetBucketResourceGroup",
 		Method: "GET",
-		Headers: map[string]string{
-			HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[HTTPHeaderContentType] != "" {
-					return request.Headers[HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
-		},
 		Parameters: map[string]string{
 			"resourceGroup": "",
 		},
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"resourceGroup"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
 
@@ -200,100 +204,96 @@ func TestMarshalInput_GetBucketResourceGroup(t *testing.T) {
 	input = &OperationInput{
 		OpName: "GetBucketResourceGroup",
 		Method: "GET",
-		Headers: map[string]string{
-			HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[HTTPHeaderContentType] != "" {
-					return request.Headers[HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
-		},
 		Parameters: map[string]string{
 			"resourceGroup": "",
 		},
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"resourceGroup"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 
-func TestUnmarshalOutput_GetBucketResourceGroup(t *testing.T) {
-	c := Client{}
+func TestUnmarshalOutput_GetBucketResourceGroup_ForVectorBucket(t *testing.T) {
+	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *OperationOutput
 	var err error
-	putBody := `<BucketResourceGroupConfiguration>
-  <ResourceGroupId>rg-aekz****</ResourceGroupId>
-</BucketResourceGroupConfiguration>`
+	putBody := `{
+  "BucketResourceGroupConfiguration": {
+    "ResourceGroupId": "rg-aekz****"
+  }
+}`
 	output = &OperationOutput{
 		StatusCode: 200,
 		Status:     "OK",
 		Body:       io.NopCloser(bytes.NewReader([]byte(putBody))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	assert.Nil(t, err)
 	result := &GetBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlOrJson)
+	err = c.client.unmarshalOutput(result, output, unmarshalBodyXmlOrJson)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 	assert.Equal(t, *result.BucketResourceGroupConfiguration.ResourceGroupId, "rg-aekz****")
 
-	putBody = `<?xml version="1.0" encoding="UTF-8"?>
-		<Error>
-		<Code>NoSuchBucket</Code>
-		<Message>The specified bucket does not exist.</Message>
-		<RequestId>66C2FF09FDF07830343C72EC</RequestId>
-		<HostId>bucket.oss-cn-hangzhou.aliyuncs.com</HostId>
-		<BucketName>bucket</BucketName>
-		<EC>0015-00000101</EC>
-	</Error>`
+	putBody = `{
+ "Error": {
+   "Code": "NoSuchBucket",
+   "Message": "The specified bucket does not exist.",
+   "RequestId": "66C2FF09FDF07830343C72EC",
+   "HostId": "bucket.oss-cn-hangzhou.aliyuncs.com",
+   "BucketName": "bucket",
+   "EC": "0015-00000101"
+ }
+}`
 	output = &OperationOutput{
 		StatusCode: 404,
 		Status:     "NoSuchBucket",
 		Body:       io.NopCloser(bytes.NewReader([]byte(putBody))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	assert.Nil(t, err)
 	result = &GetBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlOrJson)
+	err = c.client.unmarshalOutput(result, output, unmarshalBodyXmlOrJson)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 
-	putBody = `<?xml version="1.0" encoding="UTF-8"?>
-<Error>
-  <Code>AccessDenied</Code>
-  <Message>AccessDenied</Message>
-  <RequestId>568D5566F2D0F89F5C0E****</RequestId>
-  <HostId>test.oss.aliyuncs.com</HostId>
-</Error>`
+	putBody = `{
+ "Error": {
+   "Code": "AccessDenied",
+   "Message": "AccessDenied",
+   "RequestId": "568D5566F2D0F89F5C0E****",
+   "HostId": "test.oss.aliyuncs.com"
+ }
+}`
 	output = &OperationOutput{
 		StatusCode: 403,
 		Status:     "AccessDenied",
 		Body:       io.NopCloser(bytes.NewReader([]byte(putBody))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	assert.Nil(t, err)
 	result = &GetBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlOrJson)
+	err = c.client.unmarshalOutput(result, output, unmarshalBodyXmlOrJson)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 }

@@ -8,7 +8,7 @@ import (
 
 type BucketResourceGroupConfiguration struct {
 	// The ID of the resource group to which the bucket belongs.
-	ResourceGroupId *string `xml:"ResourceGroupId"`
+	ResourceGroupId *string `xml:"ResourceGroupId" json:"ResourceGroupId"`
 }
 
 type GetBucketResourceGroupRequest struct {
@@ -20,7 +20,7 @@ type GetBucketResourceGroupRequest struct {
 
 type GetBucketResourceGroupResult struct {
 	// The container that stores the ID of the resource group.
-	BucketResourceGroupConfiguration *BucketResourceGroupConfiguration `output:"body,BucketResourceGroupConfiguration,xml"`
+	BucketResourceGroupConfiguration *BucketResourceGroupConfiguration `output:"body,BucketResourceGroupConfiguration,xml|json"`
 
 	ResultCommon
 }
@@ -34,15 +34,13 @@ func (c *Client) GetBucketResourceGroup(ctx context.Context, request *GetBucketR
 	input := &OperationInput{
 		OpName: "GetBucketResourceGroup",
 		Method: "GET",
-		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeXML,
-		},
 		Parameters: map[string]string{
 			"resourceGroup": "",
 		},
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"resourceGroup"})
+
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
 	}
@@ -51,7 +49,7 @@ func (c *Client) GetBucketResourceGroup(ctx context.Context, request *GetBucketR
 		return nil, err
 	}
 	result := &GetBucketResourceGroupResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlOrJson); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
@@ -62,7 +60,7 @@ type PutBucketResourceGroupRequest struct {
 	Bucket *string `input:"host,bucket,required"`
 
 	// The request body schema.
-	BucketResourceGroupConfiguration *BucketResourceGroupConfiguration `input:"body,BucketResourceGroupConfiguration,xml,required"`
+	BucketResourceGroupConfiguration *BucketResourceGroupConfiguration `input:"body,BucketResourceGroupConfiguration,xml|json,required"`
 
 	RequestCommon
 }
@@ -81,7 +79,12 @@ func (c *Client) PutBucketResourceGroup(ctx context.Context, request *PutBucketR
 		OpName: "PutBucketResourceGroup",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeXML,
+			HTTPHeaderContentType: func() string {
+				if request.Headers != nil && request.Headers[HTTPHeaderContentType] != "" {
+					return request.Headers[HTTPHeaderContentType]
+				}
+				return contentTypeXML
+			}(),
 		},
 		Parameters: map[string]string{
 			"resourceGroup": "",
@@ -97,7 +100,7 @@ func (c *Client) PutBucketResourceGroup(ctx context.Context, request *PutBucketR
 		return nil, err
 	}
 	result := &PutBucketResourceGroupResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
+	if err = c.unmarshalOutput(result, output, discardBody); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
