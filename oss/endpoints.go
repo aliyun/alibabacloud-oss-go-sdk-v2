@@ -60,3 +60,21 @@ func endpointFromRegion(region string, disableSSL bool, etype EndpointType) stri
 
 	return endpoint
 }
+
+func vectorsEndpointFromRegion(region string, disableSSL bool, etype EndpointType) string {
+	scheme := DefaultEndpointScheme
+	if disableSSL {
+		scheme = "http"
+	}
+
+	var endpoint string
+	switch etype {
+	case EndpointInternal:
+		endpoint = fmt.Sprintf("oss-%s-internal.oss-vectors.aliyuncs.com", region)
+	default:
+		endpoint = fmt.Sprintf("oss-%s.oss-vectors.aliyuncs.com", region)
+	}
+	endpoint = fmt.Sprintf("%s://%s", scheme, endpoint)
+
+	return endpoint
+}
