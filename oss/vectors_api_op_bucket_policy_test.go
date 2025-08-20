@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMarshalInput_PutBucketPolicy(t *testing.T) {
-	c := Client{}
+func TestMarshalInput_PutBucketPolicy_ForVectorBucket(t *testing.T) {
+	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var request *PutBucketPolicyRequest
 	var input *OperationInput
@@ -32,7 +32,7 @@ func TestMarshalInput_PutBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
@@ -51,9 +51,9 @@ func TestMarshalInput_PutBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.Contains(t, err.Error(), "missing required field, Body.")
-	putBody := `{"Version":"1","Statement":[{"Action":["oss:PutObject","oss:GetObject"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:oss:*:1234567890:*/*"]}]}`
+	putBody := `{"Version":"1","Statement":[{"Action":["ossvector:PutVectors","ossvector:GetVectors"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:ossvector:cn-hangzhou:1234567890:*"]}]}`
 	request = &PutBucketPolicyRequest{
 		Bucket: Ptr("oss-demo"),
 		Body:   strings.NewReader(putBody),
@@ -70,14 +70,14 @@ func TestMarshalInput_PutBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:PutObject\",\"oss:GetObject\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:oss:*:1234567890:*/*\"]}]}")
+	assert.Equal(t, string(body), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"ossvector:PutVectors\",\"ossvector:GetVectors\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:ossvector:cn-hangzhou:1234567890:*\"]}]}")
 }
 
-func TestUnmarshalOutput_PutBucketPolicy(t *testing.T) {
-	c := Client{}
+func TestUnmarshalOutput_PutBucketPolicy_ForVectorBucket(t *testing.T) {
+	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *OperationOutput
 	var err error
@@ -89,7 +89,7 @@ func TestUnmarshalOutput_PutBucketPolicy(t *testing.T) {
 		},
 	}
 	result := &PutBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -100,59 +100,60 @@ func TestUnmarshalOutput_PutBucketPolicy(t *testing.T) {
 		Status:     "NoSuchBucket",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	result = &PutBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 	output = &OperationOutput{
 		StatusCode: 400,
 		Status:     "InvalidArgument",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	result = &PutBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 
-	body := `<?xml version="1.0" encoding="UTF-8"?>
-<Error>
-  <Code>AccessDenied</Code>
-  <Message>AccessDenied</Message>
-  <RequestId>568D5566F2D0F89F5C0E****</RequestId>
-  <HostId>test.oss.aliyuncs.com</HostId>
-</Error>`
+	body := `{
+  "Error": {
+    "Code": "AccessDenied",
+    "Message": "AccessDenied",
+    "RequestId": "568D5566F2D0F89F5C0E****",
+    "HostId": "test.oss.aliyuncs.com"
+  }
+}`
 	output = &OperationOutput{
 		StatusCode: 403,
 		Status:     "AccessDenied",
 		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	result = &PutBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 }
 
-func TestMarshalInput_GetBucketPolicy(t *testing.T) {
-	c := Client{}
+func TestMarshalInput_GetBucketPolicy_ForVectorBucket(t *testing.T) {
+	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var request *GetBucketPolicyRequest
 	var input *OperationInput
@@ -168,7 +169,7 @@ func TestMarshalInput_GetBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
 
@@ -184,16 +185,16 @@ func TestMarshalInput_GetBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 
-func TestUnmarshalOutput_GetBucketPolicy(t *testing.T) {
-	c := Client{}
+func TestUnmarshalOutput_GetBucketPolicy_ForVectorBucket(t *testing.T) {
+	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *OperationOutput
 	var err error
-	putBody := `{"Version":"1","Statement":[{"Action":["oss:PutObject","oss:GetObject"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:oss:*:1234567890:*/*"]}]}`
+	putBody := `{"Version":"1","Statement":[{"Action":["ossvector:PutVectors","ossvector:GetVectors"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:ossvector:cn-hangzhou:1234567890:*"]}]}`
 	output = &OperationOutput{
 		StatusCode: 200,
 		Status:     "OK",
@@ -208,7 +209,7 @@ func TestUnmarshalOutput_GetBucketPolicy(t *testing.T) {
 	result := &GetBucketPolicyResult{
 		Body: string(body),
 	}
-	err = c.unmarshalOutput(result, output)
+	err = c.client.unmarshalOutput(result, output)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -216,22 +217,23 @@ func TestUnmarshalOutput_GetBucketPolicy(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 	assert.Equal(t, result.Body, putBody)
 
-	putBody = `<?xml version="1.0" encoding="UTF-8"?>
-		<Error>
-		<Code>NoSuchBucket</Code>
-		<Message>The specified bucket does not exist.</Message>
-		<RequestId>66C2FF09FDF07830343C72EC</RequestId>
-		<HostId>bucket.oss-cn-hangzhou.aliyuncs.com</HostId>
-		<BucketName>bucket</BucketName>
-		<EC>0015-00000101</EC>
-	</Error>`
+	putBody = `{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "66C2FF09FDF07830343C72EC",
+    "HostId": "bucket.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "bucket",
+    "EC": "0015-00000101"
+  }
+}`
 	output = &OperationOutput{
 		StatusCode: 404,
 		Status:     "NoSuchBucket",
 		Body:       io.NopCloser(bytes.NewReader([]byte(putBody))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	body, err = ioutil.ReadAll(output.Body)
@@ -239,27 +241,28 @@ func TestUnmarshalOutput_GetBucketPolicy(t *testing.T) {
 	result = &GetBucketPolicyResult{
 		Body: string(body),
 	}
-	err = c.unmarshalOutput(result, output)
+	err = c.client.unmarshalOutput(result, output)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 
-	putBody = `<?xml version="1.0" encoding="UTF-8"?>
-<Error>
-  <Code>AccessDenied</Code>
-  <Message>AccessDenied</Message>
-  <RequestId>568D5566F2D0F89F5C0E****</RequestId>
-  <HostId>test.oss.aliyuncs.com</HostId>
-</Error>`
+	putBody = `{
+  "Error": {
+    "Code": "AccessDenied",
+    "Message": "AccessDenied",
+    "RequestId": "568D5566F2D0F89F5C0E****",
+    "HostId": "test.oss.aliyuncs.com"
+  }
+}`
 	output = &OperationOutput{
 		StatusCode: 403,
 		Status:     "AccessDenied",
 		Body:       io.NopCloser(bytes.NewReader([]byte(putBody))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	body, err = ioutil.ReadAll(output.Body)
@@ -267,16 +270,16 @@ func TestUnmarshalOutput_GetBucketPolicy(t *testing.T) {
 	result = &GetBucketPolicyResult{
 		Body: string(body),
 	}
-	err = c.unmarshalOutput(result, output)
+	err = c.client.unmarshalOutput(result, output)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 }
 
-func TestMarshalInput_DeleteBucketPolicy(t *testing.T) {
-	c := Client{}
+func TestMarshalInput_DeleteBucketPolicy_ForVectorBucket(t *testing.T) {
+	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var request *DeleteBucketPolicyRequest
 	var input *OperationInput
@@ -292,7 +295,7 @@ func TestMarshalInput_DeleteBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
@@ -308,12 +311,12 @@ func TestMarshalInput_DeleteBucketPolicy(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.client.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 }
 
-func TestUnmarshalOutput_DeleteBucketPolicy(t *testing.T) {
-	c := Client{}
+func TestUnmarshalOutput_DeleteBucketPolicy_ForVectorBucket(t *testing.T) {
+	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *OperationOutput
 	var err error
@@ -325,172 +328,60 @@ func TestUnmarshalOutput_DeleteBucketPolicy(t *testing.T) {
 		},
 	}
 	result := &DeleteBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 204)
 	assert.Equal(t, result.Status, "No Content")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	body := `<?xml version="1.0" encoding="UTF-8"?>
-		<Error>
-		<Code>NoSuchBucket</Code>
-		<Message>The specified bucket does not exist.</Message>
-		<RequestId>66C2FF09FDF07830343C72EC</RequestId>
-		<HostId>bucket.oss-cn-hangzhou.aliyuncs.com</HostId>
-		<BucketName>bucket</BucketName>
-		<EC>0015-00000101</EC>
-	</Error>`
+	body := `{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "66C2FF09FDF07830343C72EC",
+    "HostId": "bucket.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "bucket",
+    "EC": "0015-00000101"
+  }
+}`
 	output = &OperationOutput{
 		StatusCode: 404,
 		Status:     "NoSuchBucket",
 		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	result = &DeleteBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 
-	body = `<?xml version="1.0" encoding="UTF-8"?>
-<Error>
-  <Code>AccessDenied</Code>
-  <Message>AccessDenied</Message>
-  <RequestId>568D5566F2D0F89F5C0E****</RequestId>
-  <HostId>test.oss.aliyuncs.com</HostId>
-</Error>`
+	body = `{
+  "Error": {
+    "Code": "AccessDenied",
+    "Message": "AccessDenied",
+    "RequestId": "568D5566F2D0F89F5C0E****",
+    "HostId": "test.oss.aliyuncs.com"
+  }
+}`
 	output = &OperationOutput{
 		StatusCode: 403,
 		Status:     "AccessDenied",
 		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
+			"Content-Type":     {"application/json"},
 		},
 	}
 	result = &DeleteBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, discardBody)
+	err = c.client.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
-}
-
-func TestMarshalInput_GetBucketPolicyStatus(t *testing.T) {
-	c := Client{}
-	assert.NotNil(t, c)
-	var request *GetBucketPolicyStatusRequest
-	var input *OperationInput
-	var err error
-
-	request = &GetBucketPolicyStatusRequest{}
-	input = &OperationInput{
-		OpName: "GetBucketPolicyStatus",
-		Method: "GET",
-		Parameters: map[string]string{
-			"policyStatus": "",
-		},
-		Bucket: request.Bucket,
-	}
-	input.OpMetadata.Set(signer.SubResource, []string{"policyStatus"})
-	err = c.marshalInput(request, input, updateContentMd5)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field")
-
-	request = &GetBucketPolicyStatusRequest{
-		Bucket: Ptr("oss-demo"),
-	}
-	input = &OperationInput{
-		OpName: "GetBucketPolicyStatus",
-		Method: "GET",
-		Parameters: map[string]string{
-			"policyStatus": "",
-		},
-		Bucket: request.Bucket,
-	}
-	input.OpMetadata.Set(signer.SubResource, []string{"policyStatus"})
-	err = c.marshalInput(request, input, updateContentMd5)
-	assert.Nil(t, err)
-}
-
-func TestUnmarshalOutput_GetBucketPolicyStatus(t *testing.T) {
-	c := Client{}
-	assert.NotNil(t, c)
-	var output *OperationOutput
-	var err error
-	body := `<?xml version="1.0" encoding="UTF-8"?>
-<PolicyStatus>
-   <IsPublic>true</IsPublic>
-</PolicyStatus>`
-	output = &OperationOutput{
-		StatusCode: 200,
-		Status:     "OK",
-		Body:       io.NopCloser(strings.NewReader(body)),
-		Headers: http.Header{
-			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
-		},
-	}
-	result := &GetBucketPolicyStatusResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
-	assert.Nil(t, err)
-	assert.Equal(t, result.StatusCode, 200)
-	assert.Equal(t, result.Status, "OK")
-	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
-	assert.True(t, *result.PolicyStatus.IsPublic)
-	body = `<?xml version="1.0" encoding="UTF-8"?>
-		<Error>
-		<Code>NoSuchBucket</Code>
-		<Message>The specified bucket does not exist.</Message>
-		<RequestId>66C2FF09FDF07830343C72EC</RequestId>
-		<HostId>bucket.oss-cn-hangzhou.aliyuncs.com</HostId>
-		<BucketName>bucket</BucketName>
-		<EC>0015-00000101</EC>
-	</Error>`
-	output = &OperationOutput{
-		StatusCode: 404,
-		Status:     "NoSuchBucket",
-		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
-		Headers: http.Header{
-			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
-		},
-	}
-	result = &GetBucketPolicyStatusResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
-	assert.Nil(t, err)
-	assert.Equal(t, result.StatusCode, 404)
-	assert.Equal(t, result.Status, "NoSuchBucket")
-	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
-
-	body = `<?xml version="1.0" encoding="UTF-8"?>
-<Error>
-  <Code>AccessDenied</Code>
-  <Message>AccessDenied</Message>
-  <RequestId>568D5566F2D0F89F5C0E****</RequestId>
-  <HostId>test.oss.aliyuncs.com</HostId>
-</Error>`
-	output = &OperationOutput{
-		StatusCode: 403,
-		Status:     "AccessDenied",
-		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
-		Headers: http.Header{
-			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
-			"Content-Type":     {"application/xml"},
-		},
-	}
-	result = &GetBucketPolicyStatusResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
-	assert.Nil(t, err)
-	assert.Equal(t, result.StatusCode, 403)
-	assert.Equal(t, result.Status, "AccessDenied")
-	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 }
