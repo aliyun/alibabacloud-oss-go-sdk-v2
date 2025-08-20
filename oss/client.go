@@ -1593,4 +1593,5 @@ func (c *Client) getLogLevel() int {
 const (
 	contentTypeDefault string = "application/octet-stream"
 	contentTypeXML            = "application/xml"
+	contentTypeJSON           = "application/json"
 )
