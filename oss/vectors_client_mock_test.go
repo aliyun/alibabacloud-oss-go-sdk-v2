@@ -961,3 +961,473 @@ func TestMockDeleteVectorBucket_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockPutBucketPolicyForVectorSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutBucketPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *PutBucketPolicyResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/bucket/?policy", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"ossvector:PutVectors\",\"ossvector:GetVectors\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:ossvector:*:1234567890:*\"]}]}")
+		},
+		&PutBucketPolicyRequest{
+			Bucket: Ptr("bucket"),
+			Body:   strings.NewReader(`{"Version":"1","Statement":[{"Action":["ossvector:PutVectors","ossvector:GetVectors"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:ossvector:*:1234567890:*"]}]}`),
+		},
+		func(t *testing.T, o *PutBucketPolicyResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockPutBucketPolicyForVector_Success(t *testing.T) {
+	for _, c := range testMockPutBucketPolicyForVectorSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutBucketPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutBucketPolicyForVectorErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutBucketPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *PutBucketPolicyResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/bucket/?policy", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"ossvector:PutVectors\",\"ossvector:GetVectors\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:ossvector:*:1234567890:*\"]}]}")
+		},
+		&PutBucketPolicyRequest{
+			Bucket: Ptr("bucket"),
+			Body:   strings.NewReader(`{"Version":"1","Statement":[{"Action":["ossvector:PutVectors","ossvector:GetVectors"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:ossvector:*:1234567890:*"]}]}`),
+		},
+		func(t *testing.T, o *PutBucketPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "UserDisable",
+    "Message": "UserDisable",
+    "RequestId": "5C3D8D2A0ACA54D87B43****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0003-00000801"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?policy", strUrl)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"ossvector:PutVectors\",\"ossvector:GetVectors\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:ossvector:*:1234567890:*\"]}]}")
+		},
+		&PutBucketPolicyRequest{
+			Bucket: Ptr("bucket"),
+			Body:   strings.NewReader(`{"Version":"1","Statement":[{"Action":["ossvector:PutVectors","ossvector:GetVectors"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:ossvector:*:1234567890:*"]}]}`),
+		},
+		func(t *testing.T, o *PutBucketPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockPutBucketPolicyForVector_Error(t *testing.T) {
+	for _, c := range testMockPutBucketPolicyForVectorErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutBucketPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetBucketPolicyForVectorSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetBucketPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *GetBucketPolicyResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{"Version":"1","Statement":[{"Action":["ossvector:PutVectors","ossvector:GetVectors"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:ossvector:*:1234567890:*"]}]}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/bucket/?policy", r.URL.String())
+		},
+		&GetBucketPolicyRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetBucketPolicyResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.Body, "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"ossvector:PutVectors\",\"ossvector:GetVectors\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:ossvector:*:1234567890:*\"]}]}")
+		},
+	},
+}
+
+func TestMockGetBucketPolicyForVector_Success(t *testing.T) {
+	for _, c := range testMockGetBucketPolicyForVectorSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetBucketPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetBucketPolicyForVectorErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetBucketPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *GetBucketPolicyResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/bucket/?policy", r.URL.String())
+			assert.Equal(t, "GET", r.Method)
+		},
+		&GetBucketPolicyRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetBucketPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "UserDisable",
+    "Message": "UserDisable",
+    "RequestId": "5C3D8D2A0ACA54D87B43****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0003-00000801"
+  }}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?policy", strUrl)
+		},
+		&GetBucketPolicyRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetBucketPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockGetBucketPolicyForVector_Error(t *testing.T) {
+	for _, c := range testMockGetBucketPolicyForVectorErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetBucketPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteBucketPolicyForVectorSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteBucketPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteBucketPolicyResult, err error)
+}{
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?policy", strUrl)
+		},
+		&DeleteBucketPolicyRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *DeleteBucketPolicyResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+		},
+	},
+}
+
+func TestMockDeleteBucketPolicyForVector_Success(t *testing.T) {
+	for _, c := range testMockDeleteBucketPolicyForVectorSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.DeleteBucketPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteBucketPolicyForVectorErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteBucketPolicyRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteBucketPolicyResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?policy", strUrl)
+		},
+		&DeleteBucketPolicyRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *DeleteBucketPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "UserDisable",
+    "Message": "UserDisable",
+    "RequestId": "5C3D8D2A0ACA54D87B43****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0003-00000801"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "DELETE", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?policy", strUrl)
+		},
+		&DeleteBucketPolicyRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *DeleteBucketPolicyResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDeleteBucketPolicyForVector_Error(t *testing.T) {
+	for _, c := range testMockDeleteBucketPolicyForVectorErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.DeleteBucketPolicy(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
