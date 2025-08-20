@@ -50,6 +50,20 @@ func TestEndpointFromRegion(t *testing.T) {
 	assert.Equal(t, "http://cn-hangzhou.oss.aliyuncs.com", endpointFromRegion("cn-hangzhou", true, EndpointDualStack))
 }
 
+func TestVectorsEndpointFromRegion(t *testing.T) {
+	// EndpointPublic
+	assert.Equal(t, "https://oss-.oss-vectors.aliyuncs.com", vectorsEndpointFromRegion("", false, EndpointPublic))
+	assert.Equal(t, "http://oss-.oss-vectors.aliyuncs.com", vectorsEndpointFromRegion("", true, EndpointPublic))
+	assert.Equal(t, "https://oss-cn-hangzhou.oss-vectors.aliyuncs.com", vectorsEndpointFromRegion("cn-hangzhou", false, EndpointPublic))
+	assert.Equal(t, "http://oss-cn-hangzhou.oss-vectors.aliyuncs.com", vectorsEndpointFromRegion("cn-hangzhou", true, EndpointPublic))
+
+	// EndpointInternal
+	assert.Equal(t, "https://oss--internal.oss-vectors.aliyuncs.com", vectorsEndpointFromRegion("", false, EndpointInternal))
+	assert.Equal(t, "http://oss--internal.oss-vectors.aliyuncs.com", vectorsEndpointFromRegion("", true, EndpointInternal))
+	assert.Equal(t, "https://oss-cn-hangzhou-internal.oss-vectors.aliyuncs.com", vectorsEndpointFromRegion("cn-hangzhou", false, EndpointInternal))
+	assert.Equal(t, "http://oss-cn-hangzhou-internal.oss-vectors.aliyuncs.com", vectorsEndpointFromRegion("cn-hangzhou", true, EndpointInternal))
+}
+
 func TestIsValidRegion(t *testing.T) {
 	assert.True(t, isValidRegion("123-345"))
 	assert.True(t, isValidRegion("abc"))

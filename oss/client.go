@@ -633,20 +633,64 @@ func tryConvertServiceError(response *http.Response) (err error) {
 		Headers:       response.Header,
 	}
 
-	if err != nil {
-		se.Message = fmt.Sprintf("The body of the response was not readable, due to :%s", err.Error())
-		return se
-	}
-	err = xml.Unmarshal(body, &se)
-	if err != nil {
-		len := len(body)
-		if len > 256 {
-			len = 256
+	if response.Header.Get(HTTPHeaderContentType) == contentTypeXML {
+		if err != nil {
+			se.Message = fmt.Sprintf("The body of the response was not readable, due to :%s", err.Error())
+			return se
 		}
-		se.Message = fmt.Sprintf("Failed to parse xml from response body due to: %s. With part response body %s.", err.Error(), string(body[:len]))
-		return se
+		err = xml.Unmarshal(body, &se)
+		if err != nil {
+			len := len(body)
+			if len > 256 {
+				len = 256
+			}
+			se.Message = fmt.Sprintf("Failed to parse xml from response body due to: %s. With part response body %s.", err.Error(), string(body[:len]))
+			return se
+		}
+	} else {
+		if err != nil {
+			se.Message = fmt.Sprintf("The body of the response was not readable, due to :%s", err.Error())
+			return se
+		}
+		jsonData, _ := extractSecondLevelValue(string(body))
+		err = json.Unmarshal([]byte(jsonData), &se)
+		if err != nil {
+			len := len(body)
+			if len > 256 {
+				len = 256
+			}
+			se.Message = fmt.Sprintf("Failed to parse json from response body due to: %s. With part response body %s.", err.Error(), string(body[:len]))
+			return se
+		}
 	}
 	return se
+}
+
+// extractSecondLevelValue extracts the nested JSON value from the top-level key.
+// This is used to unwrap OSS API responses that have an extra wrapper object.
+// Example: {"BucketInfo": {"Bucket": {...}}} -> {"Bucket": {...}}
+func extractSecondLevelValue(jsonStr string) (string, error) {
+	jsonStr = strings.TrimSpace(jsonStr)
+	if len(jsonStr) == 0 {
+		return "", fmt.Errorf("empty json string")
+	}
+
+	firstBrace := strings.IndexByte(jsonStr, '{')
+	if firstBrace == -1 {
+		return "", fmt.Errorf("invalid json format: no opening brace found")
+	}
+
+	secondBrace := strings.IndexByte(jsonStr[firstBrace+1:], '{')
+	if secondBrace == -1 {
+		return "", fmt.Errorf("invalid json format: no second level found")
+	}
+	secondBrace += firstBrace + 1
+
+	LastBrace := strings.LastIndexByte(jsonStr, '}')
+	if LastBrace == -1 {
+		return "", fmt.Errorf("invalid json format: no closing brace found")
+	}
+	return strings.TrimSpace(jsonStr[secondBrace:LastBrace]), nil
 }
 
 func nonStreamResponseHandler(response *http.Response) error {
@@ -743,6 +787,7 @@ const (
 	fTypeUsermeta
 	fTypeXml
 	fTypeTime
+	fTypeJson
 )
 
 func parseFiledFlags(tokens []string) int {
@@ -757,6 +802,8 @@ func parseFiledFlags(tokens []string) int {
 			flags |= fTypeXml
 		case "usermeta":
 			flags |= fTypeUsermeta
+		case "json":
+			flags |= fTypeJson
 		}
 	}
 	return flags
@@ -881,6 +928,19 @@ func (c *Client) marshalInput(request any, input *OperationInput, handlers ...fu
 						}
 					}
 					input.Body = bytes.NewReader(b.Bytes())
+				} else if flags&fTypeJson != 0 {
+					wrapper := map[string]interface{}{
+						tokens[1]: v.Interface(),
+					}
+					var b bytes.Buffer
+					encoder := json.NewEncoder(&b)
+					encoder.SetEscapeHTML(false)
+					if err := encoder.Encode(wrapper); err != nil {
+						return &SerializationError{
+							Err: err,
+						}
+					}
+					input.Body = bytes.NewReader(bytes.TrimRight(b.Bytes(), "\n"))
 				} else {
 					if r, ok := v.Interface().(io.Reader); ok {
 						input.Body = r
@@ -1076,6 +1136,43 @@ func unmarshalBodyDefault(result any, output *OperationOutput) error {
 			err = json.Unmarshal(body, result)
 		case "application/json;charset=utf-8":
 			err = json.Unmarshal(body, result)
+		default:
+			err = fmt.Errorf("unsupport contentType:%s", contentType)
+		}
+
+		if err != nil {
+			err = &DeserializationError{
+				Err:      err,
+				Snapshot: body,
+			}
+		}
+	}
+	return err
+}
+
+func unmarshalBodyDefaultV2(result any, output *OperationOutput) error {
+	var err error
+	var body []byte
+	if output.Body != nil {
+		defer output.Body.Close()
+		if body, err = io.ReadAll(output.Body); err != nil {
+			return err
+		}
+	}
+
+	// extract body
+	if len(body) > 0 {
+		contentType := output.Headers.Get("Content-Type")
+		switch contentType {
+		case "application/xml":
+			err = xml.Unmarshal(body, result)
+		case "application/json", "application/json;charset=utf-8":
+			jsonStr, extractErr := extractSecondLevelValue(string(body))
+			if extractErr != nil {
+				err = extractErr
+			} else {
+				err = json.Unmarshal([]byte(jsonStr), result)
+			}
 		default:
 			err = fmt.Errorf("unsupport contentType:%s", contentType)
 		}
