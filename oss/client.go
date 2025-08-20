@@ -788,6 +788,7 @@ const (
 	fTypeXml
 	fTypeTime
 	fTypeJson
+	fTypeXmlOrJson
 )
 
 func parseFiledFlags(tokens []string) int {
@@ -804,6 +805,8 @@ func parseFiledFlags(tokens []string) int {
 			flags |= fTypeUsermeta
 		case "json":
 			flags |= fTypeJson
+		case "xml|json":
+			flags |= fTypeXmlOrJson
 		}
 	}
 	return flags
@@ -918,30 +921,49 @@ func (c *Client) marshalInput(request any, input *OperationInput, handlers ...fu
 					input.Headers[tokens[1]] = fmt.Sprintf("%v", v.Interface())
 				}
 			case "body":
-				if flags&fTypeXml != 0 {
+				switch {
+				case flags&fTypeXml != 0:
 					var b bytes.Buffer
-					if err := xml.NewEncoder(&b).EncodeElement(
+					err := xml.NewEncoder(&b).EncodeElement(
 						v.Interface(),
-						xml.StartElement{Name: xml.Name{Local: tokens[1]}}); err != nil {
-						return &SerializationError{
-							Err: err,
-						}
+						xml.StartElement{Name: xml.Name{Local: tokens[1]}})
+					if err != nil {
+						return &SerializationError{Err: err}
 					}
 					input.Body = bytes.NewReader(b.Bytes())
-				} else if flags&fTypeJson != 0 {
+				case flags&fTypeJson != 0:
 					wrapper := map[string]interface{}{
 						tokens[1]: v.Interface(),
 					}
 					var b bytes.Buffer
 					encoder := json.NewEncoder(&b)
 					encoder.SetEscapeHTML(false)
-					if err := encoder.Encode(wrapper); err != nil {
-						return &SerializationError{
-							Err: err,
-						}
+					err := encoder.Encode(wrapper)
+					if err != nil {
+						return &SerializationError{Err: err}
 					}
 					input.Body = bytes.NewReader(bytes.TrimRight(b.Bytes(), "\n"))
-				} else {
+				case flags&fTypeXmlOrJson != 0:
+					var b bytes.Buffer
+					var err error
+					if input.Headers[HTTPHeaderContentType] == contentTypeXML {
+						err = xml.NewEncoder(&b).EncodeElement(
+							v.Interface(),
+							xml.StartElement{Name: xml.Name{Local: tokens[1]}})
+						input.Body = bytes.NewReader(b.Bytes())
+					} else {
+						wrapper := map[string]interface{}{
+							tokens[1]: v.Interface(),
+						}
+						encoder := json.NewEncoder(&b)
+						encoder.SetEscapeHTML(false)
+						err = encoder.Encode(wrapper)
+						input.Body = bytes.NewReader(bytes.TrimRight(b.Bytes(), "\n"))
+					}
+					if err != nil {
+						return &SerializationError{Err: err}
+					}
+				default:
 					if r, ok := v.Interface().(io.Reader); ok {
 						input.Body = r
 					} else {
@@ -1076,6 +1098,77 @@ func unmarshalBodyXmlMix(result any, output *OperationOutput) error {
 		err = xml.Unmarshal(body, dst.Interface())
 	} else {
 		err = xml.Unmarshal(body, result)
+	}
+
+	if err != nil {
+		err = &DeserializationError{
+			Err:      err,
+			Snapshot: body,
+		}
+	}
+
+	return err
+}
+
+func unmarshalBodyXmlOrJson(result any, output *OperationOutput) error {
+	var err error
+	var body []byte
+	if output.Body != nil {
+		defer output.Body.Close()
+		if body, err = io.ReadAll(output.Body); err != nil {
+			return err
+		}
+	}
+
+	if len(body) == 0 {
+		return nil
+	}
+
+	val := reflect.ValueOf(result)
+	switch val.Kind() {
+	case reflect.Pointer, reflect.Interface:
+		if val.IsNil() {
+			return nil
+		}
+		val = val.Elem()
+	}
+	if val.Kind() != reflect.Struct || output == nil {
+		return nil
+	}
+
+	t := val.Type()
+	idx := -1
+	for k := 0; k < t.NumField(); k++ {
+		if tag, ok := t.Field(k).Tag.Lookup("output"); ok {
+			tokens := strings.Split(tag, ",")
+			if len(tokens) < 2 {
+				continue
+			}
+			// header|query|body,filed_name,[required,time,usermeta...]
+			switch tokens[0] {
+			case "body":
+				idx = k
+				break
+			}
+		}
+	}
+
+	isJson := output.Headers != nil && output.Headers.Get(HTTPHeaderContentType) == contentTypeJSON
+	unmarshalData := func(target any) error {
+		if isJson {
+			return json.Unmarshal(body, target)
+		}
+		return xml.Unmarshal(body, target)
+	}
+
+	if idx >= 0 && !isJson {
+		dst := val.Field(idx)
+		if dst.IsNil() {
+			dst.Set(reflect.New(dst.Type().Elem()))
+		}
+		err = unmarshalData(dst.Interface())
+	} else {
+		err = unmarshalData(result)
 	}
 
 	if err != nil {
