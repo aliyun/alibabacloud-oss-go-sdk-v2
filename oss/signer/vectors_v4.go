@@ -28,6 +28,7 @@ func init() {
 }
 
 type SignerVectorsV4 struct {
+	Uid *string
 }
 
 func (s *SignerVectorsV4) calcStringToSign(datetime, scope, canonicalRequest string) string {
@@ -63,12 +64,7 @@ func (s *SignerVectorsV4) calcCanonicalRequest(signingCtx *SigningContext, addit
 
 	//Canonical Uri
 	uri := "/"
-	if signingCtx.Bucket != nil {
-		uri += *signingCtx.Bucket + "/"
-	}
-	if signingCtx.Key != nil {
-		uri += *signingCtx.Key
-	}
+	uri += buildBucketArn(signingCtx, s.Uid)
 	canonicalUri := escapePath(uri, false)
 
 	//Canonical Query
@@ -297,6 +293,10 @@ func (s *SignerVectorsV4) authQuery(ctx context.Context, signingCtx *SigningCont
 }
 
 func (s *SignerVectorsV4) Sign(ctx context.Context, signingCtx *SigningContext) error {
+	if s.Uid == nil {
+		return fmt.Errorf("Uid is null.")
+	}
+
 	if signingCtx == nil {
 		return fmt.Errorf("SigningContext is null.")
 	}
@@ -316,4 +316,20 @@ func (s *SignerVectorsV4) Sign(ctx context.Context, signingCtx *SigningContext) 
 
 func (s *SignerVectorsV4) IsSignedHeader(additionalHeaders []string, h string) bool {
 	return isDefaultSignedHeader(strings.ToLower(h)) || ContainsStr(additionalHeaders, h)
+}
+
+func buildBucketArn(signingCtx *SigningContext, uid *string) string {
+	region := toString(signingCtx.Region)
+	arn := fmt.Sprintf("acs:ossvector:%s:%s:", region, toString(uid))
+	if signingCtx.Bucket != nil {
+		bucket := toString(signingCtx.Bucket)
+		arn += bucket
+		if signingCtx.Key != nil {
+			key := toString(signingCtx.Key)
+			arn += "/" + url.QueryEscape(key)
+		} else {
+			arn += "/"
+		}
+	}
+	return arn
 }
