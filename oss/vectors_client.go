@@ -16,7 +16,9 @@ func NewVectorsClient(cfg *Config, optFns ...func(*Options)) *VectorsClient {
 	resolveVectorsUserAgent(&newCfg)
 	resolveVectorsEndpoint(&newCfg)
 	vectorsOptFn := func(options *Options) {
-		options.Signer = &signer.SignerVectorsV4{}
+		options.Signer = &signer.SignerVectorsV4{
+			Uid: newCfg.Uid,
+		}
 	}
 	allOptFns := append(optFns, vectorsOptFn)
 	client := NewClient(&newCfg, allOptFns...)
