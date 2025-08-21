@@ -11,7 +11,7 @@ type PutBucketTagsRequest struct {
 	Bucket *string `input:"host,bucket,required"`
 
 	// The request body schema.
-	Tagging *Tagging `input:"body,Tagging,xml,required"`
+	Tagging *Tagging `input:"body,Tagging,xml|json,required"`
 
 	RequestCommon
 }
@@ -30,7 +30,12 @@ func (c *Client) PutBucketTags(ctx context.Context, request *PutBucketTagsReques
 		OpName: "PutBucketTags",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeXML,
+			HTTPHeaderContentType: func() string {
+				if request.Headers != nil && request.Headers[HTTPHeaderContentType] != "" {
+					return request.Headers[HTTPHeaderContentType]
+				}
+				return contentTypeXML
+			}(),
 		},
 		Parameters: map[string]string{
 			"tagging": "",
@@ -46,7 +51,7 @@ func (c *Client) PutBucketTags(ctx context.Context, request *PutBucketTagsReques
 		return nil, err
 	}
 	result := &PutBucketTagsResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
+	if err = c.unmarshalOutput(result, output, discardBody); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 
@@ -62,7 +67,7 @@ type GetBucketTagsRequest struct {
 
 type GetBucketTagsResult struct {
 	// The container that stores the returned tags of the bucket. If no tags are configured for the bucket, an XML message body is returned in which the Tagging element is empty.
-	Tagging *Tagging `output:"body,Tagging,xml"`
+	Tagging *Tagging `output:"body,Tagging,xml|json"`
 
 	ResultCommon
 }
@@ -76,9 +81,6 @@ func (c *Client) GetBucketTags(ctx context.Context, request *GetBucketTagsReques
 	input := &OperationInput{
 		OpName: "GetBucketTags",
 		Method: "GET",
-		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeXML,
-		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
@@ -93,7 +95,7 @@ func (c *Client) GetBucketTags(ctx context.Context, request *GetBucketTagsReques
 		return nil, err
 	}
 	result := &GetBucketTagsResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlOrJson); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
@@ -121,9 +123,6 @@ func (c *Client) DeleteBucketTags(ctx context.Context, request *DeleteBucketTags
 	input := &OperationInput{
 		OpName: "DeleteBucketTags",
 		Method: "DELETE",
-		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeXML,
-		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
@@ -139,7 +138,7 @@ func (c *Client) DeleteBucketTags(ctx context.Context, request *DeleteBucketTags
 		return nil, err
 	}
 	result := &DeleteBucketTagsResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
+	if err = c.unmarshalOutput(result, output, discardBody); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err

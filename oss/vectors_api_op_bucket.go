@@ -154,13 +154,13 @@ type ListVectorBucketsResult struct {
 	NextMarker *string `json:"NextMarker"`
 
 	// The container that stores information about buckets.
-	Buckets VectorBuckets `json:"Buckets"`
+	Buckets Buckets `json:"Buckets"`
 
 	ResultCommon
 }
 
-// VectorBuckets The container that stores information about vector buckets.
-type VectorBuckets struct {
+// Buckets The container that stores information about buckets.
+type Buckets struct {
 	Bucket []VectorBucketProperties `json:"Bucket"`
 }
 
