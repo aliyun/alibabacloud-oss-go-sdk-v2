@@ -3128,3 +3128,982 @@ func TestMockDeleteVectorIndex_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockPutVectorsSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutVectorsRequest
+	CheckOutputFn  func(t *testing.T, o *PutVectorsResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		nil,
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?PutVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":32,"Key2":"value2","Key3":["1","2","3"],"Key4":false}}]}`)
+		},
+		&PutVectorsRequest{
+			Bucket:    Ptr("bucket"),
+			IndexName: Ptr("exampleIndex"),
+			Vectors: []map[string]interface{}{
+				{
+					"key": "vector1",
+					"data": map[string]interface{}{
+						"float32": []float32{1.2, 2.5, 3},
+					},
+					"metadata": map[string]interface{}{
+						"Key1": 32,
+						"Key2": "value2",
+						"Key3": []string{"1", "2", "3"},
+						"Key4": false,
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *PutVectorsResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockPutVectors_Success(t *testing.T) {
+	for _, c := range testMockPutVectorsSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutVectors(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutVectorsErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutVectorsRequest
+	CheckOutputFn  func(t *testing.T, o *PutVectorsResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?PutVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":32,"Key2":"value2","Key3":["1","2","3"],"Key4":false}}]}`)
+		},
+		&PutVectorsRequest{
+			Bucket:    Ptr("bucket"),
+			IndexName: Ptr("exampleIndex"),
+			Vectors: []map[string]interface{}{
+				{
+					"key": "vector1",
+					"data": map[string]interface{}{
+						"float32": []float32{1.2, 2.5, 3},
+					},
+					"metadata": map[string]interface{}{
+						"Key1": 32,
+						"Key2": "value2",
+						"Key3": []string{"1", "2", "3"},
+						"Key4": false,
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *PutVectorsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "UserDisable",
+    "Message": "UserDisable",
+    "RequestId": "5C3D8D2A0ACA54D87B43****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0003-00000801"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?PutVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":32,"Key2":"value2","Key3":["1","2","3"],"Key4":false}}]}`)
+		},
+		&PutVectorsRequest{
+			Bucket:    Ptr("bucket"),
+			IndexName: Ptr("exampleIndex"),
+			Vectors: []map[string]interface{}{
+				{
+					"key": "vector1",
+					"data": map[string]interface{}{
+						"float32": []float32{1.2, 2.5, 3},
+					},
+					"metadata": map[string]interface{}{
+						"Key1": 32,
+						"Key2": "value2",
+						"Key3": []string{"1", "2", "3"},
+						"Key4": false,
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *PutVectorsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockPutVectors_Error(t *testing.T) {
+	for _, c := range testMockPutVectorsErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutVectors(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetVectorsSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetVectorsRequest
+	CheckOutputFn  func(t *testing.T, o *GetVectorsResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/json",
+		},
+		[]byte(`{
+   "indexName": "index",
+   "vectors": [ 
+      { 
+         "data": {
+            "float32":[32]
+         },
+         "key": "key",
+         "metadata": {
+             "Key1": "value1",
+             "Key2": "value2"
+         }
+      }
+   ]
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?GetVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\",\"key3\"],\"returnData\":true,\"returnMetadata\":false}")
+		},
+		&GetVectorsRequest{
+			Bucket:         Ptr("bucket"),
+			IndexName:      Ptr("index"),
+			Keys:           []string{"key1", "key2", "key3"},
+			ReturnData:     Ptr(true),
+			ReturnMetadata: Ptr(false),
+		},
+		func(t *testing.T, o *GetVectorsResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, len(o.Vectors), 1)
+			for _, vector := range o.Vectors {
+				if keyVal, exists := vector["key"]; exists {
+					keyStr, ok := keyVal.(string)
+					assert.True(t, ok)
+					assert.Equal(t, keyStr, "key")
+				}
+
+				// 访问 data 字段
+				if dataVal, exists := vector["data"]; exists {
+					dataMap, ok := dataVal.(map[string]interface{})
+					assert.True(t, ok)
+					if float32Val, exists := dataMap["float32"]; exists {
+						float32Data, ok := float32Val.([]interface{})
+						assert.True(t, ok)
+						assert.Equal(t, float32Data[0], float64(32))
+					}
+				}
+
+				if metadataVal, exists := vector["metadata"]; exists {
+					metadataMap, ok := metadataVal.(map[string]interface{})
+					assert.True(t, ok)
+					if key1Val, exists := metadataMap["Key1"]; exists {
+						key1Data, ok := key1Val.(string)
+						assert.True(t, ok)
+						assert.Equal(t, key1Data, "value1")
+					}
+					if key2Val, exists := metadataMap["Key2"]; exists {
+						key2Data, ok := key2Val.(string)
+						assert.True(t, ok)
+						assert.Equal(t, key2Data, "value2")
+					}
+				}
+			}
+		},
+	},
+}
+
+func TestMockGetVectors_Success(t *testing.T) {
+	for _, c := range testMockGetVectorsSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetVectors(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetVectorsErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetVectorsRequest
+	CheckOutputFn  func(t *testing.T, o *GetVectorsResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?GetVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\",\"key3\"],\"returnData\":true,\"returnMetadata\":false}")
+		},
+		&GetVectorsRequest{
+			Bucket:         Ptr("bucket"),
+			IndexName:      Ptr("index"),
+			Keys:           []string{"key1", "key2", "key3"},
+			ReturnData:     Ptr(true),
+			ReturnMetadata: Ptr(false),
+		},
+		func(t *testing.T, o *GetVectorsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "UserDisable",
+    "Message": "UserDisable",
+    "RequestId": "5C3D8D2A0ACA54D87B43****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0003-00000801"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?GetVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\",\"key3\"],\"returnData\":true,\"returnMetadata\":false}")
+		},
+		&GetVectorsRequest{
+			Bucket:         Ptr("bucket"),
+			IndexName:      Ptr("index"),
+			Keys:           []string{"key1", "key2", "key3"},
+			ReturnData:     Ptr(true),
+			ReturnMetadata: Ptr(false),
+		},
+		func(t *testing.T, o *GetVectorsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockGetVectors_Error(t *testing.T) {
+	for _, c := range testMockGetVectorsErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetVectors(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListVectorsSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListVectorsRequest
+	CheckOutputFn  func(t *testing.T, o *ListVectorsResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/json",
+		},
+		[]byte(`{
+    "nextToken": "123",
+   "vectors": [ 
+      { 
+         "data": {
+            "float32":[32]
+         },
+         "key": "key",
+         "metadata": {
+             "Key1": "value1",
+             "Key2": "value2"
+         }
+      }
+   ]
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?ListVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false}")
+		},
+		&ListVectorsRequest{
+			Bucket:         Ptr("bucket"),
+			IndexName:      Ptr("index"),
+			MaxResults:     Ptr(100),
+			NextToken:      Ptr("123"),
+			ReturnMetadata: Ptr(true),
+			ReturnData:     Ptr(false),
+			SegmentCount:   Ptr(int(10)),
+			SegmentIndex:   Ptr(3),
+		},
+		func(t *testing.T, o *ListVectorsResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, len(o.Vectors), 1)
+			assert.Equal(t, *o.NextToken, "123")
+			//assert.Equal(t, o.Vectors[0].Data.Float32[0], float32(32))
+			//assert.Equal(t, *o.Vectors[0].Key, "key")
+			//assert.Equal(t, (*o.Vectors[0].Metadata)["Key1"], "value1")
+			//assert.Equal(t, (*o.Vectors[0].Metadata)["Key2"], "value2")
+		},
+	},
+}
+
+func TestMockListVectors_Success(t *testing.T) {
+	for _, c := range testMockListVectorsSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.ListVectors(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockListVectorsErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *ListVectorsRequest
+	CheckOutputFn  func(t *testing.T, o *ListVectorsResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?ListVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false}")
+		},
+		&ListVectorsRequest{
+			Bucket:         Ptr("bucket"),
+			IndexName:      Ptr("index"),
+			MaxResults:     Ptr(100),
+			NextToken:      Ptr("123"),
+			ReturnMetadata: Ptr(true),
+			ReturnData:     Ptr(false),
+			SegmentCount:   Ptr(int(10)),
+			SegmentIndex:   Ptr(3),
+		},
+		func(t *testing.T, o *ListVectorsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "UserDisable",
+    "Message": "UserDisable",
+    "RequestId": "5C3D8D2A0ACA54D87B43****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0003-00000801"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?ListVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false}")
+		},
+		&ListVectorsRequest{
+			Bucket:         Ptr("bucket"),
+			IndexName:      Ptr("index"),
+			MaxResults:     Ptr(100),
+			NextToken:      Ptr("123"),
+			ReturnMetadata: Ptr(true),
+			ReturnData:     Ptr(false),
+			SegmentCount:   Ptr(int(10)),
+			SegmentIndex:   Ptr(3),
+		},
+		func(t *testing.T, o *ListVectorsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockListVectors_Error(t *testing.T) {
+	for _, c := range testMockListVectorsErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.ListVectors(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteVectorsSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteVectorsRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteVectorsResult, err error)
+}{
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?DeleteVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\"]}")
+		},
+		&DeleteVectorsRequest{
+			Bucket:    Ptr("bucket"),
+			IndexName: Ptr("index"),
+			Keys: []string{
+				"key1", "key2",
+			},
+		},
+		func(t *testing.T, o *DeleteVectorsResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockDeleteVectors_Success(t *testing.T) {
+	for _, c := range testMockDeleteVectorsSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.DeleteVectors(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteVectorsErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteVectorsRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteVectorsResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?DeleteVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\"]}")
+		},
+		&DeleteVectorsRequest{
+			Bucket:    Ptr("bucket"),
+			IndexName: Ptr("index"),
+			Keys: []string{
+				"key1", "key2",
+			},
+		},
+		func(t *testing.T, o *DeleteVectorsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "UserDisable",
+    "Message": "UserDisable",
+    "RequestId": "5C3D8D2A0ACA54D87B43****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0003-00000801"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?DeleteVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\"]}")
+		},
+		&DeleteVectorsRequest{
+			Bucket:    Ptr("bucket"),
+			IndexName: Ptr("index"),
+			Keys: []string{
+				"key1", "key2",
+			},
+		},
+		func(t *testing.T, o *DeleteVectorsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDeleteVectors_Error(t *testing.T) {
+	for _, c := range testMockDeleteVectorsErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.DeleteVectors(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockQueryVectorsSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *QueryVectorsRequest
+	CheckOutputFn  func(t *testing.T, o *QueryVectorsResult, err error)
+}{
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?QueryVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+		},
+		&QueryVectorsRequest{
+			Bucket:    Ptr("bucket"),
+			IndexName: Ptr("index"),
+			Filter:    Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
+			QueryVector: map[string]interface{}{
+				"float32": []float32{float32(32)},
+			},
+			ReturnMetadata: Ptr(true),
+			ReturnDistance: Ptr(true),
+			TopK:           Ptr(10),
+		},
+		func(t *testing.T, o *QueryVectorsResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockQueryVectors_Success(t *testing.T) {
+	for _, c := range testMockQueryVectorsSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.QueryVectors(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockQueryVectorsErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *QueryVectorsRequest
+	CheckOutputFn  func(t *testing.T, o *QueryVectorsResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?QueryVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+		},
+		&QueryVectorsRequest{
+			Bucket:    Ptr("bucket"),
+			IndexName: Ptr("index"),
+			Filter:    Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
+			QueryVector: map[string]interface{}{
+				"float32": []float32{float32(32)},
+			},
+			ReturnMetadata: Ptr(true),
+			ReturnDistance: Ptr(true),
+			TopK:           Ptr(10),
+		},
+		func(t *testing.T, o *QueryVectorsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "UserDisable",
+    "Message": "UserDisable",
+    "RequestId": "5C3D8D2A0ACA54D87B43****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0003-00000801"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?QueryVectors", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+		},
+		&QueryVectorsRequest{
+			Bucket:    Ptr("bucket"),
+			IndexName: Ptr("index"),
+			Filter:    Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
+			QueryVector: map[string]interface{}{
+				"float32": []float32{float32(32)},
+			},
+			ReturnMetadata: Ptr(true),
+			ReturnDistance: Ptr(true),
+			TopK:           Ptr(10),
+		},
+		func(t *testing.T, o *QueryVectorsResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockQueryVectors_Error(t *testing.T) {
+	for _, c := range testMockQueryVectorsErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.QueryVectors(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
