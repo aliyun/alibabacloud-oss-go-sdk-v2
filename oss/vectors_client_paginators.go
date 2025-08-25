@@ -42,7 +42,7 @@ func (p *ListVectorBucketsPaginator) HasNext() bool {
 	return p.firstPage || p.isTruncated
 }
 
-// NextPage retrieves the next ListBuckets page.
+// NextPage retrieves the next ListVectorBuckets page.
 func (p *ListVectorBucketsPaginator) NextPage(ctx context.Context, optFns ...func(*Options)) (*ListVectorBucketsResult, error) {
 	if !p.HasNext() {
 		return nil, fmt.Errorf("no more pages available")
@@ -128,7 +128,70 @@ func (p *ListVectorIndexesPaginator) NextPage(ctx context.Context, optFns ...fun
 
 	p.firstPage = false
 	p.nextToken = result.NextToken
-	p.isTruncated = result.NextToken != nil
+
+	return result, nil
+}
+
+// ListVectorsPaginator is a paginator for ListVectors
+type ListVectorsPaginator struct {
+	options     PaginatorOptions
+	client      *VectorsClient
+	request     *ListVectorsRequest
+	nextToken   *string
+	firstPage   bool
+	isTruncated bool
+}
+
+func (c *VectorsClient) NewListVectorsPaginator(request *ListVectorsRequest, optFns ...func(*PaginatorOptions)) *ListVectorsPaginator {
+	if request == nil {
+		request = &ListVectorsRequest{}
+	}
+
+	options := PaginatorOptions{}
+	options.Limit = int32(*request.MaxResults)
+
+	for _, fn := range optFns {
+		fn(&options)
+	}
+
+	return &ListVectorsPaginator{
+		options:     options,
+		client:      c,
+		request:     request,
+		nextToken:   request.NextToken,
+		firstPage:   true,
+		isTruncated: true,
+	}
+}
+
+// HasNext Returns true if there’s a next page.
+func (p *ListVectorsPaginator) HasNext() bool {
+	return p.firstPage || p.isTruncated
+}
+
+// NextPage retrieves the next ListVectors page.
+func (p *ListVectorsPaginator) NextPage(ctx context.Context, optFns ...func(*Options)) (*ListVectorsResult, error) {
+	if !p.HasNext() {
+		return nil, fmt.Errorf("no more pages available")
+	}
+
+	request := *p.request
+	request.NextToken = p.nextToken
+
+	var limit int32
+	if p.options.Limit > 0 {
+		limit = p.options.Limit
+	}
+	request.MaxResults = Ptr(int(limit))
+
+	result, err := p.client.ListVectors(ctx, &request, optFns...)
+	if err != nil {
+		return nil, err
+	}
+
+	p.firstPage = false
+	p.nextToken = result.NextToken
+	p.isTruncated = p.nextToken != nil
 
 	return result, nil
 }
