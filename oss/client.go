@@ -873,6 +873,7 @@ func (c *Client) marshalInput(request any, input *OperationInput, handlers ...fu
 	}
 
 	t := val.Type()
+	bodyMap := make(map[string]interface{})
 	for k := 0; k < t.NumField(); k++ {
 		if tag, ok := t.Field(k).Tag.Lookup("input"); ok {
 			// header|query|body,filed_name,[required,time,usermeta...]
@@ -932,17 +933,7 @@ func (c *Client) marshalInput(request any, input *OperationInput, handlers ...fu
 					}
 					input.Body = bytes.NewReader(b.Bytes())
 				case flags&fTypeJson != 0:
-					wrapper := map[string]interface{}{
-						tokens[1]: v.Interface(),
-					}
-					var b bytes.Buffer
-					encoder := json.NewEncoder(&b)
-					encoder.SetEscapeHTML(false)
-					err := encoder.Encode(wrapper)
-					if err != nil {
-						return &SerializationError{Err: err}
-					}
-					input.Body = bytes.NewReader(bytes.TrimRight(b.Bytes(), "\n"))
+					bodyMap[tokens[1]] = v.Interface()
 				case flags&fTypeXmlOrJson != 0:
 					var b bytes.Buffer
 					var err error
@@ -972,6 +963,14 @@ func (c *Client) marshalInput(request any, input *OperationInput, handlers ...fu
 				}
 			}
 		}
+	}
+
+	if !(bodyMap == nil || len(bodyMap) == 0) {
+		b, err := json.Marshal(bodyMap)
+		if err != nil {
+			return &SerializationError{Err: err}
+		}
+		input.Body = bytes.NewReader(b)
 	}
 
 	if err := validateInput(input); err != nil {
