@@ -13,12 +13,14 @@ var (
 	region     string
 	bucketName string
 	indexName  string
+	uid        string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the vector bucket is located.")
 	flag.StringVar(&bucketName, "bucket", "", "The name of the vector bucket.")
 	flag.StringVar(&indexName, "index", "", "The name of the vector index.")
+	flag.StringVar(&uid, "uid", "", "The id of vector account.")
 }
 
 func main() {
@@ -38,9 +40,14 @@ func main() {
 		log.Fatalf("invalid parameters, index required")
 	}
 
+	if len(uid) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, uid required")
+	}
+
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
-		WithRegion(region)
+		WithRegion(region).WithUid(uid)
 
 	client := oss.NewVectorsClient(cfg)
 
