@@ -28,7 +28,7 @@ func init() {
 }
 
 type SignerVectorsV4 struct {
-	Uid *string
+	UserId *string
 }
 
 func (s *SignerVectorsV4) calcStringToSign(datetime, scope, canonicalRequest string) string {
@@ -64,7 +64,7 @@ func (s *SignerVectorsV4) calcCanonicalRequest(signingCtx *SigningContext, addit
 
 	//Canonical Uri
 	uri := "/"
-	uri += buildBucketArn(signingCtx, s.Uid)
+	uri += buildBucketArn(signingCtx, s.UserId)
 	canonicalUri := escapePath(uri, false)
 
 	//Canonical Query
@@ -293,8 +293,8 @@ func (s *SignerVectorsV4) authQuery(ctx context.Context, signingCtx *SigningCont
 }
 
 func (s *SignerVectorsV4) Sign(ctx context.Context, signingCtx *SigningContext) error {
-	if s.Uid == nil {
-		return fmt.Errorf("Uid is null.")
+	if s.UserId == nil {
+		return fmt.Errorf("UserId is null.")
 	}
 
 	if signingCtx == nil {

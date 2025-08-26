@@ -20,7 +20,7 @@ type GetBucketResourceGroupRequest struct {
 
 type GetBucketResourceGroupResult struct {
 	// The container that stores the ID of the resource group.
-	BucketResourceGroupConfiguration *BucketResourceGroupConfiguration `output:"body,BucketResourceGroupConfiguration,xml|json"`
+	BucketResourceGroupConfiguration *BucketResourceGroupConfiguration `output:"body,BucketResourceGroupConfiguration,xml"`
 
 	ResultCommon
 }
@@ -34,6 +34,9 @@ func (c *Client) GetBucketResourceGroup(ctx context.Context, request *GetBucketR
 	input := &OperationInput{
 		OpName: "GetBucketResourceGroup",
 		Method: "GET",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
 		Parameters: map[string]string{
 			"resourceGroup": "",
 		},
@@ -49,7 +52,7 @@ func (c *Client) GetBucketResourceGroup(ctx context.Context, request *GetBucketR
 		return nil, err
 	}
 	result := &GetBucketResourceGroupResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlOrJson); err != nil {
+	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
@@ -60,7 +63,7 @@ type PutBucketResourceGroupRequest struct {
 	Bucket *string `input:"host,bucket,required"`
 
 	// The request body schema.
-	BucketResourceGroupConfiguration *BucketResourceGroupConfiguration `input:"body,BucketResourceGroupConfiguration,xml|json,required"`
+	BucketResourceGroupConfiguration *BucketResourceGroupConfiguration `input:"body,BucketResourceGroupConfiguration,xml,required"`
 
 	RequestCommon
 }
@@ -79,12 +82,7 @@ func (c *Client) PutBucketResourceGroup(ctx context.Context, request *PutBucketR
 		OpName: "PutBucketResourceGroup",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[HTTPHeaderContentType] != "" {
-					return request.Headers[HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
 			"resourceGroup": "",

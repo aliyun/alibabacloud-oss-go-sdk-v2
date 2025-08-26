@@ -842,10 +842,10 @@ func TestSignerVectorV4InvalidArgument(t *testing.T) {
 	signCtx := &SigningContext{}
 	err := signer.Sign(context.TODO(), signCtx)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Uid is null")
+	assert.Contains(t, err.Error(), "UserId is null")
 
 	signer = &SignerVectorsV4{
-		Uid: ptr("123"),
+		UserId: ptr("123"),
 	}
 	signCtx = &SigningContext{}
 	err = signer.Sign(context.TODO(), signCtx)
@@ -878,19 +878,19 @@ func TestSignerVectorV4InvalidArgument(t *testing.T) {
 func TestSignerVectorV4BuildBucketArn(t *testing.T) {
 	uid := "123"
 	signer := &SignerVectorsV4{
-		Uid: ptr(uid),
+		UserId: ptr(uid),
 	}
 	signCtx := &SigningContext{
 		Region: ptr("cn-hangzhou"),
 	}
-	arn := buildBucketArn(signCtx, signer.Uid)
+	arn := buildBucketArn(signCtx, signer.UserId)
 	assert.Equal(t, "acs:ossvector:cn-hangzhou:"+uid+":", arn)
 
 	signCtx = &SigningContext{
 		Region: ptr("cn-hangzhou"),
 		Bucket: ptr("bucket"),
 	}
-	arn = buildBucketArn(signCtx, signer.Uid)
+	arn = buildBucketArn(signCtx, signer.UserId)
 	assert.Equal(t, "acs:ossvector:cn-hangzhou:"+uid+":bucket/", arn)
 
 	signCtx = &SigningContext{
@@ -898,7 +898,7 @@ func TestSignerVectorV4BuildBucketArn(t *testing.T) {
 		Bucket: ptr("bucket"),
 		Key:    ptr("key"),
 	}
-	arn = buildBucketArn(signCtx, signer.Uid)
+	arn = buildBucketArn(signCtx, signer.UserId)
 	assert.Equal(t, "acs:ossvector:cn-hangzhou:"+uid+":bucket/key", arn)
 
 	signCtx = &SigningContext{
@@ -906,6 +906,6 @@ func TestSignerVectorV4BuildBucketArn(t *testing.T) {
 		Bucket: ptr("bucket"),
 		Key:    ptr("key-1/key-2"),
 	}
-	arn = buildBucketArn(signCtx, signer.Uid)
+	arn = buildBucketArn(signCtx, signer.UserId)
 	assert.Equal(t, "acs:ossvector:cn-hangzhou:"+uid+":bucket/"+url.QueryEscape("key-1/key-2"), arn)
 }

@@ -116,8 +116,8 @@ type Config struct {
 	// The cloud box id is automatically extracted from endpoint.
 	EnableAutoDetectCloudBoxId *bool
 
-	// For vector bucket api signer
-	Uid *string
+	// The user id
+	UserId *string
 }
 
 func NewConfig() *Config {
@@ -288,7 +288,7 @@ func (c *Config) WithEnableAutoDetectCloudBoxId(value bool) *Config {
 	return c
 }
 
-func (c *Config) WithUid(value string) *Config {
-	c.Uid = Ptr(value)
+func (c *Config) WithUserId(value string) *Config {
+	c.UserId = Ptr(value)
 	return c
 }

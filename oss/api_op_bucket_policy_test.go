@@ -286,6 +286,9 @@ func TestMarshalInput_DeleteBucketPolicy(t *testing.T) {
 	input = &OperationInput{
 		OpName: "DeleteBucketPolicy",
 		Method: "DELETE",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
 		Parameters: map[string]string{
 			"policy": "",
 		},
@@ -302,6 +305,9 @@ func TestMarshalInput_DeleteBucketPolicy(t *testing.T) {
 	input = &OperationInput{
 		OpName: "DeleteBucketPolicy",
 		Method: "DELETE",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
 		Parameters: map[string]string{
 			"policy": "",
 		},
@@ -392,6 +398,9 @@ func TestMarshalInput_GetBucketPolicyStatus(t *testing.T) {
 	input = &OperationInput{
 		OpName: "GetBucketPolicyStatus",
 		Method: "GET",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
 		Parameters: map[string]string{
 			"policyStatus": "",
 		},
@@ -408,6 +417,9 @@ func TestMarshalInput_GetBucketPolicyStatus(t *testing.T) {
 	input = &OperationInput{
 		OpName: "GetBucketPolicyStatus",
 		Method: "GET",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
 		Parameters: map[string]string{
 			"policyStatus": "",
 		},

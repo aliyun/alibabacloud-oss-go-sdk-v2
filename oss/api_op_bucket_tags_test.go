@@ -22,12 +22,7 @@ func TestMarshalInput_PutBucketTags(t *testing.T) {
 		OpName: "PutBucketTags",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[HTTPHeaderContentType] != "" {
-					return request.Headers[HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
 			"tagging": "",
@@ -46,12 +41,7 @@ func TestMarshalInput_PutBucketTags(t *testing.T) {
 		OpName: "PutBucketTags",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[HTTPHeaderContentType] != "" {
-					return request.Headers[HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
 			"tagging": "",
@@ -83,12 +73,7 @@ func TestMarshalInput_PutBucketTags(t *testing.T) {
 		OpName: "PutBucketTags",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[HTTPHeaderContentType] != "" {
-					return request.Headers[HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			HTTPHeaderContentType: contentTypeXML,
 		},
 		Parameters: map[string]string{
 			"tagging": "",
@@ -188,6 +173,9 @@ func TestMarshalInput_GetBucketTags(t *testing.T) {
 	input = &OperationInput{
 		OpName: "GetBucketTags",
 		Method: "GET",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
@@ -204,6 +192,9 @@ func TestMarshalInput_GetBucketTags(t *testing.T) {
 	input = &OperationInput{
 		OpName: "GetBucketTags",
 		Method: "GET",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
@@ -242,7 +233,7 @@ func TestUnmarshalOutput_GetBucketTags(t *testing.T) {
 		},
 	}
 	result := &GetBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlOrJson)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -261,7 +252,7 @@ func TestUnmarshalOutput_GetBucketTags(t *testing.T) {
 		},
 	}
 	result = &GetBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlOrJson)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -277,7 +268,7 @@ func TestUnmarshalOutput_GetBucketTags(t *testing.T) {
 		},
 	}
 	result = &GetBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlOrJson)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -301,7 +292,7 @@ func TestUnmarshalOutput_GetBucketTags(t *testing.T) {
 		},
 	}
 	result = &GetBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlOrJson)
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
@@ -320,6 +311,9 @@ func TestMarshalInput_DeleteBucketTags(t *testing.T) {
 	input = &OperationInput{
 		OpName: "DeleteBucketTags",
 		Method: "DELETE",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
@@ -336,6 +330,9 @@ func TestMarshalInput_DeleteBucketTags(t *testing.T) {
 	input = &OperationInput{
 		OpName: "DeleteBucketTags",
 		Method: "DELETE",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
@@ -352,6 +349,9 @@ func TestMarshalInput_DeleteBucketTags(t *testing.T) {
 	input = &OperationInput{
 		OpName: "DeleteBucketTags",
 		Method: "DELETE",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},

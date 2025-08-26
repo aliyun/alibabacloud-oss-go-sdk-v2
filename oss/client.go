@@ -633,64 +633,33 @@ func tryConvertServiceError(response *http.Response) (err error) {
 		Headers:       response.Header,
 	}
 
-	if response.Header.Get(HTTPHeaderContentType) == contentTypeXML {
-		if err != nil {
-			se.Message = fmt.Sprintf("The body of the response was not readable, due to :%s", err.Error())
-			return se
+	if err != nil {
+		se.Message = fmt.Sprintf("The body of the response was not readable, due to :%s", err.Error())
+		return se
+	}
+	var tag string
+	if strings.EqualFold(contentTypeJSON, response.Header.Get(HTTPHeaderContentType)) {
+		type ErrorRoot struct {
+			Root json.RawMessage `json:"Error"`
 		}
-		err = xml.Unmarshal(body, &se)
-		if err != nil {
-			len := len(body)
-			if len > 256 {
-				len = 256
-			}
-			se.Message = fmt.Sprintf("Failed to parse xml from response body due to: %s. With part response body %s.", err.Error(), string(body[:len]))
-			return se
+		var root ErrorRoot
+		if err = json.Unmarshal(body, &root); err == nil {
+			err = json.Unmarshal(root.Root, &se)
 		}
+		tag = "json"
 	} else {
-		if err != nil {
-			se.Message = fmt.Sprintf("The body of the response was not readable, due to :%s", err.Error())
-			return se
+		err = xml.Unmarshal(body, &se)
+		tag = "xml"
+	}
+	if err != nil {
+		len := len(body)
+		if len > 256 {
+			len = 256
 		}
-		jsonData, _ := extractSecondLevelValue(string(body))
-		err = json.Unmarshal([]byte(jsonData), &se)
-		if err != nil {
-			len := len(body)
-			if len > 256 {
-				len = 256
-			}
-			se.Message = fmt.Sprintf("Failed to parse json from response body due to: %s. With part response body %s.", err.Error(), string(body[:len]))
-			return se
-		}
+		se.Message = fmt.Sprintf("Failed to parse %s from response body due to: %s. With part response body %s.", tag, err.Error(), string(body[:len]))
+		return se
 	}
 	return se
-}
-
-// extractSecondLevelValue extracts the nested JSON value from the top-level key.
-// This is used to unwrap OSS API responses that have an extra wrapper object.
-// Example: {"BucketInfo": {"Bucket": {...}}} -> {"Bucket": {...}}
-func extractSecondLevelValue(jsonStr string) (string, error) {
-	jsonStr = strings.TrimSpace(jsonStr)
-	if len(jsonStr) == 0 {
-		return "", fmt.Errorf("empty json string")
-	}
-
-	firstBrace := strings.IndexByte(jsonStr, '{')
-	if firstBrace == -1 {
-		return "", fmt.Errorf("invalid json format: no opening brace found")
-	}
-
-	secondBrace := strings.IndexByte(jsonStr[firstBrace+1:], '{')
-	if secondBrace == -1 {
-		return "", fmt.Errorf("invalid json format: no second level found")
-	}
-	secondBrace += firstBrace + 1
-
-	LastBrace := strings.LastIndexByte(jsonStr, '}')
-	if LastBrace == -1 {
-		return "", fmt.Errorf("invalid json format: no closing brace found")
-	}
-	return strings.TrimSpace(jsonStr[secondBrace:LastBrace]), nil
 }
 
 func nonStreamResponseHandler(response *http.Response) error {
@@ -787,8 +756,6 @@ const (
 	fTypeUsermeta
 	fTypeXml
 	fTypeTime
-	fTypeJson
-	fTypeXmlOrJson
 )
 
 func parseFiledFlags(tokens []string) int {
@@ -803,10 +770,6 @@ func parseFiledFlags(tokens []string) int {
 			flags |= fTypeXml
 		case "usermeta":
 			flags |= fTypeUsermeta
-		case "json":
-			flags |= fTypeJson
-		case "xml|json":
-			flags |= fTypeXmlOrJson
 		}
 	}
 	return flags
@@ -873,7 +836,6 @@ func (c *Client) marshalInput(request any, input *OperationInput, handlers ...fu
 	}
 
 	t := val.Type()
-	bodyMap := make(map[string]interface{})
 	for k := 0; k < t.NumField(); k++ {
 		if tag, ok := t.Field(k).Tag.Lookup("input"); ok {
 			// header|query|body,filed_name,[required,time,usermeta...]
@@ -922,39 +884,17 @@ func (c *Client) marshalInput(request any, input *OperationInput, handlers ...fu
 					input.Headers[tokens[1]] = fmt.Sprintf("%v", v.Interface())
 				}
 			case "body":
-				switch {
-				case flags&fTypeXml != 0:
+				if flags&fTypeXml != 0 {
 					var b bytes.Buffer
-					err := xml.NewEncoder(&b).EncodeElement(
+					if err := xml.NewEncoder(&b).EncodeElement(
 						v.Interface(),
-						xml.StartElement{Name: xml.Name{Local: tokens[1]}})
-					if err != nil {
-						return &SerializationError{Err: err}
+						xml.StartElement{Name: xml.Name{Local: tokens[1]}}); err != nil {
+						return &SerializationError{
+							Err: err,
+						}
 					}
 					input.Body = bytes.NewReader(b.Bytes())
-				case flags&fTypeJson != 0:
-					bodyMap[tokens[1]] = v.Interface()
-				case flags&fTypeXmlOrJson != 0:
-					var b bytes.Buffer
-					var err error
-					if input.Headers[HTTPHeaderContentType] == contentTypeXML {
-						err = xml.NewEncoder(&b).EncodeElement(
-							v.Interface(),
-							xml.StartElement{Name: xml.Name{Local: tokens[1]}})
-						input.Body = bytes.NewReader(b.Bytes())
-					} else {
-						wrapper := map[string]interface{}{
-							tokens[1]: v.Interface(),
-						}
-						encoder := json.NewEncoder(&b)
-						encoder.SetEscapeHTML(false)
-						err = encoder.Encode(wrapper)
-						input.Body = bytes.NewReader(bytes.TrimRight(b.Bytes(), "\n"))
-					}
-					if err != nil {
-						return &SerializationError{Err: err}
-					}
-				default:
+				} else {
 					if r, ok := v.Interface().(io.Reader); ok {
 						input.Body = r
 					} else {
@@ -963,14 +903,6 @@ func (c *Client) marshalInput(request any, input *OperationInput, handlers ...fu
 				}
 			}
 		}
-	}
-
-	if !(bodyMap == nil || len(bodyMap) == 0) {
-		b, err := json.Marshal(bodyMap)
-		if err != nil {
-			return &SerializationError{Err: err}
-		}
-		input.Body = bytes.NewReader(b)
 	}
 
 	if err := validateInput(input); err != nil {
@@ -1109,77 +1041,6 @@ func unmarshalBodyXmlMix(result any, output *OperationOutput) error {
 	return err
 }
 
-func unmarshalBodyXmlOrJson(result any, output *OperationOutput) error {
-	var err error
-	var body []byte
-	if output.Body != nil {
-		defer output.Body.Close()
-		if body, err = io.ReadAll(output.Body); err != nil {
-			return err
-		}
-	}
-
-	if len(body) == 0 {
-		return nil
-	}
-
-	val := reflect.ValueOf(result)
-	switch val.Kind() {
-	case reflect.Pointer, reflect.Interface:
-		if val.IsNil() {
-			return nil
-		}
-		val = val.Elem()
-	}
-	if val.Kind() != reflect.Struct || output == nil {
-		return nil
-	}
-
-	t := val.Type()
-	idx := -1
-	for k := 0; k < t.NumField(); k++ {
-		if tag, ok := t.Field(k).Tag.Lookup("output"); ok {
-			tokens := strings.Split(tag, ",")
-			if len(tokens) < 2 {
-				continue
-			}
-			// header|query|body,filed_name,[required,time,usermeta...]
-			switch tokens[0] {
-			case "body":
-				idx = k
-				break
-			}
-		}
-	}
-
-	isJson := output.Headers != nil && output.Headers.Get(HTTPHeaderContentType) == contentTypeJSON
-	unmarshalData := func(target any) error {
-		if isJson {
-			return json.Unmarshal(body, target)
-		}
-		return xml.Unmarshal(body, target)
-	}
-
-	if idx >= 0 && !isJson {
-		dst := val.Field(idx)
-		if dst.IsNil() {
-			dst.Set(reflect.New(dst.Type().Elem()))
-		}
-		err = unmarshalData(dst.Interface())
-	} else {
-		err = unmarshalData(result)
-	}
-
-	if err != nil {
-		err = &DeserializationError{
-			Err:      err,
-			Snapshot: body,
-		}
-	}
-
-	return err
-}
-
 func unmarshalBodyXmlVersions(result any, output *OperationOutput) error {
 	var err error
 	var body []byte
@@ -1228,43 +1089,6 @@ func unmarshalBodyDefault(result any, output *OperationOutput) error {
 			err = json.Unmarshal(body, result)
 		case "application/json;charset=utf-8":
 			err = json.Unmarshal(body, result)
-		default:
-			err = fmt.Errorf("unsupport contentType:%s", contentType)
-		}
-
-		if err != nil {
-			err = &DeserializationError{
-				Err:      err,
-				Snapshot: body,
-			}
-		}
-	}
-	return err
-}
-
-func unmarshalBodyDefaultV2(result any, output *OperationOutput) error {
-	var err error
-	var body []byte
-	if output.Body != nil {
-		defer output.Body.Close()
-		if body, err = io.ReadAll(output.Body); err != nil {
-			return err
-		}
-	}
-
-	// extract body
-	if len(body) > 0 {
-		contentType := output.Headers.Get("Content-Type")
-		switch contentType {
-		case "application/xml":
-			err = xml.Unmarshal(body, result)
-		case "application/json", "application/json;charset=utf-8":
-			jsonStr, extractErr := extractSecondLevelValue(string(body))
-			if extractErr != nil {
-				err = extractErr
-			} else {
-				err = json.Unmarshal([]byte(jsonStr), result)
-			}
 		default:
 			err = fmt.Errorf("unsupport contentType:%s", contentType)
 		}
@@ -1683,7 +1507,16 @@ func (c *Client) getLogLevel() int {
 
 // Content-Type
 const (
-	contentTypeDefault string = "application/octet-stream"
-	contentTypeXML            = "application/xml"
-	contentTypeJSON           = "application/json"
+	contentTypeDefault = "application/octet-stream"
+	contentTypeXML     = "application/xml"
+	contentTypeJSON    = "application/json"
 )
+
+// Exposed to external modules
+func MarshalUpdateContentMd5(request any, input *OperationInput) error {
+	return updateContentMd5(request, input)
+}
+
+func UnmarshalDiscardBody(result any, output *OperationOutput) error {
+	return discardBody(result, output)
+}
