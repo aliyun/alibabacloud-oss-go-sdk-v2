@@ -38,7 +38,7 @@ type notSupportBodyTypeRequest struct {
 	StringBodyField   string  `input:"body,nop"`
 }
 
-func TestMarshalInput_ForVectorsClient(t *testing.T) {
+func TestMarshalInput(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var input *oss.OperationInput
@@ -153,7 +153,7 @@ type jsonBodyConfig struct {
 	StrField2 string  `json:"StrField2"`
 }
 
-func TestMarshalInput_JsonBody_ForVectorsClient(t *testing.T) {
+func TestMarshalInput_JsonBody(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var input *oss.OperationInput
@@ -186,7 +186,7 @@ func TestMarshalInput_JsonBody_ForVectorsClient(t *testing.T) {
 	assert.Equal(t, "{\"BodyConfiguration\":{\"StrField1\":\"StrField1\",\"StrField2\":\"StrField2\"}}", string(body))
 }
 
-func TestMarshalInput_body_ForVectorsClient(t *testing.T) {
+func TestMarshalInput_body(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var input *oss.OperationInput
@@ -238,7 +238,7 @@ type commonStubVectorRequest struct {
 	oss.RequestCommon
 }
 
-func TestMarshalInput_CommonFields_ForVectorsClient(t *testing.T) {
+func TestMarshalInput_CommonFields(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var input *oss.OperationInput
@@ -390,7 +390,7 @@ type usermetaRequest struct {
 	UserMetaField2    map[string]string `input:"header,x-oss-meta1-,usermeta"`
 }
 
-func TestMarshalInput_UserMeta_ForVectorsClient(t *testing.T) {
+func TestMarshalInput_UserMeta(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var input *oss.OperationInput
@@ -451,7 +451,7 @@ type requiredRequest struct {
 	IntHeaderField    int     `input:"header,x-oss-str-field,required"`
 }
 
-func TestMarshalInput_required_ForVectorsClient(t *testing.T) {
+func TestMarshalInput_required(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var input *oss.OperationInput
@@ -522,7 +522,7 @@ type stubResult struct {
 	oss.ResultCommon
 }
 
-func TestUnmarshalOutput_ForVectorsClient(t *testing.T) {
+func TestUnmarshalOutput(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *oss.OperationOutput
@@ -605,7 +605,7 @@ type headerStubResult struct {
 	oss.ResultCommon
 }
 
-func TestUnmarshalOutput_error_ForVectorsClient(t *testing.T) {
+func TestUnmarshalOutput_error(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *oss.OperationOutput
@@ -642,7 +642,7 @@ func TestUnmarshalOutput_error_ForVectorsClient(t *testing.T) {
 	assert.Contains(t, err.Error(), "eserialization failed,")
 }
 
-func TestResolveEndpoint_ForVectorsClient(t *testing.T) {
+func TestResolveEndpoint(t *testing.T) {
 	cfg := oss.NewConfig()
 	assert.Nil(t, cfg.Region)
 	assert.Nil(t, cfg.Endpoint)
@@ -715,7 +715,7 @@ func TestResolveEndpoint_ForVectorsClient(t *testing.T) {
 	assert.Equal(t, "oss-test-region.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
 }
 
-func TestResolveVectorsUserAgent_ForVectorsClient(t *testing.T) {
+func TestResolveVectorsUserAgent(t *testing.T) {
 	cfg := oss.NewConfig()
 	updateUserAgent(cfg)
 	assert.Equal(t, oss.ToString(cfg.UserAgent), "vectors-client")

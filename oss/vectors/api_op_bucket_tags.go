@@ -98,7 +98,6 @@ func (c *VectorsClient) DeleteBucketTags(ctx context.Context, request *DeleteBuc
 		},
 		Bucket: request.Bucket,
 	}
-
 	if err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}

@@ -357,9 +357,6 @@ func TestMarshalInput_DeleteBucketTags(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	if request.Tagging != nil {
-		input.Parameters["tagging"] = *request.Tagging
-	}
 	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
