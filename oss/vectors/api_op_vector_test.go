@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,11 +25,10 @@ func TestMarshalInput_PutVectors(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"PutVectors": "",
+			"putVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"PutVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket")
@@ -45,11 +43,10 @@ func TestMarshalInput_PutVectors(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"PutVectors": "",
+			"putVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"PutVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, IndexName")
@@ -79,11 +76,10 @@ func TestMarshalInput_PutVectors(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"PutVectors": "",
+			"putVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"PutVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Method, "POST")
@@ -181,11 +177,10 @@ func TestMarshalInput_GetVectors(t *testing.T) {
 		OpName: "GetVectors",
 		Method: "POST",
 		Parameters: map[string]string{
-			"GetVectors": "",
+			"getVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"GetVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket")
@@ -197,11 +192,10 @@ func TestMarshalInput_GetVectors(t *testing.T) {
 		OpName: "GetVectors",
 		Method: "POST",
 		Parameters: map[string]string{
-			"GetVectors": "",
+			"getVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"GetVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, IndexName")
@@ -214,11 +208,10 @@ func TestMarshalInput_GetVectors(t *testing.T) {
 		OpName: "GetVectors",
 		Method: "POST",
 		Parameters: map[string]string{
-			"GetVectors": "",
+			"getVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"GetVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Keys")
@@ -234,11 +227,10 @@ func TestMarshalInput_GetVectors(t *testing.T) {
 		OpName: "GetVectors",
 		Method: "POST",
 		Parameters: map[string]string{
-			"GetVectors": "",
+			"getVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"GetVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["GetVectors"], "")
@@ -392,11 +384,10 @@ func TestMarshalInput_ListVectors(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"ListVectors": "",
+			"listVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"ListVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket")
@@ -411,11 +402,10 @@ func TestMarshalInput_ListVectors(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"ListVectors": "",
+			"listVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"ListVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, IndexName")
@@ -437,11 +427,10 @@ func TestMarshalInput_ListVectors(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"ListVectors": "",
+			"listVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"ListVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["ListVectors"], "")
@@ -467,11 +456,10 @@ func TestMarshalInput_ListVectors(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"ListVectors": "",
+			"listVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"ListVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["ListVectors"], "")
@@ -599,11 +587,10 @@ func TestMarshalInput_DeleteVectors(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"DeleteVectors": "",
+			"deleteVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"DeleteVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket")
@@ -618,11 +605,10 @@ func TestMarshalInput_DeleteVectors(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"DeleteVectors": "",
+			"deleteVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"DeleteVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, IndexName.")
@@ -641,11 +627,10 @@ func TestMarshalInput_DeleteVectors(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"DeleteVectors": "",
+			"deleteVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"DeleteVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["DeleteVectors"], "")
@@ -747,7 +732,6 @@ func TestMarshalInput_QueryVectors(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"QueryVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket")
@@ -766,7 +750,6 @@ func TestMarshalInput_QueryVectors(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"QueryVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, IndexName")
@@ -793,7 +776,6 @@ func TestMarshalInput_QueryVectors(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"QueryVectors"})
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["QueryVectors"], "")

@@ -27,7 +27,7 @@ func TestMarshalInput_PutVectorIndex(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"PutVectorIndex": "",
+			"putVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -46,7 +46,7 @@ func TestMarshalInput_PutVectorIndex(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"PutVectorIndex": "",
+			"putVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -72,7 +72,7 @@ func TestMarshalInput_PutVectorIndex(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"PutVectorIndex": "",
+			"putVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -81,7 +81,7 @@ func TestMarshalInput_PutVectorIndex(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, input.Method, "POST")
 	assert.Equal(t, *input.Bucket, "oss-demo")
-	assert.Equal(t, input.Parameters["PutVectorIndex"], "")
+	assert.Equal(t, input.Parameters["putVectorIndex"], "")
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "{\"dataType\":\"string\",\"dimension\":128,\"distanceMetric\":\"cosine\",\"indexName\":\"exampleIndex\",\"metadata\":{\"nonFilterableMetadataKeys\":[\"foo\",\"bar\"]}}")
 }
@@ -174,7 +174,7 @@ func TestMarshalInput_GetVectorIndex(t *testing.T) {
 		OpName: "GetVectorIndex",
 		Method: "POST",
 		Parameters: map[string]string{
-			"GetVectorIndex": "",
+			"getVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -190,7 +190,7 @@ func TestMarshalInput_GetVectorIndex(t *testing.T) {
 		OpName: "GetVectorIndex",
 		Method: "POST",
 		Parameters: map[string]string{
-			"GetVectorIndex": "",
+			"getVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -207,7 +207,7 @@ func TestMarshalInput_GetVectorIndex(t *testing.T) {
 		OpName: "GetVectorIndex",
 		Method: "POST",
 		Parameters: map[string]string{
-			"GetVectorIndex": "",
+			"getVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -343,7 +343,7 @@ func TestMarshalInput_ListVectorIndexes(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"ListVectorIndexes": "",
+			"listVectorIndexes": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -362,7 +362,7 @@ func TestMarshalInput_ListVectorIndexes(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"ListVectorIndexes": "",
+			"listVectorIndexes": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -385,7 +385,7 @@ func TestMarshalInput_ListVectorIndexes(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"ListVectorIndexes": "",
+			"listVectorIndexes": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -412,7 +412,7 @@ func TestMarshalInput_ListVectorIndexes(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"ListVectorIndexes": "",
+			"listVectorIndexes": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -581,7 +581,7 @@ func TestMarshalInput_DeleteVectorIndex(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"DeleteVectorIndex": "",
+			"deleteVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -600,7 +600,7 @@ func TestMarshalInput_DeleteVectorIndex(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"DeleteVectorIndex": "",
+			"deleteVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -620,7 +620,7 @@ func TestMarshalInput_DeleteVectorIndex(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"DeleteVectorIndex": "",
+			"deleteVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 )
 
 type PutVectorIndexRequest struct {
@@ -40,7 +39,7 @@ func (c *VectorsClient) PutVectorIndex(ctx context.Context, request *PutVectorIn
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"PutVectorIndex": "",
+			"putVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -100,11 +99,10 @@ func (c *VectorsClient) GetVectorIndex(ctx context.Context, request *GetVectorIn
 		OpName: "GetVectorIndex",
 		Method: "POST",
 		Parameters: map[string]string{
-			"GetVectorIndex": "",
+			"getVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"GetVectorIndex"})
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -161,7 +159,7 @@ func (c *VectorsClient) ListVectorIndexes(ctx context.Context, request *ListVect
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"ListVectorIndexes": "",
+			"listVectorIndexes": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -206,7 +204,7 @@ func (c *VectorsClient) DeleteVectorIndex(ctx context.Context, request *DeleteVe
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"DeleteVectorIndex": "",
+			"deleteVectorIndex": "",
 		},
 		Bucket: request.Bucket,
 	}

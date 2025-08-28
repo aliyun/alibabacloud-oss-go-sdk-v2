@@ -34,7 +34,7 @@ func (c *VectorsClient) PutVectors(ctx context.Context, request *PutVectorsReque
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"PutVectors": "",
+			"putVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -84,7 +84,7 @@ func (c *VectorsClient) GetVectors(ctx context.Context, request *GetVectorsReque
 		OpName: "GetVectors",
 		Method: "POST",
 		Parameters: map[string]string{
-			"GetVectors": "",
+			"getVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -151,7 +151,7 @@ func (c *VectorsClient) ListVectors(ctx context.Context, request *ListVectorsReq
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"ListVectors": "",
+			"listVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -196,7 +196,7 @@ func (c *VectorsClient) DeleteVectors(ctx context.Context, request *DeleteVector
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"DeleteVectors": "",
+			"deleteVectors": "",
 		},
 		Bucket: request.Bucket,
 	}
@@ -249,7 +249,7 @@ func (c *VectorsClient) QueryVectors(ctx context.Context, request *QueryVectorsR
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
-			"QueryVectors": "",
+			"queryVectors": "",
 		},
 		Bucket: request.Bucket,
 	}

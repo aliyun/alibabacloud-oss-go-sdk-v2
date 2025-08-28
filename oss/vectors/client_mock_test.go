@@ -152,7 +152,7 @@ var testVectorsInvokeOperationAnonymousCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?DeleteVectorIndex", r.URL.String())
+			assert.Equal(t, "/bucket/?deleteVectorIndex", r.URL.String())
 			assert.Equal(t, "DELETE", r.Method)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -163,7 +163,7 @@ var testVectorsInvokeOperationAnonymousCases = []struct {
 			Bucket: oss.Ptr("bucket"),
 			Method: "DELETE",
 			Parameters: map[string]string{
-				"DeleteVectorIndex": "",
+				"deleteVectorIndex": "",
 			},
 			Body: strings.NewReader(`{"indexName": "string"}`),
 		},
@@ -1015,7 +1015,7 @@ func TestMockDeleteVectorBucket_Error(t *testing.T) {
 	}
 }
 
-var testMockPutBucketPolicyForVectorSuccessCases = []struct {
+var testMockPutBucketPolicySuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1048,8 +1048,8 @@ var testMockPutBucketPolicyForVectorSuccessCases = []struct {
 	},
 }
 
-func TestMockPutBucketPolicyForVector_Success(t *testing.T) {
-	for _, c := range testMockPutBucketPolicyForVectorSuccessCases {
+func TestMockPutBucketPolicy_Success(t *testing.T) {
+	for _, c := range testMockPutBucketPolicySuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1067,7 +1067,7 @@ func TestMockPutBucketPolicyForVector_Success(t *testing.T) {
 	}
 }
 
-var testMockPutBucketPolicyForVectorErrorCases = []struct {
+var testMockPutBucketPolicyErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1156,8 +1156,8 @@ var testMockPutBucketPolicyForVectorErrorCases = []struct {
 	},
 }
 
-func TestMockPutBucketPolicyForVector_Error(t *testing.T) {
-	for _, c := range testMockPutBucketPolicyForVectorErrorCases {
+func TestMockPutBucketPolicy_Error(t *testing.T) {
+	for _, c := range testMockPutBucketPolicyErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1175,7 +1175,7 @@ func TestMockPutBucketPolicyForVector_Error(t *testing.T) {
 	}
 }
 
-var testMockGetBucketPolicyForVectorSuccessCases = []struct {
+var testMockGetBucketPolicySuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1207,8 +1207,8 @@ var testMockGetBucketPolicyForVectorSuccessCases = []struct {
 	},
 }
 
-func TestMockGetBucketPolicyForVector_Success(t *testing.T) {
-	for _, c := range testMockGetBucketPolicyForVectorSuccessCases {
+func TestMockGetBucketPolicy_Success(t *testing.T) {
+	for _, c := range testMockGetBucketPolicySuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1226,7 +1226,7 @@ func TestMockGetBucketPolicyForVector_Success(t *testing.T) {
 	}
 }
 
-var testMockGetBucketPolicyForVectorErrorCases = []struct {
+var testMockGetBucketPolicyErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1310,8 +1310,8 @@ var testMockGetBucketPolicyForVectorErrorCases = []struct {
 	},
 }
 
-func TestMockGetBucketPolicyForVector_Error(t *testing.T) {
-	for _, c := range testMockGetBucketPolicyForVectorErrorCases {
+func TestMockGetBucketPolicy_Error(t *testing.T) {
+	for _, c := range testMockGetBucketPolicyErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1329,7 +1329,7 @@ func TestMockGetBucketPolicyForVector_Error(t *testing.T) {
 	}
 }
 
-var testMockDeleteBucketPolicyForVectorSuccessCases = []struct {
+var testMockDeleteBucketPolicySuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1362,8 +1362,8 @@ var testMockDeleteBucketPolicyForVectorSuccessCases = []struct {
 	},
 }
 
-func TestMockDeleteBucketPolicyForVector_Success(t *testing.T) {
-	for _, c := range testMockDeleteBucketPolicyForVectorSuccessCases {
+func TestMockDeleteBucketPolicy_Success(t *testing.T) {
+	for _, c := range testMockDeleteBucketPolicySuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1381,7 +1381,7 @@ func TestMockDeleteBucketPolicyForVector_Success(t *testing.T) {
 	}
 }
 
-var testMockDeleteBucketPolicyForVectorErrorCases = []struct {
+var testMockDeleteBucketPolicyErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1466,8 +1466,8 @@ var testMockDeleteBucketPolicyForVectorErrorCases = []struct {
 	},
 }
 
-func TestMockDeleteBucketPolicyForVector_Error(t *testing.T) {
-	for _, c := range testMockDeleteBucketPolicyForVectorErrorCases {
+func TestMockDeleteBucketPolicy_Error(t *testing.T) {
+	for _, c := range testMockDeleteBucketPolicyErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1485,7 +1485,7 @@ func TestMockDeleteBucketPolicyForVector_Error(t *testing.T) {
 	}
 }
 
-var testMockPutBucketResourceGroupForVectorForVectorSuccessCases = []struct {
+var testMockPutBucketResourceGroupSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1520,8 +1520,8 @@ var testMockPutBucketResourceGroupForVectorForVectorSuccessCases = []struct {
 	},
 }
 
-func TestMockPutBucketResourceGroupForVector_Success(t *testing.T) {
-	for _, c := range testMockPutBucketResourceGroupForVectorForVectorSuccessCases {
+func TestMockPutBucketResourceGroup_Success(t *testing.T) {
+	for _, c := range testMockPutBucketResourceGroupSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1538,7 +1538,7 @@ func TestMockPutBucketResourceGroupForVector_Success(t *testing.T) {
 	}
 }
 
-var testMockPutBucketResourceGroupForVectorErrorCases = []struct {
+var testMockPutBucketResourceGroupErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1631,8 +1631,8 @@ var testMockPutBucketResourceGroupForVectorErrorCases = []struct {
 	},
 }
 
-func TestMockPutBucketResourceGroupForVector_Error(t *testing.T) {
-	for _, c := range testMockPutBucketResourceGroupForVectorErrorCases {
+func TestMockPutBucketResourceGroup_Error(t *testing.T) {
+	for _, c := range testMockPutBucketResourceGroupErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1649,7 +1649,7 @@ func TestMockPutBucketResourceGroupForVector_Error(t *testing.T) {
 	}
 }
 
-var testMockGetBucketResourceGroupForVectorForVectorSuccessCases = []struct {
+var testMockGetBucketResourceGroupSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1686,8 +1686,8 @@ var testMockGetBucketResourceGroupForVectorForVectorSuccessCases = []struct {
 	},
 }
 
-func TestMockGetBucketResourceGroupForVector_Success(t *testing.T) {
-	for _, c := range testMockGetBucketResourceGroupForVectorForVectorSuccessCases {
+func TestMockGetBucketResourceGroup_Success(t *testing.T) {
+	for _, c := range testMockGetBucketResourceGroupSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1705,7 +1705,7 @@ func TestMockGetBucketResourceGroupForVector_Success(t *testing.T) {
 	}
 }
 
-var testMockGetBucketResourceGroupForVectorErrorCases = []struct {
+var testMockGetBucketResourceGroupErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1812,8 +1812,8 @@ var testMockGetBucketResourceGroupForVectorErrorCases = []struct {
 	},
 }
 
-func TestMockGetBucketResourceGroupForVector_Error(t *testing.T) {
-	for _, c := range testMockGetBucketResourceGroupForVectorErrorCases {
+func TestMockGetBucketResourceGroup_Error(t *testing.T) {
+	for _, c := range testMockGetBucketResourceGroupErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1832,7 +1832,7 @@ func TestMockGetBucketResourceGroupForVector_Error(t *testing.T) {
 	}
 }
 
-var testMockPutBucketTagsForVectorSuccessCases = []struct {
+var testMockPutBucketTagsSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -1910,8 +1910,8 @@ var testMockPutBucketTagsForVectorSuccessCases = []struct {
 	},
 }
 
-func TestMockPutBucketTagsForVector_Success(t *testing.T) {
-	for _, c := range testMockPutBucketTagsForVectorSuccessCases {
+func TestMockPutBucketTags_Success(t *testing.T) {
+	for _, c := range testMockPutBucketTagsSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -1928,7 +1928,7 @@ func TestMockPutBucketTagsForVector_Success(t *testing.T) {
 	}
 }
 
-var testMockPutBucketTagsForVectorErrorCases = []struct {
+var testMockPutBucketTagsErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -2043,8 +2043,8 @@ var testMockPutBucketTagsForVectorErrorCases = []struct {
 	},
 }
 
-func TestMockPutBucketTagsForVector_Error(t *testing.T) {
-	for _, c := range testMockPutBucketTagsForVectorErrorCases {
+func TestMockPutBucketTags_Error(t *testing.T) {
+	for _, c := range testMockPutBucketTagsErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -2061,7 +2061,7 @@ func TestMockPutBucketTagsForVector_Error(t *testing.T) {
 	}
 }
 
-var testMockGetBucketTagsForVectorSuccessCases = []struct {
+var testMockGetBucketTagsSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -2112,8 +2112,8 @@ var testMockGetBucketTagsForVectorSuccessCases = []struct {
 	},
 }
 
-func TestMockGetBucketTagsForVector_Success(t *testing.T) {
-	for _, c := range testMockGetBucketTagsForVectorSuccessCases {
+func TestMockGetBucketTags_Success(t *testing.T) {
+	for _, c := range testMockGetBucketTagsSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -2131,7 +2131,7 @@ func TestMockGetBucketTagsForVector_Success(t *testing.T) {
 	}
 }
 
-var testMockGetBucketTagsForVectorErrorCases = []struct {
+var testMockGetBucketTagsErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -2238,8 +2238,8 @@ var testMockGetBucketTagsForVectorErrorCases = []struct {
 	},
 }
 
-func TestMockGetBucketTagsForVector_Error(t *testing.T) {
-	for _, c := range testMockGetBucketTagsForVectorErrorCases {
+func TestMockGetBucketTags_Error(t *testing.T) {
+	for _, c := range testMockGetBucketTagsErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -2258,7 +2258,7 @@ func TestMockGetBucketTagsForVector_Error(t *testing.T) {
 	}
 }
 
-var testMockDeleteBucketTagsForVectorSuccessCases = []struct {
+var testMockDeleteBucketTagsSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -2315,8 +2315,8 @@ var testMockDeleteBucketTagsForVectorSuccessCases = []struct {
 	},
 }
 
-func TestMockDeleteBucketTagsForVector_Success(t *testing.T) {
-	for _, c := range testMockDeleteBucketTagsForVectorSuccessCases {
+func TestMockDeleteBucketTags_Success(t *testing.T) {
+	for _, c := range testMockDeleteBucketTagsSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -2334,7 +2334,7 @@ func TestMockDeleteBucketTagsForVector_Success(t *testing.T) {
 	}
 }
 
-var testMockDeleteBucketTagsForVectorErrorCases = []struct {
+var testMockDeleteBucketTagsErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -2419,8 +2419,8 @@ var testMockDeleteBucketTagsForVectorErrorCases = []struct {
 	},
 }
 
-func TestMockDeleteBucketTagsForVector_Error(t *testing.T) {
-	for _, c := range testMockDeleteBucketTagsForVectorErrorCases {
+func TestMockDeleteBucketTags_Error(t *testing.T) {
+	for _, c := range testMockDeleteBucketTagsErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -2455,7 +2455,7 @@ var testMockPutVectorIndexSuccessCases = []struct {
 		nil,
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?PutVectorIndex", r.URL.String())
+			assert.Equal(t, "/bucket/?putVectorIndex", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"dataType\":\"string\",\"dimension\":128,\"distanceMetric\":\"cosine\",\"indexName\":\"exampleIndex\",\"metadata\":{\"nonFilterableMetadataKeys\":[\"foo\",\"bar\"]}}")
 		},
@@ -2524,7 +2524,7 @@ var testMockPutVectorIndexErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?PutVectorIndex", r.URL.String())
+			assert.Equal(t, "/bucket/?putVectorIndex", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"dataType\":\"string\",\"dimension\":128,\"distanceMetric\":\"cosine\",\"indexName\":\"exampleIndex\",\"metadata\":{\"nonFilterableMetadataKeys\":[\"foo\",\"bar\"]}}")
 		},
@@ -2570,7 +2570,7 @@ var testMockPutVectorIndexErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?PutVectorIndex", r.URL.String())
+			assert.Equal(t, "/bucket/?putVectorIndex", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"dataType\":\"string\",\"dimension\":128,\"distanceMetric\":\"cosine\",\"indexName\":\"exampleIndex\",\"metadata\":{\"nonFilterableMetadataKeys\":[\"foo\",\"bar\"]}}")
 		},
@@ -2649,7 +2649,7 @@ var testMockGetVectorIndexSuccessCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?GetVectorIndex", r.URL.String())
+			assert.Equal(t, "/bucket/?getVectorIndex", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\"}")
 		},
@@ -2722,7 +2722,7 @@ var testMockGetVectorIndexErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?GetVectorIndex", r.URL.String())
+			assert.Equal(t, "/bucket/?getVectorIndex", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"demoIndex\"}")
 		},
@@ -2762,7 +2762,7 @@ var testMockGetVectorIndexErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?GetVectorIndex", r.URL.String())
+			assert.Equal(t, "/bucket/?getVectorIndex", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"demoIndex\"}")
 		},
@@ -2850,7 +2850,7 @@ var testMockListVectorIndexesSuccessCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?ListVectorIndexes", r.URL.String())
+			assert.Equal(t, "/bucket/?listVectorIndexes", r.URL.String())
 		},
 		&ListVectorIndexesRequest{
 			Bucket: oss.Ptr("bucket"),
@@ -2940,7 +2940,7 @@ var testMockListVectorIndexesErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?ListVectorIndexes", r.URL.String())
+			assert.Equal(t, "/bucket/?listVectorIndexes", r.URL.String())
 		},
 		&ListVectorIndexesRequest{
 			Bucket: oss.Ptr("bucket"),
@@ -2977,7 +2977,7 @@ var testMockListVectorIndexesErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?ListVectorIndexes", r.URL.String())
+			assert.Equal(t, "/bucket/?listVectorIndexes", r.URL.String())
 		},
 		&ListVectorIndexesRequest{
 			Bucket: oss.Ptr("bucket"),
@@ -3033,7 +3033,7 @@ var testMockDeleteVectorIndexSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?DeleteVectorIndex", r.URL.String())
+			assert.Equal(t, "/bucket/?deleteVectorIndex", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\"}")
 		},
@@ -3096,7 +3096,7 @@ var testMockDeleteVectorIndexErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?DeleteVectorIndex", r.URL.String())
+			assert.Equal(t, "/bucket/?deleteVectorIndex", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"demoIndex\"}")
 		},
@@ -3136,7 +3136,7 @@ var testMockDeleteVectorIndexErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?DeleteVectorIndex", r.URL.String())
+			assert.Equal(t, "/bucket/?deleteVectorIndex", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"demoIndex\"}")
 		},
@@ -3195,7 +3195,7 @@ var testMockPutVectorsSuccessCases = []struct {
 		nil,
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?PutVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?putVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":32,"Key2":"value2","Key3":["1","2","3"],"Key4":false}}]}`)
 		},
@@ -3272,7 +3272,7 @@ var testMockPutVectorsErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?PutVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?putVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":32,"Key2":"value2","Key3":["1","2","3"],"Key4":false}}]}`)
 		},
@@ -3326,7 +3326,7 @@ var testMockPutVectorsErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?PutVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?putVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":32,"Key2":"value2","Key3":["1","2","3"],"Key4":false}}]}`)
 		},
@@ -3414,7 +3414,7 @@ var testMockGetVectorsSuccessCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?GetVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?getVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\",\"key3\"],\"returnData\":true,\"returnMetadata\":false}")
 		},
@@ -3514,7 +3514,7 @@ var testMockGetVectorsErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?GetVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?getVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\",\"key3\"],\"returnData\":true,\"returnMetadata\":false}")
 		},
@@ -3557,7 +3557,7 @@ var testMockGetVectorsErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?GetVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?getVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\",\"key3\"],\"returnData\":true,\"returnMetadata\":false}")
 		},
@@ -3634,7 +3634,7 @@ var testMockListVectorsSuccessCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?ListVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?listVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false}")
 		},
@@ -3709,7 +3709,7 @@ var testMockListVectorsErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?ListVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?listVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false}")
 		},
@@ -3755,7 +3755,7 @@ var testMockListVectorsErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?ListVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?listVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false}")
 		},
@@ -3820,7 +3820,7 @@ var testMockDeleteVectorsSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?DeleteVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?deleteVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\"]}")
 		},
@@ -3886,7 +3886,7 @@ var testMockDeleteVectorsErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?DeleteVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?deleteVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\"]}")
 		},
@@ -3929,7 +3929,7 @@ var testMockDeleteVectorsErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?DeleteVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?deleteVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"keys\":[\"key1\",\"key2\"]}")
 		},
@@ -3991,7 +3991,7 @@ var testMockQueryVectorsSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?QueryVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?queryVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 		},
@@ -4061,7 +4061,7 @@ var testMockQueryVectorsErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?QueryVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?queryVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 		},
@@ -4108,7 +4108,7 @@ var testMockQueryVectorsErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			assert.Equal(t, "/bucket/?QueryVectors", r.URL.String())
+			assert.Equal(t, "/bucket/?queryVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 		},
@@ -4242,7 +4242,7 @@ func TestMockPutBucketLogging_Success(t *testing.T) {
 	}
 }
 
-var testMockPutBucketLoggingForVectorErrorCases = []struct {
+var testMockPutBucketLoggingErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -4342,7 +4342,7 @@ var testMockPutBucketLoggingForVectorErrorCases = []struct {
 }
 
 func TestMockPutBucketLogging_Error(t *testing.T) {
-	for _, c := range testMockPutBucketLoggingForVectorErrorCases {
+	for _, c := range testMockPutBucketLoggingErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)

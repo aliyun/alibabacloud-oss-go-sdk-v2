@@ -7,11 +7,10 @@ import (
 	"testing"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMarshalInput_PutBucketTags_ForVectorBucket(t *testing.T) {
+func TestMarshalInput_PutBucketTags(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var request *PutBucketTagsRequest
@@ -19,27 +18,17 @@ func TestMarshalInput_PutBucketTags_ForVectorBucket(t *testing.T) {
 	var err error
 
 	request = &PutBucketTagsRequest{}
-	if request.Headers == nil {
-		request.Headers = make(map[string]string)
-	}
-	request.Headers[oss.HTTPHeaderContentType] = contentTypeJSON
 	input = &oss.OperationInput{
 		OpName: "PutBucketTags",
 		Method: "PUT",
 		Headers: map[string]string{
-			oss.HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[oss.HTTPHeaderContentType] != "" {
-					return request.Headers[oss.HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket")
@@ -47,28 +36,19 @@ func TestMarshalInput_PutBucketTags_ForVectorBucket(t *testing.T) {
 	request = &PutBucketTagsRequest{
 		Bucket: oss.Ptr("oss-demo"),
 	}
-	if request.Headers == nil {
-		request.Headers = make(map[string]string)
-	}
-	request.Headers[oss.HTTPHeaderContentType] = contentTypeJSON
 	input = &oss.OperationInput{
 		OpName: "PutBucketTags",
 		Method: "PUT",
 		Headers: map[string]string{
-			oss.HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[oss.HTTPHeaderContentType] != "" {
-					return request.Headers[oss.HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Tagging.")
 
 	request = &PutBucketTagsRequest{
@@ -88,27 +68,17 @@ func TestMarshalInput_PutBucketTags_ForVectorBucket(t *testing.T) {
 			},
 		},
 	}
-	if request.Headers == nil {
-		request.Headers = make(map[string]string)
-	}
-	request.Headers[oss.HTTPHeaderContentType] = contentTypeJSON
 	input = &oss.OperationInput{
 		OpName: "PutBucketTags",
 		Method: "PUT",
 		Headers: map[string]string{
-			oss.HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[oss.HTTPHeaderContentType] != "" {
-					return request.Headers[oss.HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
@@ -127,34 +97,52 @@ func TestMarshalInput_PutBucketTags_ForVectorBucket(t *testing.T) {
 			},
 		},
 	}
-	if request.Headers == nil {
-		request.Headers = make(map[string]string)
-	}
-	request.Headers[oss.HTTPHeaderContentType] = contentTypeJSON
 	input = &oss.OperationInput{
 		OpName: "PutBucketTags",
 		Method: "PUT",
 		Headers: map[string]string{
-			oss.HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[oss.HTTPHeaderContentType] != "" {
-					return request.Headers[oss.HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	body, _ = io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "{\"Tagging\":{\"TagSet\":{\"Tag\":[{\"Key\":\"key1\",\"Value\":\"value1\"}]}}}")
+
+	request = &PutBucketTagsRequest{
+		Bucket: oss.Ptr("oss-demo"),
+		Tagging: &Tagging{
+			TagSet: &TagSet{
+				Tags: []Tag{
+					{
+						Key:   oss.Ptr("key1"),
+					},
+				},
+			},
+		},
+	}
+	input = &oss.OperationInput{
+		OpName: "PutBucketTags",
+		Method: "PUT",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"tagging": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "{\"Tagging\":{\"TagSet\":{\"Tag\":[{\"Key\":\"key1\"}]}}}")
 }
 
-func TestUnmarshalOutput_PutBucketTags_ForVectorBucket(t *testing.T) {
+func TestUnmarshalOutput_PutBucketTags(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *oss.OperationOutput
@@ -230,7 +218,7 @@ func TestUnmarshalOutput_PutBucketTags_ForVectorBucket(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 }
 
-func TestMarshalInput_GetBucketTags_ForVectorBucket(t *testing.T) {
+func TestMarshalInput_GetBucketTags(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var request *GetBucketTagsRequest
@@ -241,12 +229,14 @@ func TestMarshalInput_GetBucketTags_ForVectorBucket(t *testing.T) {
 	input = &oss.OperationInput{
 		OpName: "GetBucketTags",
 		Method: "GET",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
@@ -257,17 +247,19 @@ func TestMarshalInput_GetBucketTags_ForVectorBucket(t *testing.T) {
 	input = &oss.OperationInput{
 		OpName: "GetBucketTags",
 		Method: "GET",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 }
 
-func TestUnmarshalOutput_GetBucketTags_ForVectorBucket(t *testing.T) {
+func TestUnmarshalOutput_GetBucketTags(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *oss.OperationOutput
@@ -344,7 +336,7 @@ func TestUnmarshalOutput_GetBucketTags_ForVectorBucket(t *testing.T) {
 
 }
 
-func TestMarshalInput_DeleteBucketTags_ForVectorBucket(t *testing.T) {
+func TestMarshalInput_DeleteBucketTags(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var request *DeleteBucketTagsRequest
@@ -355,12 +347,14 @@ func TestMarshalInput_DeleteBucketTags_ForVectorBucket(t *testing.T) {
 	input = &oss.OperationInput{
 		OpName: "DeleteBucketTags",
 		Method: "DELETE",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
@@ -371,14 +365,17 @@ func TestMarshalInput_DeleteBucketTags_ForVectorBucket(t *testing.T) {
 	input = &oss.OperationInput{
 		OpName: "DeleteBucketTags",
 		Method: "DELETE",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
 		Parameters: map[string]string{
 			"tagging": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["tagging"],"")
 
 	request = &DeleteBucketTagsRequest{
 		Bucket:  oss.Ptr("oss-demo"),
@@ -392,16 +389,12 @@ func TestMarshalInput_DeleteBucketTags_ForVectorBucket(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	if request.Tagging != nil {
-		input.Parameters["tagging"] = *request.Tagging
-	}
-	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["tagging"], "k1,k2")
 }
 
-func TestUnmarshalOutput_DeleteBucketTags_ForVectorBucket(t *testing.T) {
+func TestUnmarshalOutput_DeleteBucketTags(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *oss.OperationOutput

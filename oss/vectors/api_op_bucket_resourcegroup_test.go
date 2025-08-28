@@ -7,11 +7,10 @@ import (
 	"testing"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMarshalInput_PutBucketResourceGroup_ForVectorBucket(t *testing.T) {
+func TestMarshalInput_PutBucketResourceGroup(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var request *PutBucketResourceGroupRequest
@@ -19,27 +18,17 @@ func TestMarshalInput_PutBucketResourceGroup_ForVectorBucket(t *testing.T) {
 	var err error
 
 	request = &PutBucketResourceGroupRequest{}
-	if request.Headers == nil {
-		request.Headers = make(map[string]string)
-	}
-	request.Headers[oss.HTTPHeaderContentType] = contentTypeJSON
 	input = &oss.OperationInput{
 		OpName: "PutBucketResourceGroup",
 		Method: "PUT",
 		Headers: map[string]string{
-			oss.HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[oss.HTTPHeaderContentType] != "" {
-					return request.Headers[oss.HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
 			"resourceGroup": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"resourceGroup"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
@@ -47,20 +36,11 @@ func TestMarshalInput_PutBucketResourceGroup_ForVectorBucket(t *testing.T) {
 	request = &PutBucketResourceGroupRequest{
 		Bucket: oss.Ptr("oss-demo"),
 	}
-	if request.Headers == nil {
-		request.Headers = make(map[string]string)
-	}
-	request.Headers[oss.HTTPHeaderContentType] = contentTypeJSON
 	input = &oss.OperationInput{
 		OpName: "PutBucketResourceGroup",
 		Method: "PUT",
 		Headers: map[string]string{
-			oss.HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[oss.HTTPHeaderContentType] != "" {
-					return request.Headers[oss.HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
 			"resourceGroup": "",
@@ -69,40 +49,31 @@ func TestMarshalInput_PutBucketResourceGroup_ForVectorBucket(t *testing.T) {
 	}
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Contains(t, err.Error(), "missing required field, BucketResourceGroupConfiguration.")
+
 	request = &PutBucketResourceGroupRequest{
 		Bucket: oss.Ptr("oss-demo"),
 		BucketResourceGroupConfiguration: &BucketResourceGroupConfiguration{
 			ResourceGroupId: oss.Ptr("rg-aekz****"),
 		},
 	}
-	if request.Headers == nil {
-		request.Headers = make(map[string]string)
-	}
-	request.Headers[oss.HTTPHeaderContentType] = contentTypeJSON
 	input = &oss.OperationInput{
 		OpName: "PutBucketResourceGroup",
 		Method: "PUT",
 		Headers: map[string]string{
-			oss.HTTPHeaderContentType: func() string {
-				if request.Headers != nil && request.Headers[oss.HTTPHeaderContentType] != "" {
-					return request.Headers[oss.HTTPHeaderContentType]
-				}
-				return contentTypeXML
-			}(),
+			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
 			"resourceGroup": "",
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"resourceGroup"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "{\"BucketResourceGroupConfiguration\":{\"ResourceGroupId\":\"rg-aekz****\"}}")
 }
 
-func TestUnmarshalOutput_PutBucketResourceGroup_ForVectorBucket(t *testing.T) {
+func TestUnmarshalOutput_PutBucketResourceGroup(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *oss.OperationOutput
@@ -178,7 +149,7 @@ func TestUnmarshalOutput_PutBucketResourceGroup_ForVectorBucket(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 }
 
-func TestMarshalInput_GetBucketResourceGroup_ForVectorBucket(t *testing.T) {
+func TestMarshalInput_GetBucketResourceGroup(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var request *GetBucketResourceGroupRequest
@@ -194,7 +165,6 @@ func TestMarshalInput_GetBucketResourceGroup_ForVectorBucket(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"resourceGroup"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
@@ -210,12 +180,11 @@ func TestMarshalInput_GetBucketResourceGroup_ForVectorBucket(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"resourceGroup"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 }
 
-func TestUnmarshalOutput_GetBucketResourceGroup_ForVectorBucket(t *testing.T) {
+func TestUnmarshalOutput_GetBucketResourceGroup(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
 	var output *oss.OperationOutput
