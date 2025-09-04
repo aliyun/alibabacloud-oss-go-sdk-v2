@@ -9,8 +9,9 @@ import (
 )
 
 type endpointProvider struct {
-	endpoint *url.URL
-	acountId string
+	endpoint     *url.URL
+	accountId    string
+	endpointType oss.UrlStyleType
 }
 
 func (p *endpointProvider) BuildURL(input *oss.OperationInput) string {
@@ -20,10 +21,20 @@ func (p *endpointProvider) BuildURL(input *oss.OperationInput) string {
 	var host string
 	var path string
 	var paths []string
+
 	if input.Bucket == nil {
 		host = p.endpoint.Host
 	} else {
-		host = fmt.Sprintf("%s-%s.%s", p.acountId, *input.Bucket, p.endpoint.Host)
+		switch p.endpointType {
+		default: // UrlStyleVirtualHosted
+			host = fmt.Sprintf("%s-%s.%s", *input.Bucket, p.accountId, p.endpoint.Host)
+		case oss.UrlStylePath:
+			host = p.endpoint.Host
+			paths = append(paths, *input.Bucket)
+			if input.Key == nil {
+				paths = append(paths, "")
+			}
+		}
 	}
 
 	if input.Key != nil {

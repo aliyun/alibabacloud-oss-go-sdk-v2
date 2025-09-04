@@ -116,8 +116,8 @@ type Config struct {
 	// The cloud box id is automatically extracted from endpoint.
 	EnableAutoDetectCloudBoxId *bool
 
-	// The user id
-	UserId *string
+	// The account id
+	AccountId *string
 }
 
 func NewConfig() *Config {
@@ -288,7 +288,7 @@ func (c *Config) WithEnableAutoDetectCloudBoxId(value bool) *Config {
 	return c
 }
 
-func (c *Config) WithUserId(value string) *Config {
-	c.UserId = Ptr(value)
+func (c *Config) WithAccountId(value string) *Config {
+	c.AccountId = Ptr(value)
 	return c
 }

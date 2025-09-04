@@ -22,11 +22,12 @@ func NewVectorsClient(cfg *oss.Config, optFns ...func(*oss.Options)) *VectorsCli
 	updateUserAgent(&newCfg)
 	vectorsOptFn := func(options *oss.Options) {
 		options.Signer = &signer.SignerVectorsV4{
-			UserId: newCfg.UserId,
+			AccountId: newCfg.AccountId,
 		}
 		options.EndpointProvider = &endpointProvider{
-			acountId: oss.ToString(newCfg.UserId),
-			endpoint: options.Endpoint,
+			accountId:    oss.ToString(newCfg.AccountId),
+			endpoint:     options.Endpoint,
+			endpointType: options.UrlStyle,
 		}
 	}
 	allOptFns := append(optFns, vectorsOptFn)
