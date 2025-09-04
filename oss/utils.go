@@ -408,3 +408,7 @@ func EmptyFile(filename string) bool {
 func IsEmptyValue(v reflect.Value) bool {
 	return isEmptyValue(v)
 }
+
+func EscapePath(path string, encodeSep bool) string {
+	return escapePath(path, encodeSep)
+}

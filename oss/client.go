@@ -52,6 +52,8 @@ type Options struct {
 	AuthMethod *AuthMethodType
 
 	AdditionalHeaders []string
+
+	EndpointProvider EndpointProvider
 }
 
 func (c Options) Copy() Options {
@@ -354,8 +356,13 @@ func (c *Client) sendRequest(ctx context.Context, input *OperationInput, opts *O
 		}
 	}
 	// host & path
-	host, path := buildURL(input, opts)
-	strUrl := fmt.Sprintf("%s://%s%s", opts.Endpoint.Scheme, host, path)
+	var strUrl string
+	if opts.EndpointProvider != nil {
+		strUrl = opts.EndpointProvider.BuildURL(input)
+	} else {
+		host, path := buildURL(input, opts)
+		strUrl = fmt.Sprintf("%s://%s%s", opts.Endpoint.Scheme, host, path)
+	}
 
 	// querys
 	if len(input.Parameters) > 0 {
