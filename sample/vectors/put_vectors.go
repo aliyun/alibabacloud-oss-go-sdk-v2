@@ -7,20 +7,19 @@ import (
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
-		"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/vectors"
-
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/vectors"
 )
 
 var (
 	region     string
 	bucketName string
-	uid        string
+	accountId  string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the vector bucket is located.")
 	flag.StringVar(&bucketName, "bucket", "", "The name of the vector bucket.")
-	flag.StringVar(&uid, "uid", "", "The id of vector account.")
+	flag.StringVar(&accountId, "account-id", "", "The id of vector account.")
 }
 
 func main() {
@@ -35,16 +34,16 @@ func main() {
 		log.Fatalf("invalid parameters, region required")
 	}
 
-	if len(uid) == 0 {
+	if len(accountId) == 0 {
 		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, uid required")
+		log.Fatalf("invalid parameters, accounId required")
 	}
 
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
-		WithRegion(region).WithUserId(uid)
+		WithRegion(region).WithAccountId(accountId)
 
-	client := oss.NewVectorsClient(cfg)
+	client := vectors.NewVectorsClient(cfg)
 
 	request := &vectors.PutVectorsRequest{
 		Bucket:    oss.Ptr(bucketName),
