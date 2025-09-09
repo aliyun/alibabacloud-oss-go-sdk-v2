@@ -56,12 +56,102 @@ func TestMarshalInput_PutVectorIndex(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, IndexName")
 
 	request = &PutVectorIndexRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("exampleIndex"),
+	}
+	input = &oss.OperationInput{
+		OpName: "PutVectorIndex",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"putVectorIndex": "",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"PutVectorIndex"})
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, DataType")
+
+	request = &PutVectorIndexRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("exampleIndex"),
+		DataType:  oss.Ptr("string"),
+	}
+	input = &oss.OperationInput{
+		OpName: "PutVectorIndex",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"putVectorIndex": "",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"PutVectorIndex"})
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Dimension")
+
+	request = &PutVectorIndexRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		DataType:  oss.Ptr("string"),
+		IndexName: oss.Ptr("exampleIndex"),
+		Dimension: oss.Ptr(128),
+	}
+	input = &oss.OperationInput{
+		OpName: "PutVectorIndex",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"putVectorIndex": "",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"PutVectorIndex"})
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, DistanceMetric")
+
+	request = &PutVectorIndexRequest{
 		Bucket:         oss.Ptr("oss-demo"),
 		DataType:       oss.Ptr("string"),
 		Dimension:      oss.Ptr(128),
 		DistanceMetric: oss.Ptr("cosine"),
 		IndexName:      oss.Ptr("exampleIndex"),
-		Metadata: map[string]interface{}{
+	}
+	input = &oss.OperationInput{
+		OpName: "PutVectorIndex",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"putVectorIndex": "",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"PutVectorIndex"})
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Method, "POST")
+	assert.Equal(t, *input.Bucket, "oss-demo")
+	assert.Equal(t, input.Parameters["putVectorIndex"], "")
+	body, _ := io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "{\"dataType\":\"string\",\"dimension\":128,\"distanceMetric\":\"cosine\",\"indexName\":\"exampleIndex\"}")
+
+	request = &PutVectorIndexRequest{
+		Bucket:         oss.Ptr("oss-demo"),
+		DataType:       oss.Ptr("string"),
+		Dimension:      oss.Ptr(128),
+		DistanceMetric: oss.Ptr("cosine"),
+		IndexName:      oss.Ptr("exampleIndex"),
+		Metadata: map[string]any{
 			"nonFilterableMetadataKeys": []string{"foo", "bar"},
 		},
 	}
@@ -82,7 +172,7 @@ func TestMarshalInput_PutVectorIndex(t *testing.T) {
 	assert.Equal(t, input.Method, "POST")
 	assert.Equal(t, *input.Bucket, "oss-demo")
 	assert.Equal(t, input.Parameters["putVectorIndex"], "")
-	body, _ := io.ReadAll(input.Body)
+	body, _ = io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "{\"dataType\":\"string\",\"dimension\":128,\"distanceMetric\":\"cosine\",\"indexName\":\"exampleIndex\",\"metadata\":{\"nonFilterableMetadataKeys\":[\"foo\",\"bar\"]}}")
 }
 
@@ -263,7 +353,7 @@ func TestUnmarshalOutput_GetVectorIndex(t *testing.T) {
 	assert.Equal(t, *result.Index.IndexName, "string")
 	assert.Len(t, result.Index.Metadata["nonFilterableMetadataKeys"], 2)
 	if metadataValue, ok := result.Index.Metadata["nonFilterableMetadataKeys"]; ok {
-		if keys, ok := metadataValue.([]interface{}); ok {
+		if keys, ok := metadataValue.([]any); ok {
 			assert.Equal(t, keys[0].(string), "foo")
 			assert.Equal(t, keys[1].(string), "bar")
 		}
@@ -485,7 +575,7 @@ func TestUnmarshalOutput_ListVectorIndexes(t *testing.T) {
 	assert.Equal(t, *result.Indexes[0].IndexName, "demo1")
 	assert.Len(t, result.Indexes[0].Metadata["nonFilterableMetadataKeys"], 2)
 	if metadataValue, ok := result.Indexes[0].Metadata["nonFilterableMetadataKeys"]; ok {
-		if keys, ok := metadataValue.([]interface{}); ok {
+		if keys, ok := metadataValue.([]any); ok {
 			assert.Equal(t, keys[0].(string), "foo")
 			assert.Equal(t, keys[1].(string), "bar")
 		}
@@ -499,7 +589,7 @@ func TestUnmarshalOutput_ListVectorIndexes(t *testing.T) {
 	assert.Equal(t, *result.Indexes[1].DistanceMetric, "string")
 	assert.Equal(t, *result.Indexes[1].IndexName, "demo2")
 	if metadataValue, ok := result.Indexes[1].Metadata["nonFilterableMetadataKeys"]; ok {
-		if keys, ok := metadataValue.([]interface{}); ok {
+		if keys, ok := metadataValue.([]any); ok {
 			assert.Equal(t, keys[0].(string), "foo2")
 			assert.Equal(t, keys[1].(string), "bar2")
 		}

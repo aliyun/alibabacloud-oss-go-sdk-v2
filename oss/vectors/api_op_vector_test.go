@@ -54,13 +54,13 @@ func TestMarshalInput_PutVectors(t *testing.T) {
 	request = &PutVectorsRequest{
 		Bucket:    oss.Ptr("oss-demo"),
 		IndexName: oss.Ptr("exampleIndex"),
-		Vectors: []map[string]interface{}{
+		Vectors: []map[string]any{
 			{
 				"key": "vector1",
-				"data": map[string]interface{}{
+				"data": map[string]any{
 					"float32": []float32{1.2, 2.5, 3},
 				},
-				"metadata": map[string]interface{}{
+				"metadata": map[string]any{
 					"Key1": 32,
 					"Key2": "value2",
 					"Key3": []string{"1", "2", "3"},
@@ -286,17 +286,17 @@ func TestUnmarshalOutput_GetVectors(t *testing.T) {
 
 		// 访问 data 字段
 		if dataVal, exists := vector["data"]; exists {
-			dataMap, ok := dataVal.(map[string]interface{})
+			dataMap, ok := dataVal.(map[string]any)
 			assert.True(t, ok)
 			if float32Val, exists := dataMap["float32"]; exists {
-				float32Data, ok := float32Val.([]interface{})
+				float32Data, ok := float32Val.([]any)
 				assert.True(t, ok)
 				assert.Equal(t, float32Data[0], float64(2.2))
 			}
 		}
 
 		if metadataVal, exists := vector["metadata"]; exists {
-			metadataMap, ok := metadataVal.(map[string]interface{})
+			metadataMap, ok := metadataVal.(map[string]any)
 			assert.True(t, ok)
 			if key1Val, exists := metadataMap["Key1"]; exists {
 				key1Data, ok := key1Val.(string)
@@ -755,10 +755,96 @@ func TestMarshalInput_QueryVectors(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, IndexName")
 
 	request = &QueryVectorsRequest{
+		Bucket: oss.Ptr("oss-demo"),
+	}
+	input = &oss.OperationInput{
+		OpName: "QueryVectors",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"QueryVectors": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, IndexName")
+
+	request = &QueryVectorsRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("index"),
+	}
+	input = &oss.OperationInput{
+		OpName: "QueryVectors",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"QueryVectors": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, QueryVector")
+
+	request = &QueryVectorsRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("index"),
+		QueryVector: map[string]any{
+			"float32": []float32{float32(32)},
+		},
+	}
+	input = &oss.OperationInput{
+		OpName: "QueryVectors",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"QueryVectors": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, TopK")
+
+	request = &QueryVectorsRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("index"),
+		QueryVector: map[string]any{
+			"float32": []float32{float32(32)},
+		},
+		TopK: oss.Ptr(10),
+	}
+	input = &oss.OperationInput{
+		OpName: "QueryVectors",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"QueryVectors": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["QueryVectors"], "")
+	assert.Equal(t, input.Method, "POST")
+	assert.Equal(t, *input.Bucket, "oss-demo")
+	body, _ := io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "{\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"topK\":10}")
+
+	request = &QueryVectorsRequest{
 		Bucket:    oss.Ptr("oss-demo"),
 		IndexName: oss.Ptr("index"),
 		Filter:    oss.Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
-		QueryVector: map[string]interface{}{
+		QueryVector: map[string]any{
 			"float32": []float32{float32(32)},
 		},
 		ReturnMetadata: oss.Ptr(true),
@@ -781,7 +867,7 @@ func TestMarshalInput_QueryVectors(t *testing.T) {
 	assert.Equal(t, input.Parameters["QueryVectors"], "")
 	assert.Equal(t, input.Method, "POST")
 	assert.Equal(t, *input.Bucket, "oss-demo")
-	body, _ := io.ReadAll(input.Body)
+	body, _ = io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 }
 

@@ -12,7 +12,7 @@ type PutVectorsRequest struct {
 
 	IndexName *string `input:"body,indexName,json,required"`
 
-	Vectors []map[string]interface{} `input:"body,vectors,json,required"`
+	Vectors []map[string]any `input:"body,vectors,json,required"`
 
 	oss.RequestCommon
 }
@@ -69,7 +69,7 @@ type GetVectorsRequest struct {
 }
 
 type GetVectorsResult struct {
-	Vectors []map[string]interface{} `json:"vectors"`
+	Vectors []map[string]any `json:"vectors"`
 
 	oss.ResultCommon
 }
@@ -133,7 +133,7 @@ type ListVectorsResult struct {
 	NextToken *string `json:"NextToken"`
 
 	// The container that stores information about vector.
-	Vectors []map[string]interface{} `json:"Vectors"`
+	Vectors []map[string]any `json:"Vectors"`
 
 	oss.ResultCommon
 }
@@ -223,15 +223,15 @@ type QueryVectorsRequest struct {
 	IndexName      *string                `input:"body,indexName,json,required"`
 	QueryVector    map[string]interface{} `input:"body,queryVector,json,required"`
 	TopK           *int                   `input:"body,topK,json,required"`
-	Filter         *string                `input:"body,filter,json,required"`
-	ReturnDistance *bool                  `input:"body,returnDistance,json,required"`
-	ReturnMetadata *bool                  `input:"body,returnMetadata,json,required"`
+	Filter         *string                `input:"body,filter,json"`
+	ReturnDistance *bool                  `input:"body,returnDistance,json"`
+	ReturnMetadata *bool                  `input:"body,returnMetadata,json"`
 
 	oss.RequestCommon
 }
 
 type QueryVectorsResult struct {
-	Vectors []map[string]interface{} `json:"vectors"`
+	Vectors []map[string]any `json:"vectors"`
 
 	oss.ResultCommon
 }

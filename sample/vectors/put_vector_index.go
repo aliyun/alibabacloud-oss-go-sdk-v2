@@ -51,7 +51,7 @@ func main() {
 		Dimension:      oss.Ptr(128),
 		DistanceMetric: oss.Ptr("cosine"),
 		IndexName:      oss.Ptr("exampleIndex"),
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"nonFilterableMetadataKeys": []string{"foo", "bar"},
 		},
 	}
