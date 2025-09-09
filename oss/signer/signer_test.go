@@ -883,29 +883,29 @@ func TestSignerVectorV4BuildBucketArn(t *testing.T) {
 	signCtx := &SigningContext{
 		Region: ptr("cn-hangzhou"),
 	}
-	arn := buildBucketArn(signCtx, signer.AccountId)
-	assert.Equal(t, "acs:ossvector:cn-hangzhou:"+accountId+":", arn)
+	arn := buildArnUri(signCtx, signer.AccountId)
+	assert.Equal(t, "/acs:ossvector:cn-hangzhou::/", arn)
 
 	signCtx = &SigningContext{
 		Region: ptr("cn-hangzhou"),
 		Bucket: ptr("bucket"),
 	}
-	arn = buildBucketArn(signCtx, signer.AccountId)
-	assert.Equal(t, "acs:ossvector:cn-hangzhou:"+accountId+":bucket/", arn)
+	arn = buildArnUri(signCtx, signer.AccountId)
+	assert.Equal(t, "/acs:ossvector:cn-hangzhou:"+accountId+":bucket/", arn)
 
 	signCtx = &SigningContext{
 		Region: ptr("cn-hangzhou"),
 		Bucket: ptr("bucket"),
 		Key:    ptr("key"),
 	}
-	arn = buildBucketArn(signCtx, signer.AccountId)
-	assert.Equal(t, "acs:ossvector:cn-hangzhou:"+accountId+":bucket/key", arn)
+	arn = buildArnUri(signCtx, signer.AccountId)
+	assert.Equal(t, "/acs:ossvector:cn-hangzhou:"+accountId+":bucket/key", arn)
 
 	signCtx = &SigningContext{
 		Region: ptr("cn-hangzhou"),
 		Bucket: ptr("bucket"),
 		Key:    ptr("key-1/key-2"),
 	}
-	arn = buildBucketArn(signCtx, signer.AccountId)
-	assert.Equal(t, "acs:ossvector:cn-hangzhou:"+accountId+":bucket/"+url.QueryEscape("key-1/key-2"), arn)
+	arn = buildArnUri(signCtx, signer.AccountId)
+	assert.Equal(t, "/acs:ossvector:cn-hangzhou:"+accountId+":bucket/key-1/key-2", arn)
 }

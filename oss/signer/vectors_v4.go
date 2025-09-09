@@ -63,8 +63,7 @@ func (s *SignerVectorsV4) calcCanonicalRequest(signingCtx *SigningContext, addit
 	*/
 
 	//Canonical Uri
-	uri := "/"
-	uri += buildBucketArn(signingCtx, s.AccountId)
+	uri := buildArnUri(signingCtx, s.AccountId)
 	canonicalUri := escapePath(uri, false)
 
 	//Canonical Query
@@ -318,18 +317,18 @@ func (s *SignerVectorsV4) IsSignedHeader(additionalHeaders []string, h string) b
 	return isDefaultSignedHeader(strings.ToLower(h)) || ContainsStr(additionalHeaders, h)
 }
 
-func buildBucketArn(signingCtx *SigningContext, accountId *string) string {
-	region := toString(signingCtx.Region)
-	arn := fmt.Sprintf("acs:ossvector:%s:%s:", region, toString(accountId))
+func buildArnUri(signingCtx *SigningContext, accountId *string) string {
+	arn := fmt.Sprintf("/acs:ossvector:%s:", toString(signingCtx.Region))
 	if signingCtx.Bucket != nil {
-		bucket := toString(signingCtx.Bucket)
-		arn += bucket
-		if signingCtx.Key != nil {
-			key := toString(signingCtx.Key)
-			arn += "/" + url.QueryEscape(key)
-		} else {
-			arn += "/"
-		}
+		arn += fmt.Sprintf("%s:%s/", toString(accountId), *signingCtx.Bucket)
+	} else {
+		// service's api without account id
+		arn += ":/"
 	}
+
+	if signingCtx.Key != nil {
+		arn += *signingCtx.Key
+	}
+
 	return arn
 }
