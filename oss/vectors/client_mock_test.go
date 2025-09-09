@@ -1485,959 +1485,6 @@ func TestMockDeleteBucketPolicy_Error(t *testing.T) {
 	}
 }
 
-var testMockPutBucketResourceGroupSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *PutBucketResourceGroupRequest
-	CheckOutputFn  func(t *testing.T, o *PutBucketResourceGroupResult, err error)
-}{
-	{
-		200,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?resourceGroup", r.URL.String())
-			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"BucketResourceGroupConfiguration\":{\"ResourceGroupId\":\"rg-aekz****\"}}")
-		},
-		&PutBucketResourceGroupRequest{
-			Bucket: oss.Ptr("bucket"),
-			BucketResourceGroupConfiguration: &BucketResourceGroupConfiguration{
-				ResourceGroupId: oss.Ptr("rg-aekz****"),
-			},
-		},
-		func(t *testing.T, o *PutBucketResourceGroupResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-		},
-	},
-}
-
-func TestMockPutBucketResourceGroup_Success(t *testing.T) {
-	for _, c := range testMockPutBucketResourceGroupSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewVectorsClient(cfg)
-		assert.NotNil(t, c)
-		output, err := client.PutBucketResourceGroup(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockPutBucketResourceGroupErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *PutBucketResourceGroupRequest
-	CheckOutputFn  func(t *testing.T, o *PutBucketResourceGroupResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?resourceGroup", r.URL.String())
-			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"BucketResourceGroupConfiguration\":{\"ResourceGroupId\":\"rg-aekz****\"}}")
-		},
-		&PutBucketResourceGroupRequest{
-			Bucket: oss.Ptr("bucket"),
-			BucketResourceGroupConfiguration: &BucketResourceGroupConfiguration{
-				ResourceGroupId: oss.Ptr("rg-aekz****"),
-			},
-		},
-		func(t *testing.T, o *PutBucketResourceGroupResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "0015-00000101", serr.EC)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?resourceGroup", strUrl)
-			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"BucketResourceGroupConfiguration\":{\"ResourceGroupId\":\"rg-aekz****\"}}")
-		},
-		&PutBucketResourceGroupRequest{
-			Bucket: oss.Ptr("bucket"),
-			BucketResourceGroupConfiguration: &BucketResourceGroupConfiguration{
-				ResourceGroupId: oss.Ptr("rg-aekz****"),
-			},
-		},
-		func(t *testing.T, o *PutBucketResourceGroupResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-}
-
-func TestMockPutBucketResourceGroup_Error(t *testing.T) {
-	for _, c := range testMockPutBucketResourceGroupErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewVectorsClient(cfg)
-		assert.NotNil(t, c)
-		output, err := client.PutBucketResourceGroup(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockGetBucketResourceGroupSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetBucketResourceGroupRequest
-	CheckOutputFn  func(t *testing.T, o *GetBucketResourceGroupResult, err error)
-}{
-	{
-		200,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "BucketResourceGroupConfiguration": {
-    "ResourceGroupId": "rg-aekz****"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket/?resourceGroup", r.URL.String())
-		},
-		&GetBucketResourceGroupRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetBucketResourceGroupResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, "rg-aekz****", *o.BucketResourceGroupConfiguration.ResourceGroupId)
-		},
-	},
-}
-
-func TestMockGetBucketResourceGroup_Success(t *testing.T) {
-	for _, c := range testMockGetBucketResourceGroupSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewVectorsClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.GetBucketResourceGroup(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockGetBucketResourceGroupErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetBucketResourceGroupRequest
-	CheckOutputFn  func(t *testing.T, o *GetBucketResourceGroupResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?resourceGroup", r.URL.String())
-			assert.Equal(t, "GET", r.Method)
-		},
-		&GetBucketResourceGroupRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetBucketResourceGroupResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "0015-00000101", serr.EC)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "GET", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?resourceGroup", strUrl)
-		},
-		&GetBucketResourceGroupRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetBucketResourceGroupResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-	{
-		200,
-		map[string]string{
-			"Content-Type":     "application/text",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "GET", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?resourceGroup", strUrl)
-		},
-		&GetBucketResourceGroupRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetBucketResourceGroupResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			assert.Contains(t, err.Error(), "execute GetBucketResourceGroup fail")
-		},
-	},
-}
-
-func TestMockGetBucketResourceGroup_Error(t *testing.T) {
-	for _, c := range testMockGetBucketResourceGroupErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewVectorsClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.GetBucketResourceGroup(context.TODO(), c.Request)
-
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockPutBucketTagsSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *PutBucketTagsRequest
-	CheckOutputFn  func(t *testing.T, o *PutBucketTagsResult, err error)
-}{
-	{
-		200,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?tagging", r.URL.String())
-			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"Tagging\":{\"TagSet\":{\"Tag\":[{\"Key\":\"key1\",\"Value\":\"value1\"},{\"Key\":\"key2\",\"Value\":\"value2\"}]}}}")
-		},
-		&PutBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-			Tagging: &Tagging{
-				TagSet: &TagSet{
-					Tags: []Tag{
-						{
-							Key:   oss.Ptr("key1"),
-							Value: oss.Ptr("value1"),
-						},
-						{
-							Key:   oss.Ptr("key2"),
-							Value: oss.Ptr("value2"),
-						},
-					},
-				},
-			},
-		},
-		func(t *testing.T, o *PutBucketTagsResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-		},
-	},
-	{
-		200,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?tagging", r.URL.String())
-			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"Tagging\":{\"TagSet\":{\"Tag\":[{\"Key\":\"key1\",\"Value\":\"value1\"}]}}}")
-		},
-		&PutBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-			Tagging: &Tagging{
-				TagSet: &TagSet{
-					Tags: []Tag{
-						{
-							Key:   oss.Ptr("key1"),
-							Value: oss.Ptr("value1"),
-						},
-					},
-				},
-			},
-		},
-		func(t *testing.T, o *PutBucketTagsResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-		},
-	},
-}
-
-func TestMockPutBucketTags_Success(t *testing.T) {
-	for _, c := range testMockPutBucketTagsSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewVectorsClient(cfg)
-		assert.NotNil(t, c)
-		output, err := client.PutBucketTags(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockPutBucketTagsErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *PutBucketTagsRequest
-	CheckOutputFn  func(t *testing.T, o *PutBucketTagsResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?tagging", r.URL.String())
-			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"Tagging\":{\"TagSet\":{\"Tag\":[{\"Key\":\"key1\",\"Value\":\"value1\"},{\"Key\":\"key2\",\"Value\":\"value2\"}]}}}")
-		},
-		&PutBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-			Tagging: &Tagging{
-				TagSet: &TagSet{
-					Tags: []Tag{
-						{
-							Key:   oss.Ptr("key1"),
-							Value: oss.Ptr("value1"),
-						},
-						{
-							Key:   oss.Ptr("key2"),
-							Value: oss.Ptr("value2"),
-						},
-					},
-				},
-			},
-		},
-		func(t *testing.T, o *PutBucketTagsResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "0015-00000101", serr.EC)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?tagging", strUrl)
-			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"Tagging\":{\"TagSet\":{\"Tag\":[{\"Key\":\"key1\",\"Value\":\"value1\"},{\"Key\":\"key2\",\"Value\":\"value2\"}]}}}")
-		},
-		&PutBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-			Tagging: &Tagging{
-				TagSet: &TagSet{
-					Tags: []Tag{
-						{
-							Key:   oss.Ptr("key1"),
-							Value: oss.Ptr("value1"),
-						},
-						{
-							Key:   oss.Ptr("key2"),
-							Value: oss.Ptr("value2"),
-						},
-					},
-				},
-			},
-		},
-		func(t *testing.T, o *PutBucketTagsResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-}
-
-func TestMockPutBucketTags_Error(t *testing.T) {
-	for _, c := range testMockPutBucketTagsErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewVectorsClient(cfg)
-		assert.NotNil(t, c)
-		output, err := client.PutBucketTags(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockGetBucketTagsSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetBucketTagsRequest
-	CheckOutputFn  func(t *testing.T, o *GetBucketTagsResult, err error)
-}{
-	{
-		200,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-			"Content-Type":     "application/json",
-		},
-		[]byte(`{
-  "Tagging": {
-    "TagSet": {
-      "Tag": [
-        {
-          "Key": "testa",
-          "Value": "value1"
-        },
-        {
-          "Key": "testb",
-          "Value": "value2"
-        }
-      ]
-    }
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket/?tagging", r.URL.String())
-		},
-		&GetBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetBucketTagsResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, "application/json", o.Headers.Get("Content-Type"))
-			assert.Equal(t, len(o.Tagging.TagSet.Tags), 2)
-			assert.Equal(t, *o.Tagging.TagSet.Tags[0].Key, "testa")
-			assert.Equal(t, *o.Tagging.TagSet.Tags[1].Value, "value2")
-		},
-	},
-}
-
-func TestMockGetBucketTags_Success(t *testing.T) {
-	for _, c := range testMockGetBucketTagsSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewVectorsClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.GetBucketTags(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockGetBucketTagsErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetBucketTagsRequest
-	CheckOutputFn  func(t *testing.T, o *GetBucketTagsResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?tagging", r.URL.String())
-			assert.Equal(t, "GET", r.Method)
-		},
-		&GetBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetBucketTagsResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "0015-00000101", serr.EC)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "GET", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?tagging", strUrl)
-		},
-		&GetBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetBucketTagsResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-	{
-		200,
-		map[string]string{
-			"Content-Type":     "application/text",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "GET", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?tagging", strUrl)
-		},
-		&GetBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetBucketTagsResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			assert.Contains(t, err.Error(), "execute GetBucketTags fail")
-		},
-	},
-}
-
-func TestMockGetBucketTags_Error(t *testing.T) {
-	for _, c := range testMockGetBucketTagsErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewVectorsClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.GetBucketTags(context.TODO(), c.Request)
-
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockDeleteBucketTagsSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *DeleteBucketTagsRequest
-	CheckOutputFn  func(t *testing.T, o *DeleteBucketTagsResult, err error)
-}{
-	{
-		204,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "DELETE", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?tagging", strUrl)
-		},
-		&DeleteBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *DeleteBucketTagsResult, err error) {
-			assert.Equal(t, 204, o.StatusCode)
-			assert.Equal(t, "204 No Content", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-
-		},
-	},
-	{
-		204,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "DELETE", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?tagging=k1%2Ck2", strUrl)
-		},
-		&DeleteBucketTagsRequest{
-			Bucket:  oss.Ptr("bucket"),
-			Tagging: oss.Ptr("k1,k2"),
-		},
-		func(t *testing.T, o *DeleteBucketTagsResult, err error) {
-			assert.Equal(t, 204, o.StatusCode)
-			assert.Equal(t, "204 No Content", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-
-		},
-	},
-}
-
-func TestMockDeleteBucketTags_Success(t *testing.T) {
-	for _, c := range testMockDeleteBucketTagsSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewVectorsClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.DeleteBucketTags(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockDeleteBucketTagsErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *DeleteBucketTagsRequest
-	CheckOutputFn  func(t *testing.T, o *DeleteBucketTagsResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "DELETE", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?tagging", strUrl)
-		},
-		&DeleteBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *DeleteBucketTagsResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "DELETE", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?tagging", strUrl)
-		},
-		&DeleteBucketTagsRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *DeleteBucketTagsResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-}
-
-func TestMockDeleteBucketTags_Error(t *testing.T) {
-	for _, c := range testMockDeleteBucketTagsErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewVectorsClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.DeleteBucketTags(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
 var testMockPutVectorIndexSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
@@ -2465,7 +1512,7 @@ var testMockPutVectorIndexSuccessCases = []struct {
 			Dimension:      oss.Ptr(128),
 			DistanceMetric: oss.Ptr("cosine"),
 			IndexName:      oss.Ptr("exampleIndex"),
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"nonFilterableMetadataKeys": []string{"foo", "bar"},
 			},
 		},
@@ -2534,7 +1581,7 @@ var testMockPutVectorIndexErrorCases = []struct {
 			Dimension:      oss.Ptr(128),
 			DistanceMetric: oss.Ptr("cosine"),
 			IndexName:      oss.Ptr("exampleIndex"),
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"nonFilterableMetadataKeys": []string{"foo", "bar"},
 			},
 		},
@@ -2580,7 +1627,7 @@ var testMockPutVectorIndexErrorCases = []struct {
 			Dimension:      oss.Ptr(128),
 			DistanceMetric: oss.Ptr("cosine"),
 			IndexName:      oss.Ptr("exampleIndex"),
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"nonFilterableMetadataKeys": []string{"foo", "bar"},
 			},
 		},
@@ -2868,7 +1915,7 @@ var testMockListVectorIndexesSuccessCases = []struct {
 			assert.Equal(t, *o.Indexes[0].IndexName, "demo1")
 			assert.Len(t, o.Indexes[0].Metadata["nonFilterableMetadataKeys"], 2)
 			if metadataValue, ok := o.Indexes[0].Metadata["nonFilterableMetadataKeys"]; ok {
-				if keys, ok := metadataValue.([]interface{}); ok {
+				if keys, ok := metadataValue.([]any); ok {
 					assert.Equal(t, keys[0].(string), "foo")
 					assert.Equal(t, keys[1].(string), "bar")
 				}
@@ -2883,7 +1930,7 @@ var testMockListVectorIndexesSuccessCases = []struct {
 			assert.Equal(t, *o.Indexes[1].IndexName, "demo2")
 			assert.Len(t, o.Indexes[1].Metadata["nonFilterableMetadataKeys"], 2)
 			if metadataValue, ok := o.Indexes[1].Metadata["nonFilterableMetadataKeys"]; ok {
-				if keys, ok := metadataValue.([]interface{}); ok {
+				if keys, ok := metadataValue.([]any); ok {
 					assert.Equal(t, keys[0].(string), "foo2")
 					assert.Equal(t, keys[1].(string), "bar2")
 				}
@@ -3202,13 +2249,13 @@ var testMockPutVectorsSuccessCases = []struct {
 		&PutVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("exampleIndex"),
-			Vectors: []map[string]interface{}{
+			Vectors: []map[string]any{
 				{
 					"key": "vector1",
-					"data": map[string]interface{}{
+					"data": map[string]any{
 						"float32": []float32{1.2, 2.5, 3},
 					},
-					"metadata": map[string]interface{}{
+					"metadata": map[string]any{
 						"Key1": 32,
 						"Key2": "value2",
 						"Key3": []string{"1", "2", "3"},
@@ -3279,13 +2326,13 @@ var testMockPutVectorsErrorCases = []struct {
 		&PutVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("exampleIndex"),
-			Vectors: []map[string]interface{}{
+			Vectors: []map[string]any{
 				{
 					"key": "vector1",
-					"data": map[string]interface{}{
+					"data": map[string]any{
 						"float32": []float32{1.2, 2.5, 3},
 					},
-					"metadata": map[string]interface{}{
+					"metadata": map[string]any{
 						"Key1": 32,
 						"Key2": "value2",
 						"Key3": []string{"1", "2", "3"},
@@ -3333,13 +2380,13 @@ var testMockPutVectorsErrorCases = []struct {
 		&PutVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("exampleIndex"),
-			Vectors: []map[string]interface{}{
+			Vectors: []map[string]any{
 				{
 					"key": "vector1",
-					"data": map[string]interface{}{
+					"data": map[string]any{
 						"float32": []float32{1.2, 2.5, 3},
 					},
-					"metadata": map[string]interface{}{
+					"metadata": map[string]any{
 						"Key1": 32,
 						"Key2": "value2",
 						"Key3": []string{"1", "2", "3"},
@@ -3440,17 +2487,17 @@ var testMockGetVectorsSuccessCases = []struct {
 
 				// 访问 data 字段
 				if dataVal, exists := vector["data"]; exists {
-					dataMap, ok := dataVal.(map[string]interface{})
+					dataMap, ok := dataVal.(map[string]any)
 					assert.True(t, ok)
 					if float32Val, exists := dataMap["float32"]; exists {
-						float32Data, ok := float32Val.([]interface{})
+						float32Data, ok := float32Val.([]any)
 						assert.True(t, ok)
 						assert.Equal(t, float32Data[0], float64(32))
 					}
 				}
 
 				if metadataVal, exists := vector["metadata"]; exists {
-					metadataMap, ok := metadataVal.(map[string]interface{})
+					metadataMap, ok := metadataVal.(map[string]any)
 					assert.True(t, ok)
 					if key1Val, exists := metadataMap["Key1"]; exists {
 						key1Data, ok := key1Val.(string)
@@ -3999,7 +3046,7 @@ var testMockQueryVectorsSuccessCases = []struct {
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("index"),
 			Filter:    oss.Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
-			QueryVector: map[string]interface{}{
+			QueryVector: map[string]any{
 				"float32": []float32{float32(32)},
 			},
 			ReturnMetadata: oss.Ptr(true),
@@ -4069,7 +3116,7 @@ var testMockQueryVectorsErrorCases = []struct {
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("index"),
 			Filter:    oss.Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
-			QueryVector: map[string]interface{}{
+			QueryVector: map[string]any{
 				"float32": []float32{float32(32)},
 			},
 			ReturnMetadata: oss.Ptr(true),
@@ -4116,7 +3163,7 @@ var testMockQueryVectorsErrorCases = []struct {
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("index"),
 			Filter:    oss.Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
-			QueryVector: map[string]interface{}{
+			QueryVector: map[string]any{
 				"float32": []float32{float32(32)},
 			},
 			ReturnMetadata: oss.Ptr(true),

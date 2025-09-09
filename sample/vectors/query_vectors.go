@@ -49,7 +49,7 @@ func main() {
 		Bucket:    oss.Ptr(bucketName),
 		IndexName: oss.Ptr("index"),
 		Filter:    oss.Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
-		QueryVector: map[string]interface{}{
+		QueryVector: map[string]any{
 			"float32": []float32{float32(32)},
 		},
 		ReturnMetadata: oss.Ptr(true),

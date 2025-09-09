@@ -9,15 +9,12 @@ import (
 
 type PutVectorIndexRequest struct {
 	// The name of the vector bucket.
-	Bucket           *string                `input:"host,bucket,required"`
-	IndexName        *string                `input:"body,indexName,json,required"`
-	CreateTime       *time.Time             `input:"body,createTime,json"`
-	DataType         *string                `input:"body,dataType,json"`
-	Dimension        *int                   `input:"body,dimension,json"`
-	DistanceMetric   *string                `input:"body,distanceMetric,json"`
-	Metadata         map[string]interface{} `input:"body,metadata,json"`
-	Status           *string                `input:"body,status,json"`
-	VectorBucketName *string                `input:"body,vectorBucketName,json"`
+	Bucket         *string        `input:"host,bucket,required"`
+	IndexName      *string        `input:"body,indexName,json,required"`
+	DataType       *string        `input:"body,dataType,json,required"`
+	Dimension      *int           `input:"body,dimension,json,required"`
+	DistanceMetric *string        `input:"body,distanceMetric,json,required"`
+	Metadata       map[string]any `input:"body,metadata,json"`
 
 	oss.RequestCommon
 }
@@ -79,14 +76,14 @@ type GetVectorIndexResult struct {
 }
 
 type VectorIndex struct {
-	CreateTime       *time.Time             `json:"createTime"`
-	DataType         *string                `json:"dataType"`
-	Dimension        *int                   `json:"dimension"`
-	DistanceMetric   *string                `json:"distanceMetric"`
-	IndexName        *string                `json:"indexName"`
-	Metadata         map[string]interface{} `json:"metadata"`
-	Status           *string                `json:"status"`
-	VectorBucketName *string                `json:"vectorBucketName"`
+	CreateTime       *time.Time     `json:"createTime"`
+	DataType         *string        `json:"dataType"`
+	Dimension        *int           `json:"dimension"`
+	DistanceMetric   *string        `json:"distanceMetric"`
+	IndexName        *string        `json:"indexName"`
+	Metadata         map[string]any `json:"metadata"`
+	Status           *string        `json:"status"`
+	VectorBucketName *string        `json:"vectorBucketName"`
 }
 
 // GetVectorIndex Get a vector Index.

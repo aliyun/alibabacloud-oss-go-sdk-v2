@@ -48,13 +48,13 @@ func main() {
 	request := &vectors.PutVectorsRequest{
 		Bucket:    oss.Ptr(bucketName),
 		IndexName: oss.Ptr("exampleIndex"),
-		Vectors: []map[string]interface{}{
+		Vectors: []map[string]any{
 			{
 				"key": "vector1",
-				"data": map[string]interface{}{
+				"data": map[string]any{
 					"float32": []float32{1.2, 2.5, 3},
 				},
-				"metadata": map[string]interface{}{
+				"metadata": map[string]any{
 					"Key1": 32,
 					"Key2": "value2",
 					"Key3": []string{"1", "2", "3"},
