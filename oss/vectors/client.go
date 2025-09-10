@@ -20,10 +20,9 @@ func NewVectorsClient(cfg *oss.Config, optFns ...func(*oss.Options)) *VectorsCli
 	newCfg := cfg.Copy()
 	updateEndpoint(&newCfg)
 	updateUserAgent(&newCfg)
+	var signer = resolveSigner(&newCfg)
 	vectorsOptFn := func(options *oss.Options) {
-		options.Signer = &signer.SignerVectorsV4{
-			AccountId: newCfg.AccountId,
-		}
+		options.Signer = signer
 		options.EndpointProvider = &endpointProvider{
 			accountId:    oss.ToString(newCfg.AccountId),
 			endpoint:     options.Endpoint,
@@ -62,6 +61,24 @@ func updateUserAgent(cfg *oss.Config) {
 		userAgent = fmt.Sprintf("%s/%s", userAgent, oss.ToString(cfg.UserAgent))
 	}
 	cfg.UserAgent = oss.Ptr(userAgent)
+}
+
+func resolveSigner(cfg *oss.Config) signer.Signer {
+	ver := oss.DefaultSignatureVersion
+	if cfg.SignatureVersion != nil {
+		ver = *cfg.SignatureVersion
+	}
+
+	switch ver {
+	case oss.SignatureVersionV1:
+		return &signer.SignerVectorsV1{
+			AccountId: cfg.AccountId,
+		}
+	default:
+		return &signer.SignerVectorsV4{
+			AccountId: cfg.AccountId,
+		}
+	}
 }
 
 // fieldInfo holds details for the input/output of a single field.
