@@ -326,9 +326,9 @@ func TestUnmarshalOutput_GetVectorIndex(t *testing.T) {
       "metadata": { 
          "nonFilterableMetadataKeys": ["foo", "bar"]
       },
-      "status": "running"
-   },
-   "vectorBucketName": "bucket"
+      "status": "running",
+      "vectorBucketName": "bucket"
+   }
 }`
 	output = &oss.OperationOutput{
 		StatusCode: 200,
@@ -341,6 +341,7 @@ func TestUnmarshalOutput_GetVectorIndex(t *testing.T) {
 	}
 	result := &GetVectorIndexResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
+	dumpErrIfNotNil(err)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -359,7 +360,7 @@ func TestUnmarshalOutput_GetVectorIndex(t *testing.T) {
 		}
 	}
 	assert.Equal(t, *result.Index.Status, "running")
-	assert.Equal(t, *result.VectorBucketName, "bucket")
+	assert.Equal(t, *result.Index.VectorBucketName, "bucket")
 
 	output = &oss.OperationOutput{
 		StatusCode: 404,
@@ -491,7 +492,7 @@ func TestMarshalInput_ListVectorIndexes(t *testing.T) {
 
 	request = &ListVectorIndexesRequest{
 		Bucket:     oss.Ptr("oss-demo"),
-		MaxResults: oss.Ptr(100),
+		MaxResults: 100,
 		NextToken:  oss.Ptr("123"),
 		Prefix:     oss.Ptr("prefix"),
 	}

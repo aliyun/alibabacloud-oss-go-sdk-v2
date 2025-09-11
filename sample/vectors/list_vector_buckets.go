@@ -53,7 +53,7 @@ func main() {
 		}
 
 		// Log the objects found
-		for _, b := range page.Buckets.Bucket {
+		for _, b := range page.Buckets {
 			log.Printf("Bucket:%v, %v, %v\n", oss.ToString(b.Name), oss.ToString(b.ResourceGroupId), oss.ToString(b.Location))
 		}
 	}

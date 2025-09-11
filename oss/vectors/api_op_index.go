@@ -70,8 +70,6 @@ type GetVectorIndexRequest struct {
 type GetVectorIndexResult struct {
 	Index *VectorIndex `json:"index"`
 
-	VectorBucketName *string `json:"vectorBucketName"`
-
 	oss.ResultCommon
 }
 
@@ -125,7 +123,7 @@ type ListVectorIndexesRequest struct {
 	NextToken *string `input:"body,nextToken,json"`
 
 	// The maximum number of indexes that can be returned.
-	MaxResults *int `input:"body,maxResults,json"`
+	MaxResults int `input:"body,maxResults,json"`
 
 	// The prefix that the names of returned indexes must contain.
 	Prefix *string `input:"body,prefix,json"`
