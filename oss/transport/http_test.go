@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 	"crypto/tls"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -49,6 +50,7 @@ func TestCopy(t *testing.T) {
 	assert.Equal(t, 3*time.Second, *cfg.IdleConnectionTimeout)
 	assert.Equal(t, 5*time.Second, *cfg.KeepAliveTimeout)
 	assert.Nil(t, cfg.EnabledRedirect)
+	assert.Nil(t, cfg.BindAddr)
 
 	var config1 = &Config{
 		ReadWriteTimeout: ptr(30 * time.Second),
@@ -63,6 +65,19 @@ func TestCopy(t *testing.T) {
 	assert.Equal(t, 3*time.Second, *cfg.IdleConnectionTimeout)
 	assert.Equal(t, 5*time.Second, *cfg.KeepAliveTimeout)
 	assert.Equal(t, true, *cfg.EnabledRedirect)
+	assert.Nil(t, cfg.BindAddr)
+
+	addrs, _ := net.LookupIP("127.0.0.1")
+	var config3 = &Config{
+		BindAddr: addrs[0],
+	}
+	cfg = copyTestConfig.copy(config1, config2, config3)
+	assert.Equal(t, 1*time.Second, *cfg.ConnectTimeout)
+	assert.Equal(t, 330*time.Second, *cfg.ReadWriteTimeout)
+	assert.Equal(t, 3*time.Second, *cfg.IdleConnectionTimeout)
+	assert.Equal(t, 5*time.Second, *cfg.KeepAliveTimeout)
+	assert.Equal(t, true, *cfg.EnabledRedirect)
+	assert.Equal(t, "127.0.0.1", cfg.BindAddr.String())
 
 	cfg = copyTestConfig.copy()
 	cfg.mergeIn(&DefaultConfig)
@@ -104,6 +119,20 @@ func TestMerge(t *testing.T) {
 	assert.Equal(t, 3*time.Second, *cfg.IdleConnectionTimeout)
 	assert.Equal(t, 5*time.Second, *cfg.KeepAliveTimeout)
 	assert.Equal(t, true, *cfg.EnabledRedirect)
+	assert.Nil(t, cfg.BindAddr)
+
+	addrs, _ := net.LookupIP("127.0.0.1")
+	var config3 = &Config{
+		BindAddr: addrs[0],
+	}
+	cfg = copyTestConfig.copy()
+	cfg.mergeIn(config1, config2, config3)
+	assert.Equal(t, 1*time.Second, *cfg.ConnectTimeout)
+	assert.Equal(t, 34*time.Second, *cfg.ReadWriteTimeout)
+	assert.Equal(t, 3*time.Second, *cfg.IdleConnectionTimeout)
+	assert.Equal(t, 5*time.Second, *cfg.KeepAliveTimeout)
+	assert.Equal(t, true, *cfg.EnabledRedirect)
+	assert.Equal(t, "127.0.0.1", cfg.BindAddr.String())
 
 	cfg = copyTestConfig.copy()
 	cfg.mergeIn(&DefaultConfig)
@@ -142,6 +171,7 @@ func TestDefaultConfig(t *testing.T) {
 	assert.NotNil(t, cfg.IdleConnectionTimeout)
 	assert.NotNil(t, cfg.KeepAliveTimeout)
 	assert.Nil(t, cfg.EnabledRedirect)
+	assert.Nil(t, cfg.BindAddr)
 
 	cfg = Config{}
 	assert.Nil(t, cfg.ConnectTimeout)
@@ -149,6 +179,7 @@ func TestDefaultConfig(t *testing.T) {
 	assert.Nil(t, cfg.IdleConnectionTimeout)
 	assert.Nil(t, cfg.KeepAliveTimeout)
 	assert.Nil(t, cfg.EnabledRedirect)
+	assert.Nil(t, cfg.BindAddr)
 }
 
 func TestDialer(t *testing.T) {
@@ -223,6 +254,17 @@ func TestDialer(t *testing.T) {
 	assert.Equal(t, DefaultKeepAliveTimeout, d.Dialer.KeepAlive)
 	assert.Len(t, d.postWrite, 1)
 	assert.Nil(t, d.postRead)
+
+	// BindAddr
+	cfg = DefaultConfig.copy()
+	d = newDialer(cfg)
+	assert.Nil(t, d.Dialer.LocalAddr)
+
+	addrs, _ := net.LookupIP("127.0.0.1")
+	cfg.BindAddr = addrs[0]
+	d = newDialer(cfg)
+	assert.NotNil(t, d.Dialer.LocalAddr)
+	assert.Equal(t, "127.0.0.1:0", d.Dialer.LocalAddr.String())
 }
 
 func TestTransport(t *testing.T) {
@@ -235,6 +277,7 @@ func TestTransport(t *testing.T) {
 	assert.Equal(t, DefaultConnectTimeout, transport.TLSHandshakeTimeout)
 	assert.Equal(t, DefaultIdleConnectionTimeout, transport.IdleConnTimeout)
 	assert.Equal(t, DefaultMaxConnections, transport.MaxConnsPerHost)
+	assert.Equal(t, DefaultMaxIdleConnsPerHost, transport.MaxIdleConnsPerHost)
 	assert.Equal(t, DefaultExpectContinueTimeout, transport.ExpectContinueTimeout)
 	assert.Equal(t, DefaultTLSMinVersion, transport.TLSClientConfig.MinVersion)
 	assert.Equal(t, false, transport.TLSClientConfig.InsecureSkipVerify)
@@ -300,6 +343,7 @@ func TestHttpClient(t *testing.T) {
 	assert.Equal(t, DefaultConnectTimeout, transport.TLSHandshakeTimeout)
 	assert.Equal(t, DefaultIdleConnectionTimeout, transport.IdleConnTimeout)
 	assert.Equal(t, DefaultMaxConnections, transport.MaxConnsPerHost)
+	assert.Equal(t, DefaultMaxIdleConnsPerHost, transport.MaxIdleConnsPerHost)
 	assert.Equal(t, DefaultExpectContinueTimeout, transport.ExpectContinueTimeout)
 	assert.Equal(t, DefaultTLSMinVersion, transport.TLSClientConfig.MinVersion)
 	assert.Equal(t, false, transport.TLSClientConfig.InsecureSkipVerify)
@@ -317,6 +361,7 @@ func TestHttpClient(t *testing.T) {
 	assert.Equal(t, DefaultConnectTimeout, transport.TLSHandshakeTimeout)
 	assert.Equal(t, DefaultIdleConnectionTimeout, transport.IdleConnTimeout)
 	assert.Equal(t, DefaultMaxConnections, transport.MaxConnsPerHost)
+	assert.Equal(t, DefaultMaxIdleConnsPerHost, transport.MaxIdleConnsPerHost)
 	assert.Equal(t, DefaultExpectContinueTimeout, transport.ExpectContinueTimeout)
 	assert.Equal(t, DefaultTLSMinVersion, transport.TLSClientConfig.MinVersion)
 	assert.Equal(t, false, transport.TLSClientConfig.InsecureSkipVerify)

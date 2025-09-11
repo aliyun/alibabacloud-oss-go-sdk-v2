@@ -1,6 +1,7 @@
 package oss
 
 import (
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -118,6 +119,9 @@ type Config struct {
 
 	// The account id
 	AccountId *string
+
+  // Local address to bind to for outgoing connections.
+	BindAddress net.IP
 }
 
 func NewConfig() *Config {
@@ -290,5 +294,10 @@ func (c *Config) WithEnableAutoDetectCloudBoxId(value bool) *Config {
 
 func (c *Config) WithAccountId(value string) *Config {
 	c.AccountId = Ptr(value)
+	return c
+}
+  
+func (c *Config) WithBindAddress(value net.IP) *Config {
+	c.BindAddress = value
 	return c
 }

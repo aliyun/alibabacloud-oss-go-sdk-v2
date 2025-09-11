@@ -1,6 +1,7 @@
 package oss
 
 import (
+	"net"
 	"net/http"
 	"os"
 	"testing"
@@ -47,6 +48,8 @@ func TestConfigDefault(t *testing.T) {
 	assert.Nil(t, config.CloudBoxId)
 	assert.Nil(t, config.EnableAutoDetectCloudBoxId)
 	assert.Nil(t, config.AccountId)
+
+	assert.Nil(t, config.BindAddress)
 
 	config.WithSignatureVersion(SignatureVersionV1)
 	assert.Equal(t, SignatureVersionV1, *config.SignatureVersion)
@@ -144,6 +147,10 @@ func TestConfigDefault(t *testing.T) {
 
 	config.WithAccountId("123")
 	assert.Equal(t, "123", *config.AccountId)
+
+  addrs, _ := net.LookupIP("127.0.0.1")
+	config.WithBindAddress(addrs[0])
+	assert.Equal(t, "127.0.0.1", config.BindAddress.String())
 }
 
 func TestLogLevelEnvironmentVariable(t *testing.T) {
