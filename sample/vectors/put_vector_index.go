@@ -47,7 +47,7 @@ func main() {
 
 	request := &vectors.PutVectorIndexRequest{
 		Bucket:         oss.Ptr(bucketName),
-		DataType:       oss.Ptr("string"),
+		DataType:       oss.Ptr("float32"),
 		Dimension:      oss.Ptr(128),
 		DistanceMetric: oss.Ptr("cosine"),
 		IndexName:      oss.Ptr("exampleIndex"),

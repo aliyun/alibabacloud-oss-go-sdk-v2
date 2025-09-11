@@ -113,17 +113,17 @@ type ListVectorsRequest struct {
 	IndexName *string `input:"body,indexName,json,required"`
 
 	// The maximum number of indexes that can be returned.
-	MaxResults *int `input:"body,maxResults,json"`
+	MaxResults int `input:"body,maxResults,json"`
 
 	NextToken *string `input:"body,nextToken,json"`
 
 	ReturnData *bool `input:"body,returnData,json"`
 
-	ReturnMetadata *bool `input:"body,ReturnMetadata,json"`
+	ReturnMetadata *bool `input:"body,returnMetadata,json"`
 
-	SegmentCount *int `input:"body,SegmentCount,json"`
+	SegmentCount *int `input:"body,segmentCount,json"`
 
-	SegmentIndex *int `input:"body,SegmentIndex,json"`
+	SegmentIndex *int `input:"body,segmentIndex,json"`
 
 	oss.RequestCommon
 }

@@ -61,10 +61,8 @@ func TestMarshalInput_PutVectors(t *testing.T) {
 					"float32": []float32{1.2, 2.5, 3},
 				},
 				"metadata": map[string]any{
-					"Key1": 32,
-					"Key2": "value2",
-					"Key3": []string{"1", "2", "3"},
-					"Key4": false,
+					"Key1": "value2",
+					"Key2": []string{"1", "2", "3"},
 				},
 			},
 		},
@@ -86,7 +84,7 @@ func TestMarshalInput_PutVectors(t *testing.T) {
 	assert.Equal(t, *input.Bucket, "oss-demo")
 	assert.Equal(t, input.Parameters["PutVectors"], "")
 	body, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(body), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":32,"Key2":"value2","Key3":["1","2","3"],"Key4":false}}]}`)
+	assert.Equal(t, string(body), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":"value2","Key2":["1","2","3"]}}]}`)
 }
 
 func TestUnmarshalOutput_PutVectors(t *testing.T) {
@@ -413,7 +411,7 @@ func TestMarshalInput_ListVectors(t *testing.T) {
 	request = &ListVectorsRequest{
 		Bucket:         oss.Ptr("oss-demo"),
 		IndexName:      oss.Ptr("index"),
-		MaxResults:     oss.Ptr(100),
+		MaxResults:     100,
 		NextToken:      oss.Ptr("123"),
 		ReturnMetadata: oss.Ptr(true),
 		ReturnData:     oss.Ptr(false),
@@ -439,7 +437,7 @@ func TestMarshalInput_ListVectors(t *testing.T) {
 	assert.Equal(t, input.Method, "POST")
 	assert.Equal(t, input.Headers[oss.HTTPHeaderContentType], contentTypeJSON)
 	body, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false}")
+	assert.Equal(t, string(body), "{\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false,\"returnMetadata\":true,\"segmentCount\":10,\"segmentIndex\":3}")
 
 	request = &ListVectorsRequest{
 		Bucket:         oss.Ptr("oss-demo"),
@@ -468,7 +466,7 @@ func TestMarshalInput_ListVectors(t *testing.T) {
 	assert.Equal(t, input.Method, "POST")
 	assert.Equal(t, input.Headers[oss.HTTPHeaderContentType], contentTypeJSON)
 	body, _ = io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"returnData\":false}")
+	assert.Equal(t, string(body), "{\"indexName\":\"index\",\"returnData\":false,\"returnMetadata\":true,\"segmentCount\":10,\"segmentIndex\":3}")
 
 }
 

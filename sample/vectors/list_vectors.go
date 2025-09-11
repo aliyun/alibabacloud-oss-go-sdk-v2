@@ -48,12 +48,8 @@ func main() {
 	request := &vectors.ListVectorsRequest{
 		Bucket:         oss.Ptr(bucketName),
 		IndexName:      oss.Ptr("index"),
-		MaxResults:     oss.Ptr(100),
-		NextToken:      oss.Ptr("123"),
 		ReturnMetadata: oss.Ptr(true),
 		ReturnData:     oss.Ptr(false),
-		SegmentCount:   oss.Ptr(int(10)),
-		SegmentIndex:   oss.Ptr(3),
 	}
 
 	p := client.NewListVectorsPaginator(request)

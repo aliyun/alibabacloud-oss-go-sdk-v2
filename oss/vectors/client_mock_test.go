@@ -458,14 +458,12 @@ var testMockGetVectorBucketSuccessCases = []struct {
 		},
 		[]byte(`{
 					  "BucketInfo": {
-						"Bucket": {
 						  "CreationDate": "2013-07-31T10:56:21.000Z",
 						  "ExtranetEndpoint": "oss-cn-hangzhou.aliyuncs.com",
 						  "IntranetEndpoint": "oss-cn-hangzhou-internal.aliyuncs.com",
 						  "Location": "oss-cn-hangzhou",
 						  "Name": "oss-example",
 						  "ResourceGroupId": "rg-aek27tc********"
-						}
 					  }
 					}`),
 		func(t *testing.T, r *http.Request) {
@@ -650,8 +648,7 @@ var testMockListVectorBucketsSuccessCases = []struct {
 		},
 		[]byte(`{
   "ListAllMyBucketsResult": {
-    "Buckets": {
-      "Bucket": [
+      "Buckets": [
         {
           "CreationDate": "2014-02-17T18:12:43.000Z",
           "ExtranetEndpoint": "oss-cn-shanghai.aliyuncs.com",
@@ -671,7 +668,6 @@ var testMockListVectorBucketsSuccessCases = []struct {
           "ResourceGroupId": "rg-aek27tc********"
         }
       ]
-    }
   }
 }`),
 		func(t *testing.T, r *http.Request) {
@@ -684,22 +680,22 @@ var testMockListVectorBucketsSuccessCases = []struct {
 			assert.Equal(t, "application/json", o.Headers.Get("Content-Type"))
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, len(o.Buckets.Bucket), 2)
-			assert.Equal(t, *o.Buckets.Bucket[0].CreationDate, time.Date(2014, time.February, 17, 18, 12, 43, 0, time.UTC))
-			assert.Equal(t, *o.Buckets.Bucket[0].ExtranetEndpoint, "oss-cn-shanghai.aliyuncs.com")
-			assert.Equal(t, *o.Buckets.Bucket[0].IntranetEndpoint, "oss-cn-shanghai-internal.aliyuncs.com")
-			assert.Equal(t, *o.Buckets.Bucket[0].Name, "app-base-oss")
-			assert.Equal(t, *o.Buckets.Bucket[0].Region, "cn-shanghai")
-			assert.Equal(t, *o.Buckets.Bucket[0].Location, "oss-cn-shanghai")
-			assert.Equal(t, *o.Buckets.Bucket[0].ResourceGroupId, "rg-aek27ta********")
+			assert.Equal(t, len(o.Buckets), 2)
+			assert.Equal(t, *o.Buckets[0].CreationDate, time.Date(2014, time.February, 17, 18, 12, 43, 0, time.UTC))
+			assert.Equal(t, *o.Buckets[0].ExtranetEndpoint, "oss-cn-shanghai.aliyuncs.com")
+			assert.Equal(t, *o.Buckets[0].IntranetEndpoint, "oss-cn-shanghai-internal.aliyuncs.com")
+			assert.Equal(t, *o.Buckets[0].Name, "app-base-oss")
+			assert.Equal(t, *o.Buckets[0].Region, "cn-shanghai")
+			assert.Equal(t, *o.Buckets[0].Location, "oss-cn-shanghai")
+			assert.Equal(t, *o.Buckets[0].ResourceGroupId, "rg-aek27ta********")
 
-			assert.Equal(t, *o.Buckets.Bucket[1].CreationDate, time.Date(2014, time.February, 25, 11, 21, 04, 0, time.UTC))
-			assert.Equal(t, *o.Buckets.Bucket[1].ExtranetEndpoint, "oss-cn-hangzhou.aliyuncs.com")
-			assert.Equal(t, *o.Buckets.Bucket[1].IntranetEndpoint, "oss-cn-hangzhou-internal.aliyuncs.com")
-			assert.Equal(t, *o.Buckets.Bucket[1].Name, "mybucket")
-			assert.Equal(t, *o.Buckets.Bucket[1].Region, "cn-hangzhou")
-			assert.Equal(t, *o.Buckets.Bucket[1].Location, "oss-cn-hangzhou")
-			assert.Equal(t, *o.Buckets.Bucket[1].ResourceGroupId, "rg-aek27tc********")
+			assert.Equal(t, *o.Buckets[1].CreationDate, time.Date(2014, time.February, 25, 11, 21, 04, 0, time.UTC))
+			assert.Equal(t, *o.Buckets[1].ExtranetEndpoint, "oss-cn-hangzhou.aliyuncs.com")
+			assert.Equal(t, *o.Buckets[1].IntranetEndpoint, "oss-cn-hangzhou-internal.aliyuncs.com")
+			assert.Equal(t, *o.Buckets[1].Name, "mybucket")
+			assert.Equal(t, *o.Buckets[1].Region, "cn-hangzhou")
+			assert.Equal(t, *o.Buckets[1].Location, "oss-cn-hangzhou")
+			assert.Equal(t, *o.Buckets[1].ResourceGroupId, "rg-aek27tc********")
 		},
 	},
 	{
@@ -716,8 +712,7 @@ var testMockListVectorBucketsSuccessCases = []struct {
     "MaxKeys": 10,
     "IsTruncated": true,
     "NextMarker": "mybucket10",
-    "Buckets": {
-      "Bucket": [{
+      "Buckets": [{
         "CreationDate": "2014-05-14T11:18:32.000Z",
         "ExtranetEndpoint": "oss-cn-hangzhou.aliyuncs.com",
         "IntranetEndpoint": "oss-cn-hangzhou-internal.aliyuncs.com",
@@ -726,7 +721,6 @@ var testMockListVectorBucketsSuccessCases = []struct {
         "Region": "cn-hangzhou",
         "ResourceGroupId": "rg-aek27tc********"
       }]
-    }
   }
 }`),
 		func(t *testing.T, r *http.Request) {
@@ -753,14 +747,14 @@ var testMockListVectorBucketsSuccessCases = []struct {
 			assert.Equal(t, o.IsTruncated, true)
 			assert.Equal(t, *o.NextMarker, "mybucket10")
 
-			assert.Equal(t, len(o.Buckets.Bucket), 1)
-			assert.Equal(t, *o.Buckets.Bucket[0].CreationDate, time.Date(2014, time.May, 14, 11, 18, 32, 0, time.UTC))
-			assert.Equal(t, *o.Buckets.Bucket[0].ExtranetEndpoint, "oss-cn-hangzhou.aliyuncs.com")
-			assert.Equal(t, *o.Buckets.Bucket[0].IntranetEndpoint, "oss-cn-hangzhou-internal.aliyuncs.com")
-			assert.Equal(t, *o.Buckets.Bucket[0].Name, "mybucket01")
-			assert.Equal(t, *o.Buckets.Bucket[0].Region, "cn-hangzhou")
-			assert.Equal(t, *o.Buckets.Bucket[0].Location, "oss-cn-hangzhou")
-			assert.Equal(t, *o.Buckets.Bucket[0].ResourceGroupId, "rg-aek27tc********")
+			assert.Equal(t, len(o.Buckets), 1)
+			assert.Equal(t, *o.Buckets[0].CreationDate, time.Date(2014, time.May, 14, 11, 18, 32, 0, time.UTC))
+			assert.Equal(t, *o.Buckets[0].ExtranetEndpoint, "oss-cn-hangzhou.aliyuncs.com")
+			assert.Equal(t, *o.Buckets[0].IntranetEndpoint, "oss-cn-hangzhou-internal.aliyuncs.com")
+			assert.Equal(t, *o.Buckets[0].Name, "mybucket01")
+			assert.Equal(t, *o.Buckets[0].Region, "cn-hangzhou")
+			assert.Equal(t, *o.Buckets[0].Location, "oss-cn-hangzhou")
+			assert.Equal(t, *o.Buckets[0].ResourceGroupId, "rg-aek27tc********")
 		},
 	},
 }
@@ -1690,9 +1684,9 @@ var testMockGetVectorIndexSuccessCases = []struct {
       "metadata": { 
          "nonFilterableMetadataKeys": ["foo", "bar"]
       },
-      "status": "running"
-   },
-   "vectorBucketName": "bucket"
+      "status": "running",
+      "vectorBucketName": "bucket"
+   }
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
@@ -1718,7 +1712,7 @@ var testMockGetVectorIndexSuccessCases = []struct {
 			//assert.Equal(t, o.Index.Metadata.NonFilterableMetadataKeys[0], "foo")
 			//assert.Equal(t, o.Index.Metadata.NonFilterableMetadataKeys[1], "bar")
 			assert.Equal(t, *o.Index.Status, "running")
-			assert.Equal(t, *o.VectorBucketName, "bucket")
+			assert.Equal(t, *o.Index.VectorBucketName, "bucket")
 		},
 	},
 }
@@ -2244,7 +2238,7 @@ var testMockPutVectorsSuccessCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?putVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":32,"Key2":"value2","Key3":["1","2","3"],"Key4":false}}]}`)
+			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":"value2","Key2":["1","2","3"]}}]}`)
 		},
 		&PutVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
@@ -2256,10 +2250,8 @@ var testMockPutVectorsSuccessCases = []struct {
 						"float32": []float32{1.2, 2.5, 3},
 					},
 					"metadata": map[string]any{
-						"Key1": 32,
-						"Key2": "value2",
-						"Key3": []string{"1", "2", "3"},
-						"Key4": false,
+						"Key1": "value2",
+						"Key2": []string{"1", "2", "3"},
 					},
 				},
 			},
@@ -2321,7 +2313,7 @@ var testMockPutVectorsErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?putVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":32,"Key2":"value2","Key3":["1","2","3"],"Key4":false}}]}`)
+			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key2":"value2","Key3":["1","2","3"]}}]}`)
 		},
 		&PutVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
@@ -2333,10 +2325,8 @@ var testMockPutVectorsErrorCases = []struct {
 						"float32": []float32{1.2, 2.5, 3},
 					},
 					"metadata": map[string]any{
-						"Key1": 32,
 						"Key2": "value2",
 						"Key3": []string{"1", "2", "3"},
-						"Key4": false,
 					},
 				},
 			},
@@ -2375,7 +2365,7 @@ var testMockPutVectorsErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?putVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":32,"Key2":"value2","Key3":["1","2","3"],"Key4":false}}]}`)
+			assert.Equal(t, string(data), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key2":"value2","Key3":["1","2","3"]}}]}`)
 		},
 		&PutVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
@@ -2387,10 +2377,8 @@ var testMockPutVectorsErrorCases = []struct {
 						"float32": []float32{1.2, 2.5, 3},
 					},
 					"metadata": map[string]any{
-						"Key1": 32,
 						"Key2": "value2",
 						"Key3": []string{"1", "2", "3"},
-						"Key4": false,
 					},
 				},
 			},
@@ -2688,7 +2676,7 @@ var testMockListVectorsSuccessCases = []struct {
 		&ListVectorsRequest{
 			Bucket:         oss.Ptr("bucket"),
 			IndexName:      oss.Ptr("index"),
-			MaxResults:     oss.Ptr(100),
+			MaxResults:     100,
 			NextToken:      oss.Ptr("123"),
 			ReturnMetadata: oss.Ptr(true),
 			ReturnData:     oss.Ptr(false),
@@ -2763,7 +2751,7 @@ var testMockListVectorsErrorCases = []struct {
 		&ListVectorsRequest{
 			Bucket:         oss.Ptr("bucket"),
 			IndexName:      oss.Ptr("index"),
-			MaxResults:     oss.Ptr(100),
+			MaxResults:     100,
 			NextToken:      oss.Ptr("123"),
 			ReturnMetadata: oss.Ptr(true),
 			ReturnData:     oss.Ptr(false),
@@ -2809,7 +2797,7 @@ var testMockListVectorsErrorCases = []struct {
 		&ListVectorsRequest{
 			Bucket:         oss.Ptr("bucket"),
 			IndexName:      oss.Ptr("index"),
-			MaxResults:     oss.Ptr(100),
+			MaxResults:     100,
 			NextToken:      oss.Ptr("123"),
 			ReturnMetadata: oss.Ptr(true),
 			ReturnData:     oss.Ptr(false),
