@@ -24,7 +24,7 @@ func TestMarshalInput_PutBucketPolicy(t *testing.T) {
 		OpName: "PutBucketPolicy",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeXML,
+			HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
 			"policy": "",
@@ -43,7 +43,7 @@ func TestMarshalInput_PutBucketPolicy(t *testing.T) {
 		OpName: "PutBucketPolicy",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeXML,
+			HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
 			"policy": "",
@@ -62,7 +62,7 @@ func TestMarshalInput_PutBucketPolicy(t *testing.T) {
 		OpName: "PutBucketPolicy",
 		Method: "PUT",
 		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeXML,
+			HTTPHeaderContentType: contentTypeJSON,
 		},
 		Parameters: map[string]string{
 			"policy": "",
@@ -89,7 +89,7 @@ func TestUnmarshalOutput_PutBucketPolicy(t *testing.T) {
 		},
 	}
 	result := &PutBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -104,7 +104,7 @@ func TestUnmarshalOutput_PutBucketPolicy(t *testing.T) {
 		},
 	}
 	result = &PutBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -119,7 +119,7 @@ func TestUnmarshalOutput_PutBucketPolicy(t *testing.T) {
 		},
 	}
 	result = &PutBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -143,7 +143,7 @@ func TestUnmarshalOutput_PutBucketPolicy(t *testing.T) {
 		},
 	}
 	result = &PutBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
@@ -331,7 +331,7 @@ func TestUnmarshalOutput_DeleteBucketPolicy(t *testing.T) {
 		},
 	}
 	result := &DeleteBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 204)
 	assert.Equal(t, result.Status, "No Content")
@@ -355,7 +355,7 @@ func TestUnmarshalOutput_DeleteBucketPolicy(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -379,7 +379,7 @@ func TestUnmarshalOutput_DeleteBucketPolicy(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketPolicyResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")

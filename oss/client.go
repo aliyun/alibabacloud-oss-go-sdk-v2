@@ -52,6 +52,8 @@ type Options struct {
 	AuthMethod *AuthMethodType
 
 	AdditionalHeaders []string
+
+	EndpointProvider EndpointProvider
 }
 
 func (c Options) Copy() Options {
@@ -357,8 +359,13 @@ func (c *Client) sendRequest(ctx context.Context, input *OperationInput, opts *O
 		}
 	}
 	// host & path
-	host, path := buildURL(input, opts)
-	strUrl := fmt.Sprintf("%s://%s%s", opts.Endpoint.Scheme, host, path)
+	var strUrl string
+	if opts.EndpointProvider != nil {
+		strUrl = opts.EndpointProvider.BuildURL(input)
+	} else {
+		host, path := buildURL(input, opts)
+		strUrl = fmt.Sprintf("%s://%s%s", opts.Endpoint.Scheme, host, path)
+	}
 
 	// querys
 	if len(input.Parameters) > 0 {
@@ -640,13 +647,26 @@ func tryConvertServiceError(response *http.Response) (err error) {
 		se.Message = fmt.Sprintf("The body of the response was not readable, due to :%s", err.Error())
 		return se
 	}
-	err = xml.Unmarshal(body, &se)
+	var tag string
+	if strings.EqualFold(contentTypeJSON, response.Header.Get(HTTPHeaderContentType)) {
+		type ErrorRoot struct {
+			Root json.RawMessage `json:"Error"`
+		}
+		var root ErrorRoot
+		if err = json.Unmarshal(body, &root); err == nil {
+			err = json.Unmarshal(root.Root, &se)
+		}
+		tag = "json"
+	} else {
+		err = xml.Unmarshal(body, &se)
+		tag = "xml"
+	}
 	if err != nil {
 		len := len(body)
 		if len > 256 {
 			len = 256
 		}
-		se.Message = fmt.Sprintf("Failed to parse xml from response body due to: %s. With part response body %s.", err.Error(), string(body[:len]))
+		se.Message = fmt.Sprintf("Failed to parse %s from response body due to: %s. With part response body %s.", tag, err.Error(), string(body[:len]))
 		return se
 	}
 	return se
@@ -1497,6 +1517,16 @@ func (c *Client) getLogLevel() int {
 
 // Content-Type
 const (
-	contentTypeDefault string = "application/octet-stream"
-	contentTypeXML            = "application/xml"
+	contentTypeDefault = "application/octet-stream"
+	contentTypeXML     = "application/xml"
+	contentTypeJSON    = "application/json"
 )
+
+// Exposed to external modules
+func MarshalUpdateContentMd5(request any, input *OperationInput) error {
+	return updateContentMd5(request, input)
+}
+
+func UnmarshalDiscardBody(result any, output *OperationOutput) error {
+	return discardBody(result, output)
+}
