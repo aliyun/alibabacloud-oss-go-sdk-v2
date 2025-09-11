@@ -265,8 +265,8 @@ func TestMarshalInput_DeleteBucket(t *testing.T) {
 
 	request = &DeleteBucketRequest{}
 	input = &OperationInput{
-		OpName: "DeleteBucket",
-		Method: "DELETE",
+		OpName: "PutBucket",
+		Method: "PUT",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
 		},
@@ -280,8 +280,8 @@ func TestMarshalInput_DeleteBucket(t *testing.T) {
 		Bucket: Ptr("oss-demo"),
 	}
 	input = &OperationInput{
-		OpName: "DeleteBucket",
-		Method: "DELETE",
+		OpName: "PutBucket",
+		Method: "PUT",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
 		},

@@ -836,3 +836,76 @@ func TestV4AuthQueryWithCloudBox(t *testing.T) {
 	assert.Equal(t, "16782cc8a7a554523db055eb804b508522e7e370073108ad88ee2f47496701dd", querys.Get("x-oss-signature"))
 	assert.Equal(t, "abc;zabc", querys.Get("x-oss-additional-headers"))
 }
+
+func TestSignerVectorV4InvalidArgument(t *testing.T) {
+	signer := &SignerVectorsV4{}
+	signCtx := &SigningContext{}
+	err := signer.Sign(context.TODO(), signCtx)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "AccountId is null")
+
+	signer = &SignerVectorsV4{
+		AccountId: ptr("123"),
+	}
+	signCtx = &SigningContext{}
+	err = signer.Sign(context.TODO(), signCtx)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "SigningContext.Credentials is null or empty")
+
+	provider := credentials.NewStaticCredentialsProvider("", "sk")
+	cred, _ := provider.GetCredentials(context.TODO())
+	signCtx = &SigningContext{
+		Credentials: &cred,
+	}
+	err = signer.Sign(context.TODO(), signCtx)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "SigningContext.Credentials is null or empty")
+
+	provider = credentials.NewStaticCredentialsProvider("ak", "sk")
+	cred, _ = provider.GetCredentials(context.TODO())
+	signCtx = &SigningContext{
+		Credentials: &cred,
+	}
+	err = signer.Sign(context.TODO(), signCtx)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "SigningContext.Request is null")
+
+	err = signer.Sign(context.TODO(), nil)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "SigningContext is null")
+}
+
+func TestSignerVectorV4BuildBucketArn(t *testing.T) {
+	accountId := "123"
+	signer := &SignerVectorsV4{
+		AccountId: ptr(accountId),
+	}
+	signCtx := &SigningContext{
+		Region: ptr("cn-hangzhou"),
+	}
+	arn := buildArnUri(signCtx, signer.AccountId)
+	assert.Equal(t, "/acs:ossvector:cn-hangzhou::/", arn)
+
+	signCtx = &SigningContext{
+		Region: ptr("cn-hangzhou"),
+		Bucket: ptr("bucket"),
+	}
+	arn = buildArnUri(signCtx, signer.AccountId)
+	assert.Equal(t, "/acs:ossvector:cn-hangzhou:"+accountId+":bucket/", arn)
+
+	signCtx = &SigningContext{
+		Region: ptr("cn-hangzhou"),
+		Bucket: ptr("bucket"),
+		Key:    ptr("key"),
+	}
+	arn = buildArnUri(signCtx, signer.AccountId)
+	assert.Equal(t, "/acs:ossvector:cn-hangzhou:"+accountId+":bucket/key", arn)
+
+	signCtx = &SigningContext{
+		Region: ptr("cn-hangzhou"),
+		Bucket: ptr("bucket"),
+		Key:    ptr("key-1/key-2"),
+	}
+	arn = buildArnUri(signCtx, signer.AccountId)
+	assert.Equal(t, "/acs:ossvector:cn-hangzhou:"+accountId+":bucket/key-1/key-2", arn)
+}

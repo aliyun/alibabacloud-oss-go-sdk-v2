@@ -34461,3 +34461,136 @@ func TestMockListCloudBoxes_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockReturnsJsonErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetBucketLocationRequest
+	CheckOutputFn  func(t *testing.T, o *GetBucketLocationResult, err error)
+}{
+	// Normal case
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/bucket/?location", r.URL.String())
+		},
+		&GetBucketLocationRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetBucketLocationResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	// Bad Xml
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "4C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?location", strUrl)
+		},
+		&GetBucketLocationRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetBucketLocationResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "BadErrorResponse", serr.Code)
+			assert.Contains(t, serr.Message, "Failed to parse json from response body due to")
+			assert.Equal(t, "", serr.EC)
+			assert.Equal(t, "4C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	// Empty Xml
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "4C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?location", strUrl)
+		},
+		&GetBucketLocationRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetBucketLocationResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "BadErrorResponse", serr.Code)
+			assert.Contains(t, serr.Message, "Failed to parse json from response body due to")
+			assert.Equal(t, "", serr.EC)
+			assert.Equal(t, "4C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockReturnsXmlError(t *testing.T) {
+	for _, c := range testMockReturnsJsonErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetBucketLocation(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
