@@ -88,7 +88,7 @@ func TestUnmarshalOutput_PutBucketResourceGroup(t *testing.T) {
 		},
 	}
 	result := &PutBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -103,7 +103,7 @@ func TestUnmarshalOutput_PutBucketResourceGroup(t *testing.T) {
 		},
 	}
 	result = &PutBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -118,7 +118,7 @@ func TestUnmarshalOutput_PutBucketResourceGroup(t *testing.T) {
 		},
 	}
 	result = &PutBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -142,7 +142,7 @@ func TestUnmarshalOutput_PutBucketResourceGroup(t *testing.T) {
 		},
 	}
 	result = &PutBucketResourceGroupResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")

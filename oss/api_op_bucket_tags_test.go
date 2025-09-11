@@ -100,7 +100,7 @@ func TestUnmarshalOutput_PutBucketTags(t *testing.T) {
 		},
 	}
 	result := &PutBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
@@ -115,7 +115,7 @@ func TestUnmarshalOutput_PutBucketTags(t *testing.T) {
 		},
 	}
 	result = &PutBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -130,7 +130,7 @@ func TestUnmarshalOutput_PutBucketTags(t *testing.T) {
 		},
 	}
 	result = &PutBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -154,7 +154,7 @@ func TestUnmarshalOutput_PutBucketTags(t *testing.T) {
 		},
 	}
 	result = &PutBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
@@ -357,9 +357,6 @@ func TestMarshalInput_DeleteBucketTags(t *testing.T) {
 		},
 		Bucket: request.Bucket,
 	}
-	if request.Tagging != nil {
-		input.Parameters["tagging"] = *request.Tagging
-	}
 	input.OpMetadata.Set(signer.SubResource, []string{"tagging"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
@@ -380,7 +377,7 @@ func TestUnmarshalOutput_DeleteBucketTags(t *testing.T) {
 		},
 	}
 	result := &DeleteBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 204)
 	assert.Equal(t, result.Status, "No Content")
@@ -396,7 +393,7 @@ func TestUnmarshalOutput_DeleteBucketTags(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 404)
 	assert.Equal(t, result.Status, "NoSuchBucket")
@@ -412,7 +409,7 @@ func TestUnmarshalOutput_DeleteBucketTags(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 400)
 	assert.Equal(t, result.Status, "InvalidArgument")
@@ -436,7 +433,7 @@ func TestUnmarshalOutput_DeleteBucketTags(t *testing.T) {
 		},
 	}
 	result = &DeleteBucketTagsResult{}
-	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	err = c.unmarshalOutput(result, output, discardBody)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
 	assert.Equal(t, result.Status, "AccessDenied")
