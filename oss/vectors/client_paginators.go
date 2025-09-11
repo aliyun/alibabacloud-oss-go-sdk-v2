@@ -87,7 +87,8 @@ func (c *VectorsClient) NewListVectorIndexesPaginator(request *ListVectorIndexes
 	}
 
 	options := oss.PaginatorOptions{}
-	options.Limit = int32(*request.MaxResults)
+
+	options.Limit = int32(request.MaxResults)
 
 	for _, fn := range optFns {
 		fn(&options)
@@ -121,7 +122,7 @@ func (p *ListVectorIndexesPaginator) NextPage(ctx context.Context, optFns ...fun
 	if p.options.Limit > 0 {
 		limit = p.options.Limit
 	}
-	request.MaxResults = oss.Ptr(int(limit))
+	request.MaxResults = int(limit)
 
 	result, err := p.client.ListVectorIndexes(ctx, &request, optFns...)
 	if err != nil {
@@ -150,7 +151,7 @@ func (c *VectorsClient) NewListVectorsPaginator(request *ListVectorsRequest, opt
 	}
 
 	options := oss.PaginatorOptions{}
-	options.Limit = int32(*request.MaxResults)
+	options.Limit = int32(request.MaxResults)
 
 	for _, fn := range optFns {
 		fn(&options)
@@ -184,7 +185,7 @@ func (p *ListVectorsPaginator) NextPage(ctx context.Context, optFns ...func(*oss
 	if p.options.Limit > 0 {
 		limit = p.options.Limit
 	}
-	request.MaxResults = oss.Ptr(int(limit))
+	request.MaxResults = int(limit)
 
 	result, err := p.client.ListVectors(ctx, &request, optFns...)
 	if err != nil {

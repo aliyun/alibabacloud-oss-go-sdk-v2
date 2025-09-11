@@ -113,7 +113,7 @@ type ListVectorsRequest struct {
 	IndexName *string `input:"body,indexName,json,required"`
 
 	// The maximum number of indexes that can be returned.
-	MaxResults *int `input:"body,maxResults,json"`
+	MaxResults int `input:"body,maxResults,json"`
 
 	NextToken *string `input:"body,nextToken,json"`
 

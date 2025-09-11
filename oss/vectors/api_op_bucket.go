@@ -66,7 +66,7 @@ type GetVectorBucketRequest struct {
 
 type GetVectorBucketResult struct {
 	// The container that stores the bucket information.
-	BucketInfo *VectorBucketInfo `output:"body,BucketInfo>Bucket,json"`
+	BucketInfo *VectorBucketInfo `output:"body,BucketInfo,json"`
 
 	oss.ResultCommon
 }
@@ -157,14 +157,9 @@ type ListVectorBucketsResult struct {
 	NextMarker *string `json:"NextMarker"`
 
 	// The container that stores information about buckets.
-	Buckets Buckets `json:"Buckets"`
+	Buckets []VectorBucketProperties `json:"Buckets"`
 
 	oss.ResultCommon
-}
-
-// Buckets The container that stores information about buckets.
-type Buckets struct {
-	Bucket []VectorBucketProperties `json:"Bucket"`
 }
 
 type VectorBucketProperties struct {

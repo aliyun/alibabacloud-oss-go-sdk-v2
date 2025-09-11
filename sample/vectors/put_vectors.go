@@ -55,10 +55,8 @@ func main() {
 					"float32": []float32{1.2, 2.5, 3},
 				},
 				"metadata": map[string]any{
-					"Key1": 32,
-					"Key2": "value2",
-					"Key3": []string{"1", "2", "3"},
-					"Key4": false,
+					"Key1": "value2",
+					"Key2": []string{"1", "2", "3"},
 				},
 			},
 		},
