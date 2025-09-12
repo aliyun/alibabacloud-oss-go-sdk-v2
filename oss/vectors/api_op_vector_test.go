@@ -753,24 +753,6 @@ func TestMarshalInput_QueryVectors(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, IndexName")
 
 	request = &QueryVectorsRequest{
-		Bucket: oss.Ptr("oss-demo"),
-	}
-	input = &oss.OperationInput{
-		OpName: "QueryVectors",
-		Method: "POST",
-		Headers: map[string]string{
-			oss.HTTPHeaderContentType: contentTypeJSON,
-		},
-		Parameters: map[string]string{
-			"QueryVectors": "",
-		},
-		Bucket: request.Bucket,
-	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, IndexName")
-
-	request = &QueryVectorsRequest{
 		Bucket:    oss.Ptr("oss-demo"),
 		IndexName: oss.Ptr("index"),
 	}
@@ -841,7 +823,20 @@ func TestMarshalInput_QueryVectors(t *testing.T) {
 	request = &QueryVectorsRequest{
 		Bucket:    oss.Ptr("oss-demo"),
 		IndexName: oss.Ptr("index"),
-		Filter:    oss.Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
+		Filter: map[string]any{
+			"$and": []map[string]any{
+				{
+					"type": map[string]any{
+						"$in": []string{"comedy", "documentary"},
+					},
+				},
+				{
+					"year": map[string]any{
+						"$gte": 2020,
+					},
+				},
+			},
+		},
 		QueryVector: map[string]any{
 			"float32": []float32{float32(32)},
 		},
@@ -866,7 +861,7 @@ func TestMarshalInput_QueryVectors(t *testing.T) {
 	assert.Equal(t, input.Method, "POST")
 	assert.Equal(t, *input.Bucket, "oss-demo")
 	body, _ = io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+	assert.Equal(t, string(body), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}},{\"year\":{\"$gte\":2020}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 }
 
 func TestUnmarshalOutput_QueryVectors(t *testing.T) {

@@ -9,6 +9,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -33,6 +34,7 @@ var (
 
 var (
 	bucketNamePrefix = "go-sdk-test-bucket-"
+	indexNamePrefix  = "goSdkIndex"
 	letters          = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 )
 
@@ -92,7 +94,7 @@ func cleanBucket(bucketInfo VectorBucketProperties, t *testing.T) {
 		c = getClient(*bucketInfo.Region, *bucketInfo.ExtranetEndpoint)
 	}
 	assert.NotNil(t, c)
-	cleanIndexesAndVectors(c, *bucketInfo.Name, t)
+	cleanIndexes(c, *bucketInfo.Name, t)
 }
 
 func deleteBucket(bucketName string, t *testing.T) {
@@ -100,7 +102,7 @@ func deleteBucket(bucketName string, t *testing.T) {
 	var c *VectorsClient
 	c = getDefaultClient()
 	assert.NotNil(t, c)
-	cleanIndexesAndVectors(c, bucketName, t)
+	cleanIndexes(c, bucketName, t)
 }
 
 func cleanBuckets(prefix string, t *testing.T) {
@@ -120,7 +122,7 @@ func cleanBuckets(prefix string, t *testing.T) {
 	}
 }
 
-func cleanIndexesAndVectors(c *VectorsClient, name string, t *testing.T) {
+func cleanIndexes(c *VectorsClient, name string, t *testing.T) {
 	var err error
 	var bucketName string
 
@@ -702,6 +704,7 @@ func TestVectors(t *testing.T) {
 	defer after(t)
 	//TODO
 	bucketName := bucketNamePrefix + randLowStr(6)
+	indexName := indexNamePrefix + randLowStr(5)
 	request := &PutVectorBucketRequest{
 		Bucket: oss.Ptr(bucketName),
 	}
@@ -712,7 +715,7 @@ func TestVectors(t *testing.T) {
 
 	putRequest := &PutVectorIndexRequest{
 		Bucket:         oss.Ptr(bucketName),
-		IndexName:      oss.Ptr("index"),
+		IndexName:      oss.Ptr(indexName),
 		DataType:       oss.Ptr("float32"),
 		DistanceMetric: oss.Ptr("cosine"),
 		Dimension:      oss.Ptr(int(3)),
@@ -722,7 +725,7 @@ func TestVectors(t *testing.T) {
 
 	putVectorsRequest := &PutVectorsRequest{
 		Bucket:    oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
+		IndexName: oss.Ptr(indexName),
 		Vectors: []map[string]any{
 			{
 				"key": "vector1",
@@ -745,7 +748,7 @@ func TestVectors(t *testing.T) {
 
 	getRequest := &GetVectorsRequest{
 		Bucket:    oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
+		IndexName: oss.Ptr(indexName),
 		Keys:      []string{"key1", "key2", "key3"},
 	}
 	getResult, err := client.GetVectors(context.TODO(), getRequest)
@@ -756,7 +759,7 @@ func TestVectors(t *testing.T) {
 
 	listRequest := &ListVectorsRequest{
 		Bucket:    oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
+		IndexName: oss.Ptr(indexName),
 	}
 	listResult, err := client.ListVectors(context.TODO(), listRequest)
 	assert.Nil(t, err)
@@ -766,9 +769,34 @@ func TestVectors(t *testing.T) {
 	assert.NotEmpty(t, listResult.Headers.Get("X-Oss-Request-Id"))
 	assert.NotEmpty(t, listResult.Vectors)
 
+	queryRequest := &QueryVectorsRequest{
+		Bucket:    oss.Ptr(bucketName),
+		IndexName: oss.Ptr(indexName),
+		Filter: map[string]any{
+			"$and": []map[string]any{
+				{
+					"type": map[string]any{
+						"$in": []string{"comedy", "documentary"},
+					},
+				},
+			},
+		},
+		QueryVector: map[string]any{
+			"float32": []float32{1, 2, 3},
+		},
+		ReturnMetadata: oss.Ptr(true),
+		ReturnDistance: oss.Ptr(true),
+		TopK:           oss.Ptr(10),
+	}
+	queryResult, err := client.QueryVectors(context.TODO(), queryRequest)
+	dumpErrIfNotNil(err)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, queryResult.StatusCode)
+	assert.NotEmpty(t, queryResult.Headers.Get("X-Oss-Request-Id"))
+
 	delRequest := &DeleteVectorsRequest{
 		Bucket:    oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
+		IndexName: oss.Ptr(indexName),
 		Keys:      []string{"key1", "key2", "key3"},
 	}
 	delResult, err := client.DeleteVectors(context.TODO(), delRequest)
@@ -781,7 +809,7 @@ func TestVectors(t *testing.T) {
 	bucketNameNotExist := bucketNamePrefix + "-not-exist"
 	getRequest = &GetVectorsRequest{
 		Bucket:    oss.Ptr(bucketNameNotExist),
-		IndexName: oss.Ptr("index"),
+		IndexName: oss.Ptr(indexName),
 		Keys:      []string{"key1", "key2", "key3"},
 	}
 	getResult, err = client.GetVectors(context.TODO(), getRequest)
@@ -795,7 +823,7 @@ func TestVectors(t *testing.T) {
 
 	putVectorsRequest = &PutVectorsRequest{
 		Bucket:    oss.Ptr(bucketNameNotExist),
-		IndexName: oss.Ptr("index"),
+		IndexName: oss.Ptr(indexName),
 		Vectors: []map[string]any{
 			{
 				"key": "vector1",
@@ -823,7 +851,7 @@ func TestVectors(t *testing.T) {
 
 	listRequest = &ListVectorsRequest{
 		Bucket:    oss.Ptr(bucketNameNotExist),
-		IndexName: oss.Ptr("index"),
+		IndexName: oss.Ptr(indexName),
 	}
 	serr = &oss.ServiceError{}
 	listResult, err = client.ListVectors(context.TODO(), listRequest)
@@ -835,9 +863,36 @@ func TestVectors(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 	time.Sleep(1 * time.Second)
 
+	queryRequest = &QueryVectorsRequest{
+		Bucket:    oss.Ptr(bucketNameNotExist),
+		IndexName: oss.Ptr(indexName),
+		Filter: map[string]any{
+			"$and": []map[string]any{
+				{
+					"type": map[string]any{
+						"$in": []string{"comedy", "documentary"},
+					},
+				},
+			},
+		},
+		QueryVector: map[string]any{
+			"float32": []float32{1, 2, 3},
+		},
+		ReturnMetadata: oss.Ptr(true),
+		ReturnDistance: oss.Ptr(true),
+		TopK:           oss.Ptr(10),
+	}
+	queryResult, err = client.QueryVectors(context.TODO(), queryRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
 	delRequest = &DeleteVectorsRequest{
 		Bucket:    oss.Ptr(bucketNameNotExist),
-		IndexName: oss.Ptr("index"),
+		IndexName: oss.Ptr(indexName),
 		Keys:      []string{"key1", "key2", "key3"},
 	}
 	serr = &oss.ServiceError{}
@@ -851,7 +906,7 @@ func TestVectors(t *testing.T) {
 
 	del := &DeleteVectorIndexRequest{
 		Bucket:    oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
+		IndexName: oss.Ptr(indexName),
 	}
 	_, err = client.DeleteVectorIndex(context.TODO(), del)
 	assert.Nil(t, err)
@@ -870,38 +925,53 @@ func TestPaginator(t *testing.T) {
 	dumpErrIfNotNil(err)
 	assert.Nil(t, err)
 
+	indexName := indexNamePrefix + randStr(5)
+
 	putRequest := &PutVectorIndexRequest{
 		Bucket:         oss.Ptr(bucketName),
-		IndexName:      oss.Ptr("index"),
+		IndexName:      oss.Ptr(indexName),
 		DataType:       oss.Ptr("float32"),
 		DistanceMetric: oss.Ptr("cosine"),
 		Dimension:      oss.Ptr(int(3)),
 	}
 	_, err = client.PutVectorIndex(context.TODO(), putRequest)
-	assert.Nil(t, err)
-
-	putVectorsRequest := &PutVectorsRequest{
-		Bucket:    oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
-		Vectors: []map[string]any{
-			{
-				"key": "vector1",
-				"data": map[string]any{
-					"float32": []float32{1.2, 2.5, 3},
-				},
-				"metadata": map[string]any{
-					"Key2": "value2",
-					"Key3": []string{"1", "2", "3"},
-				},
-			},
-		},
-	}
-	putResult, err := client.PutVectors(context.TODO(), putVectorsRequest)
 	dumpErrIfNotNil(err)
 	assert.Nil(t, err)
-	assert.Equal(t, 200, putResult.StatusCode)
-	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
-	time.Sleep(1 * time.Second)
+
+	for i := 1; i <= 10; i++ {
+		putRequest := &PutVectorIndexRequest{
+			Bucket:         oss.Ptr(bucketName),
+			IndexName:      oss.Ptr(indexName + strconv.Itoa(i)),
+			DataType:       oss.Ptr("float32"),
+			DistanceMetric: oss.Ptr("cosine"),
+			Dimension:      oss.Ptr(int(3)),
+		}
+		_, err = client.PutVectorIndex(context.TODO(), putRequest)
+		assert.Nil(t, err)
+	}
+
+	for i := 1; i <= 10; i++ {
+		putVectorsRequest := &PutVectorsRequest{
+			Bucket:    oss.Ptr(bucketName),
+			IndexName: oss.Ptr(indexName),
+			Vectors: []map[string]any{
+				{
+					"key": "vector" + strconv.Itoa(i),
+					"data": map[string]any{
+						"float32": []float32{1.2, 2.5, 3},
+					},
+					"metadata": map[string]any{
+						"Key2": "value2",
+						"Key3": []string{"1", "2", "3"},
+					},
+				},
+			},
+		}
+		putResult, err := client.PutVectors(context.TODO(), putVectorsRequest)
+		assert.Nil(t, err)
+		assert.Equal(t, 200, putResult.StatusCode)
+		assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	}
 
 	bucketRequest := &ListVectorBucketsRequest{}
 	p := client.NewListVectorBucketsPaginator(bucketRequest)
@@ -912,48 +982,53 @@ func TestPaginator(t *testing.T) {
 	}
 
 	indexRequest := &ListVectorIndexesRequest{
-		Bucket: oss.Ptr(bucketName),
+		Bucket:     oss.Ptr(bucketName),
+		MaxResults: 5,
 	}
 	pIndex := client.NewListVectorIndexesPaginator(indexRequest)
-	for p.HasNext() {
+	var m int
+	for pIndex.HasNext() {
+		m++
 		pageIndex, err := pIndex.NextPage(context.TODO())
 		assert.Nil(t, err)
 		assert.True(t, len(pageIndex.Indexes) > 0)
 	}
-
+	assert.Equal(t, m, 3)
 	vectorsRequest := &ListVectorsRequest{
-		Bucket: oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
+		Bucket:     oss.Ptr(bucketName),
+		IndexName:  oss.Ptr(indexName),
+		MaxResults: 5,
 	}
 	pVectors := client.NewListVectorsPaginator(vectorsRequest)
-	for p.HasNext() {
+	var n int
+	for pVectors.HasNext() {
+		n++
 		pageVectors, err := pVectors.NextPage(context.TODO())
 		assert.Nil(t, err)
 		assert.True(t, len(pageVectors.Vectors) > 0)
 	}
-
-	delRequest := &DeleteVectorsRequest{
-		Bucket:    oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
-		Keys:      []string{"key1", "key2", "key3"},
+	assert.Equal(t, n, 2)
+	for i := 1; i <= 10; i++ {
+		delRequest := &DeleteVectorsRequest{
+			Bucket:    oss.Ptr(bucketName),
+			IndexName: oss.Ptr(indexName + strconv.Itoa(i)),
+			Keys:      []string{"key2", "key3"},
+		}
+		_, err = client.DeleteVectors(context.TODO(), delRequest)
+		assert.Nil(t, err)
 	}
-	delResult, err := client.DeleteVectors(context.TODO(), delRequest)
-	assert.Nil(t, err)
-	assert.Equal(t, 204, delResult.StatusCode)
-	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
-	time.Sleep(1 * time.Second)
 
-	delRequest = &DeleteVectorsRequest{
-		Bucket:    oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
-		Keys:      []string{"key1", "key2", "key3"},
+	for i := 1; i <= 10; i++ {
+		del := &DeleteVectorIndexRequest{
+			Bucket:    oss.Ptr(bucketName),
+			IndexName: oss.Ptr(indexName + strconv.Itoa(i)),
+		}
+		_, err = client.DeleteVectorIndex(context.TODO(), del)
+		assert.Nil(t, err)
 	}
-	delResult, err = client.DeleteVectors(context.TODO(), delRequest)
-	assert.Nil(t, err)
-
 	del := &DeleteVectorIndexRequest{
 		Bucket:    oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
+		IndexName: oss.Ptr(indexName),
 	}
 	_, err = client.DeleteVectorIndex(context.TODO(), del)
 	assert.Nil(t, err)

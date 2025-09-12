@@ -219,13 +219,13 @@ func (c *VectorsClient) DeleteVectors(ctx context.Context, request *DeleteVector
 
 type QueryVectorsRequest struct {
 	// The name of the vector bucket.
-	Bucket         *string                `input:"host,bucket,required"`
-	IndexName      *string                `input:"body,indexName,json,required"`
-	QueryVector    map[string]interface{} `input:"body,queryVector,json,required"`
-	TopK           *int                   `input:"body,topK,json,required"`
-	Filter         *string                `input:"body,filter,json"`
-	ReturnDistance *bool                  `input:"body,returnDistance,json"`
-	ReturnMetadata *bool                  `input:"body,returnMetadata,json"`
+	Bucket         *string        `input:"host,bucket,required"`
+	IndexName      *string        `input:"body,indexName,json,required"`
+	QueryVector    map[string]any `input:"body,queryVector,json,required"`
+	TopK           *int           `input:"body,topK,json,required"`
+	Filter         any            `input:"body,filter,json"`
+	ReturnDistance *bool          `input:"body,returnDistance,json"`
+	ReturnMetadata *bool          `input:"body,returnMetadata,json"`
 
 	oss.RequestCommon
 }

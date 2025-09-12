@@ -14,12 +14,14 @@ var (
 	region     string
 	bucketName string
 	accountId  string
+	indexName  string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the vector bucket is located.")
 	flag.StringVar(&bucketName, "bucket", "", "The name of the vector bucket.")
 	flag.StringVar(&accountId, "account-id", "", "The id of vector account.")
+	flag.StringVar(&indexName, "index", "", "The name of vector index.")
 }
 
 func main() {
@@ -39,6 +41,11 @@ func main() {
 		log.Fatalf("invalid parameters, accounId required")
 	}
 
+	if len(indexName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, index required")
+	}
+
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region).WithAccountId(accountId)
@@ -47,8 +54,21 @@ func main() {
 
 	request := &vectors.QueryVectorsRequest{
 		Bucket:    oss.Ptr(bucketName),
-		IndexName: oss.Ptr("index"),
-		Filter:    oss.Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
+		IndexName: oss.Ptr(indexName),
+		Filter: map[string]any{
+			"$and": []map[string]any{
+				{
+					"type": map[string]any{
+						"$in": []string{"comedy", "documentary"},
+					},
+				},
+				{
+					"year": map[string]any{
+						"$gte": 2020,
+					},
+				},
+			},
+		},
 		QueryVector: map[string]any{
 			"float32": []float32{float32(32)},
 		},
