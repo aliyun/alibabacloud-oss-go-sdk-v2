@@ -3025,7 +3025,7 @@ var testMockQueryVectorsSuccessCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?queryVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}},{\"year\":{\"$gte\":2020}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+			assert.Equal(t, string(data), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 		},
 		&QueryVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
@@ -3035,11 +3035,6 @@ var testMockQueryVectorsSuccessCases = []struct {
 					{
 						"type": map[string]any{
 							"$in": []string{"comedy", "documentary"},
-						},
-					},
-					{
-						"year": map[string]any{
-							"$gte": 2020,
 						},
 					},
 				},
@@ -3108,7 +3103,7 @@ var testMockQueryVectorsErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?queryVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}},{\"year\":{\"$gte\":2020}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+			assert.Equal(t, string(data), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 		},
 		&QueryVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
@@ -3118,11 +3113,6 @@ var testMockQueryVectorsErrorCases = []struct {
 					{
 						"type": map[string]any{
 							"$in": []string{"comedy", "documentary"},
-						},
-					},
-					{
-						"year": map[string]any{
-							"$gte": 2020,
 						},
 					},
 				},
@@ -3168,7 +3158,7 @@ var testMockQueryVectorsErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?queryVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}},{\"year\":{\"$gte\":2020}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+			assert.Equal(t, string(data), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 		},
 		&QueryVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
@@ -3178,11 +3168,6 @@ var testMockQueryVectorsErrorCases = []struct {
 					{
 						"type": map[string]any{
 							"$in": []string{"comedy", "documentary"},
-						},
-					},
-					{
-						"year": map[string]any{
-							"$gte": 2020,
 						},
 					},
 				},

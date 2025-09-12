@@ -62,11 +62,6 @@ func main() {
 						"$in": []string{"comedy", "documentary"},
 					},
 				},
-				{
-					"year": map[string]any{
-						"$gte": 2020,
-					},
-				},
 			},
 		},
 		QueryVector: map[string]any{
