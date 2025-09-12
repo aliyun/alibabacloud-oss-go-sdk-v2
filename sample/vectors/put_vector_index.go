@@ -14,12 +14,14 @@ var (
 	region     string
 	bucketName string
 	accountId  string
+	indexName  string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the vector bucket is located.")
 	flag.StringVar(&bucketName, "bucket", "", "The name of the vector bucket.")
 	flag.StringVar(&accountId, "account-id", "", "The id of vector account.")
+	flag.StringVar(&indexName, "index", "", "The name of vector index.")
 }
 
 func main() {
@@ -39,6 +41,11 @@ func main() {
 		log.Fatalf("invalid parameters, accounId required")
 	}
 
+	if len(indexName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, index required")
+	}
+
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region).WithAccountId(accountId)
@@ -50,14 +57,14 @@ func main() {
 		DataType:       oss.Ptr("float32"),
 		Dimension:      oss.Ptr(128),
 		DistanceMetric: oss.Ptr("cosine"),
-		IndexName:      oss.Ptr("exampleIndex"),
+		IndexName:      oss.Ptr(indexName),
 		Metadata: map[string]any{
 			"nonFilterableMetadataKeys": []string{"foo", "bar"},
 		},
 	}
 	result, err := client.PutVectorIndex(context.TODO(), request)
 	if err != nil {
-		log.Fatalf("failed to put vectors %v", err)
+		log.Fatalf("failed to put vector index%v", err)
 	}
-	log.Printf("put vectors result:%#v\n", result)
+	log.Printf("put vector index result:%#v\n", result)
 }

@@ -131,6 +131,7 @@ func (p *ListVectorIndexesPaginator) NextPage(ctx context.Context, optFns ...fun
 
 	p.firstPage = false
 	p.nextToken = result.NextToken
+	p.isTruncated = oss.ToString(p.nextToken) != ""
 
 	return result, nil
 }
@@ -194,7 +195,7 @@ func (p *ListVectorsPaginator) NextPage(ctx context.Context, optFns ...func(*oss
 
 	p.firstPage = false
 	p.nextToken = result.NextToken
-	p.isTruncated = p.nextToken != nil
+	p.isTruncated = oss.ToString(p.nextToken) != ""
 
 	return result, nil
 }

@@ -2671,7 +2671,7 @@ var testMockListVectorsSuccessCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?listVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false}")
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false,\"returnMetadata\":true,\"segmentCount\":10,\"segmentIndex\":3}")
 		},
 		&ListVectorsRequest{
 			Bucket:         oss.Ptr("bucket"),
@@ -2690,10 +2690,7 @@ var testMockListVectorsSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.Equal(t, len(o.Vectors), 1)
 			assert.Equal(t, *o.NextToken, "123")
-			//assert.Equal(t, o.Vectors[0].Data.Float32[0], float32(32))
-			//assert.Equal(t, *o.Vectors[0].Key, "key")
-			//assert.Equal(t, (*o.Vectors[0].Metadata)["Key1"], "value1")
-			//assert.Equal(t, (*o.Vectors[0].Metadata)["Key2"], "value2")
+			assert.NotEmpty(t, o.Vectors)
 		},
 	},
 }
@@ -2746,7 +2743,7 @@ var testMockListVectorsErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?listVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false}")
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false,\"returnMetadata\":true,\"segmentCount\":10,\"segmentIndex\":3}")
 		},
 		&ListVectorsRequest{
 			Bucket:         oss.Ptr("bucket"),
@@ -2792,7 +2789,7 @@ var testMockListVectorsErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?listVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"ReturnMetadata\":true,\"SegmentCount\":10,\"SegmentIndex\":3,\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false}")
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"maxResults\":100,\"nextToken\":\"123\",\"returnData\":false,\"returnMetadata\":true,\"segmentCount\":10,\"segmentIndex\":3}")
 		},
 		&ListVectorsRequest{
 			Bucket:         oss.Ptr("bucket"),
@@ -3028,12 +3025,25 @@ var testMockQueryVectorsSuccessCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?queryVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+			assert.Equal(t, string(data), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}},{\"year\":{\"$gte\":2020}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 		},
 		&QueryVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("index"),
-			Filter:    oss.Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
+			Filter: map[string]any{
+				"$and": []map[string]any{
+					{
+						"type": map[string]any{
+							"$in": []string{"comedy", "documentary"},
+						},
+					},
+					{
+						"year": map[string]any{
+							"$gte": 2020,
+						},
+					},
+				},
+			},
 			QueryVector: map[string]any{
 				"float32": []float32{float32(32)},
 			},
@@ -3098,12 +3108,25 @@ var testMockQueryVectorsErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?queryVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+			assert.Equal(t, string(data), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}},{\"year\":{\"$gte\":2020}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 		},
 		&QueryVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("index"),
-			Filter:    oss.Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
+			Filter: map[string]any{
+				"$and": []map[string]any{
+					{
+						"type": map[string]any{
+							"$in": []string{"comedy", "documentary"},
+						},
+					},
+					{
+						"year": map[string]any{
+							"$gte": 2020,
+						},
+					},
+				},
+			},
 			QueryVector: map[string]any{
 				"float32": []float32{float32(32)},
 			},
@@ -3145,12 +3168,25 @@ var testMockQueryVectorsErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?queryVectors", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"filter\":\"{\\\"$and\\\":[{\\\"type\\\":{\\\"$in\\\":[\\\"comedy\\\",\\\"documentary\\\"]}},{\\\"year\\\":{\\\"$gte\\\":2020}}]}\",\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+			assert.Equal(t, string(data), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}},{\"year\":{\"$gte\":2020}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 		},
 		&QueryVectorsRequest{
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("index"),
-			Filter:    oss.Ptr(`{"$and":[{"type":{"$in":["comedy","documentary"]}},{"year":{"$gte":2020}}]}`),
+			Filter: map[string]any{
+				"$and": []map[string]any{
+					{
+						"type": map[string]any{
+							"$in": []string{"comedy", "documentary"},
+						},
+					},
+					{
+						"year": map[string]any{
+							"$gte": 2020,
+						},
+					},
+				},
+			},
 			QueryVector: map[string]any{
 				"float32": []float32{float32(32)},
 			},
