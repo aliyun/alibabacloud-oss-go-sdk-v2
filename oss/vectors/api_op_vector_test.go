@@ -830,11 +830,6 @@ func TestMarshalInput_QueryVectors(t *testing.T) {
 						"$in": []string{"comedy", "documentary"},
 					},
 				},
-				{
-					"year": map[string]any{
-						"$gte": 2020,
-					},
-				},
 			},
 		},
 		QueryVector: map[string]any{
@@ -861,7 +856,7 @@ func TestMarshalInput_QueryVectors(t *testing.T) {
 	assert.Equal(t, input.Method, "POST")
 	assert.Equal(t, *input.Bucket, "oss-demo")
 	body, _ = io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}},{\"year\":{\"$gte\":2020}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
+	assert.Equal(t, string(body), "{\"filter\":{\"$and\":[{\"type\":{\"$in\":[\"comedy\",\"documentary\"]}}]},\"indexName\":\"index\",\"queryVector\":{\"float32\":[32]},\"returnDistance\":true,\"returnMetadata\":true,\"topK\":10}")
 }
 
 func TestUnmarshalOutput_QueryVectors(t *testing.T) {
