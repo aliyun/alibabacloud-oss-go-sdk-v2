@@ -683,28 +683,28 @@ func TestResolveEndpoint(t *testing.T) {
 	cfg.Region = oss.Ptr("test-region")
 	updateEndpoint(cfg)
 	assert.NotNil(t, cfg.Endpoint)
-	assert.Equal(t, "oss-test-region.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
+	assert.Equal(t, "test-region.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
 
 	cfg = oss.NewConfig()
 	cfg.Region = oss.Ptr("test-region")
 	cfg.DisableSSL = oss.Ptr(true)
 	updateEndpoint(cfg)
 	assert.NotNil(t, cfg.Endpoint)
-	assert.Equal(t, "oss-test-region.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
+	assert.Equal(t, "test-region.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
 
 	cfg = oss.NewConfig()
 	cfg.Region = oss.Ptr("test-region")
 	cfg.DisableSSL = oss.Ptr(false)
 	updateEndpoint(cfg)
 	assert.NotNil(t, cfg.Endpoint)
-	assert.Equal(t, "oss-test-region.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
+	assert.Equal(t, "test-region.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
 
 	cfg = oss.NewConfig()
 	cfg.Region = oss.Ptr("test-region")
 	cfg.UseInternalEndpoint = oss.Ptr(true)
 	updateEndpoint(cfg)
 	assert.NotNil(t, cfg.Endpoint)
-	assert.Equal(t, "oss-test-region-internal.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
+	assert.Equal(t, "test-region-internal.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
 
 	cfg = oss.NewConfig()
 	cfg.Region = oss.Ptr("test-region")
@@ -712,7 +712,7 @@ func TestResolveEndpoint(t *testing.T) {
 	cfg.UseAccelerateEndpoint = oss.Ptr(true)
 	updateEndpoint(cfg)
 	assert.NotNil(t, cfg.Endpoint)
-	assert.Equal(t, "oss-test-region.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
+	assert.Equal(t, "test-region.oss-vectors.aliyuncs.com", oss.ToString(cfg.Endpoint))
 }
 
 func TestResolveVectorsUserAgent(t *testing.T) {
