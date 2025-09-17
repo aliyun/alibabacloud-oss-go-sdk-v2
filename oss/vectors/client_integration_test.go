@@ -87,14 +87,14 @@ func randLowStr(n int) string {
 func cleanBucket(bucketInfo VectorBucketProperties, t *testing.T) {
 	assert.NotEmpty(t, *bucketInfo.Name)
 	var c *VectorsClient
-	if (strings.Contains(endpoint_, *bucketInfo.ExtranetEndpoint) ||
-		strings.Contains(endpoint_, *bucketInfo.IntranetEndpoint)) || strings.Contains(endpoint_, "drill-") {
+	if strings.Contains(endpoint_, *bucketInfo.ExtranetEndpoint) ||
+		strings.Contains(endpoint_, *bucketInfo.IntranetEndpoint) {
 		c = getDefaultClient()
 	} else {
 		c = getClient(*bucketInfo.Region, *bucketInfo.ExtranetEndpoint)
 	}
 	assert.NotNil(t, c)
-	cleanIndexes(c, *bucketInfo.Name, t)
+	cleanVectorsAndIndexes(c, *bucketInfo.Name, t)
 }
 
 func deleteBucket(bucketName string, t *testing.T) {
@@ -102,7 +102,7 @@ func deleteBucket(bucketName string, t *testing.T) {
 	var c *VectorsClient
 	c = getDefaultClient()
 	assert.NotNil(t, c)
-	cleanIndexes(c, bucketName, t)
+	cleanVectorsAndIndexes(c, bucketName, t)
 }
 
 func cleanBuckets(prefix string, t *testing.T) {
@@ -122,7 +122,7 @@ func cleanBuckets(prefix string, t *testing.T) {
 	}
 }
 
-func cleanIndexes(c *VectorsClient, name string, t *testing.T) {
+func cleanVectorsAndIndexes(c *VectorsClient, name string, t *testing.T) {
 	var err error
 	var bucketName string
 
@@ -140,13 +140,35 @@ func cleanIndexes(c *VectorsClient, name string, t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	}
 	pagIndexes := c.NewListVectorIndexesPaginator(listIndexesRequest)
-	var i int
+	var listVectorsRequest *ListVectorsRequest
 	for pagIndexes.HasNext() {
-		i++
 		page, err := pagIndexes.NextPage(context.TODO())
 		dumpErrIfNotNil(err)
 		assert.Nil(t, err)
 		for _, index := range page.Indexes {
+			listVectorsRequest = &ListVectorsRequest{
+				Bucket:    oss.Ptr(bucketName),
+				IndexName: index.IndexName,
+			}
+			pagVectors := c.NewListVectorsPaginator(listVectorsRequest)
+			for pagVectors.HasNext() {
+				page2, err := pagVectors.NextPage(context.TODO())
+				dumpErrIfNotNil(err)
+				assert.Nil(t, err)
+				var allKeys []string
+				for _, vector := range page2.Vectors {
+					if keyVal, exists := vector["key"]; exists {
+						if keyStr, ok := keyVal.(string); ok {
+							allKeys = append(allKeys, keyStr)
+						}
+						_, err = c.DeleteVectors(context.TODO(), &DeleteVectorsRequest{
+							Bucket:    oss.Ptr(bucketName),
+							IndexName: index.IndexName,
+							Keys:      allKeys,
+						})
+					}
+				}
+			}
 			_, err = c.DeleteVectorIndex(context.TODO(), &DeleteVectorIndexRequest{
 				Bucket:    oss.Ptr(bucketName),
 				IndexName: index.IndexName,
@@ -170,7 +192,7 @@ func before(_ *testing.T) func(t *testing.T) {
 }
 
 func after(t *testing.T) {
-	cleanBuckets(bucketNamePrefix, t)
+	//cleanBuckets(bucketNamePrefix, t)
 	//fmt.Println("teardown  test case")
 }
 
@@ -369,106 +391,110 @@ func TestVectorsBucket(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 }
 
-//func TestBucketLogging(t *testing.T) {
-//	after := before(t)
-//	defer after(t)
-//	//TODO
-//	bucketName := bucketNamePrefix + randLowStr(6)
-//	putRequest := &PutVectorBucketRequest{
-//		Bucket: oss.Ptr(bucketName),
-//	}
-//	client := getDefaultClient()
-//	_, err := client.PutVectorBucket(context.TODO(), putRequest)
-//	assert.Nil(t, err)
-//
-//	targetBucketName := bucketNamePrefix + randLowStr(6)
-//	putOssRequest := &oss.PutBucketRequest{
-//		Bucket: oss.Ptr(targetBucketName),
-//	}
-//	_, err = client.clientImpl.PutBucket(context.TODO(), putOssRequest)
-//	assert.Nil(t, err)
-//
-//	request := &PutBucketLoggingRequest{
-//		Bucket: oss.Ptr(bucketName),
-//		BucketLoggingStatus: &BucketLoggingStatus{
-//			&LoggingEnabled{
-//				TargetBucket: oss.Ptr(bucketName),
-//				TargetPrefix: oss.Ptr("TargetPrefix"),
-//			},
-//		},
-//	}
-//	result, err := client.PutBucketLogging(context.TODO(), request)
-//	dumpErrIfNotNil(err)
-//	assert.Nil(t, err)
-//	assert.Equal(t, 200, result.StatusCode)
-//	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
-//	time.Sleep(1 * time.Second)
-//
-//	getRequest := &GetBucketLoggingRequest{
-//		Bucket: oss.Ptr(bucketName),
-//	}
-//	getResult, err := client.GetBucketLogging(context.TODO(), getRequest)
-//	assert.Nil(t, err)
-//	assert.Equal(t, 200, getResult.StatusCode)
-//	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
-//	assert.Equal(t, *getResult.BucketLoggingStatus.LoggingEnabled.TargetBucket, bucketName)
-//	assert.Equal(t, *getResult.BucketLoggingStatus.LoggingEnabled.TargetPrefix, "TargetPrefix")
-//	time.Sleep(1 * time.Second)
-//
-//	delRequest := &DeleteBucketLoggingRequest{
-//		Bucket: oss.Ptr(bucketName),
-//	}
-//	delResult, err := client.DeleteBucketLogging(context.TODO(), delRequest)
-//	assert.Nil(t, err)
-//	assert.Equal(t, 204, delResult.StatusCode)
-//	assert.Equal(t, "204 No Content", delResult.Status)
-//	assert.NotEmpty(t, delResult.Headers.Get("x-oss-request-id"))
-//	assert.NotEmpty(t, delResult.Headers.Get("Date"))
-//	time.Sleep(1 * time.Second)
-//
-//	var serr *oss.ServiceError
-//	bucketNameNotExist := bucketName + "-not-exist"
-//	request = &PutBucketLoggingRequest{
-//		Bucket: oss.Ptr(bucketNameNotExist),
-//		BucketLoggingStatus: &BucketLoggingStatus{
-//			&LoggingEnabled{
-//				TargetBucket: oss.Ptr("TargetBucket"),
-//				TargetPrefix: oss.Ptr("TargetPrefix"),
-//			},
-//		},
-//	}
-//	result, err = client.PutBucketLogging(context.TODO(), request)
-//	assert.NotNil(t, err)
-//	errors.As(err, &serr)
-//	assert.Equal(t, int(404), serr.StatusCode)
-//	assert.Equal(t, "NoSuchBucket", serr.Code)
-//	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-//	assert.NotEmpty(t, serr.RequestID)
-//
-//	getRequest = &GetBucketLoggingRequest{
-//		Bucket: oss.Ptr(bucketNameNotExist),
-//	}
-//	serr = &oss.ServiceError{}
-//	getResult, err = client.GetBucketLogging(context.TODO(), getRequest)
-//	assert.NotNil(t, err)
-//	errors.As(err, &serr)
-//	assert.Equal(t, int(404), serr.StatusCode)
-//	assert.Equal(t, "NoSuchBucket", serr.Code)
-//	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-//	assert.NotEmpty(t, serr.RequestID)
-//
-//	delRequest = &DeleteBucketLoggingRequest{
-//		Bucket: oss.Ptr(bucketNameNotExist),
-//	}
-//	serr = &oss.ServiceError{}
-//	delResult, err = client.DeleteBucketLogging(context.TODO(), delRequest)
-//	assert.NotNil(t, err)
-//	errors.As(err, &serr)
-//	assert.Equal(t, int(404), serr.StatusCode)
-//	assert.Equal(t, "NoSuchBucket", serr.Code)
-//	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-//	assert.NotEmpty(t, serr.RequestID)
-//}
+func TestBucketLogging(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	putRequest := &PutVectorBucketRequest{
+		Bucket: oss.Ptr(bucketName),
+	}
+	client := getDefaultClient()
+	_, err := client.PutVectorBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	targetBucketName := bucketNamePrefix + randLowStr(6)
+	putOssRequest := &oss.PutBucketRequest{
+		Bucket: oss.Ptr(targetBucketName),
+	}
+	_, err = client.clientImpl.PutBucket(context.TODO(), putOssRequest)
+	assert.Nil(t, err)
+
+	request := &PutBucketLoggingRequest{
+		Bucket: oss.Ptr(bucketName),
+		BucketLoggingStatus: &BucketLoggingStatus{
+			&LoggingEnabled{
+				TargetBucket: oss.Ptr(targetBucketName),
+				TargetPrefix: oss.Ptr("TargetPrefix"),
+			},
+		},
+	}
+	result, err := client.PutBucketLogging(context.TODO(), request)
+	dumpErrIfNotNil(err)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, result.StatusCode)
+	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getRequest := &GetBucketLoggingRequest{
+		Bucket: oss.Ptr(bucketName),
+	}
+	getResult, err := client.GetBucketLogging(context.TODO(), getRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	assert.Equal(t, *getResult.BucketLoggingStatus.LoggingEnabled.TargetBucket, targetBucketName)
+	assert.Equal(t, *getResult.BucketLoggingStatus.LoggingEnabled.TargetPrefix, "TargetPrefix")
+	time.Sleep(1 * time.Second)
+
+	delRequest := &DeleteBucketLoggingRequest{
+		Bucket: oss.Ptr(bucketName),
+	}
+	delResult, err := client.DeleteBucketLogging(context.TODO(), delRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delResult.StatusCode)
+	assert.Equal(t, "204 No Content", delResult.Status)
+	assert.NotEmpty(t, delResult.Headers.Get("x-oss-request-id"))
+	assert.NotEmpty(t, delResult.Headers.Get("Date"))
+	time.Sleep(1 * time.Second)
+
+	var serr *oss.ServiceError
+	bucketNameNotExist := bucketName + "not-exist"
+	request = &PutBucketLoggingRequest{
+		Bucket: oss.Ptr(bucketNameNotExist),
+		BucketLoggingStatus: &BucketLoggingStatus{
+			&LoggingEnabled{
+				TargetBucket: oss.Ptr(targetBucketName),
+				TargetPrefix: oss.Ptr("TargetPrefix"),
+			},
+		},
+	}
+	result, err = client.PutBucketLogging(context.TODO(), request)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	getRequest = &GetBucketLoggingRequest{
+		Bucket: oss.Ptr(bucketNameNotExist),
+	}
+	serr = &oss.ServiceError{}
+	getResult, err = client.GetBucketLogging(context.TODO(), getRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	delRequest = &DeleteBucketLoggingRequest{
+		Bucket: oss.Ptr(bucketNameNotExist),
+	}
+	serr = &oss.ServiceError{}
+	delResult, err = client.DeleteBucketLogging(context.TODO(), delRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	client.clientImpl.DeleteBucket(context.TODO(), &oss.DeleteBucketRequest{
+		Bucket: oss.Ptr(targetBucketName),
+	})
+}
 
 func TestBucketPolicy(t *testing.T) {
 	after := before(t)
