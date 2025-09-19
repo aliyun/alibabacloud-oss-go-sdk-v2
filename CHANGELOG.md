@@ -1,5 +1,11 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.3.0 日期：2025-09-19
+### 变更内容
+- Update：Set MaxIdleConnsPerHost to 10
+- Feature：Support to bind local address for outgoing connections
+- Feature：Add vectors bucket
+
 ## 版本号：v1.2.3 日期：2025-06-13
 ### 变更内容
 - Fix：Uploader upload from stream fail in special scenarios
