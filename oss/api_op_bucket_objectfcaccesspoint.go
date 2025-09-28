@@ -9,7 +9,7 @@ import (
 
 type AccessPointsForObjectProcess struct {
 	// The container that stores information about a single Object FC Access Point.
-	AccessPointForObjectProcesss []AccessPointForObjectProcess `xml:"AccessPointForObjectProcess"`
+	AccessPointForObjectProcesses []AccessPointForObjectProcess `xml:"AccessPointForObjectProcess"`
 }
 
 type TransformationConfiguration struct {
@@ -21,11 +21,21 @@ type TransformationConfiguration struct {
 }
 
 type ObjectProcessConfiguration struct {
-	// Specifies that Function Compute supports Range GetObject requests.
-	AllowedFeatures []string `xml:"AllowedFeatures>AllowedFeature"`
+	// The container that stores specifies that function compute supports Range GetObject requests.
+	AllowedFeatures *AllowedFeatures `xml:"AllowedFeatures"`
 
 	// The container that stores the transformation configurations.
-	TransformationConfigurations []TransformationConfiguration `xml:"TransformationConfigurations>TransformationConfiguration"`
+	TransformationConfigurations *TransformationConfigurations `xml:"TransformationConfigurations"`
+}
+
+type AllowedFeatures struct {
+	// Specifies that Function Compute supports Range GetObject requests.
+	AllowedFeature []*string `xml:"AllowedFeature"`
+}
+
+type TransformationConfigurations struct {
+	// The container that stores the transformation configurations.
+	TransformationConfiguration []*TransformationConfiguration `xml:"TransformationConfiguration"`
 }
 
 type CreateAccessPointForObjectProcessConfiguration struct {
@@ -74,13 +84,17 @@ type CustomForwardHeaders struct {
 }
 
 type ContentTransformation struct {
-	// The Alibaba Cloud Resource Name (ARN) of the role that Function Compute uses to access your resources in other cloud services. The default role is AliyunFCDefaultRole.
-	FunctionAssumeRoleArn *string `xml:"FunctionCompute>FunctionAssumeRoleArn"`
-
-	// The ARN of the function. For more information,
-	FunctionArn *string `xml:"FunctionCompute>FunctionArn"`
+	FunctionCompute *FunctionCompute `xml:"FunctionCompute"`
 
 	//CustomForwardHeaders *CustomForwardHeaders `xml:"AdditionalFeatures>CustomForwardHeaders"`
+}
+
+type FunctionCompute struct {
+	// The Alibaba Cloud Resource Name (ARN) of the role that Function Compute uses to access your resources in other cloud services. The default role is AliyunFCDefaultRole.
+	FunctionAssumeRoleArn *string `xml:"FunctionAssumeRoleArn"`
+
+	// The ARN of the function.
+	FunctionArn *string `xml:"FunctionArn"`
 }
 
 type PutAccessPointConfigForObjectProcessConfiguration struct {

@@ -6698,7 +6698,9 @@ var testMockRestoreObjectSuccessCases = []struct {
 			Key:    Ptr("object"),
 			RestoreRequest: &RestoreRequest{
 				Days: int32(2),
-				Tier: Ptr("Standard"),
+				JobParameters: &JobParameters{
+					Tier: Ptr("Standard"),
+				},
 			},
 		},
 		func(t *testing.T, o *RestoreObjectResult, err error) {
@@ -6728,7 +6730,9 @@ var testMockRestoreObjectSuccessCases = []struct {
 			Key:    Ptr("object"),
 			RestoreRequest: &RestoreRequest{
 				Days: int32(2),
-				Tier: Ptr("Standard"),
+				JobParameters: &JobParameters{
+					Tier: Ptr("Standard"),
+				},
 			},
 			RequestPayer: Ptr("requester"),
 		},
@@ -18146,7 +18150,7 @@ var testMockPutBucketWebsiteSuccessCases = []struct {
 								MirrorCheckMd5:        Ptr(false),
 								MirrorHeaders: &MirrorHeaders{
 									PassAll: Ptr(true),
-									Passs:   []string{"myheader-key1", "myheader-key2"},
+									Passes:   []string{"myheader-key1", "myheader-key2"},
 									Removes: []string{"myheader-key3", "myheader-key4"},
 									Sets: []MirrorHeadersSet{
 										{
@@ -18535,8 +18539,8 @@ var testMockGetBucketWebsiteSuccessCases = []struct {
 			assert.True(t, *o.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorFollowRedirect)
 			assert.False(t, *o.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorCheckMd5)
 			assert.True(t, *o.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.PassAll)
-			assert.Equal(t, o.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passs[0], "myheader-key1")
-			assert.Equal(t, o.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passs[1], "myheader-key2")
+			assert.Equal(t, o.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passes[0], "myheader-key1")
+			assert.Equal(t, o.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passes[1], "myheader-key2")
 			assert.Equal(t, o.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Removes[0], "myheader-key3")
 			assert.Equal(t, o.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Removes[1], "myheader-key4")
 			assert.Equal(t, *o.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Sets[0].Key, "myheader-key5")
@@ -27402,6 +27406,35 @@ var testMockPutCnameSuccessCases = []struct {
 			urlStr := sortQuery(r)
 			assert.Equal(t, "/bucket/?cname&comp=add", urlStr)
 			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+		},
+		&PutCnameRequest{
+			Bucket: Ptr("bucket"),
+			BucketCnameConfiguration: &BucketCnameConfiguration{
+				Cname: &Cname{
+					Domain: Ptr("example.com"),
+				},
+			},
+		},
+		func(t *testing.T, o *PutCnameResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?cname&comp=add", urlStr)
+			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><CertificateConfiguration><CertId>493****-cn-hangzhou</CertId><Certificate>-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----</Certificate><PrivateKey>-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----</PrivateKey><PreviousCertId>493****-cn-hangzhou</PreviousCertId><Force>true</Force></CertificateConfiguration></Cname></BucketCnameConfiguration>")
 		},
 		&PutCnameRequest{
@@ -27436,6 +27469,42 @@ var testMockPutCnameSuccessCases = []struct {
 			urlStr := sortQuery(r)
 			assert.Equal(t, "/bucket/?cname&comp=add", urlStr)
 			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><CertificateConfiguration><CertId>493****-cn-hangzhou</CertId><Certificate>-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----</Certificate><PrivateKey>-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----</PrivateKey><PreviousCertId>493****-cn-hangzhou</PreviousCertId><Force>true</Force></CertificateConfiguration></Cname></BucketCnameConfiguration>")
+		},
+		&PutCnameRequest{
+			Bucket: Ptr("bucket"),
+			BucketCnameConfiguration: &BucketCnameConfiguration{
+				Cname: &Cname{
+					Domain: Ptr("example.com"),
+					CertificateConfiguration: &CertificateConfiguration{
+						CertId:         Ptr("493****-cn-hangzhou"),
+						Certificate:    Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+						PrivateKey:     Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+						PreviousCertId: Ptr("493****-cn-hangzhou"),
+						Force:          Ptr(true),
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *PutCnameResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?cname&comp=add", urlStr)
+			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><CertificateConfiguration><DeleteCertificate>true</DeleteCertificate></CertificateConfiguration></Cname></BucketCnameConfiguration>")
 		},
 		&PutCnameRequest{
@@ -27444,6 +27513,38 @@ var testMockPutCnameSuccessCases = []struct {
 				Domain: Ptr("example.com"),
 				CertificateConfiguration: &CertificateConfiguration{
 					DeleteCertificate: Ptr(true),
+				},
+			},
+		},
+		func(t *testing.T, o *PutCnameResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?cname&comp=add", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><CertificateConfiguration><DeleteCertificate>true</DeleteCertificate></CertificateConfiguration></Cname></BucketCnameConfiguration>")
+		},
+		&PutCnameRequest{
+			Bucket: Ptr("bucket"),
+			BucketCnameConfiguration: &BucketCnameConfiguration{
+				Cname: &Cname{
+					Domain: Ptr("example.com"),
+					CertificateConfiguration: &CertificateConfiguration{
+						DeleteCertificate: Ptr(true),
+					},
 				},
 			},
 		},
@@ -27617,6 +27718,44 @@ var testMockCreateCnameTokenSuccessCases = []struct {
 			Bucket: Ptr("bucket"),
 			BucketCnameConfiguration: &BucketCnameConfiguration{
 				Domain: Ptr("example.com"),
+			},
+		},
+		func(t *testing.T, o *CreateCnameTokenResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.CnameToken.Bucket, "bucket")
+			assert.Equal(t, *o.CnameToken.Cname, "example.com")
+			assert.Equal(t, *o.CnameToken.Token, "be1d49d863dea9ffeff3df7d6455****")
+			assert.Equal(t, *o.CnameToken.ExpireTime, "Wed, 23 Feb 2022 21:16:37 GMT")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<CnameToken>
+  <Bucket>bucket</Bucket>
+  <Cname>example.com</Cname>;
+  <Token>be1d49d863dea9ffeff3df7d6455****</Token>
+  <ExpireTime>Wed, 23 Feb 2022 21:16:37 GMT</ExpireTime>
+</CnameToken>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?cname&comp=token", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+		},
+		&CreateCnameTokenRequest{
+			Bucket: Ptr("bucket"),
+			BucketCnameConfiguration: &BucketCnameConfiguration{
+				Cname: &Cname{
+					Domain: Ptr("example.com"),
+				},
 			},
 		},
 		func(t *testing.T, o *CreateCnameTokenResult, err error) {
@@ -28264,6 +28403,36 @@ var testMockDeleteCnameSuccessCases = []struct {
 			Bucket: Ptr("bucket"),
 			BucketCnameConfiguration: &BucketCnameConfiguration{
 				Domain: Ptr("example.com"),
+			},
+		},
+		func(t *testing.T, o *DeleteCnameResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?cname&comp=delete", urlStr)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+		},
+		&DeleteCnameRequest{
+			Bucket: Ptr("bucket"),
+			BucketCnameConfiguration: &BucketCnameConfiguration{
+				Cname: &Cname{
+					Domain: Ptr("example.com"),
+				},
 			},
 		},
 		func(t *testing.T, o *DeleteCnameResult, err error) {
@@ -29161,6 +29330,279 @@ var testMockDoMetaQuerySuccessCases = []struct {
 				MaxResults:  Ptr(int64(99)),
 				Query:       Ptr("Overlook the snow-covered forest"),
 				MediaType:   Ptr("image"),
+				SimpleQuery: Ptr(`{"Operation":"gt", "Field": "Size", "Value": "30"}`),
+			},
+		},
+		func(t *testing.T, o *DoMetaQueryResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, len(o.Files), 1)
+			assert.Equal(t, *o.Files[0].URI, "oss://bucket/sample-object.jpg")
+			assert.Equal(t, *o.Files[0].Filename, "sample-object.jpg")
+			assert.Equal(t, *o.Files[0].Size, int64(1000))
+			assert.Equal(t, *o.Files[0].FileModifiedTime, "2021-06-29T14:50:14.011643661+08:00")
+			assert.Equal(t, *o.Files[0].ServerSideEncryption, "AES256")
+			assert.Equal(t, *o.Files[0].ServerSideEncryptionCustomerAlgorithm, "SM4")
+			assert.Equal(t, *o.Files[0].ETag, "\"1D9C280A7C4F67F7EF873E28449****\"")
+			assert.Equal(t, *o.Files[0].OSSCRC64, "559890638950338001")
+			assert.Equal(t, *o.Files[0].ProduceTime, "2021-06-29T14:50:15.011643661+08:00")
+			assert.Equal(t, *o.Files[0].ContentType, "image/jpeg")
+			assert.Equal(t, *o.Files[0].MediaType, "image")
+			assert.Equal(t, *o.Files[0].LatLong, "30.134390,120.074997")
+			assert.Equal(t, *o.Files[0].Title, "test")
+			assert.Equal(t, *o.Files[0].OSSExpiration, "2024-12-01T12:00:00.000Z")
+			assert.Equal(t, *o.Files[0].AccessControlAllowOrigin, "https://aliyundoc.com")
+			assert.Equal(t, *o.Files[0].AccessControlRequestMethod, "PUT")
+			assert.Equal(t, *o.Files[0].ServerSideDataEncryption, "SM4")
+			assert.Equal(t, *o.Files[0].ServerSideEncryptionKeyId, "9468da86-3509-4f8d-a61e-6eab1eac****")
+			assert.Equal(t, *o.Files[0].CacheControl, "no-cache")
+			assert.Equal(t, *o.Files[0].ContentDisposition, "attachment; filename=test.jpg")
+			assert.Equal(t, *o.Files[0].ContentEncoding, "UTF-8")
+			assert.Equal(t, *o.Files[0].ContentLanguage, "zh-CN")
+			assert.Equal(t, *o.Files[0].ImageHeight, int64(500))
+			assert.Equal(t, *o.Files[0].ImageWidth, int64(270))
+			assert.Equal(t, *o.Files[0].VideoWidth, int64(1080))
+			assert.Equal(t, *o.Files[0].VideoHeight, int64(1920))
+			assert.Equal(t, len(o.Files[0].VideoStreams), 2)
+			assert.Equal(t, *o.Files[0].VideoStreams[0].CodecName, "h264")
+			assert.Equal(t, *o.Files[0].VideoStreams[0].Language, "en")
+			assert.Equal(t, *o.Files[0].VideoStreams[0].Bitrate, int64(5407765))
+			assert.Equal(t, *o.Files[0].VideoStreams[0].FrameRate, "25/1")
+			assert.Equal(t, *o.Files[0].VideoStreams[0].StartTime, float64(0))
+			assert.Equal(t, *o.Files[0].VideoStreams[0].Duration, float64(22.88))
+			assert.Equal(t, *o.Files[0].VideoStreams[0].FrameCount, int64(572))
+			assert.Equal(t, *o.Files[0].VideoStreams[0].BitDepth, int64(8))
+			assert.Equal(t, *o.Files[0].VideoStreams[0].PixelFormat, "yuv420p")
+			assert.Equal(t, *o.Files[0].VideoStreams[0].ColorSpace, "bt709")
+			assert.Equal(t, *o.Files[0].VideoStreams[0].Height, int64(720))
+			assert.Equal(t, *o.Files[0].VideoStreams[0].Width, int64(1280))
+
+			assert.Equal(t, *o.Files[0].VideoStreams[1].CodecName, "h264")
+			assert.Equal(t, *o.Files[0].VideoStreams[1].Language, "en")
+			assert.Equal(t, *o.Files[0].VideoStreams[1].Bitrate, int64(5407765))
+			assert.Equal(t, *o.Files[0].VideoStreams[1].FrameRate, "25/1")
+			assert.Equal(t, *o.Files[0].VideoStreams[1].StartTime, float64(0))
+			assert.Equal(t, *o.Files[0].VideoStreams[1].Duration, float64(22.88))
+			assert.Equal(t, *o.Files[0].VideoStreams[1].FrameCount, int64(572))
+			assert.Equal(t, *o.Files[0].VideoStreams[1].BitDepth, int64(8))
+			assert.Equal(t, *o.Files[0].VideoStreams[1].PixelFormat, "yuv420p")
+			assert.Equal(t, *o.Files[0].VideoStreams[1].ColorSpace, "bt709")
+			assert.Equal(t, *o.Files[0].VideoStreams[1].Height, int64(720))
+			assert.Equal(t, *o.Files[0].VideoStreams[1].Width, int64(1280))
+
+			assert.Equal(t, len(o.Files[0].AudioStreams), 1)
+			assert.Equal(t, *o.Files[0].AudioStreams[0].CodecName, "aac")
+			assert.Equal(t, *o.Files[0].AudioStreams[0].Bitrate, int64(1048576))
+			assert.Equal(t, *o.Files[0].AudioStreams[0].SampleRate, int64(48000))
+			assert.Equal(t, *o.Files[0].AudioStreams[0].StartTime, float64(0.0235))
+			assert.Equal(t, *o.Files[0].AudioStreams[0].Duration, float64(3.690667))
+			assert.Equal(t, *o.Files[0].AudioStreams[0].Channels, int64(2))
+			assert.Equal(t, *o.Files[0].AudioStreams[0].Language, "en")
+
+			assert.Equal(t, len(o.Files[0].Subtitles), 2)
+			assert.Equal(t, *o.Files[0].Subtitles[0].CodecName, "mov_text")
+			assert.Equal(t, *o.Files[0].Subtitles[0].Language, "en")
+			assert.Equal(t, *o.Files[0].Subtitles[0].StartTime, float64(0))
+			assert.Equal(t, *o.Files[0].Subtitles[0].Duration, float64(71.378))
+			assert.Equal(t, *o.Files[0].Subtitles[1].CodecName, "mov_text")
+			assert.Equal(t, *o.Files[0].Subtitles[1].Language, "en")
+			assert.Equal(t, *o.Files[0].Subtitles[1].StartTime, float64(72))
+			assert.Equal(t, *o.Files[0].Subtitles[1].Duration, float64(71.378))
+
+			assert.Equal(t, *o.Files[0].Bitrate, int64(5407765))
+			assert.Equal(t, *o.Files[0].Artist, "Jane")
+			assert.Equal(t, *o.Files[0].AlbumArtist, "Jenny")
+			assert.Equal(t, *o.Files[0].Composer, "Jane")
+			assert.Equal(t, *o.Files[0].Performer, "Jane")
+			assert.Equal(t, *o.Files[0].Album, "FirstAlbum")
+			assert.Equal(t, *o.Files[0].Duration, float64(71.378))
+
+			assert.Equal(t, len(o.Files[0].Addresses), 2)
+			assert.Equal(t, *o.Files[0].Addresses[0].AddressLine, "中国浙江省杭州市余杭区文一西路969号")
+			assert.Equal(t, *o.Files[0].Addresses[0].City, "杭州市")
+			assert.Equal(t, *o.Files[0].Addresses[0].Country, "中国")
+			assert.Equal(t, *o.Files[0].Addresses[0].District, "余杭区")
+			assert.Equal(t, *o.Files[0].Addresses[0].Language, "zh-Hans")
+			assert.Equal(t, *o.Files[0].Addresses[0].Province, "浙江省")
+			assert.Equal(t, *o.Files[0].Addresses[0].Township, "文一西路")
+
+			assert.Equal(t, *o.Files[0].Addresses[1].AddressLine, "中国浙江省杭州市余杭区文一西路970号")
+			assert.Equal(t, *o.Files[0].Addresses[1].City, "杭州市")
+			assert.Equal(t, *o.Files[0].Addresses[1].Country, "中国")
+			assert.Equal(t, *o.Files[0].Addresses[1].District, "余杭区")
+			assert.Equal(t, *o.Files[0].Addresses[1].Language, "zh-Hans")
+			assert.Equal(t, *o.Files[0].Addresses[1].Province, "浙江省")
+			assert.Equal(t, *o.Files[0].Addresses[1].Township, "文一西路")
+
+			assert.Equal(t, *o.Files[0].OSSObjectType, "Normal")
+			assert.Equal(t, *o.Files[0].OSSStorageClass, "Standard")
+			assert.Equal(t, *o.Files[0].OSSTaggingCount, int64(2))
+			assert.Equal(t, *o.Files[0].OSSTagging[0].Key, "key")
+			assert.Equal(t, *o.Files[0].OSSTagging[0].Value, "val")
+			assert.Equal(t, *o.Files[0].OSSTagging[1].Key, "key2")
+			assert.Equal(t, *o.Files[0].OSSTagging[1].Value, "val2")
+			assert.Equal(t, len(o.Files[0].OSSUserMeta), 1)
+			assert.Equal(t, *o.Files[0].OSSUserMeta[0].Key, "key")
+			assert.Equal(t, *o.Files[0].OSSUserMeta[0].Value, "val")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<MetaQuery>
+  <Files>
+    <File>
+      <URI>oss://bucket/sample-object.jpg</URI>
+      <Filename>sample-object.jpg</Filename>
+      <Size>1000</Size>
+      <ObjectACL>default</ObjectACL>
+      <FileModifiedTime>2021-06-29T14:50:14.011643661+08:00</FileModifiedTime>
+      <ServerSideEncryption>AES256</ServerSideEncryption>
+      <ServerSideEncryptionCustomerAlgorithm>SM4</ServerSideEncryptionCustomerAlgorithm>
+      <ETag>"1D9C280A7C4F67F7EF873E28449****"</ETag>
+      <OSSCRC64>559890638950338001</OSSCRC64>
+      <ProduceTime>2021-06-29T14:50:15.011643661+08:00</ProduceTime>
+      <ContentType>image/jpeg</ContentType>
+      <MediaType>image</MediaType>
+      <LatLong>30.134390,120.074997</LatLong>
+      <Title>test</Title>
+      <OSSExpiration>2024-12-01T12:00:00.000Z</OSSExpiration>
+      <AccessControlAllowOrigin>https://aliyundoc.com</AccessControlAllowOrigin>
+      <AccessControlRequestMethod>PUT</AccessControlRequestMethod>
+      <ServerSideDataEncryption>SM4</ServerSideDataEncryption>
+      <ServerSideEncryptionKeyId>9468da86-3509-4f8d-a61e-6eab1eac****</ServerSideEncryptionKeyId>
+      <CacheControl>no-cache</CacheControl>
+      <ContentDisposition>attachment; filename=test.jpg</ContentDisposition>
+      <ContentEncoding>UTF-8</ContentEncoding>
+      <ContentLanguage>zh-CN</ContentLanguage>
+      <ImageHeight>500</ImageHeight>
+      <ImageWidth>270</ImageWidth>
+      <VideoWidth>1080</VideoWidth>
+      <VideoHeight>1920</VideoHeight>
+      <VideoStreams>
+        <VideoStream>
+          <CodecName>h264</CodecName>
+          <Language>en</Language>
+          <Bitrate>5407765</Bitrate>
+          <FrameRate>25/1</FrameRate>
+          <StartTime>0</StartTime>
+          <Duration>22.88</Duration>
+          <FrameCount>572</FrameCount>
+          <BitDepth>8</BitDepth>
+          <PixelFormat>yuv420p</PixelFormat>
+          <ColorSpace>bt709</ColorSpace>
+          <Height>720</Height>
+          <Width>1280</Width>
+        </VideoStream>
+        <VideoStream>
+          <CodecName>h264</CodecName>
+          <Language>en</Language>
+          <Bitrate>5407765</Bitrate>
+          <FrameRate>25/1</FrameRate>
+          <StartTime>0</StartTime>
+          <Duration>22.88</Duration>
+          <FrameCount>572</FrameCount>
+          <BitDepth>8</BitDepth>
+          <PixelFormat>yuv420p</PixelFormat>
+          <ColorSpace>bt709</ColorSpace>
+          <Height>720</Height>
+          <Width>1280</Width>
+        </VideoStream>
+      </VideoStreams>
+      <AudioStreams>
+        <AudioStream>
+          <CodecName>aac</CodecName>
+          <Bitrate>1048576</Bitrate>
+          <SampleRate>48000</SampleRate>
+          <StartTime>0.0235</StartTime>
+          <Duration>3.690667</Duration>
+          <Channels>2</Channels>
+          <Language>en</Language>
+        </AudioStream>
+      </AudioStreams>
+      <Subtitles>
+        <Subtitle>
+          <CodecName>mov_text</CodecName>
+          <Language>en</Language>
+          <StartTime>0</StartTime>
+          <Duration>71.378</Duration>
+        </Subtitle>
+        <Subtitle>
+          <CodecName>mov_text</CodecName>
+          <Language>en</Language>
+          <StartTime>72</StartTime>
+          <Duration>71.378</Duration>
+        </Subtitle>
+      </Subtitles>
+      <Bitrate>5407765</Bitrate>
+      <Artist>Jane</Artist>
+      <AlbumArtist>Jenny</AlbumArtist>
+      <Composer>Jane</Composer>
+      <Performer>Jane</Performer>
+      <Album>FirstAlbum</Album>
+      <Duration>71.378</Duration>
+      <Addresses>
+        <Address>
+          <AddressLine>中国浙江省杭州市余杭区文一西路969号</AddressLine>
+          <City>杭州市</City>
+          <Country>中国</Country>
+          <District>余杭区</District>
+          <Language>zh-Hans</Language>
+          <Province>浙江省</Province>
+          <Township>文一西路</Township>
+        </Address>
+        <Address>
+          <AddressLine>中国浙江省杭州市余杭区文一西路970号</AddressLine>
+          <City>杭州市</City>
+          <Country>中国</Country>
+          <District>余杭区</District>
+          <Language>zh-Hans</Language>
+          <Province>浙江省</Province>
+          <Township>文一西路</Township>
+        </Address>
+      </Addresses>
+      <OSSObjectType>Normal</OSSObjectType>
+      <OSSStorageClass>Standard</OSSStorageClass>
+      <OSSTaggingCount>2</OSSTaggingCount>
+      <OSSTagging>
+        <Tagging>
+          <Key>key</Key>
+          <Value>val</Value>
+        </Tagging>
+        <Tagging>
+          <Key>key2</Key>
+          <Value>val2</Value>
+        </Tagging>
+      </OSSTagging>
+      <OSSUserMeta>
+        <UserMeta>
+          <Key>key</Key>
+          <Value>val</Value>
+        </UserMeta>
+      </OSSUserMeta>
+    </File>
+  </Files>
+</MetaQuery>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?comp=query&metaQuery&mode=semantic", strUrl)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, html.UnescapeString(string(body)), "<MetaQuery><MaxResults>99</MaxResults><Query>Overlook the snow-covered forest</Query><MediaTypes><MediaType>image</MediaType><MediaType>video</MediaType></MediaTypes><SimpleQuery>{\"Operation\":\"gt\", \"Field\": \"Size\", \"Value\": \"30\"}</SimpleQuery></MetaQuery>")
+		},
+		&DoMetaQueryRequest{
+			Bucket: Ptr("bucket"),
+			Mode:   Ptr("semantic"),
+			MetaQuery: &MetaQuery{
+				MaxResults:  Ptr(int64(99)),
+				Query:       Ptr("Overlook the snow-covered forest"),
+				MediaTypes:  &MetaQueryMediaTypes{MediaType: []*string{Ptr("image"), Ptr("video")}},
 				SimpleQuery: Ptr(`{"Operation":"gt", "Field": "Size", "Value": "30"}`),
 			},
 		},
@@ -31679,15 +32121,21 @@ var testMockCreateAccessPointForObjectProcessSuccessCases = []struct {
 			CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
 				AccessPointName: Ptr("ap-01"),
 				ObjectProcessConfiguration: &ObjectProcessConfiguration{
-					AllowedFeatures: []string{"GetObject-Range"},
-					TransformationConfigurations: []TransformationConfiguration{
-						{
-							Actions: &AccessPointActions{
-								[]string{"GetObject"},
-							},
-							ContentTransformation: &ContentTransformation{
-								FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
-								FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+					AllowedFeatures: &AllowedFeatures{
+						[]*string{Ptr("GetObject-Range")},
+					},
+					TransformationConfigurations: &TransformationConfigurations{
+						TransformationConfiguration: []*TransformationConfiguration{
+							{
+								Actions: &AccessPointActions{
+									[]string{"GetObject"},
+								},
+								ContentTransformation: &ContentTransformation{
+									&FunctionCompute{
+										FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
+										FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+									},
+								},
 							},
 						},
 					},
@@ -31757,15 +32205,21 @@ var testMockCreateAccessPointForObjectProcessErrorCases = []struct {
 			CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
 				AccessPointName: Ptr("ap-01"),
 				ObjectProcessConfiguration: &ObjectProcessConfiguration{
-					AllowedFeatures: []string{"GetObject-Range"},
-					TransformationConfigurations: []TransformationConfiguration{
-						{
-							Actions: &AccessPointActions{
-								[]string{"GetObject"},
-							},
-							ContentTransformation: &ContentTransformation{
-								FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
-								FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+					AllowedFeatures: &AllowedFeatures{
+						[]*string{Ptr("GetObject-Range")},
+					},
+					TransformationConfigurations: &TransformationConfigurations{
+						TransformationConfiguration: []*TransformationConfiguration{
+							{
+								Actions: &AccessPointActions{
+									[]string{"GetObject"},
+								},
+								ContentTransformation: &ContentTransformation{
+									&FunctionCompute{
+										FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
+										FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+									},
+								},
 							},
 						},
 					},
@@ -31813,15 +32267,22 @@ var testMockCreateAccessPointForObjectProcessErrorCases = []struct {
 			CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
 				AccessPointName: Ptr("ap-01"),
 				ObjectProcessConfiguration: &ObjectProcessConfiguration{
-					AllowedFeatures: []string{"GetObject-Range"},
-					TransformationConfigurations: []TransformationConfiguration{
-						{
-							Actions: &AccessPointActions{
-								[]string{"GetObject"},
-							},
-							ContentTransformation: &ContentTransformation{
-								FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
-								FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+					AllowedFeatures: &AllowedFeatures{
+						[]*string{Ptr("GetObject-Range")},
+					},
+					TransformationConfigurations: &TransformationConfigurations{
+						TransformationConfiguration: []*TransformationConfiguration{
+
+							{
+								Actions: &AccessPointActions{
+									[]string{"GetObject"},
+								},
+								ContentTransformation: &ContentTransformation{
+									&FunctionCompute{
+										FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
+										FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+									},
+								},
 							},
 						},
 					},
@@ -32233,12 +32694,12 @@ var testMockListAccessPointsForObjectProcessSuccessCases = []struct {
 			assert.Equal(t, *o.NextContinuationToken, "abc")
 			assert.True(t, *o.IsTruncated)
 			assert.Equal(t, *o.AccountId, "111933544165****")
-			assert.Equal(t, len(o.AccessPointsForObjectProcess.AccessPointForObjectProcesss), 1)
-			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointNameForObjectProcess, "fc-ap-01")
-			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointNameForObjectProcess, "fc-ap-01")
-			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointForObjectProcessAlias, "fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias")
-			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointName, "fc-01")
-			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].Status, "enable")
+			assert.Equal(t, len(o.AccessPointsForObjectProcess.AccessPointForObjectProcesses), 1)
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointNameForObjectProcess, "fc-ap-01")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointNameForObjectProcess, "fc-ap-01")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointForObjectProcessAlias, "fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointName, "fc-01")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].Status, "enable")
 		},
 	},
 }

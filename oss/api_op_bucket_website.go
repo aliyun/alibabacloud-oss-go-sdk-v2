@@ -11,7 +11,7 @@ type MirrorHeaders struct {
 	PassAll *bool `xml:"PassAll"`
 
 	// The headers to pass through to the origin. This parameter takes effect only when the value of RedirectType is Mirror. Each specified header can be up to 1,024 bytes in length and can contain only letters, digits, and hyphens (-). You can specify up to 10 headers.
-	Passs []string `xml:"Pass"`
+	Passes []string `xml:"Pass"`
 
 	// The headers that are not allowed to pass through to the origin. This parameter takes effect only when the value of RedirectType is Mirror. Each header can be up to 1,024 bytes in length and can contain only letters, digits, and hyphens (-). You can specify up to 10 headers. This parameter is used together with PassAll.
 	Removes []string `xml:"Remove"`
