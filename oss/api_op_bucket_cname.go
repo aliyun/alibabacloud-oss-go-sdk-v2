@@ -2,6 +2,7 @@ package oss
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 )
@@ -28,10 +29,23 @@ type CertificateConfiguration struct {
 
 type BucketCnameConfiguration struct {
 	// The custom domain name.
-	Domain *string `xml:"Cname>Domain"`
+	// Deprecated: Domain is deprecated, Use Cname instead.
+	Domain *string `xml:"-"`
 
 	// The container for which the certificate is configured.
-	CertificateConfiguration *CertificateConfiguration `xml:"Cname>CertificateConfiguration"`
+	// Deprecated: Domain is deprecated, Use Cname instead.
+	CertificateConfiguration *CertificateConfiguration `xml:"-"`
+
+	// The container for the custom domain name.
+	Cname *Cname `xml:"Cname"`
+}
+
+type Cname struct {
+	// The custom domain name.
+	Domain *string `xml:"Domain"`
+
+	// The container for which the certificate is configured.
+	CertificateConfiguration *CertificateConfiguration `xml:"CertificateConfiguration"`
 }
 
 type CnameCertificate struct {
@@ -118,7 +132,32 @@ func (c *Client) PutCname(ctx context.Context, request *PutCnameRequest, optFns 
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			return nil, errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
 
+		if request.BucketCnameConfiguration.CertificateConfiguration != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.CertificateConfiguration != nil) {
+			return nil, errors.New("CertificateConfiguration and Cname.CertificateConfiguration cannot be used simultaneously")
+		}
+
+		if (request.BucketCnameConfiguration.Domain != nil ||
+			request.BucketCnameConfiguration.CertificateConfiguration != nil) &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+			if request.BucketCnameConfiguration.CertificateConfiguration != nil &&
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration == nil {
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration = request.BucketCnameConfiguration.CertificateConfiguration
+			}
+		}
+	}
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
 	}
@@ -225,6 +264,20 @@ func (c *Client) DeleteCname(ctx context.Context, request *DeleteCnameRequest, o
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"cname", "comp"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			return nil, errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+		if request.BucketCnameConfiguration.Domain != nil && request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil && request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
 
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
@@ -332,7 +385,21 @@ func (c *Client) CreateCnameToken(ctx context.Context, request *CreateCnameToken
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"cname", "comp"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			return nil, errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
 
+		if request.BucketCnameConfiguration.Domain != nil && request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil && request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
 	}

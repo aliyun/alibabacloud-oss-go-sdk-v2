@@ -70,9 +70,11 @@ func main() {
 	//	Bucket: oss.Ptr(bucketName),
 	//	Mode:   oss.Ptr("semantic"),
 	//	MetaQuery: &oss.MetaQuery{
-	//		MaxResults:  oss.Ptr(int64(99)),
-	//		Query:       oss.Ptr("Overlook the snow-covered forest"),
-	//		MediaType:   oss.Ptr("image"),
+	//		MaxResults: oss.Ptr(int64(99)),
+	//		Query:      oss.Ptr("Overlook the snow-covered forest"),
+	//		MediaTypes: &oss.MetaQueryMediaTypes{
+	//			MediaType: []*string{oss.Ptr("image"), oss.Ptr("video")},
+	//		},
 	//		SimpleQuery: oss.Ptr(`{"Operation":"gt", "Field": "Size", "Value": "30"}`),
 	//	},
 	//}

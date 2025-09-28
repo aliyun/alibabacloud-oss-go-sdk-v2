@@ -81,15 +81,21 @@ func TestMarshalInput_CreateAccessPointForObjectProcess(t *testing.T) {
 		CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
 			AccessPointName: Ptr("ap-01"),
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
-							FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+				AllowedFeatures: &AllowedFeatures{
+					[]*string{Ptr("GetObject-Range")},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					TransformationConfiguration: []*TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								&FunctionCompute{
+									FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
+									FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+								},
+							},
 						},
 					},
 				},
@@ -590,12 +596,12 @@ func TestUnmarshalOutput_ListAccessPointsForObjectProcess(t *testing.T) {
 	assert.Equal(t, *result.NextContinuationToken, "abc")
 	assert.True(t, *result.IsTruncated)
 	assert.Equal(t, *result.AccountId, "111933544165****")
-	assert.Equal(t, len(result.AccessPointsForObjectProcess.AccessPointForObjectProcesss), 1)
-	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointNameForObjectProcess, "fc-ap-01")
-	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointNameForObjectProcess, "fc-ap-01")
-	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointForObjectProcessAlias, "fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias")
-	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointName, "fc-01")
-	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].Status, "enable")
+	assert.Equal(t, len(result.AccessPointsForObjectProcess.AccessPointForObjectProcesses), 1)
+	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointNameForObjectProcess, "fc-ap-01")
+	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointNameForObjectProcess, "fc-ap-01")
+	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointForObjectProcessAlias, "fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias")
+	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointName, "fc-01")
+	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].Status, "enable")
 
 	output = &OperationOutput{
 		StatusCode: 404,
@@ -1173,15 +1179,21 @@ func TestMarshalInput_PutAccessPointConfigForObjectProcess(t *testing.T) {
 		AccessPointForObjectProcessName: Ptr("ap-01"),
 		PutAccessPointConfigForObjectProcessConfiguration: &PutAccessPointConfigForObjectProcessConfiguration{
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
-							FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+				AllowedFeatures: &AllowedFeatures{
+					[]*string{Ptr("GetObject-Range")},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					TransformationConfiguration: []*TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								&FunctionCompute{
+									FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
+									FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+								},
+							},
 						},
 					},
 				},
@@ -1393,9 +1405,9 @@ func TestUnmarshalOutput_GetAccessPointConfigForObjectProcess(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 	assert.True(t, *result.PublicAccessBlockConfiguration.BlockPublicAccess)
-	assert.Equal(t, result.ObjectProcessConfiguration.TransformationConfigurations[0].Actions.Actions[0], "getobject")
-	assert.Equal(t, *result.ObjectProcessConfiguration.TransformationConfigurations[0].ContentTransformation.FunctionAssumeRoleArn, "acs:ram::111933544165****:role/aliyunfcdefaultrole")
-	assert.Equal(t, *result.ObjectProcessConfiguration.TransformationConfigurations[0].ContentTransformation.FunctionArn, "acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01")
+	assert.Equal(t, result.ObjectProcessConfiguration.TransformationConfigurations.TransformationConfiguration[0].Actions.Actions[0], "getobject")
+	assert.Equal(t, *result.ObjectProcessConfiguration.TransformationConfigurations.TransformationConfiguration[0].ContentTransformation.FunctionCompute.FunctionAssumeRoleArn, "acs:ram::111933544165****:role/aliyunfcdefaultrole")
+	assert.Equal(t, *result.ObjectProcessConfiguration.TransformationConfigurations.TransformationConfiguration[0].ContentTransformation.FunctionCompute.FunctionArn, "acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01")
 	body = `<?xml version="1.0" encoding="UTF-8"?>
 		<Error>
 		<Code>NoSuchBucket</Code>

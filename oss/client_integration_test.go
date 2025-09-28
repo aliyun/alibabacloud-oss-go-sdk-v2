@@ -8088,6 +8088,20 @@ func TestCname(t *testing.T) {
 	assert.NotNil(t, createResult.CnameToken)
 	time.Sleep(1 * time.Second)
 
+	createResult, err = client.CreateCnameToken(context.TODO(), &CreateCnameTokenRequest{
+		Bucket: Ptr(bucketName),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Cname: &Cname{
+				Domain: Ptr("example1.com"),
+			},
+		},
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, createResult.StatusCode)
+	assert.NotEmpty(t, createResult.Headers.Get("X-Oss-Request-Id"))
+	assert.NotNil(t, createResult.CnameToken)
+	time.Sleep(1 * time.Second)
+
 	getResult, err := client.GetCnameToken(context.TODO(), &GetCnameTokenRequest{
 		Bucket: Ptr(bucketName),
 		Cname:  Ptr("example.com"),
@@ -8108,6 +8122,19 @@ func TestCname(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	delResult, err := client.DeleteCname(context.TODO(), &DeleteCnameRequest{
+		Bucket: Ptr(bucketName),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Cname: &Cname{
+				Domain: Ptr("example1.com"),
+			},
+		},
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, delResult.StatusCode)
+	assert.NotEmpty(t, delResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	delResult, err = client.DeleteCname(context.TODO(), &DeleteCnameRequest{
 		Bucket: Ptr(bucketName),
 		BucketCnameConfiguration: &BucketCnameConfiguration{
 			Domain: Ptr("example.com"),
@@ -8277,6 +8304,37 @@ func TestMetaQuery(t *testing.T) {
 			MaxResults:  Ptr(int64(99)),
 			Query:       Ptr("Overlook the snow-covered forest"),
 			MediaType:   Ptr("image"),
+			SimpleQuery: Ptr(`{"Operation":"gt", "Field": "Size", "Value": "30"}`),
+		},
+	}
+	doResult, err = client.DoMetaQuery(context.TODO(), doRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, doResult.StatusCode)
+	time.Sleep(1 * time.Second)
+
+	doRequest = &DoMetaQueryRequest{
+		Bucket: Ptr(bucketNameAiSearch),
+		Mode:   Ptr("semantic"),
+		MetaQuery: &MetaQuery{
+			MaxResults:  Ptr(int64(99)),
+			Query:       Ptr("Overlook the snow-covered forest"),
+			MediaType:   Ptr("image"),
+			MediaTypes:  &MetaQueryMediaTypes{MediaType: []*string{Ptr("image"), Ptr("video")}},
+			SimpleQuery: Ptr(`{"Operation":"gt", "Field": "Size", "Value": "30"}`),
+		},
+	}
+	doResult, err = client.DoMetaQuery(context.TODO(), doRequest)
+	assert.NotNil(t, err)
+	assert.Equal(t, 200, doResult.StatusCode)
+	time.Sleep(1 * time.Second)
+
+	doRequest = &DoMetaQueryRequest{
+		Bucket: Ptr(bucketNameAiSearch),
+		Mode:   Ptr("semantic"),
+		MetaQuery: &MetaQuery{
+			MaxResults:  Ptr(int64(99)),
+			Query:       Ptr("Overlook the snow-covered forest"),
+			MediaTypes:  &MetaQueryMediaTypes{MediaType: []*string{Ptr("image"), Ptr("video")}},
 			SimpleQuery: Ptr(`{"Operation":"gt", "Field": "Size", "Value": "30"}`),
 		},
 	}
@@ -8762,15 +8820,21 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 		CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
 			AccessPointName: Ptr(accessPointName),
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr(arn),
-							FunctionAssumeRoleArn: Ptr(roleArn),
+				AllowedFeatures: &AllowedFeatures{
+					[]*string{Ptr("GetObject-Range")},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					TransformationConfiguration: []*TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								&FunctionCompute{
+									FunctionArn:           Ptr(arn),
+									FunctionAssumeRoleArn: Ptr(roleArn),
+								},
+							},
 						},
 					},
 				},
@@ -8826,15 +8890,21 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 		AccessPointForObjectProcessName: Ptr(objectProcessName),
 		PutAccessPointConfigForObjectProcessConfiguration: &PutAccessPointConfigForObjectProcessConfiguration{
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr(arn),
-							FunctionAssumeRoleArn: Ptr(roleArn),
+				AllowedFeatures: &AllowedFeatures{
+					[]*string{Ptr("GetObject-Range")},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					[]*TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								&FunctionCompute{
+									FunctionArn:           Ptr(arn),
+									FunctionAssumeRoleArn: Ptr(roleArn),
+								},
+							},
 						},
 					},
 				},
@@ -8917,15 +8987,21 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 		CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
 			AccessPointName: Ptr(accessPointName),
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr(arn),
-							FunctionAssumeRoleArn: Ptr(roleArn),
+				AllowedFeatures: &AllowedFeatures{
+					[]*string{Ptr("GetObject-Range")},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					[]*TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								&FunctionCompute{
+									FunctionArn:           Ptr(arn),
+									FunctionAssumeRoleArn: Ptr(roleArn),
+								},
+							},
 						},
 					},
 				},
@@ -9006,15 +9082,21 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 		AccessPointForObjectProcessName: Ptr(objectProcessName),
 		PutAccessPointConfigForObjectProcessConfiguration: &PutAccessPointConfigForObjectProcessConfiguration{
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr(arn),
-							FunctionAssumeRoleArn: Ptr(roleArn),
+				AllowedFeatures: &AllowedFeatures{
+					[]*string{Ptr("GetObject-Range")},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					[]*TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								&FunctionCompute{
+									FunctionArn:           Ptr(arn),
+									FunctionAssumeRoleArn: Ptr(roleArn),
+								},
+							},
 						},
 					},
 				},

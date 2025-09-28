@@ -2,6 +2,7 @@ package oss
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"net/http"
 	"testing"
@@ -73,10 +74,113 @@ func TestMarshalInput_PutCname(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.CertificateConfiguration != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.CertificateConfiguration != nil) {
+			err = errors.New("CertificateConfiguration and Cname.CertificateConfiguration cannot be used simultaneously")
+		}
+
+		if (request.BucketCnameConfiguration.Domain != nil ||
+			request.BucketCnameConfiguration.CertificateConfiguration != nil) &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+			if request.BucketCnameConfiguration.CertificateConfiguration != nil &&
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration == nil {
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration = request.BucketCnameConfiguration.CertificateConfiguration
+			}
+		}
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+
+	request = &PutCnameRequest{
+		Bucket: Ptr("oss-demo"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutCname",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cname": "",
+			"comp":  "add",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+
+	request = &PutCnameRequest{
+		Bucket: Ptr("oss-demo"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
+			Domain: Ptr("example.com"),
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutCname",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cname": "",
+			"comp":  "add",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.CertificateConfiguration != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.CertificateConfiguration != nil) {
+			err = errors.New("CertificateConfiguration and Cname.CertificateConfiguration cannot be used simultaneously")
+		}
+
+		if (request.BucketCnameConfiguration.Domain != nil ||
+			request.BucketCnameConfiguration.CertificateConfiguration != nil) &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+			if request.BucketCnameConfiguration.CertificateConfiguration != nil &&
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration == nil {
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration = request.BucketCnameConfiguration.CertificateConfiguration
+			}
+		}
+	}
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "Cname.Domain and Domain cannot be used simultaneously")
 
 	request = &PutCnameRequest{
 		Bucket: Ptr("oss-demo"),
@@ -104,6 +208,154 @@ func TestMarshalInput_PutCname(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.CertificateConfiguration != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.CertificateConfiguration != nil) {
+			err = errors.New("CertificateConfiguration and Cname.CertificateConfiguration cannot be used simultaneously")
+		}
+
+		if (request.BucketCnameConfiguration.Domain != nil ||
+			request.BucketCnameConfiguration.CertificateConfiguration != nil) &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+			if request.BucketCnameConfiguration.CertificateConfiguration != nil &&
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration == nil {
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration = request.BucketCnameConfiguration.CertificateConfiguration
+			}
+		}
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><CertificateConfiguration><CertId>493****-cn-hangzhou</CertId><Certificate>-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----</Certificate><PrivateKey>-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----</PrivateKey><PreviousCertId>493****-cn-hangzhou</PreviousCertId><Force>true</Force></CertificateConfiguration></Cname></BucketCnameConfiguration>")
+
+	request = &PutCnameRequest{
+		Bucket: Ptr("oss-demo"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			CertificateConfiguration: &CertificateConfiguration{
+				CertId:         Ptr("493****-cn-hangzhou"),
+				Certificate:    Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+				PrivateKey:     Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+				PreviousCertId: Ptr("493****-cn-hangzhou"),
+				Force:          Ptr(true),
+			},
+			Cname: &Cname{
+				CertificateConfiguration: &CertificateConfiguration{
+					CertId:         Ptr("493****-cn-hangzhou"),
+					Certificate:    Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+					PrivateKey:     Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+					PreviousCertId: Ptr("493****-cn-hangzhou"),
+					Force:          Ptr(true),
+				},
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutCname",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cname": "",
+			"comp":  "add",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.CertificateConfiguration != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.CertificateConfiguration != nil) {
+			err = errors.New("CertificateConfiguration and Cname.CertificateConfiguration cannot be used simultaneously")
+		}
+
+		if (request.BucketCnameConfiguration.Domain != nil ||
+			request.BucketCnameConfiguration.CertificateConfiguration != nil) &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+			if request.BucketCnameConfiguration.CertificateConfiguration != nil &&
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration == nil {
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration = request.BucketCnameConfiguration.CertificateConfiguration
+			}
+		}
+	}
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "CertificateConfiguration and Cname.CertificateConfiguration cannot be used simultaneously")
+
+	request = &PutCnameRequest{
+		Bucket: Ptr("oss-demo"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+				CertificateConfiguration: &CertificateConfiguration{
+					CertId:         Ptr("493****-cn-hangzhou"),
+					Certificate:    Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+					PrivateKey:     Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+					PreviousCertId: Ptr("493****-cn-hangzhou"),
+					Force:          Ptr(true),
+				},
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutCname",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cname": "",
+			"comp":  "add",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.CertificateConfiguration != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.CertificateConfiguration != nil) {
+			err = errors.New("CertificateConfiguration and Cname.CertificateConfiguration cannot be used simultaneously")
+		}
+
+		if (request.BucketCnameConfiguration.Domain != nil ||
+			request.BucketCnameConfiguration.CertificateConfiguration != nil) &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+			if request.BucketCnameConfiguration.CertificateConfiguration != nil &&
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration == nil {
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration = request.BucketCnameConfiguration.CertificateConfiguration
+			}
+		}
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ = io.ReadAll(input.Body)
@@ -131,6 +383,87 @@ func TestMarshalInput_PutCname(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.CertificateConfiguration != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.CertificateConfiguration != nil) {
+			err = errors.New("CertificateConfiguration and Cname.CertificateConfiguration cannot be used simultaneously")
+		}
+
+		if (request.BucketCnameConfiguration.Domain != nil ||
+			request.BucketCnameConfiguration.CertificateConfiguration != nil) &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+			if request.BucketCnameConfiguration.CertificateConfiguration != nil &&
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration == nil {
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration = request.BucketCnameConfiguration.CertificateConfiguration
+			}
+		}
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><CertificateConfiguration><DeleteCertificate>true</DeleteCertificate></CertificateConfiguration></Cname></BucketCnameConfiguration>")
+
+	request = &PutCnameRequest{
+		Bucket: Ptr("oss-demo"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+				CertificateConfiguration: &CertificateConfiguration{
+					DeleteCertificate: Ptr(true),
+				},
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutCname",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cname": "",
+			"comp":  "add",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.CertificateConfiguration != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.CertificateConfiguration != nil) {
+			err = errors.New("CertificateConfiguration and Cname.CertificateConfiguration cannot be used simultaneously")
+		}
+
+		if (request.BucketCnameConfiguration.Domain != nil ||
+			request.BucketCnameConfiguration.CertificateConfiguration != nil) &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+			if request.BucketCnameConfiguration.CertificateConfiguration != nil &&
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration == nil {
+				request.BucketCnameConfiguration.Cname.CertificateConfiguration = request.BucketCnameConfiguration.CertificateConfiguration
+			}
+		}
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ = io.ReadAll(input.Body)
@@ -233,6 +566,23 @@ func TestMarshalInput_CreateCnameToken(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"cname", "comp"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.Domain != nil &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
@@ -253,6 +603,23 @@ func TestMarshalInput_CreateCnameToken(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"cname", "comp"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.Domain != nil &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Contains(t, err.Error(), "missing required field, BucketCnameConfiguration.")
 
@@ -275,10 +642,112 @@ func TestMarshalInput_CreateCnameToken(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.Domain != nil &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+
+	request = &CreateCnameTokenRequest{
+		Bucket: Ptr("oss-demo"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutCname",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cname": "",
+			"comp":  "add",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.Domain != nil &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+
+	request = &CreateCnameTokenRequest{
+		Bucket: Ptr("oss-demo"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Domain: Ptr("example.com"),
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutCname",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cname": "",
+			"comp":  "add",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.Domain != nil &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "Cname.Domain and Domain cannot be used simultaneously")
 }
 
 func TestUnmarshalOutput_CreateCnameToken(t *testing.T) {
@@ -704,6 +1173,23 @@ func TestMarshalInput_DeleteCname(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"cname", "comp"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.Domain != nil &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
@@ -724,6 +1210,23 @@ func TestMarshalInput_DeleteCname(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"cname", "comp"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.Domain != nil &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, BucketCnameConfiguration.")
@@ -747,10 +1250,112 @@ func TestMarshalInput_DeleteCname(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"cname", "comp"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.Domain != nil &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+
+	request = &DeleteCnameRequest{
+		Bucket: Ptr("oss-demo"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "DeleteCname",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cname": "",
+			"comp":  "delete",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"cname", "comp"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.Domain != nil &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+
+	request = &DeleteCnameRequest{
+		Bucket: Ptr("oss-demo"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Domain: Ptr("example.com"),
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "DeleteCname",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"cname": "",
+			"comp":  "delete",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"cname", "comp"})
+	if request.BucketCnameConfiguration != nil {
+		if request.BucketCnameConfiguration.Domain != nil && (request.BucketCnameConfiguration.Cname != nil && request.BucketCnameConfiguration.Cname.Domain != nil) {
+			err = errors.New("Cname.Domain and Domain cannot be used simultaneously")
+		}
+
+		if request.BucketCnameConfiguration.Domain != nil &&
+			request.BucketCnameConfiguration.Cname == nil {
+			request.BucketCnameConfiguration.Cname = &Cname{}
+		}
+
+		if request.BucketCnameConfiguration.Cname != nil {
+			if request.BucketCnameConfiguration.Domain != nil &&
+				request.BucketCnameConfiguration.Cname.Domain == nil {
+				request.BucketCnameConfiguration.Cname.Domain = request.BucketCnameConfiguration.Domain
+			}
+		}
+	}
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "Cname.Domain and Domain cannot be used simultaneously")
 }
 
 func TestUnmarshalOutput_DeleteCname(t *testing.T) {
