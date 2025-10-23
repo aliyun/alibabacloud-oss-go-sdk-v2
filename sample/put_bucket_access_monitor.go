@@ -40,7 +40,8 @@ func main() {
 	request := &oss.PutBucketAccessMonitorRequest{
 		Bucket: oss.Ptr(bucketName),
 		AccessMonitorConfiguration: &oss.AccessMonitorConfiguration{
-			oss.AccessMonitorStatusEnabled,
+			Status:    oss.AccessMonitorStatusEnabled,
+			AllowCopy: oss.Ptr(true),
 		},
 	}
 	putResult, err := client.PutBucketAccessMonitor(context.TODO(), request)

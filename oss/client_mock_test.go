@@ -22389,6 +22389,34 @@ var testMockPutBucketAccessMonitorSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 		},
 	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessmonitor", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<AccessMonitorConfiguration><Status>Enabled</Status><AllowCopy>true</AllowCopy></AccessMonitorConfiguration>")
+		},
+		&PutBucketAccessMonitorRequest{
+			Bucket: Ptr("bucket"),
+			AccessMonitorConfiguration: &AccessMonitorConfiguration{
+				Status:    AccessMonitorStatusEnabled,
+				AllowCopy: Ptr(true),
+			},
+		},
+		func(t *testing.T, o *PutBucketAccessMonitorResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
 }
 
 func TestMockPutBucketAccessMonitor_Success(t *testing.T) {
@@ -22577,6 +22605,31 @@ var testMockGetBucketAccessMonitorSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.Equal(t, o.AccessMonitorConfiguration.Status, AccessMonitorStatusDisabled)
 
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+			<AccessMonitorConfiguration><Status>Enabled</Status><AllowCopy>true</AllowCopy></AccessMonitorConfiguration>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?accessmonitor", urlStr)
+		},
+		&GetBucketAccessMonitorRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetBucketAccessMonitorResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.AccessMonitorConfiguration.Status, AccessMonitorStatusEnabled)
+			assert.Equal(t, *o.AccessMonitorConfiguration.AllowCopy, true)
 		},
 	},
 }

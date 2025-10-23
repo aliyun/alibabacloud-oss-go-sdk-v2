@@ -7,6 +7,9 @@ import (
 type AccessMonitorConfiguration struct {
 	// The access tracking status of the bucket. Valid values:- Enabled: Access tracking is enabled.- Disabled: Access tracking is disabled.
 	Status AccessMonitorStatusType `xml:"Status"`
+
+	// Only effective when Status is Enabled, indicating whether it supports updating the source data's LastAccesstime when CopyObject/UploadPartCopy is used
+	AllowCopy *bool `xml:"AllowCopy"`
 }
 
 type PutBucketAccessMonitorRequest struct {

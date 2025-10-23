@@ -70,6 +70,52 @@ func TestMarshalInput_PutBucketAccessMonitor(t *testing.T) {
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<AccessMonitorConfiguration><Status>Enabled</Status></AccessMonitorConfiguration>")
+
+	request = &PutBucketAccessMonitorRequest{
+		Bucket: Ptr("oss-demo"),
+		AccessMonitorConfiguration: &AccessMonitorConfiguration{
+			Status:    AccessMonitorStatusEnabled,
+			AllowCopy: Ptr(true),
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutBucketAccessMonitor",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"accessmonitor": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<AccessMonitorConfiguration><Status>Enabled</Status><AllowCopy>true</AllowCopy></AccessMonitorConfiguration>")
+
+	request = &PutBucketAccessMonitorRequest{
+		Bucket: Ptr("oss-demo"),
+		AccessMonitorConfiguration: &AccessMonitorConfiguration{
+			Status:    AccessMonitorStatusEnabled,
+			AllowCopy: Ptr(false),
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutBucketAccessMonitor",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"accessmonitor": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<AccessMonitorConfiguration><Status>Enabled</Status><AllowCopy>false</AllowCopy></AccessMonitorConfiguration>")
 }
 
 func TestUnmarshalOutput_PutBucketAccessMonitor(t *testing.T) {
@@ -222,6 +268,28 @@ func TestUnmarshalOutput_GetBucketAccessMonitor(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.AccessMonitorConfiguration.Status, AccessMonitorStatusEnabled)
+
+	body = `<?xml version="1.0" encoding="UTF-8"?>
+<AccessMonitorConfiguration>
+ <Status>Enabled</Status>
+ <AllowCopy>true</AllowCopy>
+</AccessMonitorConfiguration>`
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+		},
+	}
+	result = &GetBucketAccessMonitorResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.AccessMonitorConfiguration.Status, AccessMonitorStatusEnabled)
+	assert.Equal(t, *result.AccessMonitorConfiguration.AllowCopy, true)
 
 	body = `<?xml version="1.0" encoding="UTF-8"?>
 <AccessMonitorConfiguration>

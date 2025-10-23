@@ -7207,6 +7207,7 @@ func TestBucketAccessMonitor(t *testing.T) {
 		Bucket: Ptr(bucketName),
 		AccessMonitorConfiguration: &AccessMonitorConfiguration{
 			Status: AccessMonitorStatusEnabled,
+			AllowCopy: Ptr(true),
 		},
 	}
 	putResult, err := client.PutBucketAccessMonitor(context.TODO(), putRequest)
@@ -7223,6 +7224,7 @@ func TestBucketAccessMonitor(t *testing.T) {
 	assert.Equal(t, 200, getResult.StatusCode)
 	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
 	assert.Equal(t, getResult.AccessMonitorConfiguration.Status, AccessMonitorStatusEnabled)
+	assert.Equal(t, *getResult.AccessMonitorConfiguration.AllowCopy, true)
 	time.Sleep(1 * time.Second)
 
 	var serr *ServiceError
