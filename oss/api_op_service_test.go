@@ -43,6 +43,48 @@ func TestMarshalInput_ListBuckets(t *testing.T) {
 	}
 	err = c.marshalInput(request, input)
 	assert.Nil(t, err)
+
+	request = &ListBucketsRequest{
+		Marker:          Ptr(""),
+		MaxKeys:         10,
+		Prefix:          Ptr("/"),
+		ResourceGroupId: Ptr("rg-aek27tc********"),
+		Tagging:         Ptr("\"k\":\"v\""),
+	}
+	input = &OperationInput{
+		OpName: "ListBuckets",
+		Method: "GET",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeDefault,
+		},
+	}
+	err = c.marshalInput(request, input)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["tagging"], "\"k\":\"v\"")
+
+	request = &ListBucketsRequest{
+		Marker:          Ptr(""),
+		MaxKeys:         10,
+		Prefix:          Ptr("/"),
+		ResourceGroupId: Ptr("rg-aek27tc********"),
+		TagKey:          Ptr("k"),
+		TagValue:        Ptr("v"),
+	}
+	input = &OperationInput{
+		OpName: "ListBuckets",
+		Method: "GET",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeDefault,
+		},
+	}
+	err = c.marshalInput(request, input)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["tag-key"], "k")
+	assert.Equal(t, input.Parameters["tag-value"], "v")
+	assert.Equal(t, input.Parameters["marker"], "")
+	assert.Equal(t, input.Parameters["max-keys"], "10")
+	assert.Equal(t, input.Parameters["prefix"], "/")
+	assert.Equal(t, input.Headers["x-oss-resource-group-id"], "rg-aek27tc********")
 }
 
 func TestUnmarshalOutput_ListBuckets(t *testing.T) {

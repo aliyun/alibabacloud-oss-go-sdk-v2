@@ -656,6 +656,137 @@ var testMockListBucketsSuccessCases = []struct {
 			assert.Equal(t, *o.Buckets[0].StorageClass, "Standard")
 		},
 	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListAllMyBucketsResult>
+  <Prefix>my</Prefix>
+  <Marker>mybucket</Marker>
+  <MaxKeys>10</MaxKeys>
+  <IsTruncated>true</IsTruncated>
+  <NextMarker>mybucket10</NextMarker>
+  <Owner>
+    <ID>ut_test_put_bucket</ID>
+    <DisplayName>ut_test_put_bucket</DisplayName>
+  </Owner>
+  <Buckets>
+    <Bucket>
+      <CreationDate>2014-05-14T11:18:32.000Z</CreationDate>
+      <ExtranetEndpoint>oss-cn-hangzhou.aliyuncs.com</ExtranetEndpoint>
+      <IntranetEndpoint>oss-cn-hangzhou-internal.aliyuncs.com</IntranetEndpoint>
+      <Location>oss-cn-hangzhou</Location>
+      <Name>mybucket01</Name>
+      <Region>cn-hangzhou</Region>
+      <StorageClass>Standard</StorageClass>
+    </Bucket>
+  </Buckets>
+</ListAllMyBucketsResult>`),
+		func(t *testing.T, r *http.Request) {
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?marker&max-keys=10&prefix=%2F&tagging=%22k%22%3A%22v%22", strUrl)
+		},
+		&ListBucketsRequest{
+			Marker:          Ptr(""),
+			MaxKeys:         10,
+			Prefix:          Ptr("/"),
+			ResourceGroupId: Ptr("rg-aek27tc********"),
+			Tagging:         Ptr("\"k\":\"v\""),
+		},
+		func(t *testing.T, o *ListBucketsResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+			assert.Equal(t, *o.Owner.DisplayName, "ut_test_put_bucket")
+			assert.Equal(t, *o.Owner.ID, "ut_test_put_bucket")
+			assert.Equal(t, *o.Prefix, "my")
+			assert.Equal(t, *o.Marker, "mybucket")
+			assert.Equal(t, o.MaxKeys, int32(10))
+			assert.Equal(t, o.IsTruncated, true)
+			assert.Equal(t, *o.NextMarker, "mybucket10")
+
+			assert.Equal(t, len(o.Buckets), 1)
+			assert.Equal(t, *o.Buckets[0].CreationDate, time.Date(2014, time.May, 14, 11, 18, 32, 0, time.UTC))
+			assert.Equal(t, *o.Buckets[0].ExtranetEndpoint, "oss-cn-hangzhou.aliyuncs.com")
+			assert.Equal(t, *o.Buckets[0].IntranetEndpoint, "oss-cn-hangzhou-internal.aliyuncs.com")
+			assert.Equal(t, *o.Buckets[0].Name, "mybucket01")
+			assert.Equal(t, *o.Buckets[0].Region, "cn-hangzhou")
+			assert.Equal(t, *o.Buckets[0].StorageClass, "Standard")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<ListAllMyBucketsResult>
+  <Prefix>my</Prefix>
+  <Marker>mybucket</Marker>
+  <MaxKeys>10</MaxKeys>
+  <IsTruncated>true</IsTruncated>
+  <NextMarker>mybucket10</NextMarker>
+  <Owner>
+    <ID>ut_test_put_bucket</ID>
+    <DisplayName>ut_test_put_bucket</DisplayName>
+  </Owner>
+  <Buckets>
+    <Bucket>
+      <CreationDate>2014-05-14T11:18:32.000Z</CreationDate>
+      <ExtranetEndpoint>oss-cn-hangzhou.aliyuncs.com</ExtranetEndpoint>
+      <IntranetEndpoint>oss-cn-hangzhou-internal.aliyuncs.com</IntranetEndpoint>
+      <Location>oss-cn-hangzhou</Location>
+      <Name>mybucket01</Name>
+      <Region>cn-hangzhou</Region>
+      <StorageClass>Standard</StorageClass>
+    </Bucket>
+  </Buckets>
+</ListAllMyBucketsResult>`),
+		func(t *testing.T, r *http.Request) {
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/?marker&max-keys=10&prefix=%2F&tag-key=k&tag-value=v", strUrl)
+		},
+		&ListBucketsRequest{
+			Marker:          Ptr(""),
+			MaxKeys:         10,
+			Prefix:          Ptr("/"),
+			ResourceGroupId: Ptr("rg-aek27tc********"),
+			TagKey:          Ptr("k"),
+			TagValue:        Ptr("v"),
+		},
+		func(t *testing.T, o *ListBucketsResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+			assert.Equal(t, *o.Owner.DisplayName, "ut_test_put_bucket")
+			assert.Equal(t, *o.Owner.ID, "ut_test_put_bucket")
+			assert.Equal(t, *o.Prefix, "my")
+			assert.Equal(t, *o.Marker, "mybucket")
+			assert.Equal(t, o.MaxKeys, int32(10))
+			assert.Equal(t, o.IsTruncated, true)
+			assert.Equal(t, *o.NextMarker, "mybucket10")
+
+			assert.Equal(t, len(o.Buckets), 1)
+			assert.Equal(t, *o.Buckets[0].CreationDate, time.Date(2014, time.May, 14, 11, 18, 32, 0, time.UTC))
+			assert.Equal(t, *o.Buckets[0].ExtranetEndpoint, "oss-cn-hangzhou.aliyuncs.com")
+			assert.Equal(t, *o.Buckets[0].IntranetEndpoint, "oss-cn-hangzhou-internal.aliyuncs.com")
+			assert.Equal(t, *o.Buckets[0].Name, "mybucket01")
+			assert.Equal(t, *o.Buckets[0].Region, "cn-hangzhou")
+			assert.Equal(t, *o.Buckets[0].StorageClass, "Standard")
+		},
+	},
 }
 
 func TestMockListBuckets_Success(t *testing.T) {
