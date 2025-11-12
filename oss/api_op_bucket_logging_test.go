@@ -77,6 +77,33 @@ func TestMarshalInput_PutBucketLogging(t *testing.T) {
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<BucketLoggingStatus><LoggingEnabled><TargetBucket>TargetBucket</TargetBucket><TargetPrefix>TargetPrefix</TargetPrefix></LoggingEnabled></BucketLoggingStatus>")
+
+	request = &PutBucketLoggingRequest{
+		Bucket: Ptr("oss-demo"),
+		BucketLoggingStatus: &BucketLoggingStatus{
+			&LoggingEnabled{
+				TargetBucket: Ptr("TargetBucket"),
+				TargetPrefix: Ptr("TargetPrefix"),
+				LoggingRole:  Ptr("AliyunOSSLoggingDefaultRole"),
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutBucketLogging",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"logging": "",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"logging"})
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<BucketLoggingStatus><LoggingEnabled><TargetBucket>TargetBucket</TargetBucket><TargetPrefix>TargetPrefix</TargetPrefix><LoggingRole>AliyunOSSLoggingDefaultRole</LoggingRole></LoggingEnabled></BucketLoggingStatus>")
 }
 
 func TestUnmarshalOutput_PutBucketLogging(t *testing.T) {
@@ -220,6 +247,34 @@ func TestUnmarshalOutput_GetBucketLogging(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 
+	assert.Equal(t, *result.BucketLoggingStatus.LoggingEnabled.TargetBucket, "bucket-log")
+	assert.Equal(t, *result.BucketLoggingStatus.LoggingEnabled.TargetPrefix, "prefix-access_log")
+
+	body = `<?xml version="1.0" encoding="UTF-8"?>
+<BucketLoggingStatus>
+  <LoggingEnabled>
+        <TargetBucket>bucket-log</TargetBucket>
+        <TargetPrefix>prefix-access_log</TargetPrefix>
+		<LoggingRole>AliyunOSSLoggingDefaultRole</LoggingRole>
+    </LoggingEnabled>
+</BucketLoggingStatus>`
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	result = &GetBucketLoggingResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.Equal(t, *result.BucketLoggingStatus.LoggingEnabled.LoggingRole, "AliyunOSSLoggingDefaultRole")
 	assert.Equal(t, *result.BucketLoggingStatus.LoggingEnabled.TargetBucket, "bucket-log")
 	assert.Equal(t, *result.BucketLoggingStatus.LoggingEnabled.TargetPrefix, "prefix-access_log")
 

@@ -5988,6 +5988,34 @@ func TestBucketLogging(t *testing.T) {
 	assert.Equal(t, *getResult.BucketLoggingStatus.LoggingEnabled.TargetPrefix, "TargetPrefix")
 	time.Sleep(1 * time.Second)
 
+	request = &PutBucketLoggingRequest{
+		Bucket: Ptr(bucketName),
+		BucketLoggingStatus: &BucketLoggingStatus{
+			&LoggingEnabled{
+				TargetBucket: Ptr(bucketName),
+				TargetPrefix: Ptr("TargetPrefix"),
+				LoggingRole:  Ptr("AliyunOSSLoggingDefaultRole"),
+			},
+		},
+	}
+	result, err = client.PutBucketLogging(context.TODO(), request)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, result.StatusCode)
+	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getRequest = &GetBucketLoggingRequest{
+		Bucket: Ptr(bucketName),
+	}
+	getResult, err = client.GetBucketLogging(context.TODO(), getRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	assert.Equal(t, *getResult.BucketLoggingStatus.LoggingEnabled.TargetBucket, bucketName)
+	assert.Equal(t, *getResult.BucketLoggingStatus.LoggingEnabled.TargetPrefix, "TargetPrefix")
+	assert.Equal(t, *getResult.BucketLoggingStatus.LoggingEnabled.LoggingRole, "AliyunOSSLoggingDefaultRole")
+	time.Sleep(1 * time.Second)
+
 	delRequest := &DeleteBucketLoggingRequest{
 		Bucket: Ptr(bucketName),
 	}

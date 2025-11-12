@@ -13,6 +13,7 @@ type LoggingEnabled struct {
 	// The prefix of the log objects. This parameter can be left empty.
 	TargetPrefix *string `xml:"TargetPrefix" json:"TargetPrefix,omitempty"`
 
+	// Log transfer authorization role.
 	LoggingRole *string `xml:"LoggingRole" json:"LoggingRole,omitempty"`
 }
 
