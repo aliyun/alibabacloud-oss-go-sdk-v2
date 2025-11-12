@@ -19281,6 +19281,44 @@ var testMockPutBucketHttpsConfigSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 		},
 	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/bucket/?httpsConfig", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<HttpsConfiguration><TLS><Enable>true</Enable><TLSVersion>TLSv1.2</TLSVersion><TLSVersion>TLSv1.3</TLSVersion></TLS><CipherSuite><Enable>true</Enable><StrongCipherSuite>false</StrongCipherSuite><CustomCipherSuite>ECDHE-ECDSA-AES128-SHA256</CustomCipherSuite><CustomCipherSuite>ECDHE-RSA-AES128-GCM-SHA256</CustomCipherSuite><CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite></CipherSuite></HttpsConfiguration>")
+		},
+		&PutBucketHttpsConfigRequest{
+			Bucket: Ptr("bucket"),
+			HttpsConfiguration: &HttpsConfiguration{
+				TLS: &TLS{
+					Enable:      Ptr(true),
+					TLSVersions: []string{"TLSv1.2", "TLSv1.3"},
+				},
+				CipherSuite: &CipherSuite{
+					Enable:            Ptr(true),
+					StrongCipherSuite: Ptr(false),
+					CustomCipherSuites: []string{
+						"ECDHE-ECDSA-AES128-SHA256", "ECDHE-RSA-AES128-GCM-SHA256", "ECDHE-ECDSA-AES256-CCM8",
+					},
+					TLS13CustomCipherSuites: []string{
+						"ECDHE-ECDSA-AES256-CCM8", "ECDHE-ECDSA-AES256-CCM8", "ECDHE-ECDSA-AES256-CCM8",
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *PutBucketHttpsConfigResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
 }
 
 func TestMockPutBucketHttpsConfig_Success(t *testing.T) {
@@ -19476,6 +19514,39 @@ var testMockGetBucketHttpsConfigSuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.False(t, *o.HttpsConfiguration.TLS.Enable)
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<HttpsConfiguration><TLS><Enable>true</Enable><TLSVersion>TLSv1.2</TLSVersion><TLSVersion>TLSv1.3</TLSVersion></TLS><CipherSuite><Enable>true</Enable><StrongCipherSuite>false</StrongCipherSuite><CustomCipherSuite>ECDHE-ECDSA-AES128-SHA256</CustomCipherSuite><CustomCipherSuite>ECDHE-RSA-AES128-GCM-SHA256</CustomCipherSuite><CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite></CipherSuite></HttpsConfiguration>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/bucket/?httpsConfig", r.URL.String())
+		},
+		&GetBucketHttpsConfigRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetBucketHttpsConfigResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.True(t, *o.HttpsConfiguration.TLS.Enable)
+			assert.Equal(t, o.HttpsConfiguration.TLS.TLSVersions[0], "TLSv1.2")
+			assert.Equal(t, o.HttpsConfiguration.TLS.TLSVersions[1], "TLSv1.3")
+			assert.True(t, *o.HttpsConfiguration.CipherSuite.Enable)
+			assert.Equal(t, len(o.HttpsConfiguration.CipherSuite.TLS13CustomCipherSuites), 3)
+			assert.Equal(t, o.HttpsConfiguration.CipherSuite.TLS13CustomCipherSuites[0], "ECDHE-ECDSA-AES256-CCM8")
+			assert.Equal(t, o.HttpsConfiguration.CipherSuite.TLS13CustomCipherSuites[1], "ECDHE-ECDSA-AES256-CCM8")
+			assert.Equal(t, o.HttpsConfiguration.CipherSuite.TLS13CustomCipherSuites[2], "ECDHE-ECDSA-AES256-CCM8")
+			assert.Equal(t, len(o.HttpsConfiguration.CipherSuite.CustomCipherSuites), 3)
+			assert.Equal(t, o.HttpsConfiguration.CipherSuite.CustomCipherSuites[0], "ECDHE-ECDSA-AES128-SHA256")
+			assert.Equal(t, o.HttpsConfiguration.CipherSuite.CustomCipherSuites[1], "ECDHE-RSA-AES128-GCM-SHA256")
+			assert.Equal(t, o.HttpsConfiguration.CipherSuite.CustomCipherSuites[2], "ECDHE-ECDSA-AES256-CCM8")
 		},
 	},
 }

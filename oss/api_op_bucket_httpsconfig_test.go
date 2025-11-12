@@ -77,6 +77,42 @@ func TestMarshalInput_PutBucketHttpsConfig(t *testing.T) {
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<HttpsConfiguration><TLS><Enable>true</Enable><TLSVersion>TLSv1.2</TLSVersion><TLSVersion>TLSv1.3</TLSVersion></TLS></HttpsConfiguration>")
+
+	request = &PutBucketHttpsConfigRequest{
+		Bucket: Ptr("oss-demo"),
+		HttpsConfiguration: &HttpsConfiguration{
+			TLS: &TLS{
+				Enable:      Ptr(true),
+				TLSVersions: []string{"TLSv1.2", "TLSv1.3"},
+			},
+			CipherSuite: &CipherSuite{
+				Enable:            Ptr(true),
+				StrongCipherSuite: Ptr(false),
+				CustomCipherSuites: []string{
+					"ECDHE-ECDSA-AES128-SHA256", "ECDHE-RSA-AES128-GCM-SHA256", "ECDHE-ECDSA-AES256-CCM8",
+				},
+				TLS13CustomCipherSuites: []string{
+					"ECDHE-ECDSA-AES256-CCM8", "ECDHE-ECDSA-AES256-CCM8", "ECDHE-ECDSA-AES256-CCM8",
+				},
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutBucketHttpsConfig",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"httpsConfig": "",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"httpsConfig"})
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<HttpsConfiguration><TLS><Enable>true</Enable><TLSVersion>TLSv1.2</TLSVersion><TLSVersion>TLSv1.3</TLSVersion></TLS><CipherSuite><Enable>true</Enable><StrongCipherSuite>false</StrongCipherSuite><CustomCipherSuite>ECDHE-ECDSA-AES128-SHA256</CustomCipherSuite><CustomCipherSuite>ECDHE-RSA-AES128-GCM-SHA256</CustomCipherSuite><CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite></CipherSuite></HttpsConfiguration>")
 }
 
 func TestUnmarshalOutput_PutBucketHttpsConfig(t *testing.T) {
@@ -223,6 +259,37 @@ func TestUnmarshalOutput_GetBucketHttpsConfig(t *testing.T) {
 	assert.True(t, *result.HttpsConfiguration.TLS.Enable)
 	assert.Equal(t, result.HttpsConfiguration.TLS.TLSVersions[0], "TLSv1.2")
 	assert.Equal(t, result.HttpsConfiguration.TLS.TLSVersions[1], "TLSv1.3")
+
+	body = `<?xml version="1.0" encoding="UTF-8"?>
+<HttpsConfiguration><TLS><Enable>true</Enable><TLSVersion>TLSv1.2</TLSVersion><TLSVersion>TLSv1.3</TLSVersion></TLS><CipherSuite><Enable>true</Enable><StrongCipherSuite>false</StrongCipherSuite><CustomCipherSuite>ECDHE-ECDSA-AES128-SHA256</CustomCipherSuite><CustomCipherSuite>ECDHE-RSA-AES128-GCM-SHA256</CustomCipherSuite><CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite><TLS13CustomCipherSuite>ECDHE-ECDSA-AES256-CCM8</TLS13CustomCipherSuite></CipherSuite></HttpsConfiguration>`
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	result = &GetBucketHttpsConfigResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	assert.True(t, *result.HttpsConfiguration.TLS.Enable)
+	assert.Equal(t, result.HttpsConfiguration.TLS.TLSVersions[0], "TLSv1.2")
+	assert.Equal(t, result.HttpsConfiguration.TLS.TLSVersions[1], "TLSv1.3")
+	assert.True(t, *result.HttpsConfiguration.CipherSuite.Enable)
+	assert.Equal(t, len(result.HttpsConfiguration.CipherSuite.TLS13CustomCipherSuites), 3)
+	assert.Equal(t, result.HttpsConfiguration.CipherSuite.TLS13CustomCipherSuites[0], "ECDHE-ECDSA-AES256-CCM8")
+	assert.Equal(t, result.HttpsConfiguration.CipherSuite.TLS13CustomCipherSuites[1], "ECDHE-ECDSA-AES256-CCM8")
+	assert.Equal(t, result.HttpsConfiguration.CipherSuite.TLS13CustomCipherSuites[2], "ECDHE-ECDSA-AES256-CCM8")
+	assert.Equal(t, len(result.HttpsConfiguration.CipherSuite.CustomCipherSuites), 3)
+	assert.Equal(t, result.HttpsConfiguration.CipherSuite.CustomCipherSuites[0], "ECDHE-ECDSA-AES128-SHA256")
+	assert.Equal(t, result.HttpsConfiguration.CipherSuite.CustomCipherSuites[1], "ECDHE-RSA-AES128-GCM-SHA256")
+	assert.Equal(t, result.HttpsConfiguration.CipherSuite.CustomCipherSuites[2], "ECDHE-ECDSA-AES256-CCM8")
 
 	output = &OperationOutput{
 		StatusCode: 404,
