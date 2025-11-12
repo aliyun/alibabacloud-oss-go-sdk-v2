@@ -5849,6 +5849,62 @@ var testMockDeleteMultipleObjectsSuccessCases = []struct {
 			assert.Nil(t, o.DeletedObjects[0].VersionId)
 		},
 	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "6551DBCF4311A7303980****",
+			"Date":             "Mon, 13 Nov 2023 08:18:23 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<DeleteResult>
+  <EncodingType>url</EncodingType>
+  <Deleted>
+    <Key>key1.txt</Key>
+    <DeleteMarker>true</DeleteMarker>
+    <DeleteMarkerVersionId>CAEQHxiBgMCEld7a3hgiIDYyMmZlNWVhMDU5NDQ3ZTFhODI1ZjZhMTFlMGQz****</DeleteMarkerVersionId>
+  </Deleted>
+  <Deleted>
+    <Key>key2.txt</Key>
+    <DeleteMarker>true</DeleteMarker>
+    <DeleteMarkerVersionId>CAEQHxiBgICJld7a3hgiIDJmZGE0OTU5MjMzZDQxNjlhY2NjMmI3YWRkYWI4****</DeleteMarkerVersionId>
+  </Deleted>
+</DeleteResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/?delete&encoding-type=url", strUrl)
+			data, err := io.ReadAll(r.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, string(data), "<Delete><Quiet>false</Quiet><Object><Key>key1.txt</Key><VersionId>CAEQHxiBgMCEld7a3hgiIDYyMmZlNWVhMDU5NDQ3ZTFhODI1ZjZhMTFlMGQz****</VersionId></Object><Object><Key>key2.txt</Key><VersionId>CAEQHxiBgICJld7a3hgiIDJmZGE0OTU5MjMzZDQxNjlhY2NjMmI3YWRkYWI4****</VersionId></Object></Delete>")
+		},
+		&DeleteMultipleObjectsRequest{
+			Bucket:       Ptr("bucket"),
+			EncodingType: Ptr("url"),
+			Delete: &Delete{
+				Objects: []ObjectIdentifier{
+					{Key: Ptr("key1.txt"), VersionId: Ptr("CAEQHxiBgMCEld7a3hgiIDYyMmZlNWVhMDU5NDQ3ZTFhODI1ZjZhMTFlMGQz****")},
+					{Key: Ptr("key2.txt"), VersionId: Ptr("CAEQHxiBgICJld7a3hgiIDJmZGE0OTU5MjMzZDQxNjlhY2NjMmI3YWRkYWI4****")},
+				},
+			},
+		},
+		func(t *testing.T, o *DeleteMultipleObjectsResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "6551DBCF4311A7303980****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Mon, 13 Nov 2023 08:18:23 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.Headers.Get("Content-Type"), "application/xml")
+			assert.Len(t, o.DeletedObjects, 2)
+			assert.Equal(t, *o.DeletedObjects[0].Key, "key1.txt")
+			assert.Equal(t, o.DeletedObjects[0].DeleteMarker, true)
+			assert.Equal(t, *o.DeletedObjects[0].DeleteMarkerVersionId, "CAEQHxiBgMCEld7a3hgiIDYyMmZlNWVhMDU5NDQ3ZTFhODI1ZjZhMTFlMGQz****")
+			assert.Nil(t, o.DeletedObjects[0].VersionId)
+			assert.Equal(t, *o.DeletedObjects[1].Key, "key2.txt")
+			assert.Equal(t, o.DeletedObjects[1].DeleteMarker, true)
+			assert.Equal(t, *o.DeletedObjects[1].DeleteMarkerVersionId, "CAEQHxiBgICJld7a3hgiIDJmZGE0OTU5MjMzZDQxNjlhY2NjMmI3YWRkYWI4****")
+			assert.Nil(t, o.DeletedObjects[1].VersionId)
+		},
+	},
 }
 
 func TestMockDeleteMultipleObjects_Success(t *testing.T) {

@@ -799,16 +799,38 @@ type DeleteMultipleObjectsRequest struct {
 	ContentLength int64 `input:"header,Content-Length"`
 
 	// The container that stores information about you want to delete objects.
-	Objects []DeleteObject `input:"nop,objects,required"`
+	// Deprecated: Please use the Delete instead
+	Objects []DeleteObject
 
 	// Specifies whether to enable the Quiet return mode.
 	// The DeleteMultipleObjects operation provides the following return modes: Valid value: true,false
+	// Deprecated: Please use the new Delete.Quiet instead
 	Quiet bool
 
 	// To indicate that the requester is aware that the request and data download will incur costs
 	RequestPayer *string `input:"header,x-oss-request-payer"`
 
+	// The container that stores information about you want to delete objects.
+	Delete *Delete
+
 	RequestCommon
+}
+
+type Delete struct {
+	// The container that stores information about you want to delete objects.
+	Objects []ObjectIdentifier
+
+	// Specifies whether to enable the Quiet return mode.
+	// The DeleteMultipleObjects operation provides the following return modes: Valid value: true,false
+	Quiet bool
+}
+
+type ObjectIdentifier struct {
+	// The name of the object that you want to delete.
+	Key *string `xml:"Key"`
+
+	// The version ID of the object that you want to delete.
+	VersionId *string `xml:"VersionId"`
 }
 
 type DeleteObject struct {

@@ -931,11 +931,17 @@ func (c *Client) marshalInput(request any, input *OperationInput, handlers ...fu
 func marshalDeleteObjects(request any, input *OperationInput) error {
 	var builder strings.Builder
 	delRequest := request.(*DeleteMultipleObjectsRequest)
-	builder.WriteString("<Delete>")
-	builder.WriteString("<Quiet>")
-	builder.WriteString(strconv.FormatBool(delRequest.Quiet))
-	builder.WriteString("</Quiet>")
+	if (delRequest.Objects != nil && len(delRequest.Objects) > 0) && (delRequest.Delete != nil && len(delRequest.Delete.Objects) > 0) {
+		return fmt.Errorf("Objects and Delete cannot be set simultaneously")
+	}
+	if (delRequest.Objects == nil || len(delRequest.Objects) == 0) && (delRequest.Delete == nil || len(delRequest.Delete.Objects) == 0) {
+		return NewErrParamRequired("Objects or Delete")
+	}
 	if len(delRequest.Objects) > 0 {
+		builder.WriteString("<Delete>")
+		builder.WriteString("<Quiet>")
+		builder.WriteString(strconv.FormatBool(delRequest.Quiet))
+		builder.WriteString("</Quiet>")
 		for _, object := range delRequest.Objects {
 			builder.WriteString("<Object>")
 			if object.Key != nil {
@@ -950,10 +956,28 @@ func marshalDeleteObjects(request any, input *OperationInput) error {
 			}
 			builder.WriteString("</Object>")
 		}
-	} else {
-		return NewErrParamInvalid("Objects")
+		builder.WriteString("</Delete>")
+	} else if len(delRequest.Delete.Objects) > 0 {
+		builder.WriteString("<Delete>")
+		builder.WriteString("<Quiet>")
+		builder.WriteString(strconv.FormatBool(delRequest.Delete.Quiet))
+		builder.WriteString("</Quiet>")
+		for _, object := range delRequest.Delete.Objects {
+			builder.WriteString("<Object>")
+			if object.Key != nil {
+				builder.WriteString("<Key>")
+				builder.WriteString(escapeXml(*object.Key))
+				builder.WriteString("</Key>")
+			}
+			if object.VersionId != nil {
+				builder.WriteString("<VersionId>")
+				builder.WriteString(*object.VersionId)
+				builder.WriteString("</VersionId>")
+			}
+			builder.WriteString("</Object>")
+		}
+		builder.WriteString("</Delete>")
 	}
-	builder.WriteString("</Delete>")
 	input.Body = strings.NewReader(builder.String())
 	return nil
 }
