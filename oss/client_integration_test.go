@@ -6603,6 +6603,16 @@ func TestBucketHttpsConfig(t *testing.T) {
 				Enable:      Ptr(true),
 				TLSVersions: []string{"TLSv1.2", "TLSv1.3"},
 			},
+			CipherSuite: &CipherSuite{
+				Enable:            Ptr(true),
+				StrongCipherSuite: Ptr(false),
+				CustomCipherSuites: []string{
+					"ECDHE-ECDSA-AES128-SHA256", "ECDHE-RSA-AES128-GCM-SHA256", "ECDHE-ECDSA-AES256-CCM8",
+				},
+				TLS13CustomCipherSuites: []string{
+					"TLS_AES_256_GCM_SHA384", "TLS_AES_128_GCM_SHA256", "TLS_CHACHA20_POLY1305_SHA256",
+				},
+			},
 		},
 	}
 	putResult, err := client.PutBucketHttpsConfig(context.TODO(), putRequest)
@@ -6620,6 +6630,9 @@ func TestBucketHttpsConfig(t *testing.T) {
 	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
 	assert.True(t, *getResult.HttpsConfiguration.TLS.Enable)
 	assert.Equal(t, len(getResult.HttpsConfiguration.TLS.TLSVersions), 2)
+	assert.True(t, *getResult.HttpsConfiguration.CipherSuite.Enable)
+	assert.Equal(t, len(getResult.HttpsConfiguration.CipherSuite.TLS13CustomCipherSuites), 3)
+	assert.Equal(t, len(getResult.HttpsConfiguration.CipherSuite.CustomCipherSuites), 3)
 	time.Sleep(1 * time.Second)
 
 	var serr *ServiceError
