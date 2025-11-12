@@ -14753,6 +14753,35 @@ var testMockPutBucketLoggingSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 		},
 	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/bucket/?logging", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<BucketLoggingStatus><LoggingEnabled><TargetBucket>TargetBucket</TargetBucket><TargetPrefix>TargetPrefix</TargetPrefix><LoggingRole>AliyunOSSLoggingDefaultRole</LoggingRole></LoggingEnabled></BucketLoggingStatus>")
+		},
+		&PutBucketLoggingRequest{
+			Bucket: Ptr("bucket"),
+			BucketLoggingStatus: &BucketLoggingStatus{
+				&LoggingEnabled{
+					TargetBucket: Ptr("TargetBucket"),
+					TargetPrefix: Ptr("TargetPrefix"),
+					LoggingRole:  Ptr("AliyunOSSLoggingDefaultRole"),
+				},
+			},
+		},
+		func(t *testing.T, o *PutBucketLoggingResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
 }
 
 func TestMockPutBucketLogging_Success(t *testing.T) {
@@ -14983,6 +15012,38 @@ var testMockGetBucketLoggingSuccessCases = []struct {
 
 			assert.Equal(t, *o.BucketLoggingStatus.LoggingEnabled.TargetBucket, "bucket-log")
 			assert.Nil(t, o.BucketLoggingStatus.LoggingEnabled.TargetPrefix)
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<BucketLoggingStatus>
+  <LoggingEnabled>
+        <TargetBucket>bucket-log</TargetBucket>
+        <TargetPrefix>prefix-access_log</TargetPrefix>
+		<LoggingRole>AliyunOSSLoggingDefaultRole</LoggingRole>
+    </LoggingEnabled>
+</BucketLoggingStatus>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/bucket/?logging", r.URL.String())
+		},
+		&GetBucketLoggingRequest{
+			Bucket: Ptr("bucket"),
+		},
+		func(t *testing.T, o *GetBucketLoggingResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+			assert.Equal(t, *o.BucketLoggingStatus.LoggingEnabled.LoggingRole, "AliyunOSSLoggingDefaultRole")
+			assert.Equal(t, *o.BucketLoggingStatus.LoggingEnabled.TargetBucket, "bucket-log")
+			assert.Equal(t, *o.BucketLoggingStatus.LoggingEnabled.TargetPrefix, "prefix-access_log")
 		},
 	},
 }
