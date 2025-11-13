@@ -65,7 +65,12 @@ type PutObjectRequest struct {
 	ServerSideEncryptionKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
 
 	// The access control list (ACL) of the object.
+	// Deprecated: Please use the ObjectAcl instead
 	Acl ObjectACLType `input:"header,x-oss-object-acl"`
+
+	// The access control list (ACL) of the object.
+	// The ObjectAcl has the same functionality as the Acl. it is the standardized name for acl. If both exist simultaneously, the value of objectAcl will take precedence.
+	ObjectAcl ObjectACLType `input:"header,x-oss-object-acl"`
 
 	// The storage class of the object.
 	StorageClass StorageClassType `input:"header,x-oss-storage-class"`
@@ -450,7 +455,12 @@ type CopyObjectRequest struct {
 	ServerSideEncryptionKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
 
 	// The access control list (ACL) of the object.
+	// Deprecated: Please use the ObjectAcl instead
 	Acl ObjectACLType `input:"header,x-oss-object-acl"`
+
+	// The access control list (ACL) of the object.
+	// The ObjectAcl has the same functionality as the Acl. it is the standardized name for acl. If both exist simultaneously, the value of objectAcl will take precedence.
+	ObjectAcl ObjectACLType `input:"header,x-oss-object-acl"`
 
 	// The storage class of the object.
 	StorageClass StorageClassType `input:"header,x-oss-storage-class"`
@@ -620,7 +630,13 @@ type AppendObjectRequest struct {
 	ServerSideEncryptionKeyId *string `input:"header,x-oss-server-side-encryption-key-id"`
 
 	// The access control list (ACL) of the object.
+	// Deprecated: Please use the ObjectAcl instead
 	Acl ObjectACLType `input:"header,x-oss-object-acl"`
+
+	// The access control list (ACL) of the object.
+	// The access control list (ACL) of the object.
+	// The ObjectAcl has the same functionality as the Acl. it is the standardized name for acl. If both exist simultaneously, the value of objectAcl will take precedence.
+	ObjectAcl ObjectACLType `input:"header,x-oss-object-acl"`
 
 	// The storage class of the object.
 	StorageClass StorageClassType `input:"header,x-oss-storage-class"`
@@ -1207,7 +1223,12 @@ type PutObjectAclRequest struct {
 	Key *string `input:"path,key,required"`
 
 	// The access control list (ACL) of the object.
-	Acl ObjectACLType `input:"header,x-oss-object-acl,required"`
+	// Deprecated: Please use the ObjectAcl instead
+	Acl ObjectACLType `input:"header,x-oss-object-acl"`
+
+	// The access control list (ACL) of the object.
+	// The ObjectAcl has the same functionality as the Acl. it is the standardized name for acl. If both exist simultaneously, the value of objectAcl will take precedence.
+	ObjectAcl ObjectACLType `input:"header,x-oss-object-acl"`
 
 	// The version ID of the source object.
 	VersionId *string `input:"query,versionId"`
@@ -1239,6 +1260,9 @@ func (c *Client) PutObjectAcl(ctx context.Context, request *PutObjectAclRequest,
 		Parameters: map[string]string{
 			"acl": "",
 		},
+	}
+	if request.Acl == "" && request.ObjectAcl == "" {
+		return nil, fmt.Errorf("missing required field, Acl or ObjectAcl")
 	}
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
@@ -1660,7 +1684,12 @@ type CompleteMultipartUploadRequest struct {
 	CompleteMultipartUpload *CompleteMultipartUpload `input:"body,CompleteMultipartUpload,xml"`
 
 	// The access control list (ACL) of the object.
+	// Deprecated: Please use the ObjectAcl instead
 	Acl ObjectACLType `input:"header,x-oss-object-acl"`
+
+	// The access control list (ACL) of the object.
+	// The ObjectAcl has the same functionality as the Acl. it is the standardized name for acl. If both exist simultaneously, the value of objectAcl will take precedence.
+	ObjectAcl ObjectACLType `input:"header,x-oss-object-acl"`
 
 	// A callback parameter is a Base64-encoded string that contains multiple fields in the JSON format.
 	Callback *string `input:"header,x-oss-callback"`
@@ -2090,7 +2119,12 @@ type PutSymlinkRequest struct {
 	Key *string `input:"path,key,required"`
 
 	// The destination object to which the symbolic link points.
-	Target *string `input:"header,x-oss-symlink-target,required"`
+	// Deprecated: Please use the SymlinkTarget instead
+	Target *string `input:"header,x-oss-symlink-target"`
+
+	// The destination object to which the symbolic link points.
+	// The target object to which the symbolic link points. The SymlinkTarget has the same functionality as the Target. It is the normalized name of target. If both exist simultaneously, the value of SymlinkTarget will take precedence.
+	SymlinkTarget *string `input:"header,x-oss-symlink-target"`
 
 	// Specifies whether the PutSymlink operation overwrites the object that has the same name.
 	// If you do not specify the x-oss-forbid-overwrite header or if you set the x-oss-forbid-overwrite header to false, the object that has the same name is overwritten.
@@ -2098,7 +2132,12 @@ type PutSymlinkRequest struct {
 	ForbidOverwrite *string `input:"header,x-oss-forbid-overwrite"`
 
 	// The ACL of the object. Default value: default.
+	// Deprecated: Please use the ObjectAcl instead
 	Acl ObjectACLType `input:"header,x-oss-object-acl"`
+
+	// The access control list (ACL) of the object.
+	// The ObjectAcl has the same functionality as the Acl. it is the standardized name for acl. If both exist simultaneously, the value of objectAcl will take precedence.
+	ObjectAcl ObjectACLType `input:"header,x-oss-object-acl"`
 
 	// The storage class of the object.
 	StorageClass StorageClassType `input:"header,x-oss-storage-class"`
@@ -2133,6 +2172,9 @@ func (c *Client) PutSymlink(ctx context.Context, request *PutSymlinkRequest, opt
 		Parameters: map[string]string{
 			"symlink": "",
 		},
+	}
+	if request.SymlinkTarget == nil && request.Target == nil {
+		return nil, fmt.Errorf("missing required field, Target or SymlinkTarget")
 	}
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err

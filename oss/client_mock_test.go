@@ -3516,6 +3516,31 @@ var testMockPutObjectSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 		},
 	},
+	{
+		200,
+		map[string]string{
+			"Content-Type": "application/xml",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			requestBody, err := io.ReadAll(r.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, strings.NewReader("hi oss"), strings.NewReader(string(requestBody)))
+			assert.Equal(t, "/bucket/object.txt", r.URL.String())
+			assert.Equal(t, r.Header.Get("x-oss-object-acl"), string(ObjectACLDefault))
+		},
+		&PutObjectRequest{
+			Bucket:    Ptr("bucket"),
+			Key:       Ptr("object.txt"),
+			Body:      strings.NewReader("hi oss"),
+			Acl:       ObjectACLPrivate,
+			ObjectAcl: ObjectACLDefault,
+		},
+		func(t *testing.T, o *PutObjectResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+		},
+	},
 }
 
 func TestMockPutObject_Success(t *testing.T) {
@@ -4582,6 +4607,56 @@ var testMockCopyObjectSuccessCases = []struct {
 			assert.Equal(t, *o.LastModified, time.Date(2023, time.February, 24, 9, 41, 56, 0, time.UTC))
 		},
 	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id":                    "6551DBCF4311A7303980****",
+			"Date":                                "Mon, 13 Nov 2023 08:18:23 GMT",
+			"Content-Type":                        "text",
+			"x-oss-version-id":                    "CAEQHxiBgMD0ooWf3hgiIDcyMzYzZTJkZjgwYzRmN2FhNTZkMWZlMGY0YTVj****",
+			"ETag":                                "\"F2064A169EE92E9775EE5324D0B1****\"",
+			"x-oss-server-side-encryption":        "KMS",
+			"x-oss-server-side-data-encryption":   "SM4",
+			"x-oss-server-side-encryption-key-id": "12f8711f-90df-4e0d-903d-ab972b0f****",
+			"x-oss-hash-crc64ecma":                "870718044876841****",
+			"x-oss-copy-source-version-id":        "CAEQHxiBgICDvseg3hgiIGZmOGNjNWJiZDUzNjQxNDM4MWM2NDc1YjhkYTk4****",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+	<CopyObjectResult>
+	 <ETag>"F2064A169EE92E9775EE5324D0B1****"</ETag>
+	 <LastModified>2023-02-24T09:41:56.000Z</LastModified>
+	</CopyObjectResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			assert.Equal(t, "/bucket/object", r.URL.String())
+			assert.Equal(t, "/bucket/copy-object?versionId=CAEQHxiBgICDvseg3hgiIGZmOGNjNWJiZDUzNjQxNDM4MWM2NDc1YjhkYTk4****", r.Header.Get("x-oss-copy-source"))
+			assert.Equal(t, r.Header.Get("x-oss-traffic-limit"), strconv.FormatInt(100*1024*8, 10))
+			assert.Equal(t, r.Header.Get("x-oss-object-acl"), string(ObjectACLPrivate))
+		},
+		&CopyObjectRequest{
+			Bucket:          Ptr("bucket"),
+			Key:             Ptr("object"),
+			SourceKey:       Ptr("copy-object"),
+			TrafficLimit:    int64(100 * 1024 * 8),
+			SourceVersionId: Ptr("CAEQHxiBgICDvseg3hgiIGZmOGNjNWJiZDUzNjQxNDM4MWM2NDc1YjhkYTk4****"),
+			Acl:             ObjectACLDefault,
+			ObjectAcl:       ObjectACLPrivate,
+		},
+		func(t *testing.T, o *CopyObjectResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "6551DBCF4311A7303980****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Mon, 13 Nov 2023 08:18:23 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.ETag, "\"F2064A169EE92E9775EE5324D0B1****\"")
+			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
+			assert.Equal(t, *o.ServerSideEncryption, "KMS")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+			assert.Equal(t, *o.HashCRC64, "870718044876841****")
+			assert.Equal(t, *o.VersionId, "CAEQHxiBgMD0ooWf3hgiIDcyMzYzZTJkZjgwYzRmN2FhNTZkMWZlMGY0YTVj****")
+			assert.Equal(t, *o.SourceVersionId, "CAEQHxiBgICDvseg3hgiIGZmOGNjNWJiZDUzNjQxNDM4MWM2NDc1YjhkYTk4****")
+			assert.Equal(t, *o.LastModified, time.Date(2023, time.February, 24, 9, 41, 56, 0, time.UTC))
+		},
+	},
 }
 
 func TestMockCopyObject_Success(t *testing.T) {
@@ -4940,6 +5015,58 @@ var testMockAppendObjectSuccessCases = []struct {
 			ServerSideEncryptionKeyId: Ptr("12f8711f-90df-4e0d-903d-ab972b0f****"),
 			TrafficLimit:              int64(100 * 1024 * 8),
 			RequestPayer:              Ptr("requester"),
+		},
+		func(t *testing.T, o *AppendObjectResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "6551DBCF4311A7303980****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Mon, 13 Nov 2023 08:18:23 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.VersionId, "CAEQHxiBgMD4qOWz3hgiIDUyMWIzNTBjMWM4NjQ5MDJiNTM4YzEwZGQxM2Rk****")
+			assert.Equal(t, *o.HashCRC64, "1474161709526656****")
+			assert.Equal(t, o.NextPosition, int64(1717))
+			assert.Equal(t, *o.ServerSideDataEncryption, "SM4")
+			assert.Equal(t, *o.ServerSideEncryption, "KMS")
+			assert.Equal(t, *o.ServerSideEncryptionKeyId, "12f8711f-90df-4e0d-903d-ab972b0f****")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id":                    "6551DBCF4311A7303980****",
+			"Date":                                "Mon, 13 Nov 2023 08:18:23 GMT",
+			"x-oss-version-id":                    "CAEQHxiBgMD4qOWz3hgiIDUyMWIzNTBjMWM4NjQ5MDJiNTM4YzEwZGQxM2Rk****",
+			"x-oss-next-append-position":          "1717",
+			"x-oss-hash-crc64ecma":                "1474161709526656****",
+			"x-oss-server-side-encryption":        "KMS",
+			"x-oss-server-side-data-encryption":   "SM4",
+			"x-oss-server-side-encryption-key-id": "12f8711f-90df-4e0d-903d-ab972b0f****",
+		},
+		nil,
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			requestBody, err := io.ReadAll(r.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, strings.NewReader("hi oss,append object,this is a demo"), strings.NewReader(string(requestBody)))
+			assert.Equal(t, r.Header.Get("x-oss-server-side-encryption"), "KMS")
+			assert.Equal(t, r.Header.Get("x-oss-server-side-data-encryption"), "SM4")
+			assert.Equal(t, r.Header.Get("x-oss-server-side-encryption-key-id"), "12f8711f-90df-4e0d-903d-ab972b0f****")
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/object?append&position=100", strUrl)
+			assert.Equal(t, r.Header.Get("x-oss-traffic-limit"), strconv.FormatInt(100*1024*8, 10))
+			assert.Equal(t, r.Header.Get("x-oss-object-acl"), string(ObjectACLPrivate))
+		},
+		&AppendObjectRequest{
+			Bucket:                    Ptr("bucket"),
+			Key:                       Ptr("object"),
+			Position:                  Ptr(int64(100)),
+			Body:                      strings.NewReader("hi oss,append object,this is a demo"),
+			ServerSideEncryption:      Ptr("KMS"),
+			ServerSideDataEncryption:  Ptr("SM4"),
+			ServerSideEncryptionKeyId: Ptr("12f8711f-90df-4e0d-903d-ab972b0f****"),
+			TrafficLimit:              int64(100 * 1024 * 8),
+			RequestPayer:              Ptr("requester"),
+			Acl:                       ObjectACLDefault,
+			ObjectAcl:                 ObjectACLPrivate,
 		},
 		func(t *testing.T, o *AppendObjectResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -7019,6 +7146,37 @@ var testMockPutObjectAclSuccessCases = []struct {
 			assert.Equal(t, "CAEQMhiBgIC3rpSD0BYiIDBjYTk5MmIzN2JlNjQxZTFiNGIzM2E3OTliODA0****", *o.VersionId)
 		},
 	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"X-Oss-Version-Id": "CAEQMhiBgIC3rpSD0BYiIDBjYTk5MmIzN2JlNjQxZTFiNGIzM2E3OTliODA0****",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/object?acl&versionId=CAEQMhiBgIC3rpSD0BYiIDBjYTk5MmIzN2JlNjQxZTFiNGIzM2E3OTliODA0%2A%2A%2A%2A", strUrl)
+			assert.Equal(t, string(ObjectACLPrivate), r.Header.Get(HeaderOssObjectACL))
+		},
+		&PutObjectAclRequest{
+			Bucket:    Ptr("bucket"),
+			Key:       Ptr("object"),
+			Acl:       ObjectACLPublicReadWrite,
+			VersionId: Ptr("CAEQMhiBgIC3rpSD0BYiIDBjYTk5MmIzN2JlNjQxZTFiNGIzM2E3OTliODA0****"),
+			ObjectAcl: ObjectACLPrivate,
+		},
+		func(t *testing.T, o *PutObjectAclResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get(HTTPHeaderContentType))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get(HeaderOssRequestID))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get(HTTPHeaderDate))
+
+			assert.Equal(t, "CAEQMhiBgIC3rpSD0BYiIDBjYTk5MmIzN2JlNjQxZTFiNGIzM2E3OTliODA0****", *o.VersionId)
+		},
+	},
 }
 
 func TestMockPutObjectAcl_Success(t *testing.T) {
@@ -8966,6 +9124,54 @@ var testMockCompleteMultipartUploadSuccessCases = []struct {
 					{PartNumber: int32(2), ETag: Ptr("\"8C315065167132444177411FDA14****\"")},
 				},
 			},
+		},
+		func(t *testing.T, o *CompleteMultipartUploadResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.ETag, "\"097DE458AD02B5F89F9D0530231876****\"")
+			assert.Equal(t, *o.Location, "http://oss-example.oss-cn-hangzhou.aliyuncs.com/multipart.data")
+			assert.Equal(t, *o.EncodingType, "url")
+			assert.Equal(t, *o.Bucket, "oss-example")
+			assert.Equal(t, *o.Key, "")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<CompleteMultipartUploadResult>
+  <EncodingType>url</EncodingType>
+  <Location>http://oss-example.oss-cn-hangzhou.aliyuncs.com/multipart.data</Location>
+  <Bucket>oss-example</Bucket>
+  <Key></Key>
+  <ETag>"097DE458AD02B5F89F9D0530231876****"</ETag>
+</CompleteMultipartUploadResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/object?encoding-type=url&uploadId=0004B9895DBBB6EC9", strUrl)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), `<CompleteMultipartUpload><Part><PartNumber>1</PartNumber><ETag>&#34;8EFDA8BE206636A695359836FE0A****&#34;</ETag></Part><Part><PartNumber>2</PartNumber><ETag>&#34;8C315065167132444177411FDA14****&#34;</ETag></Part><Part><PartNumber>3</PartNumber><ETag>&#34;3349DC700140D7F86A0784842780****&#34;</ETag></Part></CompleteMultipartUpload>`)
+			assert.Equal(t, r.Header.Get("x-oss-object-acl"), string(ObjectACLPrivate))
+		},
+		&CompleteMultipartUploadRequest{
+			Bucket:   Ptr("bucket"),
+			Key:      Ptr("object"),
+			UploadId: Ptr("0004B9895DBBB6EC9"),
+			CompleteMultipartUpload: &CompleteMultipartUpload{
+				Parts: []UploadPart{
+					{PartNumber: int32(3), ETag: Ptr("\"3349DC700140D7F86A0784842780****\"")},
+					{PartNumber: int32(1), ETag: Ptr("\"8EFDA8BE206636A695359836FE0A****\"")},
+					{PartNumber: int32(2), ETag: Ptr("\"8C315065167132444177411FDA14****\"")},
+				},
+			},
+			Acl:       ObjectACLDefault,
+			ObjectAcl: ObjectACLPrivate,
 		},
 		func(t *testing.T, o *CompleteMultipartUploadResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -11291,6 +11497,35 @@ var testMockPutSymlinkSuccessCases = []struct {
 			Key:          Ptr("object"),
 			Target:       Ptr("src-object"),
 			RequestPayer: Ptr("requester"),
+		},
+		func(t *testing.T, o *PutSymlinkResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/object?symlink", strUrl)
+			assert.Equal(t, r.Header.Get(HeaderOssSymlinkTarget), "src-key")
+			assert.Equal(t, r.Header.Get(HeaderOssObjectACL), string(ObjectACLPrivate))
+		},
+		&PutSymlinkRequest{
+			Bucket:        Ptr("bucket"),
+			Key:           Ptr("object"),
+			Target:        Ptr("src-object"),
+			SymlinkTarget: Ptr("src-key"),
+			Acl:           ObjectACLDefault,
+			ObjectAcl:     ObjectACLPrivate,
 		},
 		func(t *testing.T, o *PutSymlinkResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)

@@ -245,6 +245,91 @@ func TestMarshalInput_PutObject(t *testing.T) {
 	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 	assert.Nil(t, input.Parameters)
 	assert.Nil(t, input.OpMetadata.values)
+
+	request = &PutObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		Body:         strings.NewReader(body),
+		RequestPayer: Ptr("requester"),
+		ObjectAcl:    ObjectACLPrivate,
+	}
+	input = &OperationInput{
+		OpName: "PutObject",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input)
+	assert.Nil(t, err)
+
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Body, strings.NewReader(body))
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+	assert.Nil(t, input.Parameters)
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
+
+	request = &PutObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		Body:         strings.NewReader(body),
+		RequestPayer: Ptr("requester"),
+		ObjectAcl:    ObjectACLPrivate,
+	}
+	input = &OperationInput{
+		OpName: "PutObject",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	marshalFns := []func(any, *OperationInput) error{
+		addProgress,
+		c.updateContentType,
+		c.addCrcCheck,
+	}
+
+	err = c.marshalInput(request, input, marshalFns...)
+	assert.Nil(t, err)
+
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Body, strings.NewReader(body))
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+	assert.Nil(t, input.Parameters)
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
+
+	request = &PutObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		Body:         strings.NewReader(body),
+		RequestPayer: Ptr("requester"),
+		ObjectAcl:    ObjectACLPrivate,
+		Acl:          ObjectACLDefault,
+	}
+	input = &OperationInput{
+		OpName: "PutObject",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	marshalFns = []func(any, *OperationInput) error{
+		addProgress,
+		c.updateContentType,
+		c.addCrcCheck,
+	}
+
+	err = c.marshalInput(request, input, marshalFns...)
+	assert.Nil(t, err)
+
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Body, strings.NewReader(body))
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+	assert.Nil(t, input.Parameters)
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
 }
 
 func TestUnmarshalOutput_PutObject(t *testing.T) {
@@ -901,6 +986,53 @@ func TestMarshalInput_CopyObject(t *testing.T) {
 	assert.Equal(t, *input.Key, "oss-copy-key")
 	assert.Equal(t, input.Headers["x-oss-copy-source"], "/oss-bucket/oss-key")
 	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+
+	request = &CopyObjectRequest{
+		Bucket:    Ptr("oss-bucket"),
+		Key:       Ptr("oss-copy-key"),
+		SourceKey: Ptr("oss-key"),
+		ObjectAcl: ObjectACLPublicRead,
+	}
+	source = encodeSourceObject(request)
+	input = &OperationInput{
+		OpName: "CopyObject",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Headers: map[string]string{
+			"x-oss-copy-source": source,
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-copy-key")
+	assert.Equal(t, input.Headers["x-oss-copy-source"], "/oss-bucket/oss-key")
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPublicRead))
+
+	request = &CopyObjectRequest{
+		Bucket:    Ptr("oss-bucket"),
+		Key:       Ptr("oss-copy-key"),
+		SourceKey: Ptr("oss-key"),
+		ObjectAcl: ObjectACLPublicRead,
+		Acl:       ObjectACLPrivate,
+	}
+	source = encodeSourceObject(request)
+	input = &OperationInput{
+		OpName: "CopyObject",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Headers: map[string]string{
+			"x-oss-copy-source": source,
+		},
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-copy-key")
+	assert.Equal(t, input.Headers["x-oss-copy-source"], "/oss-bucket/oss-key")
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPublicRead))
 }
 
 func TestUnmarshalOutput_CopyObject(t *testing.T) {
@@ -1237,6 +1369,66 @@ func TestMarshalInput_AppendObject(t *testing.T) {
 	assert.Equal(t, input.Parameters["position"], strconv.FormatInt(p, 10))
 	assert.Nil(t, input.OpMetadata.values)
 	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+
+	request = &AppendObjectRequest{
+		Bucket:    Ptr("oss-bucket"),
+		Key:       Ptr("oss-key"),
+		Position:  Ptr(int64(0)),
+		Body:      strings.NewReader(body),
+		ObjectAcl: ObjectACLDefault,
+	}
+
+	input = &OperationInput{
+		OpName:     "AppendObject",
+		Method:     "POST",
+		Parameters: map[string]string{"append": ""},
+		Bucket:     request.Bucket,
+		Key:        request.Key,
+	}
+	marshalFns := []func(any, *OperationInput) error{
+		addProgress,
+		c.updateContentType,
+	}
+	err = c.marshalInput(request, input, marshalFns...)
+	assert.Nil(t, err)
+
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Body, strings.NewReader(body))
+	assert.Empty(t, input.Parameters["append"])
+	assert.Equal(t, input.Parameters["position"], strconv.FormatInt(p, 10))
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLDefault))
+
+	request = &AppendObjectRequest{
+		Bucket:    Ptr("oss-bucket"),
+		Key:       Ptr("oss-key"),
+		Position:  Ptr(int64(0)),
+		Body:      strings.NewReader(body),
+		Acl:       ObjectACLPublicRead,
+		ObjectAcl: ObjectACLDefault,
+	}
+	input = &OperationInput{
+		OpName:     "AppendObject",
+		Method:     "POST",
+		Parameters: map[string]string{"append": ""},
+		Bucket:     request.Bucket,
+		Key:        request.Key,
+	}
+	marshalFns = []func(any, *OperationInput) error{
+		addProgress,
+		c.updateContentType,
+	}
+	err = c.marshalInput(request, input, marshalFns...)
+	assert.Nil(t, err)
+
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Equal(t, input.Body, strings.NewReader(body))
+	assert.Empty(t, input.Parameters["append"])
+	assert.Equal(t, input.Parameters["position"], strconv.FormatInt(p, 10))
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLDefault))
 }
 
 func TestUnmarshalOutput_AppendObject(t *testing.T) {
@@ -2565,11 +2757,15 @@ func TestMarshalInput_PutObjectAcl(t *testing.T) {
 		Method: "PUT",
 		Bucket: request.Bucket,
 		Key:    request.Key,
+		Parameters: map[string]string{
+			"acl": "",
+		},
 	}
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
+	err = nil
 	request = &PutObjectAclRequest{
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
@@ -2579,11 +2775,17 @@ func TestMarshalInput_PutObjectAcl(t *testing.T) {
 		Method: "PUT",
 		Bucket: request.Bucket,
 		Key:    request.Key,
+		Parameters: map[string]string{
+			"acl": "",
+		},
 	}
-	err = c.marshalInput(request, input, updateContentMd5)
+	if request.Acl == "" && request.ObjectAcl == "" {
+		err = fmt.Errorf("missing required field, Acl or ObjectAcl")
+	}
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field")
+	assert.Contains(t, err.Error(), "missing required field, Acl or ObjectAcl")
 
+	err = nil
 	request = &PutObjectAclRequest{
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
@@ -2594,10 +2796,21 @@ func TestMarshalInput_PutObjectAcl(t *testing.T) {
 		Method: "PUT",
 		Bucket: request.Bucket,
 		Key:    request.Key,
+		Parameters: map[string]string{
+			"acl": "",
+		},
 	}
+	if request.Acl == "" && request.ObjectAcl == "" {
+		err = fmt.Errorf("missing required field, Acl or ObjectAcl")
+	}
+	assert.Nil(t, err)
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-demo")
+	assert.Equal(t, *input.Key, "oss-object")
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
 
+	err = nil
 	request = &PutObjectAclRequest{
 		Bucket:    Ptr("oss-demo"),
 		Key:       Ptr("oss-object"),
@@ -2609,10 +2822,22 @@ func TestMarshalInput_PutObjectAcl(t *testing.T) {
 		Method: "PUT",
 		Bucket: request.Bucket,
 		Key:    request.Key,
+		Parameters: map[string]string{
+			"acl": "",
+		},
 	}
+	if request.Acl == "" && request.ObjectAcl == "" {
+		err = fmt.Errorf("missing required field, Acl or ObjectAcl")
+	}
+	assert.Nil(t, err)
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-demo")
+	assert.Equal(t, *input.Key, "oss-object")
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
+	assert.Equal(t, input.Parameters["versionId"], "CAEQMhiBgMC1qpSD0BYiIGQ0ZmI5ZDEyYWVkNTQwMjBiNTliY2NjNmY3ZTVk****")
 
+	err = nil
 	request = &PutObjectAclRequest{
 		Bucket:       Ptr("oss-demo"),
 		Key:          Ptr("oss-object"),
@@ -2624,10 +2849,69 @@ func TestMarshalInput_PutObjectAcl(t *testing.T) {
 		Method: "PUT",
 		Bucket: request.Bucket,
 		Key:    request.Key,
+		Parameters: map[string]string{
+			"acl": "",
+		},
 	}
+	if request.Acl == "" && request.ObjectAcl == "" {
+		err = fmt.Errorf("missing required field, Acl or ObjectAcl")
+	}
+	assert.Nil(t, err)
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+	assert.Equal(t, *input.Bucket, "oss-demo")
+	assert.Equal(t, *input.Key, "oss-object")
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
+
+	request = &PutObjectAclRequest{
+		Bucket:    Ptr("oss-demo"),
+		Key:       Ptr("oss-object"),
+		ObjectAcl: ObjectACLPrivate,
+	}
+	input = &OperationInput{
+		OpName: "PutObjectAcl",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"acl": "",
+		},
+	}
+	if request.Acl == "" && request.ObjectAcl == "" {
+		err = fmt.Errorf("missing required field, Acl or ObjectAcl")
+	}
+	assert.Nil(t, err)
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-demo")
+	assert.Equal(t, *input.Key, "oss-object")
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
+
+	request = &PutObjectAclRequest{
+		Bucket:    Ptr("oss-demo"),
+		Key:       Ptr("oss-object"),
+		ObjectAcl: ObjectACLPrivate,
+		Acl:       ObjectACLPublicRead,
+	}
+	input = &OperationInput{
+		OpName: "PutObjectAcl",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"acl": "",
+		},
+	}
+	if request.Acl == "" && request.ObjectAcl == "" {
+		err = fmt.Errorf("missing required field, Acl or ObjectAcl")
+	}
+	assert.Nil(t, err)
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-demo")
+	assert.Equal(t, *input.Key, "oss-object")
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
 }
 
 func TestUnmarshalOutput_PutObjectAcl(t *testing.T) {
@@ -3752,6 +4036,48 @@ func TestMarshalInput_CompleteMultipartUpload(t *testing.T) {
 	assert.Equal(t, input.Headers["x-oss-forbid-overwrite"], "false")
 	assert.Nil(t, input.OpMetadata.values)
 	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+	assert.Equal(t, input.Headers["x-oss-complete-all"], "yes")
+
+	request = &CompleteMultipartUploadRequest{
+		Bucket:      Ptr("oss-dest-bucket"),
+		Key:         Ptr("oss-dest-object"),
+		UploadId:    Ptr("0004B9895DBBB6EC9****"),
+		Acl:         ObjectACLDefault,
+		CompleteAll: Ptr("yes"),
+	}
+	input = &OperationInput{
+		OpName: "CompleteMultipartUpload",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["uploadId"], "0004B9895DBBB6EC9****")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLDefault))
+	assert.Equal(t, input.Headers["x-oss-complete-all"], "yes")
+
+	request = &CompleteMultipartUploadRequest{
+		Bucket:      Ptr("oss-dest-bucket"),
+		Key:         Ptr("oss-dest-object"),
+		UploadId:    Ptr("0004B9895DBBB6EC9****"),
+		Acl:         ObjectACLDefault,
+		CompleteAll: Ptr("yes"),
+		ObjectAcl:   ObjectACLPrivate,
+	}
+	input = &OperationInput{
+		OpName: "CompleteMultipartUpload",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["uploadId"], "0004B9895DBBB6EC9****")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
+	assert.Equal(t, input.Headers["x-oss-complete-all"], "yes")
 }
 
 func TestUnmarshalOutput_CompleteMultipartUpload(t *testing.T) {
@@ -4652,10 +4978,13 @@ func TestMarshalInput_PutSymlink(t *testing.T) {
 			"symlink": "",
 		},
 	}
-	err = c.marshalInput(request, input, updateContentMd5)
+	if request.SymlinkTarget == nil && request.Target == nil {
+		err = fmt.Errorf("missing required field, Target or SymlinkTarget")
+	}
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Target")
+	assert.Contains(t, err.Error(), "missing required field, Target or SymlinkTarget")
 
+	err = nil
 	request = &PutSymlinkRequest{
 		Bucket: Ptr("oss-demo"),
 		Key:    Ptr("oss-object"),
@@ -4670,6 +4999,10 @@ func TestMarshalInput_PutSymlink(t *testing.T) {
 			"symlink": "",
 		},
 	}
+	if request.SymlinkTarget == nil && request.Target == nil {
+		err = fmt.Errorf("missing required field, Target or SymlinkTarget")
+	}
+	assert.Nil(t, err)
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["x-oss-symlink-target"], "oss-target-object")
@@ -4686,6 +5019,10 @@ func TestMarshalInput_PutSymlink(t *testing.T) {
 			"email": "demo@aliyun.com",
 		},
 	}
+	if request.SymlinkTarget == nil && request.Target == nil {
+		err = fmt.Errorf("missing required field, Target or SymlinkTarget")
+	}
+	assert.Nil(t, err)
 	input = &OperationInput{
 		OpName: "PutSymlink",
 		Method: "PUT",
@@ -4720,10 +5057,64 @@ func TestMarshalInput_PutSymlink(t *testing.T) {
 			"symlink": "",
 		},
 	}
+	if request.SymlinkTarget == nil && request.Target == nil {
+		err = fmt.Errorf("missing required field, Target or SymlinkTarget")
+	}
+	assert.Nil(t, err)
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["x-oss-symlink-target"], "oss-target-object")
 	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+
+	request = &PutSymlinkRequest{
+		Bucket:        Ptr("oss-demo"),
+		Key:           Ptr("oss-object"),
+		SymlinkTarget: Ptr("oss-target-object"),
+		ObjectAcl:     ObjectACLPrivate,
+	}
+	input = &OperationInput{
+		OpName: "PutSymlink",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
+	}
+	if request.SymlinkTarget == nil && request.Target == nil {
+		err = fmt.Errorf("missing required field, Target or SymlinkTarget")
+	}
+	assert.Nil(t, err)
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-symlink-target"], "oss-target-object")
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
+
+	request = &PutSymlinkRequest{
+		Bucket:        Ptr("oss-demo"),
+		Key:           Ptr("oss-object"),
+		SymlinkTarget: Ptr("oss-target-object"),
+		Target:        Ptr("oss-target-key"),
+		ObjectAcl:     ObjectACLPrivate,
+		Acl:           ObjectACLDefault,
+	}
+	input = &OperationInput{
+		OpName: "PutSymlink",
+		Method: "PUT",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"symlink": "",
+		},
+	}
+	if request.SymlinkTarget == nil && request.Target == nil {
+		err = fmt.Errorf("missing required field, Target or SymlinkTarget")
+	}
+	assert.Nil(t, err)
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Headers["x-oss-symlink-target"], "oss-target-object")
+	assert.Equal(t, input.Headers["x-oss-object-acl"], string(ObjectACLPrivate))
 }
 
 func TestUnmarshalOutput_PutSymlink(t *testing.T) {
