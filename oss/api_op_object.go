@@ -2468,7 +2468,7 @@ type AsyncProcessObjectRequest struct {
 	Key *string `input:"path,key,required"`
 
 	// Image async processing parameters
-	AsyncProcess *string `input:"x-async-oss-process,nop,required"`
+	AsyncProcess *string `input:"x-oss-async-process,nop,required"`
 
 	// To indicate that the requester is aware that the request and data download will incur costs
 	RequestPayer *string `input:"header,x-oss-request-payer"`
