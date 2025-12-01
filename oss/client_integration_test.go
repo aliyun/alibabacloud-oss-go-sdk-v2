@@ -9429,3 +9429,68 @@ func TestUploaderUploadFromTeeReader(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(200*1024), headResult.ContentLength)
 }
+
+func TestSealAppendObject(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	//TODO
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+	objectName := objectNamePrefix + randLowStr(6)
+	var result *SealAppendObjectResult
+	content := randLowStr(100)
+	appRequest := &AppendObjectRequest{
+		Bucket:   Ptr(bucketName),
+		Key:      Ptr(objectName),
+		Body:     strings.NewReader(content),
+		Position: Ptr(int64(0)),
+	}
+	appResult, err := client.AppendObject(context.TODO(), appRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, appResult.NextPosition, int64(len(content)))
+	assert.NotEmpty(t, appResult.HashCRC64)
+
+	request := &SealAppendObjectRequest{
+		Bucket:   Ptr(bucketName),
+		Key:      Ptr(objectName),
+		Position: Ptr(appResult.NextPosition),
+	}
+	result, err = client.SealAppendObject(context.TODO(), request)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, *result.SealedTime)
+
+	var serr *ServiceError
+	request = &SealAppendObjectRequest{
+		Bucket:   Ptr(bucketName),
+		Key:      Ptr(objectName),
+		Position: Ptr(int64(0)),
+	}
+	_, err = client.SealAppendObject(context.TODO(), request)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(409), serr.StatusCode)
+	assert.Equal(t, "PositionNotEqualToLength", serr.Code)
+	assert.NotEmpty(t, serr.RequestID)
+
+	bucketNameNotExist := bucketName + "-not-exist"
+	request = &SealAppendObjectRequest{
+		Bucket:   Ptr(bucketNameNotExist),
+		Key:      Ptr(objectName),
+		Position: Ptr(int64(0)),
+	}
+	_, err = client.SealAppendObject(context.TODO(), request)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+}

@@ -734,6 +734,65 @@ func (c *Client) AppendObject(ctx context.Context, request *AppendObjectRequest,
 	return result, err
 }
 
+type SealAppendObjectRequest struct {
+	// Bucket name
+	Bucket *string `input:"host,bucket,required"`
+
+	// Name of the Appendable Object
+	Key *string `input:"path,key,required"`
+
+	// Used to specify the expected length of the file when the user wants to seal it.
+	Position *int64 `input:"query,position,required"`
+
+	RequestCommon
+}
+
+type SealAppendObjectResult struct {
+	// The time in GMT format when the SealAppendObject operation was first performed on the object.
+	// This timestamp does not change even if the operation is performed again.
+	SealedTime *string `output:"header,x-oss-sealed-time"`
+
+	ResultCommon
+}
+
+// SealAppendObject This operation stops writing to the Appendable Object, after which the user can configure lifecycle rules to change the storage class of the corresponding Appendable Object to Cold Archive or Deep Cold Archive.
+func (c *Client) SealAppendObject(ctx context.Context, request *SealAppendObjectRequest, optFns ...func(*Options)) (*SealAppendObjectResult, error) {
+	var err error
+	if request == nil {
+		request = &SealAppendObjectRequest{}
+	}
+	input := &OperationInput{
+		OpName: "SealAppendObject",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"seal": "",
+		},
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+
+	input.OpMetadata.Set(signer.SubResource, []string{"seal"})
+
+	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
+		return nil, err
+	}
+	output, err := c.invokeOperation(ctx, input, optFns)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &SealAppendObjectResult{}
+
+	if err = c.unmarshalOutput(result, output, discardBody, unmarshalHeader); err != nil {
+		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
+	}
+
+	return result, err
+}
+
 type DeleteObjectRequest struct {
 	// The name of the bucket.
 	Bucket *string `input:"host,bucket,required"`

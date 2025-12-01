@@ -34594,3 +34594,171 @@ func TestMockReturnsXmlError(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockSealAppendObjectSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *SealAppendObjectRequest
+	CheckOutputFn  func(t *testing.T, o *SealAppendObjectResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id":  "534B371674E88A4D8906****",
+			"Date":              "Wed, 07 May 2025 23:00:00 GMT",
+			"x-oss-sealed-time": "Wed, 07 May 2025 23:00:00 GMT",
+		},
+		nil,
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/object?position=10&seal", strUrl)
+			assert.Equal(t, contentTypeXML, r.Header.Get(HTTPHeaderContentType))
+		},
+		&SealAppendObjectRequest{
+			Bucket:   Ptr("bucket"),
+			Key:      Ptr("object"),
+			Position: Ptr(int64(10)),
+		},
+		func(t *testing.T, o *SealAppendObjectResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Wed, 07 May 2025 23:00:00 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, "Wed, 07 May 2025 23:00:00 GMT", *o.SealedTime)
+		},
+	},
+}
+
+func TestMockSealAppendObject_Success(t *testing.T) {
+	for _, c := range testMockSealAppendObjectSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.SealAppendObject(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockSealAppendObjectErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *SealAppendObjectRequest
+	CheckOutputFn  func(t *testing.T, o *SealAppendObjectResult, err error)
+}{
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>UserDisable</Code>
+  <Message>UserDisable</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			requestBody, err := io.ReadAll(r.Body)
+			assert.Nil(t, err)
+			strUrl := sortQuery(r)
+			assert.Equal(t, strings.NewReader("hi oss,append object"), strings.NewReader(string(requestBody)))
+			assert.Equal(t, "/bucket/object?append&position=100", strUrl)
+		},
+		&SealAppendObjectRequest{
+			Bucket:   Ptr("bucket"),
+			Key:      Ptr("object"),
+			Position: Ptr(int64(100)),
+		},
+		func(t *testing.T, o *SealAppendObjectResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		409,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>PositionNotEqualToLength</Code>
+  <Message>Position is not equal to file length</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>demo-walker-6961.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <EC>0026-00000016</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			requestBody, err := io.ReadAll(r.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, strings.NewReader("hi oss,append object,this is a demo"), strings.NewReader(string(requestBody)))
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/object?append&position=0", strUrl)
+		},
+		&SealAppendObjectRequest{
+			Bucket:   Ptr("bucket"),
+			Key:      Ptr("object"),
+			Position: Ptr(int64(0)),
+		},
+		func(t *testing.T, o *SealAppendObjectResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(409), serr.StatusCode)
+			assert.Equal(t, "PositionNotEqualToLength", serr.Code)
+			assert.Equal(t, "Position is not equal to file length", serr.Message)
+			assert.Equal(t, "0026-00000016", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockSealAppendObject_Error(t *testing.T) {
+	for _, c := range testMockSealAppendObjectErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.SealAppendObject(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}

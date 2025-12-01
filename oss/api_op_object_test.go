@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"io"
 	"net/http"
 	"net/url"
@@ -6389,6 +6390,159 @@ func TestUnmarshalOutput_CleanRestoredObject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 409)
 	assert.Equal(t, result.Status, "Conflict")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+}
+
+func TestMarshalInput_SealAppendObject(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var request *SealAppendObjectRequest
+	var input *OperationInput
+	var err error
+
+	request = &SealAppendObjectRequest{}
+	input = &OperationInput{
+		OpName: "SealAppendObject",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"seal": "",
+		},
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+
+	input.OpMetadata.Set(signer.SubResource, []string{"seal"})
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Bucket")
+
+	request = &SealAppendObjectRequest{
+		Bucket: Ptr("oss-demo"),
+	}
+	input = &OperationInput{
+		OpName: "SealAppendObject",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"seal": "",
+		},
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"seal"})
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Key")
+
+	request = &SealAppendObjectRequest{
+		Bucket: Ptr("oss-bucket"),
+		Key:    Ptr("oss-key"),
+	}
+	input = &OperationInput{
+		OpName: "SealAppendObject",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"seal": "",
+		},
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+
+	input.OpMetadata.Set(signer.SubResource, []string{"seal"})
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Position")
+
+	p := int64(10)
+	request = &SealAppendObjectRequest{
+		Bucket:   Ptr("oss-bucket"),
+		Key:      Ptr("oss-key"),
+		Position: Ptr(p),
+	}
+	input = &OperationInput{
+		OpName: "SealAppendObject",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"seal": "",
+		},
+		Bucket: request.Bucket,
+		Key:    request.Key,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"seal"})
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.Body)
+	assert.Equal(t, input.Headers["Content-MD5"], "1B2M2Y8AsgTpgAmY7PhCfg==")
+	assert.Equal(t, input.Method, "POST")
+	assert.Empty(t, input.Parameters["seal"])
+	assert.Equal(t, input.Parameters["position"], strconv.FormatInt(p, 10))
+}
+
+func TestUnmarshalOutput_SealAppendObject(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var output *OperationOutput
+	var err error
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Headers: http.Header{
+			"X-Oss-Request-Id":  {"5C06A3B67B8B5A3DA422****"},
+			"Date":              {"Wed, 07 May 2025 23:00:00 GMT"},
+			"x-oss-sealed-time": {"Wed, 07 May 2025 23:00:00 GMT"},
+			"ETag":              {"\"fba9dede5f27731c9771645a3986****\""},
+		},
+	}
+	result := &SealAppendObjectResult{}
+	err = c.unmarshalOutput(result, output, discardBody, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "5C06A3B67B8B5A3DA422****")
+	assert.Equal(t, result.Headers.Get("Date"), "Wed, 07 May 2025 23:00:00 GMT")
+	assert.Equal(t, *result.SealedTime, "Wed, 07 May 2025 23:00:00 GMT")
+
+	output = &OperationOutput{
+		StatusCode: 404,
+		Status:     "NoSuchBucket",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, discardBody, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 404)
+	assert.Equal(t, result.Status, "NoSuchBucket")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+
+	output = &OperationOutput{
+		StatusCode: 409,
+		Status:     "ObjectNotAppendable",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	err = c.unmarshalOutput(result, output, discardBody, unmarshalHeader)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 409)
+	assert.Equal(t, result.Status, "ObjectNotAppendable")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 }
