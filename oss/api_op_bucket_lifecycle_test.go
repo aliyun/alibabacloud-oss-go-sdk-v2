@@ -210,11 +210,13 @@ func TestMarshalInput_PutBucketLifecycle(t *testing.T) {
 					Prefix: Ptr(""),
 					Status: Ptr("Enabled"),
 					Filter: &LifecycleRuleFilter{
-						Not: &LifecycleRuleNot{
-							Prefix: Ptr("log"),
-							Tag: &Tag{
-								Key:   Ptr("key1"),
-								Value: Ptr("value1"),
+						Nots: []LifecycleRuleNot{
+							{
+								Prefix: Ptr("log"),
+								Tag: &Tag{
+									Key:   Ptr("key1"),
+									Value: Ptr("value1"),
+								},
 							},
 						},
 					},
@@ -247,6 +249,62 @@ func TestMarshalInput_PutBucketLifecycle(t *testing.T) {
 	assert.Nil(t, err)
 	body, _ = io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<LifecycleConfiguration><Rule><Status>Enabled</Status><Filter><Not><Tag><Key>key1</Key><Value>value1</Value></Tag><Prefix>log</Prefix></Not></Filter><ID>rule</ID><Prefix></Prefix><Expiration><Days>100</Days></Expiration><Transition><Days>30</Days><StorageClass>Archive</StorageClass></Transition></Rule></LifecycleConfiguration>")
+
+	request = &PutBucketLifecycleRequest{
+		Bucket: Ptr("oss-demo"),
+		LifecycleConfiguration: &LifecycleConfiguration{
+			Rules: []LifecycleRule{
+				{
+					ID:     Ptr("rule"),
+					Prefix: Ptr(""),
+					Status: Ptr("Enabled"),
+					Filter: &LifecycleRuleFilter{
+						Nots: []LifecycleRuleNot{
+							{
+								Prefix: Ptr("log"),
+								Tag: &Tag{
+									Key:   Ptr("key1"),
+									Value: Ptr("value1"),
+								},
+							},
+							{
+								Prefix: Ptr("pre"),
+								Tag: &Tag{
+									Key:   Ptr("key2"),
+									Value: Ptr("value2"),
+								},
+							},
+						},
+					},
+					Transitions: []LifecycleRuleTransition{
+						{
+							Days:         Ptr(int32(30)),
+							StorageClass: StorageClassArchive,
+						},
+					},
+					Expiration: &LifecycleRuleExpiration{
+						Days: Ptr(int32(100)),
+					},
+				},
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "PutBucketLifecycle",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{
+			"lifecycle": "",
+		},
+		Bucket: request.Bucket,
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"lifecycle"})
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<LifecycleConfiguration><Rule><Status>Enabled</Status><Filter><Not><Tag><Key>key1</Key><Value>value1</Value></Tag><Prefix>log</Prefix></Not><Not><Tag><Key>key2</Key><Value>value2</Value></Tag><Prefix>pre</Prefix></Not></Filter><ID>rule</ID><Prefix></Prefix><Expiration><Days>100</Days></Expiration><Transition><Days>30</Days><StorageClass>Archive</StorageClass></Transition></Rule></LifecycleConfiguration>")
 
 	// demo 6
 	request = &PutBucketLifecycleRequest{
@@ -726,6 +784,186 @@ func TestUnmarshalOutput_GetBucketLifecycle(t *testing.T) {
 	assert.True(t, *config.Rules[1].NoncurrentVersionTransitions[0].IsAccessTime)
 	assert.False(t, *config.Rules[1].NoncurrentVersionTransitions[0].ReturnToStdWhenVisit)
 	assert.Equal(t, int64(1631698332), *config.Rules[1].AtimeBase)
+
+	body = `<?xml version="1.0" encoding="UTF-8"?>
+<LifecycleConfiguration>
+  <Rule>
+    <ID>atime transition1</ID>
+    <Prefix>logs1/</Prefix>
+    <Status>Enabled</Status>
+    <Transition>
+      <Days>30</Days>
+      <StorageClass>IA</StorageClass>
+      <IsAccessTime>true</IsAccessTime>
+      <ReturnToStdWhenVisit>false</ReturnToStdWhenVisit>
+    </Transition>
+    <AtimeBase>1631698332</AtimeBase>
+  </Rule>
+  <Rule>
+    <ID>atime transition2</ID>
+    <Prefix>logs2/</Prefix>
+    <Status>Enabled</Status>
+    <NoncurrentVersionTransition>
+      <NoncurrentDays>10</NoncurrentDays>
+      <StorageClass>IA</StorageClass>
+      <IsAccessTime>true</IsAccessTime>
+      <ReturnToStdWhenVisit>false</ReturnToStdWhenVisit>
+    </NoncurrentVersionTransition>
+    <AtimeBase>1631698332</AtimeBase>
+  </Rule>
+</LifecycleConfiguration>`
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	result = &GetBucketLifecycleResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	config = *result.LifecycleConfiguration
+	assert.Equal(t, 2, len(config.Rules))
+	assert.Equal(t, "atime transition1", *config.Rules[0].ID)
+	assert.Equal(t, "logs1/", *config.Rules[0].Prefix)
+	assert.Equal(t, "Enabled", *config.Rules[0].Status)
+	assert.Equal(t, 1, len(config.Rules[0].Transitions))
+	assert.Equal(t, int32(30), *config.Rules[0].Transitions[0].Days)
+	assert.Equal(t, StorageClassIA, config.Rules[0].Transitions[0].StorageClass)
+	assert.False(t, *config.Rules[0].Transitions[0].ReturnToStdWhenVisit)
+	assert.True(t, *config.Rules[0].Transitions[0].IsAccessTime)
+	assert.Equal(t, int64(1631698332), *config.Rules[0].AtimeBase)
+
+	assert.Equal(t, "atime transition2", *config.Rules[1].ID)
+	assert.Equal(t, "logs2/", *config.Rules[1].Prefix)
+	assert.Equal(t, "Enabled", *config.Rules[1].Status)
+	assert.Equal(t, int32(10), *config.Rules[1].NoncurrentVersionTransitions[0].NoncurrentDays)
+	assert.Equal(t, StorageClassIA, config.Rules[1].NoncurrentVersionTransitions[0].StorageClass)
+	assert.True(t, *config.Rules[1].NoncurrentVersionTransitions[0].IsAccessTime)
+	assert.False(t, *config.Rules[1].NoncurrentVersionTransitions[0].ReturnToStdWhenVisit)
+	assert.Equal(t, int64(1631698332), *config.Rules[1].AtimeBase)
+
+	body = `<LifecycleConfiguration>
+    <Rule>
+        <Status>Enabled</Status>
+        <Filter>
+            <Not>
+                <Tag>
+                    <Key>key1</Key>
+                    <Value>value1</Value>
+                </Tag>
+                <Prefix>log</Prefix>
+            </Not>
+        </Filter>
+        <ID>rule</ID>
+        <Prefix></Prefix>
+        <Expiration>
+            <Days>100</Days>
+        </Expiration>
+        <Transition>
+            <Days>30</Days>
+            <StorageClass>Archive</StorageClass>
+        </Transition>
+    </Rule>
+</LifecycleConfiguration>`
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	result = &GetBucketLifecycleResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	config = *result.LifecycleConfiguration
+	assert.Equal(t, 1, len(config.Rules))
+	assert.Equal(t, "rule", *config.Rules[0].ID)
+	assert.Equal(t, "", *config.Rules[0].Prefix)
+	assert.Equal(t, "Enabled", *config.Rules[0].Status)
+	assert.Equal(t, 1, len(config.Rules[0].Transitions))
+	assert.Equal(t, int32(30), *config.Rules[0].Transitions[0].Days)
+	assert.Equal(t, StorageClassArchive, config.Rules[0].Transitions[0].StorageClass)
+	assert.Equal(t, 1, len(config.Rules[0].Filter.Nots))
+	assert.Equal(t, "log", *config.Rules[0].Filter.Nots[0].Prefix)
+	assert.Equal(t, "key1", *config.Rules[0].Filter.Nots[0].Tag.Key)
+	assert.Equal(t, "value1", *config.Rules[0].Filter.Nots[0].Tag.Value)
+	assert.Equal(t, int32(100), *config.Rules[0].Expiration.Days)
+
+	body = `<LifecycleConfiguration>
+    <Rule>
+        <Status>Enabled</Status>
+        <Filter>
+            <Not>
+                <Tag>
+                    <Key>key1</Key>
+                    <Value>value1</Value>
+                </Tag>
+                <Prefix>log</Prefix>
+            </Not>
+			<Not>
+                <Tag>
+                    <Key>key2</Key>
+                    <Value>value2</Value>
+                </Tag>
+                <Prefix>pre</Prefix>
+            </Not>
+        </Filter>
+        <ID>rule</ID>
+        <Prefix></Prefix>
+        <Expiration>
+            <Days>100</Days>
+        </Expiration>
+        <Transition>
+            <Days>30</Days>
+            <StorageClass>Archive</StorageClass>
+        </Transition>
+    </Rule>
+</LifecycleConfiguration>`
+	output = &OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/xml"},
+		},
+	}
+	result = &GetBucketLifecycleResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
+	config = *result.LifecycleConfiguration
+	assert.Equal(t, 1, len(config.Rules))
+	assert.Equal(t, "rule", *config.Rules[0].ID)
+	assert.Equal(t, "", *config.Rules[0].Prefix)
+	assert.Equal(t, "Enabled", *config.Rules[0].Status)
+	assert.Equal(t, 1, len(config.Rules[0].Transitions))
+	assert.Equal(t, int32(30), *config.Rules[0].Transitions[0].Days)
+	assert.Equal(t, StorageClassArchive, config.Rules[0].Transitions[0].StorageClass)
+	assert.Equal(t, 2, len(config.Rules[0].Filter.Nots))
+	assert.Equal(t, "log", *config.Rules[0].Filter.Nots[0].Prefix)
+	assert.Equal(t, "key1", *config.Rules[0].Filter.Nots[0].Tag.Key)
+	assert.Equal(t, "value1", *config.Rules[0].Filter.Nots[0].Tag.Value)
+	assert.Equal(t, "pre", *config.Rules[0].Filter.Nots[1].Prefix)
+	assert.Equal(t, "key2", *config.Rules[0].Filter.Nots[1].Tag.Key)
+	assert.Equal(t, "value2", *config.Rules[0].Filter.Nots[1].Tag.Value)
+	assert.Equal(t, int32(100), *config.Rules[0].Expiration.Days)
 
 	body = `<?xml version="1.0" encoding="UTF-8"?>
 <Error>
