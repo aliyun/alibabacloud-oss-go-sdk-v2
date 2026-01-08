@@ -497,6 +497,7 @@ func TestDownloaderConstruct(t *testing.T) {
 	assert.True(t, d.options.UseTempFile)
 	assert.False(t, d.options.EnableCheckpoint)
 	assert.Equal(t, "", d.options.CheckpointDir)
+	assert.Equal(t, 0, d.options.WriteBufferSize)
 
 	d = NewDownloader(c, func(do *DownloaderOptions) {
 		do.CheckpointDir = "dir"
@@ -504,12 +505,30 @@ func TestDownloaderConstruct(t *testing.T) {
 		do.ParallelNum = 1
 		do.PartSize = 2
 		do.UseTempFile = false
+		do.WriteBufferSize = 4 *1024
 	})
 	assert.Equal(t, 1, d.options.ParallelNum)
 	assert.Equal(t, int64(2), d.options.PartSize)
 	assert.False(t, d.options.UseTempFile)
 	assert.True(t, d.options.EnableCheckpoint)
 	assert.Equal(t, "dir", d.options.CheckpointDir)
+	assert.Equal(t, 4096, d.options.WriteBufferSize)
+
+	// non-4k algin
+	d = NewDownloader(c, func(do *DownloaderOptions) {
+		do.CheckpointDir = "dir"
+		do.EnableCheckpoint = true
+		do.ParallelNum = 1
+		do.PartSize = 2
+		do.UseTempFile = false
+		do.WriteBufferSize = 4 *1024 - 1
+	})
+	assert.Equal(t, 1, d.options.ParallelNum)
+	assert.Equal(t, int64(2), d.options.PartSize)
+	assert.False(t, d.options.UseTempFile)
+	assert.True(t, d.options.EnableCheckpoint)
+	assert.Equal(t, "dir", d.options.CheckpointDir)
+	assert.Equal(t, 4 *1024 - 1, d.options.WriteBufferSize)
 }
 
 func TestDownloaderDelegateConstruct(t *testing.T) {
@@ -572,7 +591,151 @@ func TestDownloaderDelegateConstruct(t *testing.T) {
 	assert.False(t, delegate.options.UseTempFile)
 	assert.True(t, delegate.options.EnableCheckpoint)
 	assert.Equal(t, "dir", delegate.options.CheckpointDir)
+
+	// WriteBufferSize 4K
+	delegate, err = d.newDelegate(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")},
+		func(do *DownloaderOptions) {
+			do.ParallelNum = -1
+			do.PartSize = -1
+			do.CheckpointDir = "dir"
+			do.EnableCheckpoint = true
+			do.UseTempFile = false
+			do.WriteBufferSize = 4 * 1024
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, delegate)
+	assert.Equal(t, DefaultDownloadParallel, delegate.options.ParallelNum)
+	assert.Equal(t, DefaultDownloadPartSize, delegate.options.PartSize)
+	assert.False(t, delegate.options.UseTempFile)
+	assert.True(t, delegate.options.EnableCheckpoint)
+	assert.Equal(t, "dir", delegate.options.CheckpointDir)
+	assert.Equal(t, 4 * 1024, delegate.options.WriteBufferSize)
+
+	// WriteBufferSize non-4K
+	delegate, err = d.newDelegate(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")},
+		func(do *DownloaderOptions) {
+			do.ParallelNum = -1
+			do.PartSize = -1
+			do.CheckpointDir = "dir"
+			do.EnableCheckpoint = true
+			do.UseTempFile = false
+			do.WriteBufferSize = 4 * 1024 -1
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, delegate)
+	assert.Equal(t, DefaultDownloadParallel, delegate.options.ParallelNum)
+	assert.Equal(t, DefaultDownloadPartSize, delegate.options.PartSize)
+	assert.False(t, delegate.options.UseTempFile)
+	assert.True(t, delegate.options.EnableCheckpoint)
+	assert.Equal(t, "dir", delegate.options.CheckpointDir)
+	assert.Equal(t, 4 * 1024, delegate.options.WriteBufferSize)
+
+	// WriteBufferSize non-4K
+	delegate, err = d.newDelegate(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")},
+		func(do *DownloaderOptions) {
+			do.ParallelNum = -1
+			do.PartSize = -1
+			do.CheckpointDir = "dir"
+			do.EnableCheckpoint = true
+			do.UseTempFile = false
+			do.WriteBufferSize = 4 * 1024 + 1
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, delegate)
+	assert.Equal(t, DefaultDownloadParallel, delegate.options.ParallelNum)
+	assert.Equal(t, DefaultDownloadPartSize, delegate.options.PartSize)
+	assert.False(t, delegate.options.UseTempFile)
+	assert.True(t, delegate.options.EnableCheckpoint)
+	assert.Equal(t, "dir", delegate.options.CheckpointDir)
+	assert.Equal(t, 8192, delegate.options.WriteBufferSize)	
 }
+
+func TestDownloaderDelegateConstruct2(t *testing.T) {
+	c := &Client{}
+
+	d := NewDownloader(c, func(do *DownloaderOptions) {
+		do.CheckpointDir = "dir"
+		do.EnableCheckpoint = true
+		do.ParallelNum = 1
+		do.PartSize = 2
+		do.UseTempFile = false
+		do.WriteBufferSize = 4 *1024 + 1
+	})
+	assert.Equal(t, 1, d.options.ParallelNum)
+	assert.Equal(t, int64(2), d.options.PartSize)
+	assert.False(t, d.options.UseTempFile)
+	assert.True(t, d.options.EnableCheckpoint)
+	assert.Equal(t, "dir", d.options.CheckpointDir)
+	assert.Equal(t, 4 *1024 + 1, d.options.WriteBufferSize)
+
+	delegate, err := d.newDelegate(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")})
+	assert.Nil(t, err)
+	assert.NotNil(t, delegate)
+	assert.Equal(t, 1, delegate.options.ParallelNum)
+	assert.Equal(t, int64(2), delegate.options.PartSize)
+	assert.False(t, delegate.options.UseTempFile)
+	assert.True(t, delegate.options.EnableCheckpoint)
+	assert.Equal(t, "dir", delegate.options.CheckpointDir)
+	assert.Equal(t, 8 *1024, delegate.options.WriteBufferSize)
+
+	// WriteBufferSize 4K
+	delegate, err = d.newDelegate(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")},
+		func(do *DownloaderOptions) {
+			do.ParallelNum = -1
+			do.PartSize = -1
+			do.CheckpointDir = "dir"
+			do.EnableCheckpoint = true
+			do.UseTempFile = false
+			do.WriteBufferSize = 4 * 1024
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, delegate)
+	assert.Equal(t, DefaultDownloadParallel, delegate.options.ParallelNum)
+	assert.Equal(t, DefaultDownloadPartSize, delegate.options.PartSize)
+	assert.False(t, delegate.options.UseTempFile)
+	assert.True(t, delegate.options.EnableCheckpoint)
+	assert.Equal(t, "dir", delegate.options.CheckpointDir)
+	assert.Equal(t, 4 * 1024, delegate.options.WriteBufferSize)
+
+	// WriteBufferSize non-4K
+	delegate, err = d.newDelegate(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")},
+		func(do *DownloaderOptions) {
+			do.ParallelNum = -1
+			do.PartSize = -1
+			do.CheckpointDir = "dir"
+			do.EnableCheckpoint = true
+			do.UseTempFile = false
+			do.WriteBufferSize = 4 * 1024 -1
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, delegate)
+	assert.Equal(t, DefaultDownloadParallel, delegate.options.ParallelNum)
+	assert.Equal(t, DefaultDownloadPartSize, delegate.options.PartSize)
+	assert.False(t, delegate.options.UseTempFile)
+	assert.True(t, delegate.options.EnableCheckpoint)
+	assert.Equal(t, "dir", delegate.options.CheckpointDir)
+	assert.Equal(t, 4 * 1024, delegate.options.WriteBufferSize)
+
+	// WriteBufferSize non-4K
+	delegate, err = d.newDelegate(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")},
+		func(do *DownloaderOptions) {
+			do.ParallelNum = -1
+			do.PartSize = -1
+			do.CheckpointDir = "dir"
+			do.EnableCheckpoint = true
+			do.UseTempFile = false
+			do.WriteBufferSize = 4 * 1024 + 1
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, delegate)
+	assert.Equal(t, DefaultDownloadParallel, delegate.options.ParallelNum)
+	assert.Equal(t, DefaultDownloadPartSize, delegate.options.PartSize)
+	assert.False(t, delegate.options.UseTempFile)
+	assert.True(t, delegate.options.EnableCheckpoint)
+	assert.Equal(t, "dir", delegate.options.CheckpointDir)
+	assert.Equal(t, 8192, delegate.options.WriteBufferSize)	
+}
+
 
 func TestDownloaderDownloadFileArgument(t *testing.T) {
 	c := &Client{}
@@ -1539,4 +1702,55 @@ func TestMockDownloaderDownloadFileEnableCheckpointProgress(t *testing.T) {
 	assert.Equal(t, datasum, hash.Sum64())
 	assert.Equal(t, dcp.Info.Data.DownloadInfo.Offset, tracker.gotMinOffset)
 	assert.Equal(t, int64(length), inc)
+}
+
+
+func TestMockDownloaderEnableWriteBufferSize(t *testing.T) {
+	length := 5*100*1024 + 1234
+	data := []byte(randStr(length))
+	gmtTime := getNowGMT()
+	datasum := func() uint64 {
+		h := NewCRC64(0)
+		h.Write(data)
+		return h.Sum64()
+	}()
+	tracker := &downloaderMockTracker{
+		lastModified:      gmtTime,
+		data:              data,
+	}
+	server := testSetupDownloaderMockServer(t, tracker)
+	defer server.Close()
+	assert.NotNil(t, server)
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL).
+		WithReadWriteTimeout(300 * time.Second)
+
+	client := NewClient(cfg)
+	d := NewDownloader(client, func(do *DownloaderOptions) {
+		do.ParallelNum = 3
+		do.PartSize = 100 * 1024
+		do.WriteBufferSize = 16 * 1024
+	})
+	assert.NotNil(t, d)
+	assert.NotNil(t, d.client)
+
+	localFile := randStr(8) + "-no-surfix"
+
+	result, err := d.DownloadFile(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")}, localFile)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	hash := NewCRC64(0)
+	rfile, err := os.Open(localFile)
+	assert.Nil(t, err)
+
+	defer func() {
+		rfile.Close()
+		os.Remove(localFile)
+	}()
+
+	io.Copy(hash, rfile)
+	assert.Equal(t, datasum, hash.Sum64())
 }

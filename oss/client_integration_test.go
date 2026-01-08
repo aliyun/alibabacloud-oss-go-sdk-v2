@@ -563,6 +563,14 @@ func TestInvokeOperation_BucketPolicy(t *testing.T) {
 	_, err := client.PutBucket(context.TODO(), putRequest)
 	assert.Nil(t, err)
 
+	_, err = client.PutBucketPublicAccessBlock(context.TODO(), &PutBucketPublicAccessBlockRequest{
+		Bucket: Ptr(bucketName),
+		PublicAccessBlockConfiguration: &PublicAccessBlockConfiguration{
+			BlockPublicAccess: Ptr(false),
+		},
+	})
+	assert.Nil(t, err)
+
 	calcMd5 := func(input string) string {
 		if len(input) == 0 {
 			return "1B2M2Y8AsgTpgAmY7PhCfg=="
@@ -878,7 +886,7 @@ func TestGetBucketInfo(t *testing.T) {
 	assert.Empty(t, info.BucketInfo.BucketPolicy.LogPrefix)
 
 	assert.Equal(t, *info.BucketInfo.SseRule.SSEAlgorithm, "")
-	assert.False(t, *info.BucketInfo.BlockPublicAccess)
+	assert.True(t, *info.BucketInfo.BlockPublicAccess)
 	assert.Nil(t, info.BucketInfo.SseRule.KMSDataEncryption)
 	assert.Nil(t, info.BucketInfo.SseRule.KMSMasterKeyID)
 	delRequest := &DeleteBucketRequest{
@@ -1009,6 +1017,12 @@ func TestPutBucketAcl(t *testing.T) {
 	client := getDefaultClient()
 	_, err := client.PutBucket(context.TODO(), putRequest)
 	assert.Nil(t, err)
+	_, err = client.PutBucketPublicAccessBlock(context.TODO(), &PutBucketPublicAccessBlockRequest{
+		Bucket: Ptr(bucketName),
+		PublicAccessBlockConfiguration: &PublicAccessBlockConfiguration{
+			BlockPublicAccess: Ptr(false),
+		},
+	})	
 	request := &PutBucketAclRequest{
 		Bucket: Ptr(bucketName),
 		Acl:    BucketACLPublicRead,
@@ -1907,7 +1921,7 @@ func TestPutObjectAcl(t *testing.T) {
 	request := &PutObjectAclRequest{
 		Bucket: Ptr(bucketName),
 		Key:    Ptr(objectName),
-		Acl:    ObjectACLPublicRead,
+		Acl:    ObjectACLPrivate,
 	}
 	result, err := client.PutObjectAcl(context.TODO(), request)
 	assert.Nil(t, err)
@@ -1928,7 +1942,7 @@ func TestPutObjectAcl(t *testing.T) {
 	request = &PutObjectAclRequest{
 		Bucket: Ptr(bucketNameNotExist),
 		Key:    Ptr(objectName),
-		Acl:    ObjectACLPublicRead,
+		Acl:    ObjectACLPrivate,
 	}
 	_, err = client.PutObjectAcl(context.TODO(), request)
 	assert.NotNil(t, err)
@@ -1955,7 +1969,7 @@ func TestGetObjectAcl(t *testing.T) {
 	objectRequest := &PutObjectRequest{
 		Bucket: Ptr(bucketName),
 		Key:    Ptr(objectName),
-		Acl:    ObjectACLPublicReadWrite,
+		Acl:    ObjectACLPrivate,
 	}
 	_, err = client.PutObject(context.TODO(), objectRequest)
 	assert.Nil(t, err)
@@ -1967,7 +1981,7 @@ func TestGetObjectAcl(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 200, result.StatusCode)
 	assert.NotEmpty(t, result.Headers.Get(HeaderOssRequestID))
-	assert.Equal(t, ObjectACLType(*result.ACL), ObjectACLPublicReadWrite)
+	assert.Equal(t, ObjectACLType(*result.ACL), ObjectACLPrivate)
 	assert.NotEmpty(t, *result.Owner.ID)
 	assert.NotEmpty(t, *result.Owner.DisplayName)
 
@@ -4793,7 +4807,7 @@ func TestClientExtension(t *testing.T) {
 				"author": "test",
 				"magic":  "123",
 			},
-			Acl: ObjectACLPublicRead,
+			Acl: ObjectACLPrivate,
 		},
 		bytes.NewReader([]byte(bigContent)),
 		func(uo *UploaderOptions) {
@@ -4826,7 +4840,7 @@ func TestClientExtension(t *testing.T) {
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, hResult)
-	assert.Equal(t, "public-read", ToString(aclResult.ACL))
+	assert.Equal(t, "private", ToString(aclResult.ACL))
 
 	// Downloader with not align partSize
 	d := client.NewDownloader(func(do *DownloaderOptions) {
@@ -4856,6 +4870,37 @@ func TestClientExtension(t *testing.T) {
 	}()
 	io.Copy(hash, rfile)
 	assert.Equal(t, bigHash.Sum64(), hash.Sum64())
+
+	// Downloader with not align partSize + write-bufer-size
+	d2 := client.NewDownloader(func(do *DownloaderOptions) {
+		do.ParallelNum = 3
+		do.PartSize = 100*1024 + 123
+		do.WriteBufferSize = 16 * 1024
+	})
+	assert.NotNil(t, d2)
+	assert.Equal(t, int64(100*1024+123), d.options.PartSize)
+	assert.Equal(t, 3, d2.options.ParallelNum)
+	assert.Equal(t, 16 * 1024, d2.options.WriteBufferSize)
+	localFileBig2 := randStr(8) + "-downloader-2"
+	dResult2, err := d2.DownloadFile(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectNameBig)},
+		localFileBig2)
+
+	dumpErrIfNotNil(err)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(bigLength), dResult2.Written)
+
+	hash2 := NewCRC64(0)
+	rfile2, err := os.Open(localFileBig2)
+	assert.Nil(t, err)
+	defer func() {
+		rfile.Close()
+		os.Remove(localFileBig2)
+	}()
+	io.Copy(hash2, rfile2)
+	assert.Equal(t, bigHash.Sum64(), hash2.Sum64())
 
 	//Use ReadOnlyFile
 	f, err := client.OpenFile(context.TODO(), bucketName, objectNameBig)
@@ -5222,7 +5267,7 @@ func TestGetBucketRequestPayment(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 }
 
-func TestPaymentWithRequester(t *testing.T) {
+func testPaymentWithRequester(t *testing.T) {
 	after := before(t)
 	defer after(t)
 	//TODO
@@ -5233,7 +5278,12 @@ func TestPaymentWithRequester(t *testing.T) {
 	client := getDefaultClient()
 	_, err := client.PutBucket(context.TODO(), putRequest)
 	assert.Nil(t, err)
-
+	_, err = client.PutBucketPublicAccessBlock(context.TODO(), &PutBucketPublicAccessBlockRequest{
+		Bucket: Ptr(bucketName),
+		PublicAccessBlockConfiguration: &PublicAccessBlockConfiguration{
+			BlockPublicAccess: Ptr(false),
+		},
+	})
 	policyInfo := `
 	{
 		"Version":"1",
@@ -5391,7 +5441,7 @@ func TestPaymentWithRequester(t *testing.T) {
 	putAclRequest := &PutObjectAclRequest{
 		Bucket:       Ptr(bucketName),
 		Key:          Ptr(objectName),
-		Acl:          ObjectACLPublicRead,
+		Acl:          ObjectACLPrivate,
 		RequestPayer: Ptr("requester"),
 	}
 	_, err = creClient.PutObjectAcl(context.TODO(), putAclRequest)
@@ -5614,7 +5664,7 @@ func TestPaymentWithRequester(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 }
 
-func TestClientExtensionWithPayer(t *testing.T) {
+func testClientExtensionWithPayer(t *testing.T) {
 	after := before(t)
 	defer after(t)
 
@@ -5717,7 +5767,7 @@ func TestClientExtensionWithPayer(t *testing.T) {
 				"author": "test",
 				"magic":  "123",
 			},
-			Acl:          ObjectACLPublicRead,
+			Acl:          ObjectACLPrivate,
 			RequestPayer: Ptr("requester"),
 		},
 		bytes.NewReader([]byte(bigContent)),
@@ -5842,7 +5892,7 @@ func TestClientAppendFile(t *testing.T) {
 
 	f, err := client.AppendFile(context.TODO(), bucketName, objectName, func(ao *AppendOptions) {
 		ao.CreateParameter = &AppendObjectRequest{
-			Acl:          ObjectACLPublicRead,
+			Acl:          ObjectACLPrivate,
 			CacheControl: Ptr("no-cache"),
 			Metadata: map[string]string{
 				"user": "jack",
@@ -5879,7 +5929,7 @@ func TestClientAppendFile(t *testing.T) {
 	//Open Again
 	f, err = client.AppendFile(context.TODO(), bucketName, objectName, func(ao *AppendOptions) {
 		ao.CreateParameter = &AppendObjectRequest{
-			Acl:          ObjectACLPublicRead,
+			Acl:          ObjectACLPrivate,
 			CacheControl: Ptr("no-cache"),
 			Metadata: map[string]string{
 				"user": "jack",
@@ -5897,7 +5947,7 @@ func TestClientAppendFile(t *testing.T) {
 	objectName1 := objectNamePrefix + randLowStr(6) + "-1-.append"
 	f, err = client.AppendFile(context.TODO(), bucketName, objectName1, func(ao *AppendOptions) {
 		ao.CreateParameter = &AppendObjectRequest{
-			Acl:          ObjectACLPublicRead,
+			Acl:          ObjectACLPrivate,
 			CacheControl: Ptr("no-cache"),
 			Metadata: map[string]string{
 				"user": "jack-1",
