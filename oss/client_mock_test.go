@@ -29144,6 +29144,15 @@ var testMockDoMetaQuerySuccessCases = []struct {
           <Value>val</Value>
         </UserMeta>
       </OSSUserMeta>
+      <Insights>
+        <Image>
+          <Caption>There stands a person.</Caption>
+          <Description>In the picture, there is a person wearing a dark suit jacket with a white shirt underneath. The background is a gradient from light blue to gray</Description>
+        </Image>
+		<Video>
+          <Caption>The video shows two different scenes</Caption>
+        </Video>
+      </Insights>
     </File>
   </Files>
 </MetaQuery>`),
@@ -29277,6 +29286,10 @@ var testMockDoMetaQuerySuccessCases = []struct {
 			assert.Equal(t, len(o.Files[0].OSSUserMeta), 1)
 			assert.Equal(t, *o.Files[0].OSSUserMeta[0].Key, "key")
 			assert.Equal(t, *o.Files[0].OSSUserMeta[0].Value, "val")
+			assert.Equal(t, *o.Files[0].Insights.Image.Caption, "There stands a person.")
+			assert.Equal(t, *o.Files[0].Insights.Image.Description, "In the picture, there is a person wearing a dark suit jacket with a white shirt underneath. The background is a gradient from light blue to gray")
+			assert.Equal(t, *o.Files[0].Insights.Video.Caption, "The video shows two different scenes")
+			assert.Nil(t, o.Files[0].Insights.Video.Description)
 		},
 	},
 }
