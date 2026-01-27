@@ -664,6 +664,40 @@ func TestListBuckets(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, len(result.Buckets), count)
 
+	bucketTagName := bucketPrefix + strconv.Itoa(1)
+	putTagsRequest := &PutBucketTagsRequest{
+		Bucket: Ptr(bucketTagName),
+		Tagging: &Tagging{
+			&TagSet{
+				[]Tag{
+					{
+						Ptr("k"),
+						Ptr("v"),
+					},
+				},
+			},
+		},
+	}
+	_, err = client.PutBucketTags(context.TODO(), putTagsRequest)
+	listRequest = &ListBucketsRequest{
+		Prefix:  Ptr(bucketPrefix),
+		Tagging: Ptr("\"k\":\"v\""),
+	}
+
+	result, err = client.ListBuckets(context.TODO(), listRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, len(result.Buckets), 1)
+
+	listRequest = &ListBucketsRequest{
+		Prefix:   Ptr(bucketPrefix),
+		TagKey:   Ptr("k"),
+		TagValue: Ptr("v"),
+	}
+
+	result, err = client.ListBuckets(context.TODO(), listRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, len(result.Buckets), 1)
+
 	_, err = client.ListBuckets(context.TODO(), nil)
 	assert.Nil(t, err)
 }
