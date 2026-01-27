@@ -6607,6 +6607,98 @@ func TestBucketWebsite(t *testing.T) {
 	assert.Equal(t, getResult.WebsiteConfiguration, putRequest.WebsiteConfiguration)
 	time.Sleep(1 * time.Second)
 
+	putRequest = &PutBucketWebsiteRequest{
+		Bucket: Ptr(bucketName),
+		WebsiteConfiguration: &WebsiteConfiguration{
+			IndexDocument: &IndexDocument{
+				Suffix:        Ptr("index.html"),
+				SupportSubDir: Ptr(true),
+				Type:          Ptr(int64(0)),
+			},
+			ErrorDocument: &ErrorDocument{
+				Key:        Ptr("error.html"),
+				HttpStatus: Ptr(int64(404)),
+			},
+			RoutingRules: &RoutingRules{
+				[]RoutingRule{
+					{
+						Redirect: &RoutingRuleRedirect{
+							MirrorPassOriginalSlashes: Ptr(false),
+							RedirectType:              Ptr("Mirror"),
+							MirrorURL:                 Ptr("http://example.com/"),
+							MirrorPassQueryString:     Ptr(true),
+							MirrorSNI:                 Ptr(true),
+							ReplaceKeyPrefixWith:      Ptr("def/"),
+							MirrorFollowRedirect:      Ptr(true),
+							HostName:                  Ptr("example.com"),
+							MirrorHeaders: &MirrorHeaders{
+								Passs: []string{"myheader-key1", "myheader-key2"},
+								Sets: []MirrorHeadersSet{
+									{
+										Key:   Ptr("myheader-key5"),
+										Value: Ptr("myheader-value5"),
+									},
+								},
+								PassAll: Ptr(true),
+							},
+							PassQueryString:                Ptr(true),
+							EnableReplacePrefix:            Ptr(true),
+							HttpRedirectCode:               Ptr(int64(301)),
+							MirrorURLSlave:                 Ptr("http://example.com/"),
+							MirrorSaveOssMeta:              Ptr(true),
+							MirrorProxyPass:                Ptr(false),
+							MirrorAllowGetImageInfo:        Ptr(true),
+							MirrorAllowVideoSnapshot:       Ptr(false),
+							MirrorIsExpressTunnel:          Ptr(true),
+							MirrorDstRegion:                Ptr("cn-hangzhou"),
+							MirrorUserLastModified:         Ptr(false),
+							MirrorUsingRole:                Ptr(true),
+							MirrorRole:                     Ptr("aliyun-test-role"),
+							MirrorAllowHeadObject:          Ptr(true),
+							TransparentMirrorResponseCodes: Ptr("400"),
+							MirrorTaggings: &MirrorTaggings{
+								Taggings: []MirrorTagging{
+									{
+										Key:   Ptr("k"),
+										Value: Ptr("v"),
+									},
+								},
+							},
+							MirrorReturnHeaders: &MirrorReturnHeaders{
+								ReturnHeaders: []ReturnHeader{
+									{
+										Key:   Ptr("k"),
+										Value: Ptr("v"),
+									},
+								},
+							},
+							MirrorAuth: &MirrorAuth{
+								AuthType:        Ptr("S3V4"),
+								Region:          Ptr("ap-southeast-1"),
+								AccessKeyId:     Ptr("TESTAK"),
+								AccessKeySecret: Ptr("TESTSK"),
+							},
+						},
+						RuleNumber: Ptr(int64(1)),
+						Condition: &RoutingRuleCondition{
+							KeySuffixEquals:             Ptr(".txt"),
+							KeyPrefixEquals:             Ptr("abc/"),
+							HttpErrorCodeReturnedEquals: Ptr(int64(404)),
+						},
+						LuaConfig: &RoutingRuleLuaConfig{
+							Script: Ptr("test.lua"),
+						},
+					},
+				},
+			},
+		},
+	}
+	putResult, err = client.PutBucketWebsite(context.TODO(), putRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
 	delRequest := &DeleteBucketWebsiteRequest{
 		Bucket: Ptr(bucketName),
 	}
