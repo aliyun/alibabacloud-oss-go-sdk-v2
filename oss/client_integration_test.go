@@ -1740,6 +1740,24 @@ func TestDeleteMultipleObjects(t *testing.T) {
 	assert.Len(t, result.DeletedObjects, 1)
 	assert.Equal(t, *result.DeletedObjects[0].Key, objectNameSpecial)
 
+	delRequest = &DeleteMultipleObjectsRequest{
+		Bucket: Ptr(bucketName),
+		Delete: &Delete{Objects: nil},
+	}
+	for i := 0; i < 10; i++ {
+		request.Key = Ptr(objectName + strconv.Itoa(i))
+		_, err = client.PutObject(context.TODO(), request)
+		assert.Nil(t, err)
+		delRequest.Delete.Objects = append(delRequest.Delete.Objects, ObjectIdentifier{Key: Ptr(objectName + strconv.Itoa(i))})
+	}
+	result, err = client.DeleteMultipleObjects(context.TODO(), delRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, result.StatusCode)
+	assert.Equal(t, "200 OK", result.Status)
+	assert.NotEmpty(t, result.Headers.Get("x-oss-request-id"))
+	assert.NotEmpty(t, result.Headers.Get("Date"))
+	assert.Len(t, result.DeletedObjects, 10)
+
 	_, err = client.DeleteMultipleObjects(context.TODO(), nil)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")

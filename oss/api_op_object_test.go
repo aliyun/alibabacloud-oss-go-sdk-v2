@@ -1522,7 +1522,7 @@ func TestUnmarshalOutput_DeleteObject(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 }
 
-func TestMarshalInput_DeleteMultipleObjects(t *testing.T) {
+func TestMarshalInput_DeleteMultipleObjectsLegacy(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
 	var request *DeleteMultipleObjectsRequest
@@ -1630,6 +1630,191 @@ func TestMarshalInput_DeleteMultipleObjects(t *testing.T) {
 	assert.Equal(t, *input.Bucket, "oss-bucket")
 	assert.Equal(t, input.Body, strings.NewReader("<Delete><Quiet>true</Quiet><Object><Key>key1.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****</VersionId></Object><Object><Key>key2.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****</VersionId></Object></Delete>"))
 	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["delete"])
+	assert.Equal(t, input.Parameters["encoding-type"], "url")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+}
+
+func TestMarshalInput_DeleteMultipleObjects(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var request *DeleteMultipleObjectsRequest
+	var input *OperationInput
+	var err error
+
+	request = &DeleteMultipleObjectsRequest{}
+	input = &OperationInput{
+		OpName: "DeleteMultipleObjects",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{"delete": ""},
+		Bucket:     request.Bucket,
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Bucket")
+
+	request = &DeleteMultipleObjectsRequest{
+		Bucket: Ptr("oss-bucket"),
+	}
+	input = &OperationInput{
+		OpName: "DeleteMultipleObjects",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{"delete": "", "encoding-type": "url"},
+		Bucket:     request.Bucket,
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5, enableNonStream)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Objects")
+
+	request = &DeleteMultipleObjectsRequest{
+		Bucket:  Ptr("oss-bucket"),
+		Objects: []DeleteObject{},
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5, enableNonStream)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Objects")
+
+	request = &DeleteMultipleObjectsRequest{
+		Bucket: Ptr("oss-bucket"),
+		Delete: &Delete{
+			Objects: nil,
+		},
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5, enableNonStream)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Objects")
+
+	request = &DeleteMultipleObjectsRequest{
+		Bucket: Ptr("oss-bucket"),
+		Delete: &Delete{
+			Objects: []ObjectIdentifier{},
+		},
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5, enableNonStream)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Objects")
+
+	request = &DeleteMultipleObjectsRequest{
+		Bucket:  Ptr("oss-bucket"),
+		Objects: []DeleteObject{{Key: Ptr("key1.txt")}, {Key: Ptr("key2.txt")}},
+	}
+	input = &OperationInput{
+		OpName: "DeleteMultipleObjects",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{"delete": "", "encoding-type": "url"},
+		Bucket:     request.Bucket,
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5, enableNonStream)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, input.Body, strings.NewReader("<Delete><Quiet>false</Quiet><Object><Key>key1.txt</Key></Object><Object><Key>key2.txt</Key></Object></Delete>"))
+	assert.Empty(t, input.Parameters["delete"])
+	assert.Equal(t, input.Parameters["encoding-type"], "url")
+
+	request = &DeleteMultipleObjectsRequest{
+		Bucket: Ptr("oss-bucket"),
+		Delete: &Delete{
+			Objects: []ObjectIdentifier{
+				{Key: Ptr("key1.txt")}, {Key: Ptr("key2.txt")},
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "DeleteMultipleObjects",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{"delete": "", "encoding-type": "url"},
+		Bucket:     request.Bucket,
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5, enableNonStream)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, input.Body, strings.NewReader("<Delete><Quiet>false</Quiet><Object><Key>key1.txt</Key></Object><Object><Key>key2.txt</Key></Object></Delete>"))
+	assert.Empty(t, input.Parameters["delete"])
+	assert.Equal(t, input.Parameters["encoding-type"], "url")
+
+	request = &DeleteMultipleObjectsRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Objects:      []DeleteObject{{Key: Ptr("key1.txt"), VersionId: Ptr("CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****")}, {Key: Ptr("key2.txt"), VersionId: Ptr("CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****")}},
+		EncodingType: Ptr("url"),
+		Quiet:        true,
+	}
+	input = &OperationInput{
+		OpName: "DeleteMultipleObjects",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{"delete": "", "encoding-type": "url"},
+		Bucket:     request.Bucket,
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5, enableNonStream)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, input.Body, strings.NewReader("<Delete><Quiet>true</Quiet><Object><Key>key1.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****</VersionId></Object><Object><Key>key2.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****</VersionId></Object></Delete>"))
+	assert.Empty(t, input.Parameters["delete"])
+	assert.Equal(t, input.Parameters["encoding-type"], "url")
+
+	request = &DeleteMultipleObjectsRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Objects:      []DeleteObject{{Key: Ptr("key1.txt"), VersionId: Ptr("CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****")}, {Key: Ptr("key2.txt"), VersionId: Ptr("CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****")}},
+		EncodingType: Ptr("url"),
+		Quiet:        true,
+		RequestPayer: Ptr("requester"),
+	}
+	input = &OperationInput{
+		OpName: "DeleteMultipleObjects",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{"delete": "", "encoding-type": "url"},
+		Bucket:     request.Bucket,
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5, enableNonStream)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, input.Body, strings.NewReader("<Delete><Quiet>true</Quiet><Object><Key>key1.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****</VersionId></Object><Object><Key>key2.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****</VersionId></Object></Delete>"))
+	assert.Empty(t, input.Parameters["delete"])
+	assert.Equal(t, input.Parameters["encoding-type"], "url")
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+
+	request = &DeleteMultipleObjectsRequest{
+		Bucket:       Ptr("oss-bucket"),
+		EncodingType: Ptr("url"),
+		RequestPayer: Ptr("requester"),
+		Delete: &Delete{
+			Objects: []ObjectIdentifier{
+				{Key: Ptr("key1.txt"), VersionId: Ptr("CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****")},
+				{Key: Ptr("key2.txt"), VersionId: Ptr("CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****")},
+			},
+			Quiet: true,
+		},
+	}
+	input = &OperationInput{
+		OpName: "DeleteMultipleObjects",
+		Method: "POST",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Parameters: map[string]string{"delete": "", "encoding-type": "url"},
+		Bucket:     request.Bucket,
+	}
+	err = c.marshalInput(request, input, marshalDeleteObjects, updateContentMd5, enableNonStream)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, input.Body, strings.NewReader("<Delete><Quiet>true</Quiet><Object><Key>key1.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA4****</VersionId></Object><Object><Key>key2.txt</Key><VersionId>CAEQNRiBgIDyz.6C0BYiIGQ2NWEwNmVhNTA3ZTQ3MzM5ODliYjM1ZTdjYjA5****</VersionId></Object></Delete>"))
 	assert.Empty(t, input.Parameters["delete"])
 	assert.Equal(t, input.Parameters["encoding-type"], "url")
 	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")

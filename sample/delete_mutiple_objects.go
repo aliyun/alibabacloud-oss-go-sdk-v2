@@ -48,8 +48,10 @@ func main() {
 		DeleteObjects = append(DeleteObjects, oss.DeleteObject{Key: oss.Ptr(name)})
 	}
 	request := &oss.DeleteMultipleObjectsRequest{
-		Bucket:  oss.Ptr(bucketName),
-		Objects: DeleteObjects,
+		Bucket: oss.Ptr(bucketName),
+		Delete: &oss.Delete{
+			Objects: DeleteObjects,
+		},
 	}
 	result, err := client.DeleteMultipleObjects(context.TODO(), request)
 	if err != nil {

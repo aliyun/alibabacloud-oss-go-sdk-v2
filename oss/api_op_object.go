@@ -847,6 +847,25 @@ func (c *Client) DeleteObject(ctx context.Context, request *DeleteObjectRequest,
 	return result, err
 }
 
+type DeleteObject struct {
+	// The name of the object that you want to delete.
+	Key *string `xml:"Key"`
+
+	// The version ID of the object that you want to delete.
+	VersionId *string `xml:"VersionId"`
+}
+
+type ObjectIdentifier = DeleteObject
+
+type Delete struct {
+	// The container that stores information about you want to delete objects.
+	Objects []ObjectIdentifier
+
+	// Specifies whether to enable the Quiet return mode.
+	// The DeleteMultipleObjects operation provides the following return modes: Valid value: true,false
+	Quiet bool
+}
+
 type DeleteMultipleObjectsRequest struct {
 	// The name of the bucket.
 	Bucket *string `input:"host,bucket,required"`
@@ -858,24 +877,23 @@ type DeleteMultipleObjectsRequest struct {
 	ContentLength int64 `input:"header,Content-Length"`
 
 	// The container that stores information about you want to delete objects.
-	Objects []DeleteObject `input:"nop,objects,required"`
+	// Deprecated: Objects is deprecated, and will be removed in the future. Use Delete.Objects instead.
+	// If both exist simultaneously, the value of Delete will take precedence.
+	Objects []DeleteObject
 
 	// Specifies whether to enable the Quiet return mode.
 	// The DeleteMultipleObjects operation provides the following return modes: Valid value: true,false
+	// Deprecated: Quiet is deprecated, and will be removed in the future. Use Delete.Quiet instead.
+	// If both exist simultaneously, the value of Delete will take precedence.
 	Quiet bool
 
 	// To indicate that the requester is aware that the request and data download will incur costs
 	RequestPayer *string `input:"header,x-oss-request-payer"`
 
+	// The container that stores information about you want to delete objects.
+	Delete *Delete
+
 	RequestCommon
-}
-
-type DeleteObject struct {
-	// The name of the object that you want to delete.
-	Key *string `xml:"Key"`
-
-	// The version ID of the object that you want to delete.
-	VersionId *string `xml:"VersionId"`
 }
 
 type DeleteMultipleObjectsResult struct {

@@ -958,18 +958,28 @@ func marshalRestoreObject(request any, input *OperationInput) error {
 	builder.WriteString("</RestoreRequest>")
 	input.Body = strings.NewReader(builder.String())
 	return nil
-	return nil
 }
 
 func marshalDeleteObjects(request any, input *OperationInput) error {
 	var builder strings.Builder
 	delRequest := request.(*DeleteMultipleObjectsRequest)
+	objects := delRequest.Objects
+	quiet := delRequest.Quiet
+	if delRequest.Delete != nil {
+		objects = delRequest.Delete.Objects
+		quiet = delRequest.Delete.Quiet
+	}
+
+	if len(objects) == 0 {
+		return NewErrParamRequired("Objects")
+	}
+
 	builder.WriteString("<Delete>")
 	builder.WriteString("<Quiet>")
-	builder.WriteString(strconv.FormatBool(delRequest.Quiet))
+	builder.WriteString(strconv.FormatBool(quiet))
 	builder.WriteString("</Quiet>")
-	if len(delRequest.Objects) > 0 {
-		for _, object := range delRequest.Objects {
+	if len(objects) > 0 {
+		for _, object := range objects {
 			builder.WriteString("<Object>")
 			if object.Key != nil {
 				builder.WriteString("<Key>")
