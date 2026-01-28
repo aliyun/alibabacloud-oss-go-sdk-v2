@@ -928,6 +928,39 @@ func (c *Client) marshalInput(request any, input *OperationInput, handlers ...fu
 	return nil
 }
 
+func marshalRestoreObject(request any, input *OperationInput) error {
+	var builder strings.Builder
+	roRequest := request.(*RestoreObjectRequest)
+	if roRequest.RestoreRequest == nil {
+		return nil
+	}
+
+	restoreRequest := roRequest.RestoreRequest
+	builder.WriteString("<RestoreRequest>")
+	builder.WriteString("<Days>")
+	builder.WriteString(strconv.Itoa(int(restoreRequest.Days)))
+	builder.WriteString("</Days>")
+	if restoreRequest.JobParameters != nil {
+		builder.WriteString("<JobParameters>")
+		if restoreRequest.JobParameters.Tier != nil {
+			builder.WriteString("<Tier>")
+			builder.WriteString(*restoreRequest.JobParameters.Tier)
+			builder.WriteString("</Tier>")
+		}
+		builder.WriteString("</JobParameters>")
+	} else if restoreRequest.Tier != nil {
+		builder.WriteString("<JobParameters>")
+		builder.WriteString("<Tier>")
+		builder.WriteString(*restoreRequest.Tier)
+		builder.WriteString("</Tier>")
+		builder.WriteString("</JobParameters>")
+	}
+	builder.WriteString("</RestoreRequest>")
+	input.Body = strings.NewReader(builder.String())
+	return nil
+	return nil
+}
+
 func marshalDeleteObjects(request any, input *OperationInput) error {
 	var builder strings.Builder
 	delRequest := request.(*DeleteMultipleObjectsRequest)

@@ -1866,6 +1866,74 @@ func TestGetObjectMeta(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 }
 
+func TestRestoreObjectLegacy(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	//TODO
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+
+	objectName := objectNamePrefix + randLowStr(6)
+	content := randLowStr(10)
+	request := &PutObjectRequest{
+		Bucket:       Ptr(bucketName),
+		Key:          Ptr(objectName),
+		Body:         strings.NewReader(content),
+		StorageClass: StorageClassColdArchive,
+	}
+	_, err = client.PutObject(context.TODO(), request)
+	assert.Nil(t, err)
+
+	restoreRequest := &RestoreObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	result, err := client.RestoreObject(context.TODO(), restoreRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 202)
+	assert.Equal(t, result.Status, "202 Accepted")
+	assert.NotEmpty(t, result.Headers.Get("x-oss-request-id"))
+
+	_, err = client.RestoreObject(context.TODO(), nil)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field")
+
+	var serr *ServiceError
+	restoreRequest = &RestoreObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	}
+	result, err = client.RestoreObject(context.TODO(), restoreRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(409), serr.StatusCode)
+	assert.Equal(t, "RestoreAlreadyInProgress", serr.Code)
+	assert.Equal(t, "The restore operation is in progress.", serr.Message)
+	assert.NotEmpty(t, serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	bucketNameNotExist := bucketNamePrefix + randLowStr(6) + "not-exist"
+	restoreRequest = &RestoreObjectRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		Key:    Ptr(objectName),
+	}
+	_, err = client.RestoreObject(context.TODO(), restoreRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+}
+
 func TestRestoreObject(t *testing.T) {
 	after := before(t)
 	defer after(t)
@@ -1894,6 +1962,12 @@ func TestRestoreObject(t *testing.T) {
 	restoreRequest := &RestoreObjectRequest{
 		Bucket: Ptr(bucketName),
 		Key:    Ptr(objectName),
+		RestoreRequest: &RestoreRequest{
+			Days: 1,
+			JobParameters: &JobParameters{
+				Tier: Ptr("Standard"),
+			},
+		},
 	}
 	result, err := client.RestoreObject(context.TODO(), restoreRequest)
 	assert.Nil(t, err)
