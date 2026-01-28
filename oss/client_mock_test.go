@@ -35177,16 +35177,13 @@ var testMockSealAppendObjectErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			requestBody, err := io.ReadAll(r.Body)
-			assert.Nil(t, err)
 			strUrl := sortQuery(r)
-			assert.Equal(t, strings.NewReader("hi oss,append object"), strings.NewReader(string(requestBody)))
-			assert.Equal(t, "/bucket/object?append&position=100", strUrl)
+			assert.Equal(t, "/bucket/object?position=10&seal", strUrl)
 		},
 		&SealAppendObjectRequest{
 			Bucket:   Ptr("bucket"),
 			Key:      Ptr("object"),
-			Position: Ptr(int64(100)),
+			Position: Ptr(int64(10)),
 		},
 		func(t *testing.T, o *SealAppendObjectResult, err error) {
 			assert.Nil(t, o)
@@ -35218,16 +35215,13 @@ var testMockSealAppendObjectErrorCases = []struct {
 </Error>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
-			requestBody, err := io.ReadAll(r.Body)
-			assert.Nil(t, err)
-			assert.Equal(t, strings.NewReader("hi oss,append object,this is a demo"), strings.NewReader(string(requestBody)))
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/object?append&position=0", strUrl)
+			assert.Equal(t, "/bucket/object?position=10&seal", strUrl)
 		},
 		&SealAppendObjectRequest{
 			Bucket:   Ptr("bucket"),
 			Key:      Ptr("object"),
-			Position: Ptr(int64(0)),
+			Position: Ptr(int64(10)),
 		},
 		func(t *testing.T, o *SealAppendObjectResult, err error) {
 			assert.Nil(t, o)
