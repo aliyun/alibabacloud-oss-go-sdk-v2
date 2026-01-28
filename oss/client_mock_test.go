@@ -27842,7 +27842,7 @@ func TestMockDeleteBucketPublicAccessBlock_Error(t *testing.T) {
 	}
 }
 
-var testMockPutCnameSuccessCases = []struct {
+var testMockPutCnameSuccessCasesLegacy = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -27943,6 +27943,132 @@ var testMockPutCnameSuccessCases = []struct {
 	},
 }
 
+func TestMockPutCnameLegacy_Success(t *testing.T) {
+	for _, c := range testMockPutCnameSuccessCasesLegacy {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.PutCname(context.TODO(), c.Request)
+		assert.Nil(t, c.Request.BucketCnameConfiguration.Cname)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutCnameSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutCnameRequest
+	CheckOutputFn  func(t *testing.T, o *PutCnameResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?cname&comp=add", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+		},
+		&PutCnameRequest{
+			Bucket: Ptr("bucket"),
+			BucketCnameConfiguration: &BucketCnameConfiguration{
+				Cname: &Cname{
+					Domain: Ptr("example.com"),
+				},
+			},
+		},
+		func(t *testing.T, o *PutCnameResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?cname&comp=add", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><CertificateConfiguration><CertId>493****-cn-hangzhou</CertId><Certificate>-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----</Certificate><PrivateKey>-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----</PrivateKey><PreviousCertId>493****-cn-hangzhou</PreviousCertId><Force>true</Force></CertificateConfiguration></Cname></BucketCnameConfiguration>")
+		},
+		&PutCnameRequest{
+			Bucket: Ptr("bucket"),
+			BucketCnameConfiguration: &BucketCnameConfiguration{
+				Cname: &Cname{
+					Domain: Ptr("example.com"),
+					CertificateConfiguration: &CertificateConfiguration{
+						CertId:         Ptr("493****-cn-hangzhou"),
+						Certificate:    Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+						PrivateKey:     Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+						PreviousCertId: Ptr("493****-cn-hangzhou"),
+						Force:          Ptr(true),
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *PutCnameResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?cname&comp=add", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><CertificateConfiguration><DeleteCertificate>true</DeleteCertificate></CertificateConfiguration></Cname></BucketCnameConfiguration>")
+		},
+		&PutCnameRequest{
+			Bucket: Ptr("bucket"),
+			BucketCnameConfiguration: &BucketCnameConfiguration{
+				Cname: &Cname{
+					Domain: Ptr("example.com"),
+					CertificateConfiguration: &CertificateConfiguration{
+						DeleteCertificate: Ptr(true),
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *PutCnameResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
 func TestMockPutCname_Success(t *testing.T) {
 	for _, c := range testMockPutCnameSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
@@ -27957,6 +28083,7 @@ func TestMockPutCname_Success(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 		output, err := client.PutCname(context.TODO(), c.Request)
+		assert.NotNil(t, c.Request.BucketCnameConfiguration.Cname)
 		c.CheckOutputFn(t, output, err)
 	}
 }
@@ -28069,11 +28196,12 @@ func TestMockPutCname_Error(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 		output, err := client.PutCname(context.TODO(), c.Request)
+		assert.Nil(t, c.Request.BucketCnameConfiguration.Cname)
 		c.CheckOutputFn(t, output, err)
 	}
 }
 
-var testMockCreateCnameTokenSuccessCases = []struct {
+var testMockCreateCnameTokenLegacySuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -28119,6 +28247,73 @@ var testMockCreateCnameTokenSuccessCases = []struct {
 	},
 }
 
+func TestMockCreateCnameTokenLegacy_Success(t *testing.T) {
+	for _, c := range testMockCreateCnameTokenLegacySuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.CreateCnameToken(context.TODO(), c.Request)
+		assert.Nil(t, c.Request.BucketCnameConfiguration.Cname)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockCreateCnameTokenSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *CreateCnameTokenRequest
+	CheckOutputFn  func(t *testing.T, o *CreateCnameTokenResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<CnameToken>
+  <Bucket>bucket</Bucket>
+  <Cname>example.com</Cname>;
+  <Token>be1d49d863dea9ffeff3df7d6455****</Token>
+  <ExpireTime>Wed, 23 Feb 2022 21:16:37 GMT</ExpireTime>
+</CnameToken>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?cname&comp=token", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+		},
+		&CreateCnameTokenRequest{
+			Bucket: Ptr("bucket"),
+			BucketCnameConfiguration: &BucketCnameConfiguration{
+				Cname: &Cname{
+					Domain: Ptr("example.com"),
+				},
+			},
+		},
+		func(t *testing.T, o *CreateCnameTokenResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.CnameToken.Bucket, "bucket")
+			assert.Equal(t, *o.CnameToken.Cname, "example.com")
+			assert.Equal(t, *o.CnameToken.Token, "be1d49d863dea9ffeff3df7d6455****")
+			assert.Equal(t, *o.CnameToken.ExpireTime, "Wed, 23 Feb 2022 21:16:37 GMT")
+		},
+	},
+}
+
 func TestMockCreateCnameToken_Success(t *testing.T) {
 	for _, c := range testMockCreateCnameTokenSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
@@ -28133,6 +28328,7 @@ func TestMockCreateCnameToken_Success(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 		output, err := client.CreateCnameToken(context.TODO(), c.Request)
+		assert.NotNil(t, c.Request.BucketCnameConfiguration.Cname)
 		c.CheckOutputFn(t, output, err)
 	}
 }
@@ -28724,7 +28920,7 @@ func TestMockListCname_Error(t *testing.T) {
 	}
 }
 
-var testMockDeleteCnameSuccessCases = []struct {
+var testMockDeleteCnameLegacySuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -28762,6 +28958,65 @@ var testMockDeleteCnameSuccessCases = []struct {
 	},
 }
 
+func TestMockDeleteCnameLegacy_Success(t *testing.T) {
+	for _, c := range testMockDeleteCnameLegacySuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+		output, err := client.DeleteCname(context.TODO(), c.Request)
+		assert.Nil(t, c.Request.BucketCnameConfiguration.Cname)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDeleteCnameSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DeleteCnameRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteCnameResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?cname&comp=delete", urlStr)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+		},
+		&DeleteCnameRequest{
+			Bucket: Ptr("bucket"),
+			BucketCnameConfiguration: &BucketCnameConfiguration{
+				Cname: &Cname{
+					Domain: Ptr("example.com"),
+				},
+			},
+		},
+		func(t *testing.T, o *DeleteCnameResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
 func TestMockDeleteCname_Success(t *testing.T) {
 	for _, c := range testMockDeleteCnameSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
@@ -28776,6 +29031,7 @@ func TestMockDeleteCname_Success(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 		output, err := client.DeleteCname(context.TODO(), c.Request)
+		assert.NotNil(t, c.Request.BucketCnameConfiguration.Cname)
 		c.CheckOutputFn(t, output, err)
 	}
 }

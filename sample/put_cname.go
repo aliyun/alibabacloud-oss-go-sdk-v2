@@ -40,7 +40,9 @@ func main() {
 	request := &oss.PutCnameRequest{
 		Bucket: oss.Ptr(bucketName),
 		BucketCnameConfiguration: &oss.BucketCnameConfiguration{
-			Domain: oss.Ptr("example.com"),
+			Cname: &oss.Cname{
+				Domain: oss.Ptr("example.com"),
+			},
 		},
 	}
 	result, err := client.PutCname(context.TODO(), request)
