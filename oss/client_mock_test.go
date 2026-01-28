@@ -6748,7 +6748,7 @@ func TestMockGetObjectMeta_Error(t *testing.T) {
 	}
 }
 
-var testMockRestoreObjectSuccessCases = []struct {
+var testMockRestoreObjectLegacySuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
@@ -6859,6 +6859,154 @@ var testMockRestoreObjectSuccessCases = []struct {
 			Key:    Ptr("object"),
 			RestoreRequest: &RestoreRequest{
 				Days: int32(2),
+				Tier: Ptr("Standard"),
+			},
+			RequestPayer: Ptr("requester"),
+		},
+		func(t *testing.T, o *RestoreObjectResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Tue, 04 Dec 2018 15:56:38 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockRestoreObjectLegacy_Success(t *testing.T) {
+	for _, c := range testMockRestoreObjectLegacySuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.RestoreObject(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockRestoreObjectSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *RestoreObjectRequest
+	CheckOutputFn  func(t *testing.T, o *RestoreObjectResult, err error)
+}{
+	{
+		202,
+		map[string]string{
+			"X-Oss-Request-Id": "6555A936CA31DC333143****",
+			"Date":             "Thu, 16 Nov 2023 05:31:34 GMT",
+		},
+		nil,
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/object?restore", r.URL.String())
+		},
+		&RestoreObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+		},
+		func(t *testing.T, o *RestoreObjectResult, err error) {
+			assert.Equal(t, 202, o.StatusCode)
+			assert.Equal(t, "202 Accepted", o.Status)
+			assert.Equal(t, "6555A936CA31DC333143****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Thu, 16 Nov 2023 05:31:34 GMT", o.Headers.Get("Date"))
+
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"X-Oss-Request-Id": "5CAC3B40B7AEADE01700****",
+			"Date":             "Tue, 04 Dec 2018 15:56:38 GMT",
+			"x-oss-version-Id": "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****",
+		},
+		nil,
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/bucket/object?restore&versionId=CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy%2A%2A%2A%2A", strUrl)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days></RestoreRequest>")
+		},
+		&RestoreObjectRequest{
+			Bucket:    Ptr("bucket"),
+			Key:       Ptr("object"),
+			VersionId: Ptr("CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****"),
+			RestoreRequest: &RestoreRequest{
+				Days: int32(2),
+			},
+		},
+		func(t *testing.T, o *RestoreObjectResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "5CAC3B40B7AEADE01700****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Tue, 04 Dec 2018 15:56:38 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.VersionId, "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"X-Oss-Request-Id": "534B371674E88A4D8906****",
+			"Date":             "Tue, 04 Dec 2018 15:56:38 GMT",
+		},
+		nil,
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/object?restore", r.URL.String())
+
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days><JobParameters><Tier>Standard</Tier></JobParameters></RestoreRequest>")
+		},
+		&RestoreObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+			RestoreRequest: &RestoreRequest{
+				Days: int32(2),
+				JobParameters: &JobParameters{
+					Tier: Ptr("Standard"),
+				},
+			},
+		},
+		func(t *testing.T, o *RestoreObjectResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Tue, 04 Dec 2018 15:56:38 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"X-Oss-Request-Id": "534B371674E88A4D8906****",
+			"Date":             "Tue, 04 Dec 2018 15:56:38 GMT",
+		},
+		nil,
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/object?restore", r.URL.String())
+
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days><JobParameters><Tier>Bluk</Tier></JobParameters></RestoreRequest>")
+			assert.Equal(t, r.Header.Get("x-oss-request-payer"), "requester")
+		},
+		&RestoreObjectRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+			RestoreRequest: &RestoreRequest{
+				Days: int32(2),
+				JobParameters: &JobParameters{
+					Tier: Ptr("Bluk"),
+				},
 				Tier: Ptr("Standard"),
 			},
 			RequestPayer: Ptr("requester"),

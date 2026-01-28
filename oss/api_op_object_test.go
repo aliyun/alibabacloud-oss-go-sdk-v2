@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -2315,7 +2316,7 @@ func TestUnmarshalOutput_GetObjectMeta(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 }
 
-func TestMarshalInput_RestoreObject(t *testing.T) {
+func TestMarshalInput_RestoreObjectLegacy(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
 	var request *RestoreObjectRequest
@@ -2354,7 +2355,7 @@ func TestMarshalInput_RestoreObject(t *testing.T) {
 			HTTPHeaderContentType: contentTypeXML,
 		},
 	}
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field")
 
@@ -2374,7 +2375,7 @@ func TestMarshalInput_RestoreObject(t *testing.T) {
 			HTTPHeaderContentType: contentTypeXML,
 		},
 	}
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, *input.Bucket, "oss-bucket")
 	assert.Equal(t, *input.Key, "oss-key")
@@ -2408,6 +2409,60 @@ func TestMarshalInput_RestoreObject(t *testing.T) {
 		Bucket:    Ptr("oss-bucket"),
 		Key:       Ptr("oss-key"),
 		VersionId: Ptr("CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****"),
+	}
+	input = &OperationInput{
+		OpName: "RestoreObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"restore": "",
+		},
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+	}
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["restore"])
+	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****")
+	assert.Nil(t, input.Body)
+
+	request = &RestoreObjectRequest{
+		Bucket:    Ptr("oss-bucket"),
+		Key:       Ptr("oss-key"),
+		VersionId: Ptr("CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****"),
+		RestoreRequest: &RestoreRequest{
+			Days: int32(2),
+		},
+	}
+	input = &OperationInput{
+		OpName: "RestoreObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"restore": "",
+		},
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+	}
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["restore"])
+	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****")
+	data, _ := io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days></RestoreRequest>")
+
+	request = &RestoreObjectRequest{
+		Bucket:    Ptr("oss-bucket"),
+		Key:       Ptr("oss-key"),
+		VersionId: Ptr("CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****"),
 		RestoreRequest: &RestoreRequest{
 			Days: int32(2),
 			Tier: Ptr("Standard"),
@@ -2425,13 +2480,13 @@ func TestMarshalInput_RestoreObject(t *testing.T) {
 			HTTPHeaderContentType: contentTypeXML,
 		},
 	}
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
 	assert.Equal(t, *input.Bucket, "oss-bucket")
 	assert.Equal(t, *input.Key, "oss-key")
 	assert.Nil(t, input.OpMetadata.values)
 	assert.Empty(t, input.Parameters["restore"])
 	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****")
-	data, _ := io.ReadAll(input.Body)
+	data, _ = io.ReadAll(input.Body)
 	assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days><JobParameters><Tier>Standard</Tier></JobParameters></RestoreRequest>")
 
 	request = &RestoreObjectRequest{
@@ -2455,7 +2510,7 @@ func TestMarshalInput_RestoreObject(t *testing.T) {
 			HTTPHeaderContentType: contentTypeXML,
 		},
 	}
-	err = c.marshalInput(request, input, updateContentMd5)
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
 	assert.Equal(t, *input.Bucket, "oss-bucket")
 	assert.Equal(t, *input.Key, "oss-key")
 	assert.Nil(t, input.OpMetadata.values)
@@ -2463,6 +2518,167 @@ func TestMarshalInput_RestoreObject(t *testing.T) {
 	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
 	data, _ = io.ReadAll(input.Body)
 	assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days><JobParameters><Tier>Standard</Tier></JobParameters></RestoreRequest>")
+}
+
+func TestMarshalInput_RestoreObject(t *testing.T) {
+	c := Client{}
+	assert.NotNil(t, c)
+	var request *RestoreObjectRequest
+	var input *OperationInput
+	var err error
+
+	request = &RestoreObjectRequest{
+		Bucket:    Ptr("oss-bucket"),
+		Key:       Ptr("oss-key"),
+		VersionId: Ptr("CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****"),
+	}
+	input = &OperationInput{
+		OpName: "RestoreObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"restore": "",
+		},
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+	}
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["restore"])
+	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****")
+	assert.Nil(t, input.Body)
+
+	request = &RestoreObjectRequest{
+		Bucket:    Ptr("oss-bucket"),
+		Key:       Ptr("oss-key"),
+		VersionId: Ptr("CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****"),
+		RestoreRequest: &RestoreRequest{
+			Days: int32(2),
+		},
+	}
+	input = &OperationInput{
+		OpName: "RestoreObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"restore": "",
+		},
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+	}
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["restore"])
+	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****")
+	data, _ := io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days></RestoreRequest>")
+
+	request = &RestoreObjectRequest{
+		Bucket:    Ptr("oss-bucket"),
+		Key:       Ptr("oss-key"),
+		VersionId: Ptr("CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****"),
+		RestoreRequest: &RestoreRequest{
+			Days: int32(2),
+			JobParameters: &JobParameters{
+				Tier: Ptr("Standard"),
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "RestoreObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"restore": "",
+		},
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+	}
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["restore"])
+	assert.Equal(t, input.Parameters["versionId"], "CAEQNRiBgICb8o6D0BYiIDNlNzk5NGE2M2Y3ZjRhZTViYTAxZGE0ZTEyMWYy****")
+	data, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days><JobParameters><Tier>Standard</Tier></JobParameters></RestoreRequest>")
+
+	request = &RestoreObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		RequestPayer: Ptr("requester"),
+		RestoreRequest: &RestoreRequest{
+			Days: int32(2),
+			JobParameters: &JobParameters{
+				Tier: Ptr("Standard"),
+			},
+		},
+	}
+	input = &OperationInput{
+		OpName: "RestoreObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"restore": "",
+		},
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+	}
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["restore"])
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+	data, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days><JobParameters><Tier>Standard</Tier></JobParameters></RestoreRequest>")
+
+	// Mixed
+	request = &RestoreObjectRequest{
+		Bucket:       Ptr("oss-bucket"),
+		Key:          Ptr("oss-key"),
+		RequestPayer: Ptr("requester"),
+		RestoreRequest: &RestoreRequest{
+			Days: int32(2),
+			JobParameters: &JobParameters{
+				Tier: Ptr("Bluk"),
+			},
+			Tier: Ptr("Standard"),
+		},
+	}
+	input = &OperationInput{
+		OpName: "RestoreObject",
+		Method: "POST",
+		Bucket: request.Bucket,
+		Key:    request.Key,
+		Parameters: map[string]string{
+			"restore": "",
+		},
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+	}
+	err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5)
+	assert.Equal(t, *input.Bucket, "oss-bucket")
+	assert.Equal(t, *input.Key, "oss-key")
+	assert.Nil(t, input.OpMetadata.values)
+	assert.Empty(t, input.Parameters["restore"])
+	assert.Equal(t, input.Headers["x-oss-request-payer"], "requester")
+	data, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(data), "<RestoreRequest><Days>2</Days><JobParameters><Tier>Bluk</Tier></JobParameters></RestoreRequest>")
 }
 
 func TestUnmarshalOutput_RestoreObject(t *testing.T) {
