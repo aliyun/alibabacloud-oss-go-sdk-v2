@@ -396,10 +396,12 @@ func TestMarshalInput_DoMetaQuery(t *testing.T) {
 		Bucket: Ptr("bucket"),
 		Mode:   Ptr("semantic"),
 		MetaQuery: &MetaQuery{
-			NextToken:   Ptr("MTIzNDU2Nzg6aW1tdGVzdDpleGFtcGxlYnVja2V0OmRhdGFzZXQwMDE6b3NzOi8vZXhhbXBsZWJ1Y2tldC9zYW1wbGVvYmplY3QxLmpw****"),
-			MaxResults:  Ptr(int64(99)),
-			Query:       Ptr(`Overlook the snow-covered forest`),
-			MediaType:   Ptr("image"),
+			NextToken:  Ptr("MTIzNDU2Nzg6aW1tdGVzdDpleGFtcGxlYnVja2V0OmRhdGFzZXQwMDE6b3NzOi8vZXhhbXBsZWJ1Y2tldC9zYW1wbGVvYmplY3QxLmpw****"),
+			MaxResults: Ptr(int64(99)),
+			Query:      Ptr(`Overlook the snow-covered forest`),
+			MediaTypes: &MetaQueryMediaTypes{
+				MediaTypes: []string{"image"},
+			},
 			SimpleQuery: Ptr(`{"Operation":"gt", "Field": "Size", "Value": "30"}`),
 		},
 	}
