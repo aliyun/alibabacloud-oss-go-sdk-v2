@@ -112,7 +112,7 @@ func TestMarshalInput_PutBucketWebsite(t *testing.T) {
 							MirrorCheckMd5:        Ptr(false),
 							MirrorHeaders: &MirrorHeaders{
 								PassAll: Ptr(true),
-								Passs:   []string{"myheader-key1", "myheader-key2"},
+								Passes:   []string{"myheader-key1", "myheader-key2"},
 								Removes: []string{"myheader-key3", "myheader-key4"},
 								Sets: []MirrorHeadersSet{
 									{
@@ -268,7 +268,7 @@ func TestMarshalInput_PutBucketWebsite(t *testing.T) {
 							},
 							MirrorHeaders: &MirrorHeaders{
 								PassAll: Ptr(true),
-								Passs:   []string{"myheader-key1", "myheader-key2"},
+								Passes:   []string{"myheader-key1", "myheader-key2"},
 								Removes: []string{"myheader-key3", "myheader-key4"},
 								Sets: []MirrorHeadersSet{
 									{
@@ -578,8 +578,8 @@ func TestUnmarshalOutput_GetBucketWebsite(t *testing.T) {
 	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorFollowRedirect)
 	assert.False(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorCheckMd5)
 	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.PassAll)
-	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passs[0], "myheader-key1")
-	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passs[1], "myheader-key2")
+	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passes[0], "myheader-key1")
+	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passes[1], "myheader-key2")
 	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Removes[0], "myheader-key3")
 	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Removes[1], "myheader-key4")
 	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Sets[0].Key, "myheader-key5")
@@ -642,8 +642,8 @@ func TestUnmarshalOutput_GetBucketWebsite(t *testing.T) {
 	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorSNI)
 	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.ReplaceKeyPrefixWith, "def/")
 	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.HostName, "example.com")
-	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passs[0], "myheader-key1")
-	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passs[1], "myheader-key2")
+	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passes[0], "myheader-key1")
+	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Passes[1], "myheader-key2")
 	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Sets[0].Key, "myheader-key5")
 	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.Sets[0].Value, "myheader-value5")
 	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[0].Redirect.MirrorHeaders.PassAll)
@@ -685,8 +685,8 @@ func TestUnmarshalOutput_GetBucketWebsite(t *testing.T) {
 	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.PassQueryString)
 	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.MirrorSNI)
 	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.MirrorCheckMd5)
-	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.MirrorHeaders.Passs[0], "myheader-key1")
-	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.MirrorHeaders.Passs[1], "myheader-key2")
+	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.MirrorHeaders.Passes[0], "myheader-key1")
+	assert.Equal(t, result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.MirrorHeaders.Passes[1], "myheader-key2")
 	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.MirrorHeaders.Sets[0].Key, "myheader-key5")
 	assert.Equal(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.MirrorHeaders.Sets[0].Value, "myheader-value5")
 	assert.True(t, *result.WebsiteConfiguration.RoutingRules.RoutingRules[1].Redirect.MirrorHeaders.PassAll)

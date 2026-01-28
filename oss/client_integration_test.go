@@ -6660,7 +6660,7 @@ func TestBucketWebsite(t *testing.T) {
 							MirrorFollowRedirect:      Ptr(true),
 							HostName:                  Ptr("example.com"),
 							MirrorHeaders: &MirrorHeaders{
-								Passs: []string{"myheader-key1", "myheader-key2"},
+								Passes: []string{"myheader-key1", "myheader-key2"},
 								Sets: []MirrorHeadersSet{
 									{
 										Key:   Ptr("myheader-key5"),
