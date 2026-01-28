@@ -590,12 +590,12 @@ func TestUnmarshalOutput_ListAccessPointsForObjectProcess(t *testing.T) {
 	assert.Equal(t, *result.NextContinuationToken, "abc")
 	assert.True(t, *result.IsTruncated)
 	assert.Equal(t, *result.AccountId, "111933544165****")
-	assert.Equal(t, len(result.AccessPointsForObjectProcess.AccessPointForObjectProcesss), 1)
-	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointNameForObjectProcess, "fc-ap-01")
-	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointNameForObjectProcess, "fc-ap-01")
-	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointForObjectProcessAlias, "fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias")
-	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointName, "fc-01")
-	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].Status, "enable")
+	assert.Equal(t, len(result.AccessPointsForObjectProcess.AccessPointForObjectProcesses), 1)
+	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointNameForObjectProcess, "fc-ap-01")
+	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointNameForObjectProcess, "fc-ap-01")
+	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointForObjectProcessAlias, "fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias")
+	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointName, "fc-01")
+	assert.Equal(t, *result.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].Status, "enable")
 
 	output = &OperationOutput{
 		StatusCode: 404,

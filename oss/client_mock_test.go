@@ -32733,12 +32733,12 @@ var testMockListAccessPointsForObjectProcessSuccessCases = []struct {
 			assert.Equal(t, *o.NextContinuationToken, "abc")
 			assert.True(t, *o.IsTruncated)
 			assert.Equal(t, *o.AccountId, "111933544165****")
-			assert.Equal(t, len(o.AccessPointsForObjectProcess.AccessPointForObjectProcesss), 1)
-			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointNameForObjectProcess, "fc-ap-01")
-			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointNameForObjectProcess, "fc-ap-01")
-			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointForObjectProcessAlias, "fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias")
-			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].AccessPointName, "fc-01")
-			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesss[0].Status, "enable")
+			assert.Equal(t, len(o.AccessPointsForObjectProcess.AccessPointForObjectProcesses), 1)
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointNameForObjectProcess, "fc-ap-01")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointNameForObjectProcess, "fc-ap-01")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointForObjectProcessAlias, "fc-ap-01-3b00521f653d2b3223680ec39dbbe2****-opapalias")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].AccessPointName, "fc-01")
+			assert.Equal(t, *o.AccessPointsForObjectProcess.AccessPointForObjectProcesses[0].Status, "enable")
 		},
 	},
 }
