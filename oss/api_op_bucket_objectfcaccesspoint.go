@@ -9,7 +9,7 @@ import (
 
 type AccessPointsForObjectProcess struct {
 	// The container that stores information about a single Object FC Access Point.
-	AccessPointForObjectProcesss []AccessPointForObjectProcess `xml:"AccessPointForObjectProcess"`
+	AccessPointForObjectProcesses []AccessPointForObjectProcess `xml:"AccessPointForObjectProcess"`
 }
 
 type TransformationConfiguration struct {
