@@ -1196,7 +1196,7 @@ type RestoreObjectRequest struct {
 	VersionId *string `input:"query,versionId"`
 
 	// The container that stores information about the RestoreObject request.
-	RestoreRequest *RestoreRequest `input:"body,RestoreRequest,xml"`
+	RestoreRequest *RestoreRequest //`input:"body,RestoreRequest,xml"`
 
 	// To indicate that the requester is aware that the request and data download will incur costs
 	RequestPayer *string `input:"header,x-oss-request-payer"`
@@ -1208,8 +1208,19 @@ type RestoreRequest struct {
 	// The duration within which the restored object remains in the restored state.
 	Days int32 `xml:"Days"`
 
+	// Deprecated: Tier is deprecated, and will be removed in the future. Use JobParameters.Tier instead.
+	// If both exist simultaneously, the value of JobParameters will take precedence.
+	Tier *string //`xml:"JobParameters>Tier"`
+
+	// The container that stores the restoration priority coniguration.
+	// This configuration takes effect only when the request is sent to restore Cold Archive objects.
+	// If you do not specify the JobParameters parameter, the default restoration priority Standard is used.
+	JobParameters *JobParameters `xml:"JobParameters"`
+}
+
+type JobParameters struct {
 	// The restoration priority of Cold Archive or Deep Cold Archive objects. Valid values:Expedited,Standard,Bulk
-	Tier *string `xml:"JobParameters>Tier"`
+	Tier *string `xml:"Tier"`
 }
 
 type RestoreObjectResult struct {
@@ -1242,7 +1253,7 @@ func (c *Client) RestoreObject(ctx context.Context, request *RestoreObjectReques
 			"restore": "",
 		},
 	}
-	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
+	if err = c.marshalInput(request, input, marshalRestoreObject, updateContentMd5); err != nil {
 		return nil, err
 	}
 
