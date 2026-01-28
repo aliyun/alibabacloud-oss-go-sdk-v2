@@ -40,7 +40,9 @@ func main() {
 	request := &oss.DeleteCnameRequest{
 		Bucket: oss.Ptr(bucketName),
 		BucketCnameConfiguration: &oss.BucketCnameConfiguration{
-			Domain: oss.Ptr("example.com"),
+			Cname: &oss.Cname{
+				Domain: oss.Ptr("example.com"),
+			},
 		},
 	}
 	result, err := client.DeleteCname(context.TODO(), request)

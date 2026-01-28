@@ -57,7 +57,9 @@ func TestMarshalInput_PutCname(t *testing.T) {
 	request = &PutCnameRequest{
 		Bucket: Ptr("oss-demo"),
 		BucketCnameConfiguration: &BucketCnameConfiguration{
-			Domain: Ptr("example.com"),
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
 		},
 	}
 	input = &OperationInput{
@@ -81,13 +83,15 @@ func TestMarshalInput_PutCname(t *testing.T) {
 	request = &PutCnameRequest{
 		Bucket: Ptr("oss-demo"),
 		BucketCnameConfiguration: &BucketCnameConfiguration{
-			Domain: Ptr("example.com"),
-			CertificateConfiguration: &CertificateConfiguration{
-				CertId:         Ptr("493****-cn-hangzhou"),
-				Certificate:    Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
-				PrivateKey:     Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
-				PreviousCertId: Ptr("493****-cn-hangzhou"),
-				Force:          Ptr(true),
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+				CertificateConfiguration: &CertificateConfiguration{
+					CertId:         Ptr("493****-cn-hangzhou"),
+					Certificate:    Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+					PrivateKey:     Ptr("-----BEGIN CERTIFICATE----- MIIDhDCCAmwCCQCFs8ixARsyrDANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMC **** -----END CERTIFICATE-----"),
+					PreviousCertId: Ptr("493****-cn-hangzhou"),
+					Force:          Ptr(true),
+				},
 			},
 		},
 	}
@@ -112,9 +116,11 @@ func TestMarshalInput_PutCname(t *testing.T) {
 	request = &PutCnameRequest{
 		Bucket: Ptr("oss-demo"),
 		BucketCnameConfiguration: &BucketCnameConfiguration{
-			Domain: Ptr("example.com"),
-			CertificateConfiguration: &CertificateConfiguration{
-				DeleteCertificate: Ptr(true),
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+				CertificateConfiguration: &CertificateConfiguration{
+					DeleteCertificate: Ptr(true),
+				},
 			},
 		},
 	}
@@ -259,7 +265,9 @@ func TestMarshalInput_CreateCnameToken(t *testing.T) {
 	request = &CreateCnameTokenRequest{
 		Bucket: Ptr("oss-demo"),
 		BucketCnameConfiguration: &BucketCnameConfiguration{
-			Domain: Ptr("example.com"),
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
 		},
 	}
 	input = &OperationInput{
@@ -731,7 +739,9 @@ func TestMarshalInput_DeleteCname(t *testing.T) {
 	request = &DeleteCnameRequest{
 		Bucket: Ptr("oss-demo"),
 		BucketCnameConfiguration: &BucketCnameConfiguration{
-			Domain: Ptr("example.com"),
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
 		},
 	}
 	input = &OperationInput{
