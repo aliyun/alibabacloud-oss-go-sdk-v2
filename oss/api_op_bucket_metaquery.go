@@ -321,11 +321,16 @@ type MetaQuery struct {
 	// The pagination token used to obtain information in the next request. The object information is returned in alphabetical order starting from the value of NextToken.
 	NextToken *string `xml:"NextToken"`
 
-	// The type of multimedia that you want to query. Valid values: image, video, audio, document
-	MediaType *string `xml:"MediaTypes>MediaType"`
+	// The container that stores the type of multimedia.
+	MediaTypes *MetaQueryMediaTypes `xml:"MediaTypes"`
 
 	//The query conditions
 	SimpleQuery *string `xml:"SimpleQuery"`
+}
+
+type MetaQueryMediaTypes struct {
+	// The type of multimedia that you want to query. Valid values: image, video, audio, document
+	MediaTypes []string `xml:"MediaType"`
 }
 
 type MetaQueryStatus struct {

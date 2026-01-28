@@ -18338,7 +18338,7 @@ var testMockPutBucketWebsiteSuccessCases = []struct {
 								MirrorCheckMd5:        Ptr(false),
 								MirrorHeaders: &MirrorHeaders{
 									PassAll: Ptr(true),
-									Passes:   []string{"myheader-key1", "myheader-key2"},
+									Passes:  []string{"myheader-key1", "myheader-key2"},
 									Removes: []string{"myheader-key3", "myheader-key4"},
 									Sets: []MirrorHeadersSet{
 										{
@@ -18496,7 +18496,7 @@ var testMockPutBucketWebsiteSuccessCases = []struct {
 								},
 								MirrorHeaders: &MirrorHeaders{
 									PassAll: Ptr(true),
-									Passes:   []string{"myheader-key1", "myheader-key2"},
+									Passes:  []string{"myheader-key1", "myheader-key2"},
 									Removes: []string{"myheader-key3", "myheader-key4"},
 									Sets: []MirrorHeadersSet{
 										{
@@ -29654,9 +29654,11 @@ var testMockDoMetaQuerySuccessCases = []struct {
 			Bucket: Ptr("bucket"),
 			Mode:   Ptr("semantic"),
 			MetaQuery: &MetaQuery{
-				MaxResults:  Ptr(int64(99)),
-				Query:       Ptr("Overlook the snow-covered forest"),
-				MediaType:   Ptr("image"),
+				MaxResults: Ptr(int64(99)),
+				Query:      Ptr("Overlook the snow-covered forest"),
+				MediaTypes: &MetaQueryMediaTypes{
+					MediaTypes: []string{"image"},
+				},
 				SimpleQuery: Ptr(`{"Operation":"gt", "Field": "Size", "Value": "30"}`),
 			},
 		},
