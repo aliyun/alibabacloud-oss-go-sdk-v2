@@ -81,15 +81,21 @@ func TestMarshalInput_CreateAccessPointForObjectProcess(t *testing.T) {
 		CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
 			AccessPointName: Ptr("ap-01"),
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
-							FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+				AllowedFeatures: &ObjectProcessAllowedFeatures{
+					[]string{"GetObject-Range"},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					[]TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								FunctionCompute: &ObjectProcessFunctionCompute{
+									FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
+									FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+								},
+							},
 						},
 					},
 				},
@@ -111,7 +117,7 @@ func TestMarshalInput_CreateAccessPointForObjectProcess(t *testing.T) {
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "<CreateAccessPointForObjectProcessConfiguration><AccessPointName>ap-01</AccessPointName><ObjectProcessConfiguration><AllowedFeatures><AllowedFeature>GetObject-Range</AllowedFeature></AllowedFeatures><TransformationConfigurations><TransformationConfiguration><Actions><Action>GetObject</Action></Actions><ContentTransformation><FunctionCompute><FunctionAssumeRoleArn>acs:ram::111933544165****:role/aliyunfcdefaultrole</FunctionAssumeRoleArn><FunctionArn>acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01</FunctionArn></FunctionCompute></ContentTransformation></TransformationConfiguration></TransformationConfigurations></ObjectProcessConfiguration></CreateAccessPointForObjectProcessConfiguration>")
+	assert.Equal(t, string(body), "<CreateAccessPointForObjectProcessConfiguration><AccessPointName>ap-01</AccessPointName><ObjectProcessConfiguration><TransformationConfigurations><TransformationConfiguration><Actions><Action>GetObject</Action></Actions><ContentTransformation><FunctionCompute><FunctionArn>acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01</FunctionArn><FunctionAssumeRoleArn>acs:ram::111933544165****:role/aliyunfcdefaultrole</FunctionAssumeRoleArn></FunctionCompute></ContentTransformation></TransformationConfiguration></TransformationConfigurations><AllowedFeatures><AllowedFeature>GetObject-Range</AllowedFeature></AllowedFeatures></ObjectProcessConfiguration></CreateAccessPointForObjectProcessConfiguration>")
 }
 
 func TestUnmarshalOutput_CreateAccessPointForObjectProcess(t *testing.T) {
@@ -1173,15 +1179,21 @@ func TestMarshalInput_PutAccessPointConfigForObjectProcess(t *testing.T) {
 		AccessPointForObjectProcessName: Ptr("ap-01"),
 		PutAccessPointConfigForObjectProcessConfiguration: &PutAccessPointConfigForObjectProcessConfiguration{
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
-							FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+				AllowedFeatures: &ObjectProcessAllowedFeatures{
+					[]string{"GetObject-Range"},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					[]TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								FunctionCompute: &ObjectProcessFunctionCompute{
+									FunctionArn:           Ptr("acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01"),
+									FunctionAssumeRoleArn: Ptr("acs:ram::111933544165****:role/aliyunfcdefaultrole"),
+								},
+							},
 						},
 					},
 				},
@@ -1206,7 +1218,7 @@ func TestMarshalInput_PutAccessPointConfigForObjectProcess(t *testing.T) {
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	rBody, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(rBody), "<PutAccessPointConfigForObjectProcessConfiguration><PublicAccessBlockConfiguration><BlockPublicAccess>true</BlockPublicAccess></PublicAccessBlockConfiguration><ObjectProcessConfiguration><AllowedFeatures><AllowedFeature>GetObject-Range</AllowedFeature></AllowedFeatures><TransformationConfigurations><TransformationConfiguration><Actions><Action>GetObject</Action></Actions><ContentTransformation><FunctionCompute><FunctionAssumeRoleArn>acs:ram::111933544165****:role/aliyunfcdefaultrole</FunctionAssumeRoleArn><FunctionArn>acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01</FunctionArn></FunctionCompute></ContentTransformation></TransformationConfiguration></TransformationConfigurations></ObjectProcessConfiguration></PutAccessPointConfigForObjectProcessConfiguration>")
+	assert.Equal(t, string(rBody), "<PutAccessPointConfigForObjectProcessConfiguration><PublicAccessBlockConfiguration><BlockPublicAccess>true</BlockPublicAccess></PublicAccessBlockConfiguration><ObjectProcessConfiguration><TransformationConfigurations><TransformationConfiguration><Actions><Action>GetObject</Action></Actions><ContentTransformation><FunctionCompute><FunctionArn>acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01</FunctionArn><FunctionAssumeRoleArn>acs:ram::111933544165****:role/aliyunfcdefaultrole</FunctionAssumeRoleArn></FunctionCompute></ContentTransformation></TransformationConfiguration></TransformationConfigurations><AllowedFeatures><AllowedFeature>GetObject-Range</AllowedFeature></AllowedFeatures></ObjectProcessConfiguration></PutAccessPointConfigForObjectProcessConfiguration>")
 }
 
 func TestUnmarshalOutput_PutAccessPointConfigForObjectProcess(t *testing.T) {
@@ -1393,9 +1405,9 @@ func TestUnmarshalOutput_GetAccessPointConfigForObjectProcess(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 	assert.True(t, *result.PublicAccessBlockConfiguration.BlockPublicAccess)
-	assert.Equal(t, result.ObjectProcessConfiguration.TransformationConfigurations[0].Actions.Actions[0], "getobject")
-	assert.Equal(t, *result.ObjectProcessConfiguration.TransformationConfigurations[0].ContentTransformation.FunctionAssumeRoleArn, "acs:ram::111933544165****:role/aliyunfcdefaultrole")
-	assert.Equal(t, *result.ObjectProcessConfiguration.TransformationConfigurations[0].ContentTransformation.FunctionArn, "acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01")
+	assert.Equal(t, result.ObjectProcessConfiguration.TransformationConfigurations.TransformationConfigurations[0].Actions.Actions[0], "getobject")
+	assert.Equal(t, *result.ObjectProcessConfiguration.TransformationConfigurations.TransformationConfigurations[0].ContentTransformation.FunctionCompute.FunctionAssumeRoleArn, "acs:ram::111933544165****:role/aliyunfcdefaultrole")
+	assert.Equal(t, *result.ObjectProcessConfiguration.TransformationConfigurations.TransformationConfigurations[0].ContentTransformation.FunctionCompute.FunctionArn, "acs:fc:cn-qingdao:111933544165****:services/test-oss-fc.LATEST/functions/fc-01")
 	body = `<?xml version="1.0" encoding="UTF-8"?>
 		<Error>
 		<Code>NoSuchBucket</Code>

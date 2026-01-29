@@ -50,15 +50,21 @@ func main() {
 		CreateAccessPointForObjectProcessConfiguration: &oss.CreateAccessPointForObjectProcessConfiguration{
 			AccessPointName: oss.Ptr(accessPointName),
 			ObjectProcessConfiguration: &oss.ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []oss.TransformationConfiguration{
-					{
-						Actions: &oss.AccessPointActions{
-							Actions: []string{"GetObject"},
-						},
-						ContentTransformation: &oss.ContentTransformation{
-							FunctionArn:           oss.Ptr(arn),
-							FunctionAssumeRoleArn: oss.Ptr(roleArn),
+				AllowedFeatures: &oss.ObjectProcessAllowedFeatures{
+					AllowedFeatures: []string{"GetObject-Range"},
+				},
+				TransformationConfigurations: &oss.TransformationConfigurations{
+					TransformationConfigurations: []oss.TransformationConfiguration{
+						{
+							Actions: &oss.AccessPointActions{
+								Actions: []string{"GetObject"},
+							},
+							ContentTransformation: &oss.ContentTransformation{
+								FunctionCompute: &oss.ObjectProcessFunctionCompute{
+									FunctionArn:           oss.Ptr(arn),
+									FunctionAssumeRoleArn: oss.Ptr(roleArn),
+								},
+							},
 						},
 					},
 				},
