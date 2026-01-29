@@ -4049,7 +4049,7 @@ func TestPresignExtra(t *testing.T) {
 		Bucket: Ptr(bucketName),
 		Key:    Ptr(objectName),
 	}
-	expiration = time.Now().Add(-1 * time.Second)
+	expiration = time.Now().Add(-10 * time.Second)
 	result, err = clientV1.Presign(context.TODO(), getObjRequest, PresignExpiration(expiration))
 	assert.Nil(t, err)
 	assert.Equal(t, "GET", result.Method)
@@ -9786,10 +9786,21 @@ func TestSealAppendObject(t *testing.T) {
 		Position: Ptr(appResult.NextPosition),
 	}
 	result, err = client.SealAppendObject(context.TODO(), request)
+
+	var serr *ServiceError
+	// TOD remove later
+	if err != nil {
+		errors.As(err, &serr)
+		assert.Equal(t, int(400), serr.StatusCode)
+		assert.Equal(t, "OperationNotSupported", serr.Code)
+		assert.Equal(t, "SealAppendable is not supported.", serr.Message)
+		assert.Equal(t, "0016-00000513", serr.EC)
+		return
+	}
+
 	assert.Nil(t, err)
 	assert.NotEmpty(t, *result.SealedTime)
 
-	var serr *ServiceError
 	request = &SealAppendObjectRequest{
 		Bucket:   Ptr(bucketName),
 		Key:      Ptr(objectName),
