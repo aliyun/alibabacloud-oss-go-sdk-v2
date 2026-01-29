@@ -1676,7 +1676,7 @@ var testMockGetVectorIndexSuccessCases = []struct {
 		},
 		[]byte(`{
    "index": { 
-      "createTime": "2025-08-02T10:49:17.289372919+08:00",
+      "createTime": "2025-08-02T10:49:17.289372919Z",
       "dataType": "string",
       "dimension": 128,
       "distanceMetric": "cosine",
@@ -1703,7 +1703,7 @@ var testMockGetVectorIndexSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, *o.Index.CreateTime, time.Date(2025, time.August, 2, 10, 49, 17, 289372919, time.Local))
+			assert.Equal(t, *o.Index.CreateTime, time.Date(2025, time.August, 2, 10, 49, 17, 289372919, time.UTC))
 			assert.Equal(t, *o.Index.DataType, "string")
 			assert.Equal(t, *o.Index.Dimension, 128)
 			assert.Equal(t, *o.Index.DistanceMetric, "cosine")
@@ -1863,7 +1863,7 @@ var testMockListVectorIndexesSuccessCases = []struct {
 		[]byte(`{
   "indexes": [
     { 
-      "createTime": "2025-08-02T10:49:17.289372919+08:00",
+      "createTime": "2025-08-02T10:49:17.289372919Z",
       "dataType": "string",
       "dimension": 128,
       "distanceMetric": "string",
@@ -1875,7 +1875,7 @@ var testMockListVectorIndexesSuccessCases = []struct {
       "vectorBucketName": "bucket"
     },
     { 
-      "createTime": "2025-08-20T10:49:17.289372919+08:00",
+      "createTime": "2025-08-20T10:49:17.289372919Z",
       "dataType": "string",
       "dimension": 128,
       "distanceMetric": "string",
@@ -1902,7 +1902,7 @@ var testMockListVectorIndexesSuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.Equal(t, len(o.Indexes), 2)
-			assert.Equal(t, *o.Indexes[0].CreateTime, time.Date(2025, time.August, 2, 10, 49, 17, 289372919, time.Local))
+			assert.Equal(t, *o.Indexes[0].CreateTime, time.Date(2025, time.August, 2, 10, 49, 17, 289372919, time.UTC))
 			assert.Equal(t, *o.Indexes[0].DataType, "string")
 			assert.Equal(t, *o.Indexes[0].Dimension, 128)
 			assert.Equal(t, *o.Indexes[0].DistanceMetric, "string")
@@ -1917,7 +1917,7 @@ var testMockListVectorIndexesSuccessCases = []struct {
 			assert.Equal(t, *o.Indexes[0].Status, "running")
 			assert.Equal(t, *o.Indexes[0].VectorBucketName, "bucket")
 
-			assert.Equal(t, *o.Indexes[1].CreateTime, time.Date(2025, time.August, 20, 10, 49, 17, 289372919, time.Local))
+			assert.Equal(t, *o.Indexes[1].CreateTime, time.Date(2025, time.August, 20, 10, 49, 17, 289372919, time.UTC))
 			assert.Equal(t, *o.Indexes[1].DataType, "string")
 			assert.Equal(t, *o.Indexes[1].Dimension, 128)
 			assert.Equal(t, *o.Indexes[1].DistanceMetric, "string")
@@ -3236,7 +3236,7 @@ var testMockPutBucketLoggingSuccessCases = []struct {
 		&PutBucketLoggingRequest{
 			Bucket: oss.Ptr("bucket"),
 			BucketLoggingStatus: &BucketLoggingStatus{
-				&LoggingEnabled{
+				LoggingEnabled: &LoggingEnabled{
 					TargetBucket: oss.Ptr("TargetBucket"),
 					TargetPrefix: oss.Ptr("TargetPrefix"),
 					LoggingRole:  oss.Ptr("AliyunOSSLoggingDefaultRole"),
@@ -3265,7 +3265,7 @@ var testMockPutBucketLoggingSuccessCases = []struct {
 		&PutBucketLoggingRequest{
 			Bucket: oss.Ptr("bucket"),
 			BucketLoggingStatus: &BucketLoggingStatus{
-				&LoggingEnabled{
+				LoggingEnabled: &LoggingEnabled{
 					TargetBucket: oss.Ptr("TargetBucket"),
 				},
 			},
@@ -3331,7 +3331,7 @@ var testMockPutBucketLoggingErrorCases = []struct {
 		&PutBucketLoggingRequest{
 			Bucket: oss.Ptr("bucket"),
 			BucketLoggingStatus: &BucketLoggingStatus{
-				&LoggingEnabled{
+				LoggingEnabled: &LoggingEnabled{
 					TargetBucket: oss.Ptr("TargetBucket"),
 					TargetPrefix: oss.Ptr("TargetPrefix"),
 				},
@@ -3376,7 +3376,7 @@ var testMockPutBucketLoggingErrorCases = []struct {
 		&PutBucketLoggingRequest{
 			Bucket: oss.Ptr("bucket"),
 			BucketLoggingStatus: &BucketLoggingStatus{
-				&LoggingEnabled{
+				LoggingEnabled: &LoggingEnabled{
 					TargetBucket: oss.Ptr("TargetBucket"),
 					TargetPrefix: oss.Ptr("TargetPrefix"),
 				},

@@ -318,7 +318,7 @@ func TestUnmarshalOutput_GetVectorIndex(t *testing.T) {
 	var err error
 	body := `{
    "index": { 
-      "createTime": "2025-08-02T10:49:17.289372919+08:00",
+      "createTime": "2025-08-02T10:49:17.289372919Z",
       "dataType": "string",
       "dimension": 128,
       "distanceMetric": "string",
@@ -341,13 +341,13 @@ func TestUnmarshalOutput_GetVectorIndex(t *testing.T) {
 	}
 	result := &GetVectorIndexResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
-	dumpErrIfNotNil(err)
+	//dumpErrIfNotNil(err)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
-	assert.Equal(t, *result.Index.CreateTime, time.Date(2025, time.August, 2, 10, 49, 17, 289372919, time.Local))
+	assert.Equal(t, *result.Index.CreateTime, time.Date(2025, time.August, 2, 10, 49, 17, 289372919, time.UTC))
 	assert.Equal(t, *result.Index.DataType, "string")
 	assert.Equal(t, *result.Index.Dimension, 128)
 	assert.Equal(t, *result.Index.DistanceMetric, "string")
@@ -526,7 +526,7 @@ func TestUnmarshalOutput_ListVectorIndexes(t *testing.T) {
 	body := `{
   "indexes": [
     { 
-      "createTime": "2025-08-02T10:49:17.289372919+08:00",
+      "createTime": "2025-08-02T10:49:17.289372919Z",
       "dataType": "string",
       "dimension": 128,
       "distanceMetric": "string",
@@ -538,7 +538,7 @@ func TestUnmarshalOutput_ListVectorIndexes(t *testing.T) {
       "vectorBucketName": "bucket"
     },
     { 
-      "createTime": "2025-08-20T10:49:17.289372919+08:00",
+      "createTime": "2025-08-20T10:49:17.289372919Z",
       "dataType": "string",
       "dimension": 128,
       "distanceMetric": "string",
@@ -569,7 +569,7 @@ func TestUnmarshalOutput_ListVectorIndexes(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, len(result.Indexes), 2)
-	assert.Equal(t, *result.Indexes[0].CreateTime, time.Date(2025, time.August, 2, 10, 49, 17, 289372919, time.Local))
+	assert.Equal(t, *result.Indexes[0].CreateTime, time.Date(2025, time.August, 2, 10, 49, 17, 289372919, time.UTC))
 	assert.Equal(t, *result.Indexes[0].DataType, "string")
 	assert.Equal(t, *result.Indexes[0].Dimension, 128)
 	assert.Equal(t, *result.Indexes[0].DistanceMetric, "string")
@@ -584,7 +584,7 @@ func TestUnmarshalOutput_ListVectorIndexes(t *testing.T) {
 	assert.Equal(t, *result.Indexes[0].Status, "running")
 	assert.Equal(t, *result.Indexes[0].VectorBucketName, "bucket")
 
-	assert.Equal(t, *result.Indexes[1].CreateTime, time.Date(2025, time.August, 20, 10, 49, 17, 289372919, time.Local))
+	assert.Equal(t, *result.Indexes[1].CreateTime, time.Date(2025, time.August, 20, 10, 49, 17, 289372919, time.UTC))
 	assert.Equal(t, *result.Indexes[1].DataType, "string")
 	assert.Equal(t, *result.Indexes[1].Dimension, 128)
 	assert.Equal(t, *result.Indexes[1].DistanceMetric, "string")
