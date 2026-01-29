@@ -54,7 +54,7 @@ func TestMarshalInput_PutBucketLogging(t *testing.T) {
 	request = &PutBucketLoggingRequest{
 		Bucket: oss.Ptr("oss-demo"),
 		BucketLoggingStatus: &BucketLoggingStatus{
-			&LoggingEnabled{
+			LoggingEnabled: &LoggingEnabled{
 				TargetBucket: oss.Ptr("TargetBucket"),
 			},
 		},
@@ -78,7 +78,7 @@ func TestMarshalInput_PutBucketLogging(t *testing.T) {
 	request = &PutBucketLoggingRequest{
 		Bucket: oss.Ptr("oss-demo"),
 		BucketLoggingStatus: &BucketLoggingStatus{
-			&LoggingEnabled{
+			LoggingEnabled: &LoggingEnabled{
 				TargetBucket: oss.Ptr("TargetBucket"),
 				TargetPrefix: oss.Ptr("TargetPrefix"),
 				LoggingRole:  oss.Ptr("AliyunOSSLoggingDefaultRole"),

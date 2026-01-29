@@ -1,3 +1,5 @@
+//go:build integration
+
 package oss
 
 import (
@@ -61,7 +63,6 @@ var (
 var (
 	bucketNamePrefix = "go-sdk-test-bucket-"
 	objectNamePrefix = "go-sdk-test-object-"
-	letters          = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 )
 
 func getDefaultClient() *Client {
@@ -170,19 +171,6 @@ func getSignatrueVersion() SignatureVersionType {
 	default:
 		return SignatureVersionV4
 	}
-}
-
-func randStr(n int) string {
-	b := make([]rune, n)
-	randMarker := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := range b {
-		b[i] = letters[randMarker.Intn(len(letters))]
-	}
-	return string(b)
-}
-
-func randLowStr(n int) string {
-	return strings.ToLower(randStr(n))
 }
 
 func cleanBucket(bucketInfo BucketProperties, t *testing.T) {

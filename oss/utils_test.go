@@ -1,12 +1,32 @@
 package oss
 
 import (
+	"math/rand"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+var (
+	letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+)
+
+func randStr(n int) string {
+	b := make([]rune, n)
+	randMarker := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i := range b {
+		b[i] = letters[randMarker.Intn(len(letters))]
+	}
+	return string(b)
+}
+
+func randLowStr(n int) string {
+	return strings.ToLower(randStr(n))
+}
 
 func TestParseOffsetAndSizeFromHeaders(t *testing.T) {
 	// no header
