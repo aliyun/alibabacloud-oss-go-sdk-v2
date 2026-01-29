@@ -9055,15 +9055,21 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 		CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
 			AccessPointName: Ptr(accessPointName),
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr(arn),
-							FunctionAssumeRoleArn: Ptr(roleArn),
+				AllowedFeatures: &ObjectProcessAllowedFeatures{
+					[]string{"GetObject-Range"},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					[]TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								FunctionCompute: &ObjectProcessFunctionCompute{
+									FunctionArn:           Ptr(arn),
+									FunctionAssumeRoleArn: Ptr(roleArn),
+								},
+							},
 						},
 					},
 				},
@@ -9119,15 +9125,21 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 		AccessPointForObjectProcessName: Ptr(objectProcessName),
 		PutAccessPointConfigForObjectProcessConfiguration: &PutAccessPointConfigForObjectProcessConfiguration{
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr(arn),
-							FunctionAssumeRoleArn: Ptr(roleArn),
+				AllowedFeatures: &ObjectProcessAllowedFeatures{
+					[]string{"GetObject-Range"},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					[]TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								FunctionCompute: &ObjectProcessFunctionCompute{
+									FunctionArn:           Ptr(arn),
+									FunctionAssumeRoleArn: Ptr(roleArn),
+								},
+							},
 						},
 					},
 				},
@@ -9210,15 +9222,21 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 		CreateAccessPointForObjectProcessConfiguration: &CreateAccessPointForObjectProcessConfiguration{
 			AccessPointName: Ptr(accessPointName),
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr(arn),
-							FunctionAssumeRoleArn: Ptr(roleArn),
+				AllowedFeatures: &ObjectProcessAllowedFeatures{
+					[]string{"GetObject-Range"},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					[]TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								FunctionCompute: &ObjectProcessFunctionCompute{
+									FunctionArn:           Ptr(arn),
+									FunctionAssumeRoleArn: Ptr(roleArn),
+								},
+							},
 						},
 					},
 				},
@@ -9299,15 +9317,21 @@ func TestAccessPointForObjectProcess(t *testing.T) {
 		AccessPointForObjectProcessName: Ptr(objectProcessName),
 		PutAccessPointConfigForObjectProcessConfiguration: &PutAccessPointConfigForObjectProcessConfiguration{
 			ObjectProcessConfiguration: &ObjectProcessConfiguration{
-				AllowedFeatures: []string{"GetObject-Range"},
-				TransformationConfigurations: []TransformationConfiguration{
-					{
-						Actions: &AccessPointActions{
-							[]string{"GetObject"},
-						},
-						ContentTransformation: &ContentTransformation{
-							FunctionArn:           Ptr(arn),
-							FunctionAssumeRoleArn: Ptr(roleArn),
+				AllowedFeatures: &ObjectProcessAllowedFeatures{
+					[]string{"GetObject-Range"},
+				},
+				TransformationConfigurations: &TransformationConfigurations{
+					[]TransformationConfiguration{
+						{
+							Actions: &AccessPointActions{
+								[]string{"GetObject"},
+							},
+							ContentTransformation: &ContentTransformation{
+								FunctionCompute: &ObjectProcessFunctionCompute{
+									FunctionArn:           Ptr(arn),
+									FunctionAssumeRoleArn: Ptr(roleArn),
+								},
+							},
 						},
 					},
 				},
