@@ -877,13 +877,13 @@ type DeleteMultipleObjectsRequest struct {
 	ContentLength int64 `input:"header,Content-Length"`
 
 	// The container that stores information about you want to delete objects.
-	// Deprecated: Objects is deprecated, and will be removed in the future. Use Delete.Objects instead.
+	// Objects will be deprecated and removed in the future. Use Delete.Objects instead.
 	// If both exist simultaneously, the value of Delete will take precedence.
 	Objects []DeleteObject
 
 	// Specifies whether to enable the Quiet return mode.
 	// The DeleteMultipleObjects operation provides the following return modes: Valid value: true,false
-	// Deprecated: Quiet is deprecated, and will be removed in the future. Use Delete.Quiet instead.
+	// Quiet is will be deprecated and removed in the future. Use Delete.Quiet instead.
 	// If both exist simultaneously, the value of Delete will take precedence.
 	Quiet bool
 
@@ -1226,7 +1226,8 @@ type RestoreRequest struct {
 	// The duration within which the restored object remains in the restored state.
 	Days int32 `xml:"Days"`
 
-	// Deprecated: Tier is deprecated, and will be removed in the future. Use JobParameters.Tier instead.
+	// The restoration priority of Cold Archive or Deep Cold Archive objects. Valid values:Expedited,Standard,Bulk
+	// Tier will be  deprecated, and removed in the future. Use JobParameters.Tier instead.
 	// If both exist simultaneously, the value of JobParameters will take precedence.
 	Tier *string //`xml:"JobParameters>Tier"`
 
