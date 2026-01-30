@@ -1,5 +1,25 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.4.0 日期：2026-01-30
+### 变更内容
+- Feature：Downloader supports WriteBufferSize option
+- Feature：Adds seal append object api
+- Feature：Add bucket overwrite config api
+- Update：ListBuckets supports more parameters
+- Update：Bucket website api supports more parameters
+- Update：Bucket https configuration supports more parameters
+- Update：Bucket logging supports more parameters
+- Update：DoMetaQuery supports more parameters
+- Update：Normalizes BucketCnameConfiguration parameter naming
+- Update：Normalizes RestoreObject parameter naming
+- Update：Normalizes DeleteMultipleObjects parameter naming
+- Update：Normalizes AccessPointForObjectProcess parameter naming
+- Fix：Rename AsyncProcess's parameter tag name
+- Break Change：Reanmes MirrorHeaders.Passs to MirrorHeaders.Passes
+- Break Change：Reanmes AccessPointForObjectProcesss to AccessPointForObjectProcesses
+- Break Change：Reanmes the name and type of MetaQuery.MediaType
+- Break Change：Change the name and type of LifecycleRuleFilter.not to LifecycleRuleFilter.nots
+
 ## 版本号：v1.3.0 日期：2025-09-19
 ### 变更内容
 - Update：Set MaxIdleConnsPerHost to 10
