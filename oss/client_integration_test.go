@@ -9933,3 +9933,93 @@ func TestBucketOverwriteConfig(t *testing.T) {
 	assert.Equal(t, "0015-00000101", serr.EC)
 	assert.NotEmpty(t, serr.RequestID)
 }
+
+func TestBucketObjectWormConfiguration(t *testing.T) {
+	region := os.Getenv("OSS_REGION")
+	endpoint := "http://oss-" + region + "-zmf.aliyuncs.com"
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	request := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getClient(region, endpoint)
+	_, err := client.PutBucket(context.TODO(), request)
+	assert.Nil(t, err)
+
+	_, err = client.PutBucketVersioning(context.TODO(), &PutBucketVersioningRequest{
+		Bucket: Ptr(bucketName),
+		VersioningConfiguration: &VersioningConfiguration{
+			Status: VersionEnabled,
+		},
+	})
+	assert.Nil(t, err)
+
+	putRequest := &PutBucketObjectWormConfigurationRequest{
+		Bucket: Ptr(bucketName),
+		ObjectWormConfiguration: &ObjectWormConfiguration{
+			ObjectWormEnabled: Ptr("Enabled"),
+			Rule: &ObjectWormConfigurationRule{
+				DefaultRetention: &ObjectWormConfigurationRuleDefaultRetention{
+					Mode:  Ptr("GOVERNANCE"),
+					Years: Ptr(int32(1)),
+				},
+			},
+		},
+	}
+	putResult, err := client.PutBucketObjectWormConfiguration(context.TODO(), putRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getRequest := &GetBucketObjectWormConfigurationRequest{
+		Bucket: Ptr(bucketName),
+	}
+	getResult, err := client.GetBucketObjectWormConfiguration(context.TODO(), getRequest)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	var serr *ServiceError
+	bucketNameNotExist := bucketName + "-not-exist"
+	getRequest = &GetBucketObjectWormConfigurationRequest{
+		Bucket: Ptr(bucketNameNotExist),
+	}
+	getResult, err = client.GetBucketObjectWormConfiguration(context.TODO(), getRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	putRequest = &PutBucketObjectWormConfigurationRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		ObjectWormConfiguration: &ObjectWormConfiguration{
+			ObjectWormEnabled: Ptr("Enabled"),
+			Rule: &ObjectWormConfigurationRule{
+				DefaultRetention: &ObjectWormConfigurationRuleDefaultRetention{
+					Mode:  Ptr("GOVERNANCE"),
+					Years: Ptr(int32(1)),
+				},
+			},
+		},
+	}
+	serr = &ServiceError{}
+	putResult, err = client.PutBucketObjectWormConfiguration(context.TODO(), putRequest)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(400), serr.StatusCode)
+	assert.Equal(t, "MalformedXML", serr.Code)
+	assert.Equal(t, "The XML you provided was not well-formed or did not validate against our published schema.", serr.Message)
+	assert.Equal(t, "0015-00000231", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = client.DeleteBucket(context.TODO(), &DeleteBucketRequest{
+		Bucket: Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+}
