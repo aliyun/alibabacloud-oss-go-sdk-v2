@@ -2,7 +2,6 @@ package oss
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -58,8 +57,8 @@ func TestMarshalInput_PutBucketObjectWormConfiguration(t *testing.T) {
 		Bucket: Ptr("oss-demo"),
 		ObjectWormConfiguration: &ObjectWormConfiguration{
 			ObjectWormEnabled: Ptr("Enabled"),
-			Rule: &ObjectWormConfigurationRule{
-				DefaultRetention: &ObjectWormConfigurationRuleDefaultRetention{
+			Rule: &ObjectWormRule{
+				DefaultRetention: &ObjectWormDefaultRetention{
 					Mode: Ptr("COMPLIANCE"),
 				},
 			},
@@ -77,109 +76,17 @@ func TestMarshalInput_PutBucketObjectWormConfiguration(t *testing.T) {
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"objectWorm"})
-	if request.ObjectWormConfiguration != nil && request.ObjectWormConfiguration.Rule != nil {
-		if request.ObjectWormConfiguration.Rule.DefaultRetention != nil {
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Days != nil && *request.ObjectWormConfiguration.Rule.DefaultRetention.Days <= 0 {
-				err = fmt.Errorf("request.ObjectWormConfiguration.Rule.DefaultRetention.Days must be greater than 0")
-			}
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Years != nil && *request.ObjectWormConfiguration.Rule.DefaultRetention.Years <= 0 {
-				err = fmt.Errorf("request.ObjectWormConfiguration.Rule.DefaultRetention.Years must be greater than 0")
-			}
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Days == nil && request.ObjectWormConfiguration.Rule.DefaultRetention.Years == nil {
-				err = fmt.Errorf("either request.ObjectWormConfiguration.Rule.DefaultRetention.Days or request.ObjectWormConfiguration.Rule.DefaultRetention.Years must be configured")
-			}
-		}
-	}
-	assert.NotNil(t, err)
-	assert.Equal(t, err.Error(), "either request.ObjectWormConfiguration.Rule.DefaultRetention.Days or request.ObjectWormConfiguration.Rule.DefaultRetention.Years must be configured")
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	body, _ := io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "<ObjectWormConfiguration><ObjectWormEnabled>Enabled</ObjectWormEnabled><Rule><DefaultRetention><Mode>COMPLIANCE</Mode></DefaultRetention></Rule></ObjectWormConfiguration>")
 
 	request = &PutBucketObjectWormConfigurationRequest{
 		Bucket: Ptr("oss-demo"),
 		ObjectWormConfiguration: &ObjectWormConfiguration{
 			ObjectWormEnabled: Ptr("Enabled"),
-			Rule: &ObjectWormConfigurationRule{
-				DefaultRetention: &ObjectWormConfigurationRuleDefaultRetention{
-					Mode: Ptr("COMPLIANCE"),
-					Days: Ptr(int32(0)),
-				},
-			},
-		},
-	}
-	input = &OperationInput{
-		OpName: "PutBucketObjectWormConfiguration",
-		Method: "PUT",
-		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeXML,
-		},
-		Parameters: map[string]string{
-			"objectWorm": "",
-		},
-		Bucket: request.Bucket,
-	}
-	input.OpMetadata.Set(signer.SubResource, []string{"objectWorm"})
-	if request.ObjectWormConfiguration.Rule.DefaultRetention != nil {
-		if request.ObjectWormConfiguration.Rule.DefaultRetention != nil {
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Days != nil && *request.ObjectWormConfiguration.Rule.DefaultRetention.Days <= 0 {
-				err = fmt.Errorf("request.ObjectWormConfiguration.Rule.DefaultRetention.Days must be greater than 0")
-			}
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Years != nil && *request.ObjectWormConfiguration.Rule.DefaultRetention.Years <= 0 {
-				err = fmt.Errorf("request.ObjectWormConfiguration.Rule.DefaultRetention.Years must be greater than 0")
-			}
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Days == nil && request.ObjectWormConfiguration.Rule.DefaultRetention.Years == nil {
-				err = fmt.Errorf("either request.ObjectWormConfiguration.Rule.DefaultRetention.Days or request.ObjectWormConfiguration.Rule.DefaultRetention.Years must be configured")
-			}
-		}
-	}
-	assert.NotNil(t, err)
-	assert.Equal(t, err.Error(), "request.ObjectWormConfiguration.Rule.DefaultRetention.Days must be greater than 0")
-
-	err = nil
-	request = &PutBucketObjectWormConfigurationRequest{
-		Bucket: Ptr("oss-demo"),
-		ObjectWormConfiguration: &ObjectWormConfiguration{
-			ObjectWormEnabled: Ptr("Enabled"),
-			Rule: &ObjectWormConfigurationRule{
-				DefaultRetention: &ObjectWormConfigurationRuleDefaultRetention{
-					Mode:  Ptr("COMPLIANCE"),
-					Years: Ptr(int32(0)),
-				},
-			},
-		},
-	}
-	input = &OperationInput{
-		OpName: "PutBucketObjectWormConfiguration",
-		Method: "PUT",
-		Headers: map[string]string{
-			HTTPHeaderContentType: contentTypeXML,
-		},
-		Parameters: map[string]string{
-			"objectWorm": "",
-		},
-		Bucket: request.Bucket,
-	}
-	input.OpMetadata.Set(signer.SubResource, []string{"objectWorm"})
-	if request.ObjectWormConfiguration.Rule.DefaultRetention != nil {
-		if request.ObjectWormConfiguration.Rule.DefaultRetention != nil {
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Days != nil && *request.ObjectWormConfiguration.Rule.DefaultRetention.Days <= 0 {
-				err = fmt.Errorf("request.ObjectWormConfiguration.Rule.DefaultRetention.Days must be greater than 0")
-			}
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Years != nil && *request.ObjectWormConfiguration.Rule.DefaultRetention.Years <= 0 {
-				err = fmt.Errorf("request.ObjectWormConfiguration.Rule.DefaultRetention.Years must be greater than 0")
-			}
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Days == nil && request.ObjectWormConfiguration.Rule.DefaultRetention.Years == nil {
-				err = fmt.Errorf("either request.ObjectWormConfiguration.Rule.DefaultRetention.Days or request.ObjectWormConfiguration.Rule.DefaultRetention.Years must be configured")
-			}
-		}
-	}
-	assert.NotNil(t, err)
-	assert.Equal(t, err.Error(), "request.ObjectWormConfiguration.Rule.DefaultRetention.Years must be greater than 0")
-
-	request = &PutBucketObjectWormConfigurationRequest{
-		Bucket: Ptr("oss-demo"),
-		ObjectWormConfiguration: &ObjectWormConfiguration{
-			ObjectWormEnabled: Ptr("Enabled"),
-			Rule: &ObjectWormConfigurationRule{
-				DefaultRetention: &ObjectWormConfigurationRuleDefaultRetention{
+			Rule: &ObjectWormRule{
+				DefaultRetention: &ObjectWormDefaultRetention{
 					Mode: Ptr("COMPLIANCE"),
 					Days: Ptr(int32(1)),
 				},
@@ -200,15 +107,15 @@ func TestMarshalInput_PutBucketObjectWormConfiguration(t *testing.T) {
 	input.OpMetadata.Set(signer.SubResource, []string{"objectWorm"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
-	body, _ := io.ReadAll(input.Body)
+	body, _ = io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<ObjectWormConfiguration><ObjectWormEnabled>Enabled</ObjectWormEnabled><Rule><DefaultRetention><Mode>COMPLIANCE</Mode><Days>1</Days></DefaultRetention></Rule></ObjectWormConfiguration>")
 
 	request = &PutBucketObjectWormConfigurationRequest{
 		Bucket: Ptr("oss-demo"),
 		ObjectWormConfiguration: &ObjectWormConfiguration{
 			ObjectWormEnabled: Ptr("Enabled"),
-			Rule: &ObjectWormConfigurationRule{
-				DefaultRetention: &ObjectWormConfigurationRuleDefaultRetention{
+			Rule: &ObjectWormRule{
+				DefaultRetention: &ObjectWormDefaultRetention{
 					Mode:  Ptr("GOVERNANCE"),
 					Years: Ptr(int32(1)),
 				},

@@ -12,47 +12,43 @@ import (
 var (
 	region     string
 	bucketName string
+	objectName string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
 	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
+	flag.StringVar(&objectName, "object", "", "The name of the object.")
 }
 
 func main() {
 	flag.Parse()
-	if len(bucketName) == 0 {
-		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, bucket name required")
-	}
-
 	if len(region) == 0 {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, region required")
 	}
-
+	if len(bucketName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, bucket name required")
+	}
+	if len(objectName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, object name required")
+	}
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region)
-
 	client := oss.NewClient(cfg)
-
-	request := &oss.PutBucketObjectWormConfigurationRequest{
+	putRequest := &oss.PutObjectLegalHoldRequest{
 		Bucket: oss.Ptr(bucketName),
-		ObjectWormConfiguration: &oss.ObjectWormConfiguration{
-			ObjectWormEnabled: oss.Ptr("Enabled"),
-			Rule: &oss.ObjectWormRule{
-				DefaultRetention: &oss.ObjectWormDefaultRetention{
-					Mode: oss.Ptr("COMPLIANCE"),
-					Days: oss.Ptr(int32(1)),
-				},
-			},
+		Key:    oss.Ptr(objectName),
+		LegalHold: &oss.ObjectWormLegalHold{
+			Status: oss.Ptr("ON"),
 		},
 	}
-
-	result, err := client.PutBucketObjectWormConfiguration(context.TODO(), request)
+	putResult, err := client.PutObjectLegalHold(context.TODO(), putRequest)
 	if err != nil {
-		log.Fatalf("failed to put bucket object worm configuration %v", err)
+		log.Fatalf("failed to put object legal hold %v", err)
 	}
-	log.Printf("put bucket object worm configuration result:%#v\n", result)
+	log.Printf("put object legal hold result:%#v\n", putResult)
 }
