@@ -10023,3 +10023,164 @@ func TestBucketObjectWormConfiguration(t *testing.T) {
 	})
 	assert.Nil(t, err)
 }
+
+func TestObjectWorm(t *testing.T) {
+	region := os.Getenv("OSS_REGION")
+	endpoint := "http://oss-" + region + "-zmf.aliyuncs.com"
+	//TODO
+	bucketName := bucketNamePrefix + randLowStr(6)
+	objectName := objectNamePrefix + randLowStr(6)
+	request := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+	client := getClient(region, endpoint)
+	_, err := client.PutBucket(context.TODO(), request)
+	assert.Nil(t, err)
+
+	_, err = client.PutObject(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Body:   strings.NewReader("hi oss"),
+	})
+	assert.Nil(t, err)
+
+	_, err = client.PutBucketVersioning(context.TODO(), &PutBucketVersioningRequest{
+		Bucket: Ptr(bucketName),
+		VersioningConfiguration: &VersioningConfiguration{
+			Status: VersionEnabled,
+		},
+	})
+	assert.Nil(t, err)
+
+	input := &OperationInput{
+		Bucket: Ptr(bucketName),
+		OpName: "PutBucketObjectWormConfiguration",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: "application/xml",
+		},
+		Parameters: map[string]string{
+			"objectWorm": "",
+		},
+		Body: io.NopCloser(bytes.NewReader([]byte(`<ObjectWormConfiguration>
+			<ObjectWormEnabled>Enabled</ObjectWormEnabled>
+				<Rule>
+					<DefaultRetention>
+						<Mode>COMPLIANCE</Mode>
+						<Days>1</Days>
+					</DefaultRetention>
+				</Rule>
+			</ObjectWormConfiguration>`))),
+	}
+	input.OpMetadata.Set(signer.SubResource, []string{"objectWorm"})
+	_, err = client.InvokeOperation(context.TODO(), input)
+	assert.Nil(t, err)
+
+	date := time.Now().UTC().Add(3 * time.Second).Format("2006-01-02T15:04:05.000Z")
+	putResult, err := client.PutObjectRetention(context.TODO(), &PutObjectRetentionRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Retention: &Retention{
+			Mode:            Ptr("COMPLIANCE"),
+			RetainUntilDate: Ptr(date),
+		},
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getResult, err := client.GetObjectRetention(context.TODO(), &GetObjectRetentionRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	putResult2, err := client.PutObjectLegalHold(context.TODO(), &PutObjectLegalHoldRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		LegalHold: &LegalHold{
+			Status: Ptr("OFF"),
+		},
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult2.StatusCode)
+	assert.NotEmpty(t, putResult2.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getResult2, err := client.GetObjectLegalHold(context.TODO(), &GetObjectLegalHoldRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult2.StatusCode)
+	assert.NotEmpty(t, getResult2.LegalHold.Status, "OFF")
+	time.Sleep(1 * time.Second)
+
+	var serr *ServiceError
+	bucketNameNotExist := bucketName + "-not-exist"
+	_, err = client.PutObjectRetention(context.TODO(), &PutObjectRetentionRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		Key:    Ptr(objectName),
+		Retention: &Retention{
+			Mode:            Ptr("COMPLIANCE"),
+			RetainUntilDate: Ptr(date),
+		},
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+
+	serr = &ServiceError{}
+	_, err = client.GetObjectRetention(context.TODO(), &GetObjectRetentionRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		Key:    Ptr(objectName),
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	serr = &ServiceError{}
+	_, err = client.PutObjectLegalHold(context.TODO(), &PutObjectLegalHoldRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		Key:    Ptr(objectName),
+		LegalHold: &LegalHold{
+			Status: Ptr("ON"),
+		},
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	serr = &ServiceError{}
+	_, err = client.GetObjectLegalHold(context.TODO(), &GetObjectLegalHoldRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		Key:    Ptr(objectName),
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	time.Sleep(4 * time.Second)
+	cleanObjects(client, bucketName, t)
+}

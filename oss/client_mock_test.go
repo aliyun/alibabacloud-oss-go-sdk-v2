@@ -36916,3 +36916,822 @@ func TestMockGetBucketObjectWormConfiguration_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockPutObjectRetentionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutObjectRetentionRequest
+	CheckOutputFn  func(t *testing.T, o *PutObjectRetentionResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?retention", urlStr)
+			assert.Equal(t, "PUT", r.Method)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<Retention><Mode>GOVERNANC</Mode><RetainUntilDate>2025-11-10T16:00:00.000Z</RetainUntilDate></Retention>")
+		},
+		&PutObjectRetentionRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+			Retention: &Retention{
+				Mode:            Ptr("GOVERNANC"),
+				RetainUntilDate: Ptr("2025-11-10T16:00:00.000Z"),
+			},
+		},
+		func(t *testing.T, o *PutObjectRetentionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?retention&versionId=123", urlStr)
+			assert.Equal(t, "PUT", r.Method)
+			assert.Equal(t, "true", r.Header.Get("x-oss-bypass-governance-retention"))
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<Retention><Mode>GOVERNANC</Mode><RetainUntilDate>2025-11-10T16:00:00.000Z</RetainUntilDate></Retention>")
+		},
+		&PutObjectRetentionRequest{
+			Bucket:                    Ptr("bucket"),
+			Key:                       Ptr("object"),
+			VersionId:                 Ptr("123"),
+			BypassGovernanceRetention: Ptr(true),
+			Retention: &Retention{
+				Mode:            Ptr("GOVERNANC"),
+				RetainUntilDate: Ptr("2025-11-10T16:00:00.000Z"),
+			},
+		},
+		func(t *testing.T, o *PutObjectRetentionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockPutObjectRetention_Success(t *testing.T) {
+	for _, c := range testMockPutObjectRetentionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutObjectRetention(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutObjectRetentionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutObjectRetentionRequest
+	CheckOutputFn  func(t *testing.T, o *PutObjectRetentionResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>InvalidArgument</Code>
+  <Message>no such bucket access control exists</Message>
+  <RequestId>5C3D9175B6FC201293AD****</RequestId>
+  <HostId>***-test.example.com</HostId>
+  <ArgumentName>x-oss-acl</ArgumentName>
+  <ArgumentValue>error-acl</ArgumentValue>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?retention", urlStr)
+			assert.Equal(t, "PUT", r.Method)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<Retention><Mode>GOVERNANC</Mode><RetainUntilDate>2025-11-10T16:00:00.000Z</RetainUntilDate></Retention>")
+		},
+		&PutObjectRetentionRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+			Retention: &Retention{
+				Mode:            Ptr("GOVERNANC"),
+				RetainUntilDate: Ptr("2025-11-10T16:00:00.000Z"),
+			},
+		},
+		func(t *testing.T, o *PutObjectRetentionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "no such bucket access control exists", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>UserDisable</Code>
+  <Message>UserDisable</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?retention", urlStr)
+			assert.Equal(t, "PUT", r.Method)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<Retention><Mode>GOVERNANC</Mode><RetainUntilDate>2025-11-10T16:00:00.000Z</RetainUntilDate></Retention>")
+		},
+		&PutObjectRetentionRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+			Retention: &Retention{
+				Mode:            Ptr("GOVERNANC"),
+				RetainUntilDate: Ptr("2025-11-10T16:00:00.000Z"),
+			},
+		},
+		func(t *testing.T, o *PutObjectRetentionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockPutObjectRetention_Error(t *testing.T) {
+	for _, c := range testMockPutObjectRetentionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutObjectRetention(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetObjectRetentionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetObjectRetentionRequest
+	CheckOutputFn  func(t *testing.T, o *GetObjectRetentionResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Retention>
+  <Mode>COMPLIANCE</Mode>
+  <RetainUntilDate>2025-11-10T16:00:00.000Z</RetainUntilDate>
+</Retention>>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?retention&versionId=123", urlStr)
+		},
+		&GetObjectRetentionRequest{
+			Bucket:    Ptr("bucket"),
+			Key:       Ptr("object"),
+			VersionId: Ptr("123"),
+		},
+		func(t *testing.T, o *GetObjectRetentionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+			assert.Equal(t, *o.Retention.Mode, "COMPLIANCE")
+			assert.Equal(t, *o.Retention.RetainUntilDate, "2025-11-10T16:00:00.000Z")
+		},
+	},
+}
+
+func TestMockGetObjectRetention_Success(t *testing.T) {
+	for _, c := range testMockGetObjectRetentionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetObjectRetention(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetObjectRetentionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetObjectRetentionRequest
+	CheckOutputFn  func(t *testing.T, o *GetObjectRetentionResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>InvalidArgument</Code>
+  <Message>no such bucket access control exists</Message>
+  <RequestId>5C3D9175B6FC201293AD****</RequestId>
+  <HostId>***-test.example.com</HostId>
+  <ArgumentName>x-oss-acl</ArgumentName>
+  <ArgumentValue>error-acl</ArgumentValue>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?retention", urlStr)
+		},
+		&GetObjectRetentionRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+		},
+		func(t *testing.T, o *GetObjectRetentionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "no such bucket access control exists", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>UserDisable</Code>
+  <Message>UserDisable</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?retention", urlStr)
+		},
+		&GetObjectRetentionRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+		},
+		func(t *testing.T, o *GetObjectRetentionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>NoSuchBucket</Code>
+  <Message>The specified bucket does not exist.</Message>
+  <RequestId>5C3D9175B6FC201293AD****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?retention", urlStr)
+		},
+		&GetObjectRetentionRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+		},
+		func(t *testing.T, o *GetObjectRetentionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockGetObjectRetention_Error(t *testing.T) {
+	for _, c := range testMockGetObjectRetentionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetObjectRetention(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutObjectLegalHoldSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutObjectLegalHoldRequest
+	CheckOutputFn  func(t *testing.T, o *PutObjectLegalHoldResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?legalHold", urlStr)
+			assert.Equal(t, "PUT", r.Method)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<LegalHold><Status>ON</Status></LegalHold>")
+		},
+		&PutObjectLegalHoldRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+			LegalHold: &LegalHold{
+				Status: Ptr("ON"),
+			},
+		},
+		func(t *testing.T, o *PutObjectLegalHoldResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?legalHold&versionId=123", urlStr)
+			assert.Equal(t, "PUT", r.Method)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<LegalHold><Status>ON</Status></LegalHold>")
+		},
+		&PutObjectLegalHoldRequest{
+			Bucket:    Ptr("bucket"),
+			Key:       Ptr("object"),
+			VersionId: Ptr("123"),
+			LegalHold: &LegalHold{
+				Status: Ptr("ON"),
+			},
+		},
+		func(t *testing.T, o *PutObjectLegalHoldResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockPutObjectLegalHold_Success(t *testing.T) {
+	for _, c := range testMockPutObjectLegalHoldSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutObjectLegalHold(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutObjectLegalHoldErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutObjectLegalHoldRequest
+	CheckOutputFn  func(t *testing.T, o *PutObjectLegalHoldResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>InvalidArgument</Code>
+  <Message>no such bucket access control exists</Message>
+  <RequestId>5C3D9175B6FC201293AD****</RequestId>
+  <HostId>***-test.example.com</HostId>
+  <ArgumentName>x-oss-acl</ArgumentName>
+  <ArgumentValue>error-acl</ArgumentValue>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?legalHold", urlStr)
+			assert.Equal(t, "PUT", r.Method)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<LegalHold><Status>ON</Status></LegalHold>")
+		},
+		&PutObjectLegalHoldRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+			LegalHold: &LegalHold{
+				Status: Ptr("ON"),
+			},
+		},
+		func(t *testing.T, o *PutObjectLegalHoldResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "no such bucket access control exists", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>UserDisable</Code>
+  <Message>UserDisable</Message>
+  <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+  <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <BucketName>test</BucketName>
+  <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?legalHold", urlStr)
+			assert.Equal(t, "PUT", r.Method)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(body), "<LegalHold><Status>ON</Status></LegalHold>")
+		},
+		&PutObjectLegalHoldRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+			LegalHold: &LegalHold{
+				Status: Ptr("ON"),
+			},
+		},
+		func(t *testing.T, o *PutObjectLegalHoldResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockPutObjectLegalHold_Error(t *testing.T) {
+	for _, c := range testMockPutObjectLegalHoldErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutObjectLegalHold(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetObjectLegalHoldSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetObjectLegalHoldRequest
+	CheckOutputFn  func(t *testing.T, o *GetObjectLegalHoldResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<LegalHold>
+   <Status>ON</Status>
+</LegalHold>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?legalHold&versionId=123", urlStr)
+		},
+		&GetObjectLegalHoldRequest{
+			Bucket:    Ptr("bucket"),
+			Key:       Ptr("object"),
+			VersionId: Ptr("123"),
+		},
+		func(t *testing.T, o *GetObjectLegalHoldResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.LegalHold.Status, "ON")
+		},
+	},
+}
+
+func TestMockGetObjectLegalHold_Success(t *testing.T) {
+	for _, c := range testMockGetObjectLegalHoldSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetObjectLegalHold(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockGetObjectLegalHoldErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *GetObjectLegalHoldRequest
+	CheckOutputFn  func(t *testing.T, o *GetObjectLegalHoldResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>InvalidArgument</Code>
+ <Message>no such bucket access control exists</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>***-test.example.com</HostId>
+ <ArgumentName>x-oss-acl</ArgumentName>
+ <ArgumentValue>error-acl</ArgumentValue>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?legalHold", urlStr)
+		},
+		&GetObjectLegalHoldRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+		},
+		func(t *testing.T, o *GetObjectLegalHoldResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "no such bucket access control exists", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?legalHold", urlStr)
+		},
+		&GetObjectLegalHoldRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+		},
+		func(t *testing.T, o *GetObjectLegalHoldResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/object?legalHold", urlStr)
+		},
+		&GetObjectLegalHoldRequest{
+			Bucket: Ptr("bucket"),
+			Key:    Ptr("object"),
+		},
+		func(t *testing.T, o *GetObjectLegalHoldResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockGetObjectLegalHold_Error(t *testing.T) {
+	for _, c := range testMockGetObjectLegalHoldErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.GetObjectLegalHold(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
