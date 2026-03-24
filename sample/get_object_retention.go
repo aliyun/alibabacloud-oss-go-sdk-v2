@@ -12,47 +12,40 @@ import (
 var (
 	region     string
 	bucketName string
+	objectName string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
 	flag.StringVar(&bucketName, "bucket", "", "The name of the bucket.")
+	flag.StringVar(&objectName, "object", "", "The name of the object.")
 }
 
 func main() {
 	flag.Parse()
-	if len(bucketName) == 0 {
-		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, bucket name required")
-	}
-
 	if len(region) == 0 {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, region required")
 	}
-
+	if len(bucketName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, bucket name required")
+	}
+	if len(objectName) == 0 {
+		flag.PrintDefaults()
+		log.Fatalf("invalid parameters, object name required")
+	}
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region)
-
 	client := oss.NewClient(cfg)
-
-	request := &oss.PutBucketObjectWormConfigurationRequest{
+	getRequest := &oss.GetObjectRetentionRequest{
 		Bucket: oss.Ptr(bucketName),
-		ObjectWormConfiguration: &oss.ObjectWormConfiguration{
-			ObjectWormEnabled: oss.Ptr("Enabled"),
-			Rule: &oss.ObjectWormRule{
-				DefaultRetention: &oss.ObjectWormDefaultRetention{
-					Mode: oss.Ptr("COMPLIANCE"),
-					Days: oss.Ptr(int32(1)),
-				},
-			},
-		},
+		Key:    oss.Ptr(objectName),
 	}
-
-	result, err := client.PutBucketObjectWormConfiguration(context.TODO(), request)
+	getResult, err := client.GetObjectRetention(context.TODO(), getRequest)
 	if err != nil {
-		log.Fatalf("failed to put bucket object worm configuration %v", err)
+		log.Fatalf("failed to get object retention %v", err)
 	}
-	log.Printf("put bucket object worm configuration result:%#v\n", result)
+	log.Printf("get object retention result:%#v\n", getResult)
 }

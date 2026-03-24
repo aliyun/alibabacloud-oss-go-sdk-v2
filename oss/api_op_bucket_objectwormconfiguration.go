@@ -3,6 +3,7 @@ package oss
 import (
 	"context"
 	"fmt"
+
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 )
 
@@ -21,14 +22,14 @@ type ObjectWormConfiguration struct {
 	ObjectWormEnabled *string `xml:"ObjectWormEnabled"`
 
 	// Container with object-level retention policy
-	Rule *ObjectWormConfigurationRule `xml:"Rule"`
+	Rule *ObjectWormRule `xml:"Rule"`
 }
 
-type ObjectWormConfigurationRule struct {
-	DefaultRetention *ObjectWormConfigurationRuleDefaultRetention `xml:"DefaultRetention"`
+type ObjectWormRule struct {
+	DefaultRetention *ObjectWormDefaultRetention `xml:"DefaultRetention"`
 }
 
-type ObjectWormConfigurationRuleDefaultRetention struct {
+type ObjectWormDefaultRetention struct {
 	// Object-level retention strategy pattern. valid value:GOVERNANCE, COMPLIANCE
 	Mode *string `xml:"Mode"`
 
@@ -61,19 +62,11 @@ func (c *Client) PutBucketObjectWormConfiguration(ctx context.Context, request *
 		Bucket: request.Bucket,
 	}
 	input.OpMetadata.Set(signer.SubResource, []string{"objectWorm"})
-	if request.ObjectWormConfiguration.Rule.DefaultRetention != nil {
-		if request.ObjectWormConfiguration.Rule.DefaultRetention != nil {
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Days != nil && *request.ObjectWormConfiguration.Rule.DefaultRetention.Days <= 0 {
-				err = fmt.Errorf("request.ObjectWormConfiguration.Rule.DefaultRetention.Days must be greater than 0")
-			}
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Years != nil && *request.ObjectWormConfiguration.Rule.DefaultRetention.Years <= 0 {
-				err = fmt.Errorf("request.ObjectWormConfiguration.Rule.DefaultRetention.Years must be greater than 0")
-			}
-			if request.ObjectWormConfiguration.Rule.DefaultRetention.Days == nil && request.ObjectWormConfiguration.Rule.DefaultRetention.Years == nil {
-				err = fmt.Errorf("either request.ObjectWormConfiguration.Rule.DefaultRetention.Days or request.ObjectWormConfiguration.Rule.DefaultRetention.Years must be configured")
-			}
-		}
+
+	if err = checkObjectWormConfiguration(request.ObjectWormConfiguration); err != nil {
+		return nil, err
 	}
+
 	if err = c.marshalInput(request, input, updateContentMd5); err != nil {
 		return nil, err
 	}
@@ -138,4 +131,32 @@ func (c *Client) GetBucketObjectWormConfiguration(ctx context.Context, request *
 	}
 
 	return result, err
+}
+
+func checkObjectWormConfiguration(configuration *ObjectWormConfiguration) error {
+	if configuration == nil {
+		return nil
+	}
+
+	if configuration.Rule == nil {
+		return nil
+	}
+
+	if configuration.Rule.DefaultRetention == nil {
+		return nil
+	}
+
+	if configuration.Rule.DefaultRetention.Days == nil && configuration.Rule.DefaultRetention.Years == nil {
+		return fmt.Errorf("either DefaultRetention.Days or DefaultRetention.Years must be configured")
+	}
+
+	if configuration.Rule.DefaultRetention.Days != nil && *configuration.Rule.DefaultRetention.Days <= 0 {
+		return fmt.Errorf("DefaultRetention.Days must be greater than 0")
+	}
+
+	if configuration.Rule.DefaultRetention.Years != nil && *configuration.Rule.DefaultRetention.Years <= 0 {
+		return fmt.Errorf("DefaultRetention.Years must be greater than 0")
+	}
+
+	return nil
 }
