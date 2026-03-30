@@ -1,5 +1,10 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.4.1 日期：2026-03-30
+### 变更内容
+- Feature：Add object worm api
+- Feature：Add more shallow copy options to CopierOptions
+
 ## 版本号：v1.4.0 日期：2026-01-30
 ### 变更内容
 - Feature：Downloader supports WriteBufferSize option
