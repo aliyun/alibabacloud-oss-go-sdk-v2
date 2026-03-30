@@ -34,10 +34,38 @@ type CopierOptions struct {
 
 	ClientOptions []func(*Options)
 
+	// ShallowCopy Flags
+	NoCheckSSE         bool
+	NoCheckCrossBucket bool
+
 	// MetaProperties and TagProperties takes effect in Copier.Copy
 	MetadataProperties *HeadObjectResult
 
 	TagProperties *GetObjectTaggingResult
+}
+
+func WithCopierPartSize(value int64) func(*CopierOptions) {
+	return func(o *CopierOptions) {
+		o.PartSize = value
+	}
+}
+
+func WithCopierParallelNum(value int) func(*CopierOptions) {
+	return func(o *CopierOptions) {
+		o.ParallelNum = value
+	}
+}
+
+func WithCopierNoCheckSSE(value bool) func(*CopierOptions) {
+	return func(o *CopierOptions) {
+		o.NoCheckSSE = value
+	}
+}
+
+func WithCopierNoCheckCrossBucket(value bool) func(*CopierOptions) {
+	return func(o *CopierOptions) {
+		o.NoCheckCrossBucket = value
+	}
 }
 
 type Copier struct {
@@ -251,14 +279,18 @@ func (d *copierDelegate) canUseShallowCopy() bool {
 	}
 
 	// Cross bucket
-	if d.request.SourceBucket != nil &&
-		ToString(d.request.SourceBucket) != ToString(d.request.Bucket) {
-		return false
+	if !d.options.NoCheckCrossBucket {
+		if d.request.SourceBucket != nil &&
+			ToString(d.request.SourceBucket) != ToString(d.request.Bucket) {
+			return false
+		}
 	}
 
 	// Decryption
-	if d.metaProp.Headers.Get(HeaderOssServerSideEncryption) != "" {
-		return false
+	if !d.options.NoCheckSSE {
+		if d.metaProp.Headers.Get(HeaderOssServerSideEncryption) != "" {
+			return false
+		}
 	}
 
 	return true

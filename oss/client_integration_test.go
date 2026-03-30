@@ -10179,3 +10179,185 @@ func TestObjectWorm(t *testing.T) {
 	time.Sleep(4 * time.Second)
 	cleanObjects(client, bucketName, t)
 }
+
+func TestCopierWithNoCheckSSEFlags(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	//TODO
+	putRequest := &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	}
+
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), putRequest)
+	assert.Nil(t, err)
+	objectName := objectNamePrefix + randLowStr(6)
+	length := 2*100*1024 + 1234
+	content := randStr(length)
+	hash := NewCRC64(0)
+	hash.Write([]byte(content))
+
+	request := &PutObjectRequest{
+		Bucket:               Ptr(bucketName),
+		Key:                  Ptr(objectName),
+		ServerSideEncryption: Ptr("AES256"),
+		Body:                 strings.NewReader(content),
+	}
+	_, err = client.PutObject(context.TODO(), request)
+	assert.Nil(t, err)
+
+	dstObjectName := objectName + "-copy"
+	copyRequest := &CopyObjectRequest{
+		Bucket:    Ptr(bucketName),
+		Key:       Ptr(dstObjectName),
+		SourceKey: Ptr(objectName),
+	}
+
+	c := client.NewCopier(func(co *CopierOptions) {
+		co.ParallelNum = 1
+		co.PartSize = 100 * 1024
+		co.MultipartCopyThreshold = 100 * 1024
+	})
+	result, err := c.Copy(context.TODO(), copyRequest)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	headResult, err := client.HeadObject(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(dstObjectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "Multipart", ToString(headResult.ObjectType))
+
+	// Disable SSE Check From Copy
+	result, err = c.Copy(context.TODO(), copyRequest, WithCopierNoCheckSSE(true))
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	headResult, err = client.HeadObject(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(dstObjectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "Normal", ToString(headResult.ObjectType))
+
+	// Disable SSE Check From Copier
+	dstObjectName1 := objectName + "-copy-client"
+	c1 := client.NewCopier(func(co *CopierOptions) {
+		co.ParallelNum = 1
+		co.PartSize = 100 * 1024
+		co.MultipartCopyThreshold = 100 * 1024
+	},
+		WithCopierNoCheckSSE(true),
+	)
+	result1, err := c1.Copy(context.TODO(), &CopyObjectRequest{
+		Bucket:    Ptr(bucketName),
+		Key:       Ptr(dstObjectName1),
+		SourceKey: Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, result1)
+
+	headResult1, err := client.HeadObject(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(dstObjectName1),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "Normal", ToString(headResult1.ObjectType))
+
+}
+
+func TestCopierWithNoCheckCrossBucketFlags(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	crossBucketName := bucketName + "-cross"
+
+	//TODO
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+
+	_, err = client.PutBucket(context.TODO(), &PutBucketRequest{
+		Bucket: Ptr(crossBucketName),
+	})
+	assert.Nil(t, err)
+
+	objectName := objectNamePrefix + randLowStr(6)
+	length := 2*100*1024 + 1234
+	content := randStr(length)
+	hash := NewCRC64(0)
+	hash.Write([]byte(content))
+
+	request := &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Body:   strings.NewReader(content),
+	}
+	_, err = client.PutObject(context.TODO(), request)
+	assert.Nil(t, err)
+
+	dstObjectName := objectName + "-copy"
+	copyRequest := &CopyObjectRequest{
+		Bucket:       Ptr(crossBucketName),
+		Key:          Ptr(dstObjectName),
+		SourceBucket: Ptr(bucketName),
+		SourceKey:    Ptr(objectName),
+	}
+
+	c := client.NewCopier(func(co *CopierOptions) {
+		co.ParallelNum = 1
+		co.PartSize = 100 * 1024
+		co.MultipartCopyThreshold = 100 * 1024
+	})
+	result, err := c.Copy(context.TODO(), copyRequest)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	headResult, err := client.HeadObject(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(crossBucketName),
+		Key:    Ptr(dstObjectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "Multipart", ToString(headResult.ObjectType))
+
+	// Disable Check From Copy
+	result, err = c.Copy(context.TODO(), copyRequest, WithCopierNoCheckCrossBucket(true))
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	headResult, err = client.HeadObject(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(crossBucketName),
+		Key:    Ptr(dstObjectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "Normal", ToString(headResult.ObjectType))
+
+	// Disable Check From Copier
+	dstObjectName1 := objectName + "-copy-client"
+	c1 := client.NewCopier(func(co *CopierOptions) {
+		co.ParallelNum = 1
+		co.PartSize = 100 * 1024
+		co.MultipartCopyThreshold = 100 * 1024
+	},
+		WithCopierNoCheckCrossBucket(true),
+	)
+	result1, err := c1.Copy(context.TODO(), &CopyObjectRequest{
+		Bucket:       Ptr(crossBucketName),
+		Key:          Ptr(dstObjectName1),
+		SourceBucket: Ptr(bucketName),
+		SourceKey:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, result1)
+
+	headResult1, err := client.HeadObject(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(crossBucketName),
+		Key:    Ptr(dstObjectName1),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "Normal", ToString(headResult1.ObjectType))
+}
