@@ -1,0 +1,119 @@
+package tables
+
+import (
+	"context"
+
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+)
+
+type GetTableMetadataLocationRequest struct {
+	// The name of the table bucket.
+	Bucket *string `input:"host,bucket,required"`
+
+	Namespace *string `input:"nop,namespace,required"`
+
+	Table *string `input:"nop,name,required"`
+
+	oss.RequestCommon
+}
+
+type GetTableMetadataLocationResult struct {
+	MetadataLocation  *string `json:"metadataLocation"`
+	WarehouseLocation *string `json:"warehouseLocation"`
+	VersionToken      *string `json:"versionToken"`
+
+	oss.ResultCommon
+}
+
+// GetTableMetadataLocation Queries the metadata location of a table.
+func (c *TablesClient) GetTableMetadataLocation(ctx context.Context, request *GetTableMetadataLocationRequest, optFns ...func(*oss.Options)) (*GetTableMetadataLocationResult, error) {
+	var err error
+	if request == nil {
+		request = &GetTableMetadataLocationRequest{}
+	}
+	input := &oss.OperationInput{
+		OpName: "GetTableMetadataLocation",
+		Method: "GET",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"metadata-location":             "",
+			"tables":                        "",
+			oss.ToString(request.Namespace): "",
+			oss.ToString(request.Table):     "",
+		},
+		Bucket: request.Bucket,
+	}
+	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
+		return nil, err
+	}
+	output, err := c.InvokeOperation(ctx, input, optFns...)
+	if err != nil {
+		return nil, err
+	}
+	result := &GetTableMetadataLocationResult{}
+	if err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle); err != nil {
+		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
+	}
+	return result, err
+}
+
+type UpdateTableMetadataLocationRequest struct {
+	// The name of the table bucket.
+	Bucket *string `input:"host,bucket,required"`
+
+	Namespace *string `input:"nop,namespace,required"`
+
+	Table *string `input:"nop,name,required"`
+
+	MetadataLocation *string `input:"body,metadataLocation,required,json"`
+
+	VersionToken *string `input:"body,versionToken,required,json"`
+
+	oss.RequestCommon
+}
+
+type UpdateTableMetadataLocationResult struct {
+	MetadataLocation *string  `json:"metadataLocation"`
+	Name             *string  `json:"name"`
+	Namespace        []string `json:"namespace"`
+	TableARN         *string  `json:"tableARN"`
+	VersionToken     *string  `json:"versionToken"`
+
+	oss.ResultCommon
+}
+
+// UpdateTableMetadataLocation Update the metadata location of a table.
+func (c *TablesClient) UpdateTableMetadataLocation(ctx context.Context, request *UpdateTableMetadataLocationRequest, optFns ...func(*oss.Options)) (*UpdateTableMetadataLocationResult, error) {
+	var err error
+	if request == nil {
+		request = &UpdateTableMetadataLocationRequest{}
+	}
+	input := &oss.OperationInput{
+		OpName: "UpdateTableMetadataLocation",
+		Method: "PUT",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"metadata-location":             "",
+			"tables":                        "",
+			oss.ToString(request.Namespace): "",
+			oss.ToString(request.Table):     "",
+		},
+		Bucket: request.Bucket,
+	}
+	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
+		return nil, err
+	}
+	output, err := c.InvokeOperation(ctx, input, optFns...)
+	if err != nil {
+		return nil, err
+	}
+	result := &UpdateTableMetadataLocationResult{}
+	if err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle); err != nil {
+		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
+	}
+	return result, err
+}
