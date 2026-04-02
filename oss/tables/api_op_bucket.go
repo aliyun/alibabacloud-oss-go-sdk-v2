@@ -2,6 +2,9 @@ package tables
 
 import (
 	"context"
+	"fmt"
+	"net/url"
+
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 )
 
@@ -12,12 +15,6 @@ type CreateTableBucketRequest struct {
 	// The encryption of the table bucket.
 	EncryptionConfiguration *EncryptionConfiguration `input:"body,encryptionConfiguration,json"`
 
-	// The storage class of the table bucket.
-	StorageClassConfiguration *StorageClassConfiguration `input:"body,storageClassConfiguration,json"`
-
-	// The tagging of the table bucket.
-	Tags map[string]any `input:"body,tags,json"`
-
 	oss.RequestCommon
 }
 
@@ -27,12 +24,8 @@ type EncryptionConfiguration struct {
 	SseAlgorithm *string `json:"sseAlgorithm"`
 }
 
-type StorageClassConfiguration struct {
-	StorageClass oss.StorageClassType `json:"storageClass"`
-}
-
 type CreateTableBucketResult struct {
-	Arn *string `json:"arn"`
+	BucketArn *string `json:"arn"`
 
 	oss.ResultCommon
 }
@@ -49,7 +42,7 @@ func (c *TablesClient) CreateTableBucket(ctx context.Context, request *CreateTab
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Key: oss.Ptr("buckets"),
 	}
 
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -71,14 +64,13 @@ func (c *TablesClient) CreateTableBucket(ctx context.Context, request *CreateTab
 }
 
 type GetTableBucketRequest struct {
-	// The name of the bucket containing the objects
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	oss.RequestCommon
 }
 
 type GetTableBucketResult struct {
-	Arn            *string `json:"arn"`
+	BucketArn      *string `json:"arn"`
 	CreatedAt      *string `json:"createdAt"`
 	Name           *string `json:"name"`
 	OwnerAccountId *string `json:"ownerAccountId"`
@@ -100,8 +92,10 @@ func (c *TablesClient) GetTableBucket(ctx context.Context, request *GetTableBuck
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -142,11 +136,12 @@ type ListTableBucketsResult struct {
 }
 
 type TableBucketProperties struct {
-	TableBucketArn *string `json:"tableBucketArn"`
+	BucketArn      *string `json:"arn"`
 	CreatedAt      *string `json:"createdAt"`
 	Name           *string `json:"name"`
 	OwnerAccountId *string `json:"ownerAccountId"`
 	TableBucketId  *string `json:"tableBucketId"`
+	Type           *string `json:"type"`
 }
 
 // ListTableBuckets Lists table buckets that belong to the current account.
@@ -161,6 +156,7 @@ func (c *TablesClient) ListTableBuckets(ctx context.Context, request *ListTableB
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
+		Key: oss.Ptr("buckets"),
 	}
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
@@ -178,8 +174,8 @@ func (c *TablesClient) ListTableBuckets(ctx context.Context, request *ListTableB
 }
 
 type DeleteTableBucketRequest struct {
-	// The name of the table bucket to delete.
-	Bucket *string `input:"host,bucket,required"`
+	// The bucket arn of the table bucket to delete.
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	oss.RequestCommon
 }
@@ -200,8 +196,10 @@ func (c *TablesClient) DeleteTableBucket(ctx context.Context, request *DeleteTab
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}

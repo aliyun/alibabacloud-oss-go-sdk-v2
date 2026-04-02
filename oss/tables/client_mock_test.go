@@ -3,6 +3,7 @@ package tables
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -83,7 +84,7 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"},\"name\":\"bucket\",\"storageClassConfiguration\":{\"storageClass\":\"Standard\"},\"tags\":{\"k1\":\"v1\",\"k2\":\"v2\"}}", string(requestBody))
+			assert.Equal(t, "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"},\"name\":\"bucket\"}", string(requestBody))
 
 		},
 		&oss.OperationInput{
@@ -93,7 +94,7 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 				oss.HTTPHeaderContentType: contentTypeJSON,
 			},
 			Bucket: oss.Ptr("bucket"),
-			Body:   strings.NewReader(`{"encryptionConfiguration":{"kmsKeyArn":"arn","sseAlgorithm":"AES256"},"name":"bucket","storageClassConfiguration":{"storageClass":"Standard"},"tags":{"k1":"v1","k2":"v2"}}`),
+			Body:   strings.NewReader(`{"encryptionConfiguration":{"kmsKeyArn":"arn","sseAlgorithm":"AES256"},"name":"bucket"}`),
 		},
 		func(t *testing.T, o *oss.OperationOutput) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -119,7 +120,7 @@ var testTablesInvokeOperationAnonymousCases = []struct {
    "type": "oss"
 }`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket/demo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 		},
@@ -129,7 +130,7 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 			Headers: map[string]string{
 				oss.HTTPHeaderContentType: contentTypeJSON,
 			},
-			Bucket: oss.Ptr("bucket"),
+			Key: oss.Ptr("buckets/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *oss.OperationOutput) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -151,7 +152,7 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket/demo-bucket", r.URL.String())
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&oss.OperationInput{
@@ -160,7 +161,7 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 			Headers: map[string]string{
 				oss.HTTPHeaderContentType: contentTypeJSON,
 			},
-			Bucket: oss.Ptr("bucket"),
+			Key: oss.Ptr("buckets/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *oss.OperationOutput) {
 			assert.Equal(t, 204, o.StatusCode)
@@ -206,18 +207,10 @@ var testTablesInvokeOperationErrorCases = []struct {
 			"x-oss-request-id": "57ABD896CCB80C366955****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0016-00000502",
 		},
 		[]byte(
-			`{
-  "Error": {
-    "Code": "MissingArgument",
-    "Message": "Missing Some Required Arguments.",
-    "RequestId": "57ABD896CCB80C366955****",
-    "HostId": "oss-example.oss-cn-hangzhou.aliyuncs.com",
-    "EC": "0016-00000502",
-    "RecommendDoc": "https://api.aliyun.com/troubleshoot?q=0016-00000502"
-  }
-}`),
+			`{"message": "Missing Some Required Arguments."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "/bucket/", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
@@ -242,10 +235,51 @@ var testTablesInvokeOperationErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(400), serr.StatusCode)
-			assert.Equal(t, "MissingArgument", serr.Code)
+			assert.Equal(t, "Bad Request", serr.Code)
 			assert.Equal(t, "0016-00000502", serr.EC)
 			assert.Equal(t, "57ABD896CCB80C366955****", serr.RequestID)
 			assert.Contains(t, serr.Message, "Missing Some Required Arguments.")
+		},
+	},
+	{
+		405,
+		map[string]string{
+			"x-oss-request-id": "57ABD896CCB80C366955****",
+			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
+			"Content-Type":     "application/json",
+			"x-oss-ec":         "0016-00000502",
+		},
+		[]byte(
+			`{"message": "The specified method is not allowed against this resource."}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "PUT", r.Method)
+			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
+			requestBody, err := io.ReadAll(r.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, "{\"name\":\"bucket\"}", string(requestBody))
+		},
+		&oss.OperationInput{
+			OpName: "CreateTableBucket",
+			Method: "PUT",
+			Headers: map[string]string{
+				oss.HTTPHeaderContentType: contentTypeJSON,
+			},
+			Bucket: oss.Ptr("bucket"),
+			Body:   strings.NewReader(`{"name":"bucket"}`),
+		},
+		func(t *testing.T, o *oss.OperationOutput, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *oss.ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(405), serr.StatusCode)
+			assert.Equal(t, "Method Not Allowed", serr.Code)
+			assert.Equal(t, "0016-00000502", serr.EC)
+			assert.Equal(t, "57ABD896CCB80C366955****", serr.RequestID)
+			fmt.Printf("serr.Message:%#v\n", serr.Message)
+			assert.Contains(t, serr.Message, "The specified method is not allowed against this resource.")
 		},
 	},
 }
@@ -282,15 +316,16 @@ var testMockCreateTableBucketSuccessCases = []struct {
 		map[string]string{
 			"x-oss-request-id": "534B371674E88A4D8906****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/json",
 		},
-		nil,
+		[]byte(`{"arn": "acs:osstables:cn-beijing:1234567890:bucket/bucket"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/buckets", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"},\"name\":\"bucket\",\"storageClassConfiguration\":{\"storageClass\":\"Standard\"},\"tags\":{\"k1\":\"v1\",\"k2\":\"v2\"}}", string(requestBody))
+			assert.Equal(t, "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"},\"name\":\"bucket\"}", string(requestBody))
 		},
 		&CreateTableBucketRequest{
 			Bucket: oss.Ptr("bucket"),
@@ -298,18 +333,13 @@ var testMockCreateTableBucketSuccessCases = []struct {
 				KmsKeyArn:    oss.Ptr("arn"),
 				SseAlgorithm: oss.Ptr("AES256"),
 			},
-			StorageClassConfiguration: &StorageClassConfiguration{
-				StorageClass: oss.StorageClassStandard,
-			},
-			Tags: map[string]any{
-				"k1": "v1", "k2": "v2",
-			},
 		},
 		func(t *testing.T, o *CreateTableBucketResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/bucket", *o.BucketArn)
 		},
 	},
 	{
@@ -317,11 +347,12 @@ var testMockCreateTableBucketSuccessCases = []struct {
 		map[string]string{
 			"x-oss-request-id": "534B371674E88A4D8906****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/json",
 		},
-		nil,
+		[]byte(`{"arn": "acs:osstables:cn-beijing:1234567890:bucket/bucket"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/buckets", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&CreateTableBucketRequest{
@@ -332,6 +363,7 @@ var testMockCreateTableBucketSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/bucket", *o.BucketArn)
 		},
 	},
 }
@@ -369,20 +401,15 @@ var testMockCreateTableBucketErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0002-00000040",
 		},
 		[]byte(
 			`{
-			  "Error": {
-				"Code": "SignatureDoesNotMatch",
-				"Message": "The request signature we calculated does not match the signature you provided. Check your key and signing method.",
-				"RequestId": "65467C42E001B4333337****",
-				"SignatureProvided": "RizTbeKC/QlwxINq8xEdUPowc84=",
-				"EC": "0002-00000040"
-			  }
+				"message": "The request signature we calculated does not match the signature you provided. Check your key and signing method."
 			}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/buckets", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -398,7 +425,7 @@ var testMockCreateTableBucketErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "SignatureDoesNotMatch", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "0002-00000040", serr.EC)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request signature we calculated does not match")
@@ -411,19 +438,15 @@ var testMockCreateTableBucketErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0015-00000104",
 		},
 		[]byte(
 			`{
-			  "Error": {
-				"Code": "BucketAlreadyExists",
-				"Message": "The requested bucket name is not available. The bucket namespace is shared by all users of the system. Please select a different name and try again.",
-				"RequestId": "6548A043CA31D****",
-				"EC": "0015-00000104"
-			  }
+				"message": "The requested bucket name is not available. The bucket namespace is shared by all users of the system. Please select a different name and try again."
 			}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/buckets", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -439,9 +462,9 @@ var testMockCreateTableBucketErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(409), serr.StatusCode)
-			assert.Equal(t, "BucketAlreadyExists", serr.Code)
+			assert.Equal(t, "Conflict", serr.Code)
 			assert.Equal(t, "0015-00000104", serr.EC)
-			assert.Equal(t, "6548A043CA31D****", serr.RequestID)
+			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The requested bucket name is not available. The bucket namespace is shared by all users of the system. Please select a different name and try again")
 			assert.Contains(t, serr.RequestTarget, "/bucket")
 		},
@@ -483,20 +506,20 @@ var testMockGetTableBucketSuccessCases = []struct {
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
 		[]byte(`{
-   "arn": "test-arn",
-   "createdAt": "2013-07-31T10:56:21.000Z",
-   "name": "oss-bucket",
-   "ownerAccountId": "123456",
-   "tableBucketId": "123",
+   "arn": "acs:osstables:cn-beijing:12345657890:bucket/demo-bucket",
+   "createdAt": "2026-04-01T09:42:50.000000+00:00",
+   "name": "demo-bucket",
+   "ownerAccountId": "12345657890",
+   "tableBucketId": "50859410-3482-401c-b500-605c22848ef4",
    "type": "oss"
 }`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -506,11 +529,11 @@ var testMockGetTableBucketSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 
 			assert.Equal(t, o.Headers.Get("Content-Type"), "application/json")
-			assert.Equal(t, *o.Arn, "test-arn")
-			assert.Equal(t, *o.Name, "oss-bucket")
-			assert.Equal(t, *o.CreatedAt, "2013-07-31T10:56:21.000Z")
-			assert.Equal(t, *o.OwnerAccountId, "123456")
-			assert.Equal(t, *o.TableBucketId, "123")
+			assert.Equal(t, *o.BucketArn, "acs:osstables:cn-beijing:12345657890:bucket/demo-bucket")
+			assert.Equal(t, *o.Name, "demo-bucket")
+			assert.Equal(t, *o.CreatedAt, "2026-04-01T09:42:50.000000+00:00")
+			assert.Equal(t, *o.OwnerAccountId, "12345657890")
+			assert.Equal(t, *o.TableBucketId, "50859410-3482-401c-b500-605c22848ef4")
 			assert.Equal(t, *o.Type, "oss")
 		},
 	},
@@ -549,24 +572,16 @@ var testMockGetTableBucketErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketResult, err error) {
 			assert.Nil(t, o)
@@ -575,7 +590,7 @@ var testMockGetTableBucketErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "0015-00000101", serr.EC)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
@@ -587,24 +602,16 @@ var testMockGetTableBucketErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketResult, err error) {
 			assert.Nil(t, o)
@@ -613,7 +620,7 @@ var testMockGetTableBucketErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
@@ -628,12 +635,12 @@ var testMockGetTableBucketErrorCases = []struct {
 		},
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketResult, err error) {
 			assert.Nil(t, o)
@@ -678,24 +685,27 @@ var testMockListTableBucketsSuccessCases = []struct {
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
 		[]byte(`{
-  "continuationToken": "token-123",
+  "continuationToken": "Cj5hY3M6b3NzdGFibGVzOmNuLWJlaWppbmc6MTc2MDIyNTU0NTA4NDMzMTpidWNrZXQvZGVtby13YWxrZXItMQ--",
   "tableBuckets": [{
-    "tableBucketArn": "test-arn",
-    "createdAt": "2014-02-17T18:12:43.000Z",
-    "name": "app-base-oss",
-    "ownerAccountId": "123456",
-    "tableBucketId": "123"
+    "arn": "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket",
+    "createdAt": "2026-04-02T05:27:31.000000+00:00",
+    "name": "demo-bucket",
+    "ownerAccountId": "1234567890",
+    "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5",
+    "type": "customer"
   },
   {
-    "tableBucketArn": "test-arn",
-    "createdAt": "2014-02-18T18:12:43.000Z",
-    "name": "app-base-oss2",
-    "ownerAccountId": "123456",
-    "tableBucketId": "124"
+    "arn": "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket-1",
+    "createdAt": "2026-04-02T05:27:32.000000+00:00",
+    "name": "demo-bucket-1",
+    "ownerAccountId": "1234567890",
+    "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f3",
+    "type": "customer"
   }]
 }`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/", r.URL.String())
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/?buckets", r.URL.String())
 		},
 		nil,
 		func(t *testing.T, o *ListTableBucketsResult, err error) {
@@ -706,17 +716,19 @@ var testMockListTableBucketsSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.Equal(t, *o.ContinuationToken, "token-123")
 			assert.Equal(t, len(o.Buckets), 2)
-			assert.Equal(t, *o.Buckets[0].CreatedAt, "2014-02-17T18:12:43.000Z")
-			assert.Equal(t, *o.Buckets[0].TableBucketArn, "test-arn")
-			assert.Equal(t, *o.Buckets[0].Name, "app-base-oss")
-			assert.Equal(t, *o.Buckets[0].TableBucketId, "123")
-			assert.Equal(t, *o.Buckets[0].OwnerAccountId, "123456")
+			assert.Equal(t, *o.Buckets[0].CreatedAt, "2026-04-02T05:27:31.000000+00:00")
+			assert.Equal(t, *o.Buckets[0].BucketArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+			assert.Equal(t, *o.Buckets[0].Name, "demo-bucket")
+			assert.Equal(t, *o.Buckets[0].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
+			assert.Equal(t, *o.Buckets[0].OwnerAccountId, "1234567890")
+			assert.Equal(t, *o.Buckets[0].Type, "customer")
 
-			assert.Equal(t, *o.Buckets[1].CreatedAt, "2014-02-18T18:12:43.000Z")
-			assert.Equal(t, *o.Buckets[1].TableBucketArn, "test-arn")
-			assert.Equal(t, *o.Buckets[1].Name, "app-base-oss2")
-			assert.Equal(t, *o.Buckets[1].TableBucketId, "124")
-			assert.Equal(t, *o.Buckets[1].OwnerAccountId, "123456")
+			assert.Equal(t, *o.Buckets[1].CreatedAt, "2026-04-02T05:27:32.000000+00:00")
+			assert.Equal(t, *o.Buckets[1].BucketArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket-1")
+			assert.Equal(t, *o.Buckets[1].Name, "demo-bucket-1")
+			assert.Equal(t, *o.Buckets[1].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f3")
+			assert.Equal(t, *o.Buckets[1].OwnerAccountId, "1234567890")
+			assert.Equal(t, *o.Buckets[1].Type, "customer")
 		},
 	},
 }
@@ -754,19 +766,13 @@ var testMockListTableBucketsErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0002-00000040",
 		},
 		[]byte(
-			`{
-  "Error": {
-    "Code": "InvalidAccessKeyId",
-    "Message": "The OSS Access Key Id you provided does not exist in our records.",
-    "RequestId": "65467C42E001B4333337****",
-    "SignatureProvided": "RizTbeKC/QlwxINq8xEdUPowc84=",
-    "EC": "0002-00000040"
-  }
-}`),
+			`{"message": "The OSS Access Key Id you provided does not exist in our records."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/", r.URL.String())
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/?buckets", r.URL.String())
 		},
 		&ListTableBucketsRequest{},
 		func(t *testing.T, o *ListTableBucketsResult, err error) {
@@ -791,7 +797,8 @@ var testMockListTableBucketsErrorCases = []struct {
 		},
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/", r.URL.String())
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/?buckets", r.URL.String())
 		},
 		&ListTableBucketsRequest{},
 		func(t *testing.T, o *ListTableBucketsResult, err error) {
@@ -837,11 +844,11 @@ var testMockDeleteTableBucketSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketResult, err error) {
 			assert.Equal(t, 204, o.StatusCode)
@@ -885,23 +892,15 @@ var testMockDeleteTableBucketErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketResult, err error) {
 			assert.Nil(t, o)
@@ -910,7 +909,7 @@ var testMockDeleteTableBucketErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "0015-00000101", serr.EC)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
@@ -922,23 +921,15 @@ var testMockDeleteTableBucketErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000301",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "BucketNotEmpty",
-    "Message": "The bucket has objects. Please delete them first.",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000301"
-  }
-}`),
+		[]byte(`{"message": "The bucket has objects. Please delete them first."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketResult, err error) {
 			assert.Nil(t, o)
@@ -947,7 +938,7 @@ var testMockDeleteTableBucketErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(409), serr.StatusCode)
-			assert.Equal(t, "BucketNotEmpty", serr.Code)
+			assert.Equal(t, "Conflict", serr.Code)
 			assert.Equal(t, "The bucket has objects. Please delete them first.", serr.Message)
 			assert.Equal(t, "0015-00000301", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
@@ -1955,325 +1946,6 @@ func TestMockDeleteTableBucketPolicy_Error(t *testing.T) {
 		assert.NotNil(t, c)
 
 		output, err := client.DeleteTableBucketPolicy(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockPutTableBucketStorageClassSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *PutTableBucketStorageClassRequest
-	CheckOutputFn  func(t *testing.T, o *PutTableBucketStorageClassResult, err error)
-}{
-	{
-		200,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?storage-class", r.URL.String())
-			assert.Equal(t, "PUT", r.Method)
-			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"storageClassConfiguration\":{\"storageClass\":\"Standard\"}}")
-		},
-		&PutTableBucketStorageClassRequest{
-			Bucket: oss.Ptr("bucket"),
-			StorageClassConfiguration: &StorageClassConfiguration{
-				StorageClass: oss.StorageClassStandard,
-			},
-		},
-		func(t *testing.T, o *PutTableBucketStorageClassResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-		},
-	},
-}
-
-func TestMockPutTableBucketStorageClass_Success(t *testing.T) {
-	for _, c := range testMockPutTableBucketStorageClassSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.PutTableBucketStorageClass(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockPutTableBucketStorageClassErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *PutTableBucketStorageClassRequest
-	CheckOutputFn  func(t *testing.T, o *PutTableBucketStorageClassResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?storage-class", r.URL.String())
-			assert.Equal(t, "PUT", r.Method)
-			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"storageClassConfiguration\":{\"storageClass\":\"Standard\"}}")
-		},
-		&PutTableBucketStorageClassRequest{
-			Bucket: oss.Ptr("bucket"),
-			StorageClassConfiguration: &StorageClassConfiguration{
-				StorageClass: oss.StorageClassStandard,
-			},
-		},
-		func(t *testing.T, o *PutTableBucketStorageClassResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?storage-class", r.URL.String())
-			assert.Equal(t, "PUT", r.Method)
-			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"storageClassConfiguration\":{\"storageClass\":\"Standard\"}}")
-		},
-		&PutTableBucketStorageClassRequest{
-			Bucket: oss.Ptr("bucket"),
-			StorageClassConfiguration: &StorageClassConfiguration{
-				StorageClass: oss.StorageClassStandard,
-			},
-		},
-		func(t *testing.T, o *PutTableBucketStorageClassResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-}
-
-func TestMockPutTableBucketStorageClass_Error(t *testing.T) {
-	for _, c := range testMockPutTableBucketStorageClassErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.PutTableBucketStorageClass(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockGetTableBucketStorageClassSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetTableBucketStorageClassRequest
-	CheckOutputFn  func(t *testing.T, o *GetTableBucketStorageClassResult, err error)
-}{
-	{
-		200,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?storage-class", r.URL.String())
-			assert.Equal(t, "GET", r.Method)
-		},
-		&GetTableBucketStorageClassRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetTableBucketStorageClassResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-		},
-	},
-}
-
-func TestMockGetTableBucketStorageClass_Success(t *testing.T) {
-	for _, c := range testMockGetTableBucketStorageClassSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.GetTableBucketStorageClass(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockGetTableBucketStorageClassErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetTableBucketStorageClassRequest
-	CheckOutputFn  func(t *testing.T, o *GetTableBucketStorageClassResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?storage-class", r.URL.String())
-			assert.Equal(t, "GET", r.Method)
-		},
-		&GetTableBucketStorageClassRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetTableBucketStorageClassResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?storage-class", r.URL.String())
-			assert.Equal(t, "GET", r.Method)
-		},
-		&GetTableBucketStorageClassRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
-		func(t *testing.T, o *GetTableBucketStorageClassResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-}
-
-func TestMockGetTableBucketStorageClass_Error(t *testing.T) {
-	for _, c := range testMockGetTableBucketStorageClassErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.GetTableBucketStorageClass(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
@@ -3382,9 +3054,6 @@ var testMockCreateTableSuccessCases = []struct {
 			EncryptionConfiguration: &EncryptionConfiguration{
 				KmsKeyArn:    oss.Ptr("arn"),
 				SseAlgorithm: oss.Ptr("AES256"),
-			},
-			StorageClassConfiguration: &StorageClassConfiguration{
-				StorageClass: oss.StorageClassStandard,
 			},
 			Tags: map[string]any{
 				"k1": "v1", "k2": "v2",
@@ -5038,170 +4707,6 @@ func TestMockGetTableEncryption_Error(t *testing.T) {
 
 		output, err := client.GetTableEncryption(context.TODO(), c.Request)
 
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockGetTableStorageClassSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetTableStorageClassRequest
-	CheckOutputFn  func(t *testing.T, o *GetTableStorageClassResult, err error)
-}{
-	{
-		200,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "GET")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?space&storage-class&table&tables", strUrl)
-		},
-		&GetTableStorageClassRequest{
-			Bucket:    oss.Ptr("bucket"),
-			Namespace: oss.Ptr("space"),
-			Table:     oss.Ptr("table"),
-		},
-		func(t *testing.T, o *GetTableStorageClassResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-		},
-	},
-}
-
-func TestMockGetTableStorageClass_Success(t *testing.T) {
-	for _, c := range testMockGetTableStorageClassSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.GetTableStorageClass(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockGetTableStorageClassErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetTableStorageClassRequest
-	CheckOutputFn  func(t *testing.T, o *GetTableStorageClassResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "GET")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?space&storage-class&table&tables", strUrl)
-		},
-		&GetTableStorageClassRequest{
-			Bucket:    oss.Ptr("bucket"),
-			Namespace: oss.Ptr("space"),
-			Table:     oss.Ptr("table"),
-		},
-		func(t *testing.T, o *GetTableStorageClassResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "GET")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?space&storage-class&table&tables", strUrl)
-		},
-		&GetTableStorageClassRequest{
-			Bucket:    oss.Ptr("bucket"),
-			Namespace: oss.Ptr("space"),
-			Table:     oss.Ptr("table"),
-		},
-		func(t *testing.T, o *GetTableStorageClassResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-}
-
-func TestMockGetTableStorageClass_Error(t *testing.T) {
-	for _, c := range testMockGetTableStorageClassErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.GetTableStorageClass(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
