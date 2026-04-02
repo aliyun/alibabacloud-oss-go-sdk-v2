@@ -28,7 +28,6 @@ func init() {
 }
 
 type SignerTablesV4 struct {
-	AccountId *string
 }
 
 func (s *SignerTablesV4) calcStringToSign(datetime, scope, canonicalRequest string) string {
@@ -63,8 +62,7 @@ func (s *SignerTablesV4) calcCanonicalRequest(signingCtx *SigningContext, additi
 	*/
 
 	//Canonical Uri
-	uri := buildTableBucketArnUri(signingCtx, s.AccountId)
-	canonicalUri := escapePath(uri, false)
+	canonicalUri := buildCanonicalUri(signingCtx)
 
 	//Canonical Query
 	query := strings.Replace(request.URL.RawQuery, "+", "%20", -1)
@@ -292,10 +290,6 @@ func (s *SignerTablesV4) authQuery(ctx context.Context, signingCtx *SigningConte
 }
 
 func (s *SignerTablesV4) Sign(ctx context.Context, signingCtx *SigningContext) error {
-	if s.AccountId == nil {
-		return fmt.Errorf("AccountId is null.")
-	}
-
 	if signingCtx == nil {
 		return fmt.Errorf("SigningContext is null.")
 	}
@@ -317,34 +311,22 @@ func (s *SignerTablesV4) IsSignedHeader(additionalHeaders []string, h string) bo
 	return isDefaultSignedHeader(strings.ToLower(h)) || ContainsStr(additionalHeaders, h)
 }
 
-func buildTableBucketArnUri(signingCtx *SigningContext, accountId *string) string {
-	arn := fmt.Sprintf("/acs:osstables:%s:", toString(signingCtx.Region))
+func buildCanonicalUri(signingCtx *SigningContext) string {
+	// without bucket arn： acs:osstables:cn-hangzhou:{}:bucket/{}/${urldecode(path)}
+	// with    bucket arn： ${bucket-arn}/${urldecode(path)}
+	var uri strings.Builder
+	uri.WriteString("/")
 	if signingCtx.Bucket != nil {
-		arn += fmt.Sprintf("%s:%s/", toString(accountId), *signingCtx.Bucket)
+		uri.WriteString(*signingCtx.Bucket)
+		uri.WriteString("/")
 	} else {
-		// service's api without account id
-		arn += ":/"
+		uri.WriteString(fmt.Sprintf("acs:osstables:%s::bucket/", *signingCtx.Region))
+		uri.WriteString("/")
 	}
 
 	if signingCtx.Key != nil {
-		arn += *signingCtx.Key
+		decodedKey, _ := url.PathUnescape(*signingCtx.Key)
+		uri.WriteString(decodedKey)
 	}
-
-	return arn
-}
-
-func buildTableArnUri(signingCtx *SigningContext, accountId *string) string {
-	arn := fmt.Sprintf("/acs:osstable:%s:", toString(signingCtx.Region))
-	if signingCtx.Bucket != nil {
-		arn += fmt.Sprintf("%s:bucket/%s", toString(accountId), *signingCtx.Bucket)
-	} else {
-		// service's api without account id
-		arn += ":/"
-	}
-
-	if signingCtx.Key != nil {
-		arn += *signingCtx.Key
-	}
-
-	return arn
+	return escapePath(uri.String(), false)
 }
