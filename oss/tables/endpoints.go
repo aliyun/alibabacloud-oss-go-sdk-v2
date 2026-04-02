@@ -10,7 +10,6 @@ import (
 
 type endpointProvider struct {
 	endpoint     *url.URL
-	accountId    string
 	endpointType oss.UrlStyleType
 }
 
@@ -27,7 +26,10 @@ func (p *endpointProvider) BuildURL(input *oss.OperationInput) string {
 	} else {
 		switch p.endpointType {
 		default: // UrlStyleVirtualHosted
-			host = fmt.Sprintf("%s-%s.%s", *input.Bucket, p.accountId, p.endpoint.Host)
+			// acs:osstables:cn-hangzhou:account:bucket/bucketName
+			vals1 := strings.Split(*input.Bucket, ":")
+			vals2 := strings.Split(vals1[4], "/")
+			host = fmt.Sprintf("%s-%s.%s", vals2[1], vals1[3], p.endpoint.Host)
 		case oss.UrlStylePath:
 			host = p.endpoint.Host
 			paths = append(paths, *input.Bucket)
@@ -38,7 +40,7 @@ func (p *endpointProvider) BuildURL(input *oss.OperationInput) string {
 	}
 
 	if input.Key != nil {
-		paths = append(paths, oss.EscapePath(*input.Key, false))
+		paths = append(paths, *input.Key)
 	}
 
 	path = "/" + strings.Join(paths, "/")
