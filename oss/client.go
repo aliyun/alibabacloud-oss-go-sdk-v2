@@ -805,8 +805,15 @@ func validateInput(input *OperationInput) error {
 		return NewErrParamNull("OperationInput")
 	}
 
-	if input.Bucket != nil && !isValidBucketName(input.Bucket) {
-		return NewErrParamInvalid("OperationInput.Bucket")
+	if input.Bucket != nil {
+		if input.OpMetadata.Get(OpMetaKeyRequestIsBucketArn) == true {
+			return AssertValidateArnBucket(ToString(input.Bucket))
+		} else {
+			if !IsValidBucketName(input.Bucket) {
+				return NewErrParamInvalid("OperationInput.Bucket")
+			}
+		}
+
 	}
 
 	if input.Key != nil && !isValidObjectName(input.Key) {
