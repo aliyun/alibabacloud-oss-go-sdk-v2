@@ -649,13 +649,28 @@ func tryConvertServiceError(response *http.Response) (err error) {
 	}
 	var tag string
 	if strings.EqualFold(contentTypeJSON, response.Header.Get(HTTPHeaderContentType)) {
-		type ErrorRoot struct {
-			Root json.RawMessage `json:"Error"`
+		var rawMap map[string]json.RawMessage
+		if err = json.Unmarshal(body, &rawMap); err == nil {
+			if errorData, ok := rawMap["Error"]; ok && len(errorData) > 0 {
+				type ErrorRoot struct {
+					Root json.RawMessage `json:"Error"`
+				}
+				var root ErrorRoot
+				if err = json.Unmarshal(body, &root); err == nil {
+					err = json.Unmarshal(root.Root, &se)
+				}
+			} else {
+				se.EC = response.Header.Get(HeaderOssEC)
+				code := extractStatusCode(response.Status)
+				if code != "" {
+					se.Code = code
+				}
+				if err = json.Unmarshal(body, &se); err == nil {
+					err = json.Unmarshal(body, &se)
+				}
+			}
 		}
-		var root ErrorRoot
-		if err = json.Unmarshal(body, &root); err == nil {
-			err = json.Unmarshal(root.Root, &se)
-		}
+
 		tag = "json"
 	} else {
 		err = xml.Unmarshal(body, &se)
