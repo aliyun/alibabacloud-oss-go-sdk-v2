@@ -21,11 +21,9 @@ func NewTablesClient(cfg *oss.Config, optFns ...func(*oss.Options)) *TablesClien
 	updateEndpoint(&newCfg)
 	updateUserAgent(&newCfg)
 	tablesOptFn := func(options *oss.Options) {
-		options.Signer = &signer.SignerTablesV4{
-			AccountId: newCfg.AccountId,
-		}
+		options.Product = "osstables"
+		options.Signer = &signer.SignerTablesV4{}
 		options.EndpointProvider = &endpointProvider{
-			accountId:    oss.ToString(newCfg.AccountId),
 			endpoint:     options.Endpoint,
 			endpointType: options.UrlStyle,
 		}
@@ -48,10 +46,10 @@ func updateEndpoint(cfg *oss.Config) {
 	}
 
 	if oss.ToBool(cfg.UseInternalEndpoint) {
-		cfg.Endpoint = oss.Ptr(fmt.Sprintf("%s-internal.oss-tables.aliyuncs.com", region))
+		cfg.Endpoint = oss.Ptr(fmt.Sprintf("oss-%s-internal.oss-tables.aliyuncs.com", region))
 
 	} else {
-		cfg.Endpoint = oss.Ptr(fmt.Sprintf("%s.oss-tables.aliyuncs.com", region))
+		cfg.Endpoint = oss.Ptr(fmt.Sprintf("oss-%s.oss-tables.aliyuncs.com", region))
 	}
 }
 
@@ -100,8 +98,15 @@ func validateInput(input *oss.OperationInput) error {
 		return oss.NewErrParamNull("OperationInput")
 	}
 
-	if input.Bucket != nil && !oss.IsValidBucketName(input.Bucket) {
-		return oss.NewErrParamInvalid("OperationInput.Bucket")
+	if input.Bucket != nil {
+		if input.OpMetadata.Get(oss.OpMetaKeyRequestIsBucketArn) == true {
+			return oss.AssertValidateArnBucket(oss.ToString(input.Bucket))
+		} else {
+			if !oss.IsValidBucketName(input.Bucket) {
+				return oss.NewErrParamInvalid("OperationInput.Bucket")
+			}
+		}
+
 	}
 
 	if !oss.IsValidMethod(input.Method) {
