@@ -20,9 +20,6 @@ type CreateTableRequest struct {
 	// The encryption of the table .
 	EncryptionConfiguration *EncryptionConfiguration `input:"body,encryptionConfiguration,json"`
 
-	// The storage class of the table .
-	StorageClassConfiguration *StorageClassConfiguration `input:"body,storageClassConfiguration,json"`
-
 	// The tagging of the table .
 	Tags map[string]any `input:"body,tags,json"`
 

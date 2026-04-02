@@ -200,9 +200,6 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 			KmsKeyArn:    oss.Ptr("arn"),
 			SseAlgorithm: oss.Ptr("AES256"),
 		},
-		StorageClassConfiguration: &StorageClassConfiguration{
-			StorageClass: oss.StorageClassStandard,
-		},
 		Tags: map[string]any{
 			"k1": "v1", "k2": "v2",
 		},
@@ -223,7 +220,7 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
 	jsonStr, _ = io.ReadAll(input.Body)
-	assert.Equal(t, string(jsonStr), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"},\"format\":\"iceberg\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\",\"storageClassConfiguration\":{\"storageClass\":\"Standard\"},\"tags\":{\"k1\":\"v1\",\"k2\":\"v2\"}}")
+	assert.Equal(t, string(jsonStr), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"},\"format\":\"iceberg\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\",\"tags\":{\"k1\":\"v1\",\"k2\":\"v2\"}}")
 }
 
 func TestUnmarshalOutput_CreateTable(t *testing.T) {
