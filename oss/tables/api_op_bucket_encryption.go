@@ -41,7 +41,7 @@ func (c *TablesClient) PutTableBucketEncryption(ctx context.Context, request *Pu
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
-	output, err := c.clientImpl.InvokeOperation(ctx, input, optFns...)
+	output, err := c.InvokeOperation(ctx, input, optFns...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *TablesClient) GetTableBucketEncryption(ctx context.Context, request *Ge
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
-	output, err := c.clientImpl.InvokeOperation(ctx, input, optFns...)
+	output, err := c.InvokeOperation(ctx, input, optFns...)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (c *TablesClient) DeleteTableBucketEncryption(ctx context.Context, request 
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
-	output, err := c.clientImpl.InvokeOperation(ctx, input, optFns...)
+	output, err := c.InvokeOperation(ctx, input, optFns...)
 	if err != nil {
 		return nil, err
 	}

@@ -399,12 +399,7 @@ func TestUnmarshalOutput_ListTableBuckets(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 
 	body = `{
-  "Error": {
-    "Code": "AccessDenied",
-    "Message": "AccessDenied",
-    "RequestId": "568D5566F2D0F89F5C0E****",
-    "HostId": "test.oss.aliyuncs.com"
-  }
+    "message": "AccessDenied",
 }`
 	output = &oss.OperationOutput{
 		StatusCode: 403,

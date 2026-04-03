@@ -1456,14 +1456,14 @@ var testMockPutTableBucketPolicySuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?policy", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"osstable:GetTable\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/table\"]}]}")
+			assert.Equal(t, string(data), "{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}")
 		},
 		&PutTableBucketPolicyRequest{
-			Bucket: oss.Ptr("bucket"),
-			Body:   strings.NewReader(`{"Version":"1","Statement":[{"Action":["osstable:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/table"]}]}`),
+			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			ResourcePolicy: oss.Ptr(`{"Version":"1","Statement":[{"Action":["oss:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket"]}]}`),
 		},
 		func(t *testing.T, o *PutTableBucketPolicyResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -1507,25 +1507,19 @@ var testMockPutTableBucketPolicyErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
 		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
+    "Message": "The specified bucket does not exist."
 }`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?policy", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"osstable:GetTable\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/table\"]}]}")
+			assert.Equal(t, string(data), "{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}")
 		},
 		&PutTableBucketPolicyRequest{
-			Bucket: oss.Ptr("bucket"),
-			Body:   strings.NewReader(`{"Version":"1","Statement":[{"Action":["osstable:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/table"]}]}`),
+			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			ResourcePolicy: oss.Ptr(`{"Version":"1","Statement":[{"Action":["oss:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket"]}]}`),
 		},
 		func(t *testing.T, o *PutTableBucketPolicyResult, err error) {
 			assert.Nil(t, o)
@@ -1534,7 +1528,7 @@ var testMockPutTableBucketPolicyErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "0015-00000101", serr.EC)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
@@ -1546,26 +1540,18 @@ var testMockPutTableBucketPolicyErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"osstable:GetTable\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/table\"]}]}")
+			assert.Equal(t, string(data), "{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}")
 		},
 		&PutTableBucketPolicyRequest{
-			Bucket: oss.Ptr("bucket"),
-			Body:   strings.NewReader(`{"Version":"1","Statement":[{"Action":["osstable:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/table"]}]}`),
+			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			ResourcePolicy: oss.Ptr(`{"Version":"1","Statement":[{"Action":["oss:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket"]}]}`),
 		},
 		func(t *testing.T, o *PutTableBucketPolicyResult, err error) {
 			assert.Nil(t, o)
@@ -1574,7 +1560,7 @@ var testMockPutTableBucketPolicyErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
@@ -1614,21 +1600,22 @@ var testMockGetTableBucketPolicySuccessCases = []struct {
 		map[string]string{
 			"x-oss-request-id": "534B371674E88A4D8906****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/json",
 		},
-		[]byte(`{"Version":"1","Statement":[{"Action":["osstable:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/table"]}]}`),
+		[]byte("{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}"),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket/?policy", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
 		},
 		&GetTableBucketPolicyRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketPolicyResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, o.Body, "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"osstable:GetTable\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/table\"]}]}")
+			assert.Equal(t, *o.ResourcePolicy, "{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\"]}]}")
 		},
 	},
 }
@@ -1666,23 +1653,15 @@ var testMockGetTableBucketPolicyErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?policy", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketPolicyRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketPolicyResult, err error) {
 			assert.Nil(t, o)
@@ -1691,7 +1670,7 @@ var testMockGetTableBucketPolicyErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "0015-00000101", serr.EC)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
@@ -1703,23 +1682,17 @@ var testMockGetTableBucketPolicyErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
 		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }}`),
+    "message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&GetTableBucketPolicyRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketPolicyResult, err error) {
 			assert.Nil(t, o)
@@ -1728,7 +1701,7 @@ var testMockGetTableBucketPolicyErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
@@ -1773,10 +1746,10 @@ var testMockDeleteTableBucketPolicySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&DeleteTableBucketPolicyRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketPolicyResult, err error) {
 			assert.Equal(t, 204, o.StatusCode)
@@ -1821,24 +1794,17 @@ var testMockDeleteTableBucketPolicyErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
 		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+    "message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&DeleteTableBucketPolicyRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketPolicyResult, err error) {
 			assert.Nil(t, o)
@@ -1847,7 +1813,7 @@ var testMockDeleteTableBucketPolicyErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
 		},
@@ -1858,24 +1824,16 @@ var testMockDeleteTableBucketPolicyErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&DeleteTableBucketPolicyRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketPolicyResult, err error) {
 			assert.Nil(t, o)
@@ -1884,7 +1842,7 @@ var testMockDeleteTableBucketPolicyErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
