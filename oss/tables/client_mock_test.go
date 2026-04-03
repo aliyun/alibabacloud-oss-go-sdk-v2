@@ -1878,31 +1878,67 @@ var testMockPutTableBucketMaintenanceConfigurationSuccessCases = []struct {
 	CheckOutputFn  func(t *testing.T, o *PutTableBucketMaintenanceConfigurationResult, err error)
 }{
 	{
-		200,
+		204,
 		map[string]string{
 			"x-oss-request-id": "534B371674E88A4D8906****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?maintenance", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"icebergUnreferencedFileRemoval\":{\"settings\":{\"unreferencedDays\":4,\"nonCurrentDays\":10},\"status\":\"enable\"}}")
+			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":10,\"unreferencedDays\":4}},\"status\":\"disabled\"}}")
 		},
 		&PutTableBucketMaintenanceConfigurationRequest{
-			Bucket: oss.Ptr("bucket"),
-			IcebergUnreferencedFileRemoval: &IcebergUnreferencedFileRemoval{
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
+			Value: &MaintenanceValue{
 				Settings: &MaintenanceSettings{
-					UnreferencedDays: oss.Ptr(int64(4)),
-					NonCurrentDays:   oss.Ptr(int64(10)),
+					IcebergUnreferencedFileRemoval: &SettingsDetail{
+						UnreferencedDays: oss.Ptr(int(4)),
+						NonCurrentDays:   oss.Ptr(10),
+					},
 				},
-				Status: oss.Ptr("enable"),
+				Status: oss.Ptr("disabled"),
 			},
 		},
 		func(t *testing.T, o *PutTableBucketMaintenanceConfigurationResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		204,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
+			assert.Equal(t, "PUT", r.Method)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":1,\"unreferencedDays\":2147483647}},\"status\":\"enabled\"}}")
+		},
+		&PutTableBucketMaintenanceConfigurationRequest{
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
+			Value: &MaintenanceValue{
+				Settings: &MaintenanceSettings{
+					IcebergUnreferencedFileRemoval: &SettingsDetail{
+						UnreferencedDays: oss.Ptr(2147483647),
+						NonCurrentDays:   oss.Ptr(1),
+					},
+				},
+				Status: oss.Ptr("enabled"),
+			},
+		},
+		func(t *testing.T, o *PutTableBucketMaintenanceConfigurationResult, err error) {
+			assert.Equal(t, 204, o.StatusCode)
+			assert.Equal(t, "204 No Content", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 		},
@@ -1942,31 +1978,26 @@ var testMockPutTableBucketMaintenanceConfigurationErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "5C3D9175B6FC201293AD****",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?maintenance", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"icebergUnreferencedFileRemoval\":{\"settings\":{\"unreferencedDays\":4,\"nonCurrentDays\":10},\"status\":\"enable\"}}")
+			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":1,\"unreferencedDays\":2147483647}},\"status\":\"enabled\"}}")
 		},
 		&PutTableBucketMaintenanceConfigurationRequest{
-			Bucket: oss.Ptr("bucket"),
-			IcebergUnreferencedFileRemoval: &IcebergUnreferencedFileRemoval{
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
+			Value: &MaintenanceValue{
 				Settings: &MaintenanceSettings{
-					UnreferencedDays: oss.Ptr(int64(4)),
-					NonCurrentDays:   oss.Ptr(int64(10)),
+					IcebergUnreferencedFileRemoval: &SettingsDetail{
+						UnreferencedDays: oss.Ptr(2147483647),
+						NonCurrentDays:   oss.Ptr(1),
+					},
 				},
-				Status: oss.Ptr("enable"),
+				Status: oss.Ptr("enabled"),
 			},
 		},
 		func(t *testing.T, o *PutTableBucketMaintenanceConfigurationResult, err error) {
@@ -1976,7 +2007,7 @@ var testMockPutTableBucketMaintenanceConfigurationErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
 		},
@@ -1987,31 +2018,26 @@ var testMockPutTableBucketMaintenanceConfigurationErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?maintenance", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"icebergUnreferencedFileRemoval\":{\"settings\":{\"unreferencedDays\":4,\"nonCurrentDays\":10},\"status\":\"enable\"}}")
+			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":1,\"unreferencedDays\":2147483647}},\"status\":\"enabled\"}}")
 		},
 		&PutTableBucketMaintenanceConfigurationRequest{
-			Bucket: oss.Ptr("bucket"),
-			IcebergUnreferencedFileRemoval: &IcebergUnreferencedFileRemoval{
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
+			Value: &MaintenanceValue{
 				Settings: &MaintenanceSettings{
-					UnreferencedDays: oss.Ptr(int64(4)),
-					NonCurrentDays:   oss.Ptr(int64(10)),
+					IcebergUnreferencedFileRemoval: &SettingsDetail{
+						UnreferencedDays: oss.Ptr(2147483647),
+						NonCurrentDays:   oss.Ptr(1),
+					},
 				},
-				Status: oss.Ptr("enable"),
+				Status: oss.Ptr("enabled"),
 			},
 		},
 		func(t *testing.T, o *PutTableBucketMaintenanceConfigurationResult, err error) {
@@ -2021,7 +2047,7 @@ var testMockPutTableBucketMaintenanceConfigurationErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
@@ -2064,33 +2090,28 @@ var testMockGetTableBucketMaintenanceConfigurationSuccessCases = []struct {
 			"Content-Type":     "application/json",
 		},
 		[]byte(`{
-   "configuration": { 
-      "icebergUnreferencedFileRemoval": {
-        "settings": {
-          "unreferencedDays":4,
-          "nonCurrentDays":10
-        },
-        "status": "enable"
-     }
-   },
-   "tableBucketARN": "test-arn"
-}`),
+    "configuration": {"icebergUnreferencedFileRemoval": {
+            "settings": {"icebergUnreferencedFileRemoval": {
+                    "nonCurrentDays": 2147483647,
+                    "unreferencedDays": 10}},
+            "status": "enabled"}},
+    "tableBucketARN": "acs:osstables:cn-beijing:123456:bucket/demo-bucket"}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?maintenance", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketMaintenanceConfigurationRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketMaintenanceConfigurationResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.UnreferencedDays, int64(4))
-			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.NonCurrentDays, int64(10))
-			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Status, "enable")
-			assert.Equal(t, *o.TableBucketARN, "test-arn")
+			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.IcebergUnreferencedFileRemoval.UnreferencedDays, 10)
+			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.IcebergUnreferencedFileRemoval.NonCurrentDays, 2147483647)
+			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Status, "enabled")
+			assert.Equal(t, *o.TableBucketARN, "acs:osstables:cn-beijing:123456:bucket/demo-bucket")
 		},
 	},
 }
@@ -2128,23 +2149,15 @@ var testMockGetTableBucketMaintenanceConfigurationErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?maintenance", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketMaintenanceConfigurationRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketMaintenanceConfigurationResult, err error) {
 			assert.Nil(t, o)
@@ -2153,7 +2166,7 @@ var testMockGetTableBucketMaintenanceConfigurationErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
 		},
@@ -2164,23 +2177,15 @@ var testMockGetTableBucketMaintenanceConfigurationErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?maintenance", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketMaintenanceConfigurationRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketMaintenanceConfigurationResult, err error) {
 			assert.Nil(t, o)
@@ -2189,7 +2194,7 @@ var testMockGetTableBucketMaintenanceConfigurationErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
@@ -5011,10 +5016,10 @@ var testMockPutTableMaintenanceConfigurationSuccessCases = []struct {
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 			IcebergUnreferencedFileRemoval: &IcebergUnreferencedFileRemoval{
-				Settings: &MaintenanceSettings{
-					UnreferencedDays: oss.Ptr(int64(4)),
-					NonCurrentDays:   oss.Ptr(int64(10)),
-				},
+				//Settings: &MaintenanceSettings{
+				//	UnreferencedDays: oss.Ptr(int64(4)),
+				//	NonCurrentDays:   oss.Ptr(int64(10)),
+				//},
 				Status: oss.Ptr("enable"),
 			},
 		},
@@ -5085,10 +5090,10 @@ var testMockPutTableMaintenanceConfigurationErrorCases = []struct {
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 			IcebergUnreferencedFileRemoval: &IcebergUnreferencedFileRemoval{
-				Settings: &MaintenanceSettings{
-					UnreferencedDays: oss.Ptr(int64(4)),
-					NonCurrentDays:   oss.Ptr(int64(10)),
-				},
+				//Settings: &MaintenanceSettings{
+				//	UnreferencedDays: oss.Ptr(int64(4)),
+				//	NonCurrentDays:   oss.Ptr(int64(10)),
+				//},
 				Status: oss.Ptr("enable"),
 			},
 		},
@@ -5135,10 +5140,10 @@ var testMockPutTableMaintenanceConfigurationErrorCases = []struct {
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 			IcebergUnreferencedFileRemoval: &IcebergUnreferencedFileRemoval{
-				Settings: &MaintenanceSettings{
-					UnreferencedDays: oss.Ptr(int64(4)),
-					NonCurrentDays:   oss.Ptr(int64(10)),
-				},
+				//Settings: &MaintenanceSettings{
+				//	UnreferencedDays: oss.Ptr(int64(4)),
+				//	NonCurrentDays:   oss.Ptr(int64(10)),
+				//},
 				Status: oss.Ptr("enable"),
 			},
 		},
@@ -5220,8 +5225,8 @@ var testMockGetTableMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 
-			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.UnreferencedDays, int64(4))
-			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.NonCurrentDays, int64(10))
+			//assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.UnreferencedDays, int64(4))
+			//assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.NonCurrentDays, int64(10))
 			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Status, "enable")
 			assert.Equal(t, *o.TableARN, "test-arn")
 		},

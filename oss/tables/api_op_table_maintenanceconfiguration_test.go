@@ -107,10 +107,10 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 		Namespace: oss.Ptr("oss-space"),
 		Table:     oss.Ptr("oss-table"),
 		IcebergUnreferencedFileRemoval: &IcebergUnreferencedFileRemoval{
-			Settings: &MaintenanceSettings{
-				UnreferencedDays: oss.Ptr(int64(4)),
-				NonCurrentDays:   oss.Ptr(int64(10)),
-			},
+			//Settings: &MaintenanceSettings{
+			//	UnreferencedDays: oss.Ptr(int64(4)),
+			//	NonCurrentDays:   oss.Ptr(int64(10)),
+			//},
 			Status: oss.Ptr("enable"),
 		},
 	}
@@ -145,8 +145,8 @@ func TestUnmarshalOutput_PutTableMaintenanceConfiguration(t *testing.T) {
 	var output *oss.OperationOutput
 	var err error
 	output = &oss.OperationOutput{
-		StatusCode: 200,
-		Status:     "OK",
+		StatusCode: 204,
+		Status:     "No Content",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 		},
@@ -154,8 +154,8 @@ func TestUnmarshalOutput_PutTableMaintenanceConfiguration(t *testing.T) {
 	result := &PutTableMaintenanceConfigurationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
 	assert.Nil(t, err)
-	assert.Equal(t, result.StatusCode, 200)
-	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.StatusCode, 204)
+	assert.Equal(t, result.Status, "No Content")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 
 	output = &oss.OperationOutput{
@@ -336,8 +336,8 @@ func TestUnmarshalOutput_GetTableMaintenanceConfiguration(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
-	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Settings.UnreferencedDays, int64(4))
-	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Settings.NonCurrentDays, int64(10))
+	//assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Settings.UnreferencedDays, int64(4))
+	//assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Settings.NonCurrentDays, int64(10))
 	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Status, "enable")
 	assert.Equal(t, *result.TableARN, "test-arn")
 

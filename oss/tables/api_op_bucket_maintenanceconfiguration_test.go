@@ -2,8 +2,10 @@ package tables
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
@@ -24,17 +26,16 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"maintenance": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Type))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn")
 
 	request = &PutTableBucketMaintenanceConfigurationRequest{
-		Bucket: oss.Ptr("oss-demo"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "PutTableBucketMaintenanceConfiguration",
@@ -42,23 +43,43 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"maintenance": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Type))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, IcebergUnreferencedFileRemoval.")
+	assert.Contains(t, err.Error(), "missing required field, Type.")
 
 	request = &PutTableBucketMaintenanceConfigurationRequest{
-		Bucket: oss.Ptr("oss-demo"),
-		IcebergUnreferencedFileRemoval: &IcebergUnreferencedFileRemoval{
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Type:      oss.Ptr("IcebergUnreferencedFileRemoval"),
+	}
+	input = &oss.OperationInput{
+		OpName: "PutTableBucketMaintenanceConfiguration",
+		Method: "PUT",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Type))),
+	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Value.")
+
+	request = &PutTableBucketMaintenanceConfigurationRequest{
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
+		Value: &MaintenanceValue{
 			Settings: &MaintenanceSettings{
-				UnreferencedDays: oss.Ptr(int64(4)),
-				NonCurrentDays:   oss.Ptr(int64(10)),
+				IcebergUnreferencedFileRemoval: &SettingsDetail{
+					UnreferencedDays: oss.Ptr(int(4)),
+					NonCurrentDays:   oss.Ptr(10),
+				},
 			},
-			Status: oss.Ptr("enable"),
+			Status: oss.Ptr("disabled"),
 		},
 	}
 	input = &oss.OperationInput{
@@ -67,17 +88,16 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"maintenance": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Type))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers[oss.HTTPHeaderContentType], contentTypeJSON)
-	assert.Equal(t, input.Parameters["maintenance"], "")
+	assert.Equal(t, *input.Key, "buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval")
 	body, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "{\"icebergUnreferencedFileRemoval\":{\"settings\":{\"unreferencedDays\":4,\"nonCurrentDays\":10},\"status\":\"enable\"}}")
+	assert.Equal(t, string(body), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":10,\"unreferencedDays\":4}},\"status\":\"disabled\"}}")
 }
 
 func TestUnmarshalOutput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
@@ -161,17 +181,16 @@ func TestMarshalInput_GetTableBucketMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"maintenance": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
 
 	request = &GetTableBucketMaintenanceConfigurationRequest{
-		Bucket: oss.Ptr("oss-demo"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableBucketMaintenanceConfiguration",
@@ -179,15 +198,14 @@ func TestMarshalInput_GetTableBucketMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"maintenance": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers[oss.HTTPHeaderContentType], contentTypeJSON)
-	assert.Equal(t, input.Parameters["maintenance"], "")
+	assert.Equal(t, *input.Key, "buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance")
 }
 
 func TestUnmarshalOutput_GetTableBucketMaintenanceConfiguration(t *testing.T) {
@@ -196,17 +214,12 @@ func TestUnmarshalOutput_GetTableBucketMaintenanceConfiguration(t *testing.T) {
 	var output *oss.OperationOutput
 	var err error
 	body := `{
-   "configuration": { 
-      "icebergUnreferencedFileRemoval": {
-        "settings": {
-          "unreferencedDays":4,
-          "nonCurrentDays":10
-        },
-        "status": "enable"
-     }
-   },
-   "tableBucketARN": "test-arn"
-}`
+    "configuration": {"icebergUnreferencedFileRemoval": {
+            "settings": {"icebergUnreferencedFileRemoval": {
+                    "nonCurrentDays": 2147483647,
+                    "unreferencedDays": 10}},
+            "status": "enabled"}},
+    "tableBucketARN": "acs:osstables:cn-beijing:123456:bucket/demo-bucket"}`
 	output = &oss.OperationOutput{
 		StatusCode: 200,
 		Status:     "OK",
@@ -223,10 +236,10 @@ func TestUnmarshalOutput_GetTableBucketMaintenanceConfiguration(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
-	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Settings.UnreferencedDays, int64(4))
-	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Settings.NonCurrentDays, int64(10))
-	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Status, "enable")
-	assert.Equal(t, *result.TableBucketARN, "test-arn")
+	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Settings.IcebergUnreferencedFileRemoval.UnreferencedDays, 10)
+	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Settings.IcebergUnreferencedFileRemoval.NonCurrentDays, 2147483647)
+	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Status, "enabled")
+	assert.Equal(t, *result.TableBucketARN, "acs:osstables:cn-beijing:123456:bucket/demo-bucket")
 
 	output = &oss.OperationOutput{
 		StatusCode: 404,
