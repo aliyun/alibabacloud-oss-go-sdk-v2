@@ -2238,18 +2238,18 @@ var testMockCreateNamespaceSuccessCases = []struct {
 		},
 		[]byte(`{
    "namespace": [ "space" ],
-   "tableBucketARN": "bucket-arn"
+   "tableBucketARN": "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket/?namespaces", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, "{\"namespace\":[\"space\"]}", string(requestBody))
 		},
 		&CreateNamespaceRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: []string{"space"},
 		},
 		func(t *testing.T, o *CreateNamespaceResult, err error) {
@@ -2257,7 +2257,7 @@ var testMockCreateNamespaceSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, "bucket-arn", *o.TableBucketARN)
+			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket", *o.TableBucketARN)
 			assert.Equal(t, "space", o.Namespace[0])
 		},
 	},
@@ -2296,27 +2296,22 @@ var testMockCreateNamespaceErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0002-00000040",
 		},
 		[]byte(
 			`{
-			  "Error": {
-				"Code": "SignatureDoesNotMatch",
-				"Message": "The request signature we calculated does not match the signature you provided. Check your key and signing method.",
-				"RequestId": "65467C42E001B4333337****",
-				"SignatureProvided": "RizTbeKC/QlwxINq8xEdUPowc84=",
-				"EC": "0002-00000040"
-			  }
+				"message": "The request signature we calculated does not match the signature you provided. Check your key and signing method."
 			}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket/?namespaces", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, "{\"namespace\":[\"space\"]}", string(requestBody))
 		},
 		&CreateNamespaceRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: []string{"space"},
 		},
 		func(t *testing.T, o *CreateNamespaceResult, err error) {
@@ -2326,11 +2321,10 @@ var testMockCreateNamespaceErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "SignatureDoesNotMatch", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "0002-00000040", serr.EC)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request signature we calculated does not match")
-			assert.Contains(t, serr.RequestTarget, "/?namespaces")
 		},
 	},
 	{
@@ -2339,26 +2333,22 @@ var testMockCreateNamespaceErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0015-00000104",
 		},
 		[]byte(
 			`{
-			  "Error": {
-				"Code": "BucketAlreadyExists",
-				"Message": "The requested bucket name is not available. The bucket namespace is shared by all users of the system. Please select a different name and try again.",
-				"RequestId": "6548A043CA31D****",
-				"EC": "0015-00000104"
-			  }
+				"message": "The requested bucket name is not available. The bucket namespace is shared by all users of the system. Please select a different name and try again."
 			}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket/?namespaces", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, "{\"namespace\":[\"space\"]}", string(requestBody))
 		},
 		&CreateNamespaceRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: []string{"space"},
 		},
 		func(t *testing.T, o *CreateNamespaceResult, err error) {
@@ -2368,11 +2358,10 @@ var testMockCreateNamespaceErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(409), serr.StatusCode)
-			assert.Equal(t, "BucketAlreadyExists", serr.Code)
+			assert.Equal(t, "Conflict", serr.Code)
 			assert.Equal(t, "0015-00000104", serr.EC)
-			assert.Equal(t, "6548A043CA31D****", serr.RequestID)
+			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The requested bucket name is not available. The bucket namespace is shared by all users of the system. Please select a different name and try again")
-			assert.Contains(t, serr.RequestTarget, "/?namespaces")
 		},
 	},
 }
@@ -2412,21 +2401,21 @@ var testMockGetNamespaceSuccessCases = []struct {
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
 		[]byte(`{
-   "createdAt": "2013-07-31T10:56:21.000Z",
-   "createdBy": "aliyun",
-   "namespace": ["123"],
-   "namespaceId": "123",
-   "ownerAccountId": "123456",
-   "tableBucketId": "1"
+   "createdAt": "2026-04-03T09:00:44.014637+00:00",
+   "createdBy": "1234567890",
+   "namespace": ["my_space"],
+   "namespaceId": "0a8fcd4d-a22a-42a4-a3f6-d4a88027018f",
+   "ownerAccountId": "1234567890",
+   "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5"
 }`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket/?namespaces&space", urlStr)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetNamespaceRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *GetNamespaceResult, err error) {
@@ -2436,12 +2425,12 @@ var testMockGetNamespaceSuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.Equal(t, o.Headers.Get("Content-Type"), "application/json")
-			assert.Equal(t, *o.CreatedBy, "aliyun")
-			assert.Equal(t, *o.CreatedAt, "2013-07-31T10:56:21.000Z")
-			assert.Equal(t, *o.OwnerAccountId, "123456")
-			assert.Equal(t, o.Namespace[0], "123")
-			assert.Equal(t, *o.NamespaceId, "123")
-			assert.Equal(t, *o.TableBucketId, "1")
+			assert.Equal(t, *o.CreatedBy, "1234567890")
+			assert.Equal(t, *o.CreatedAt, "2026-04-03T09:00:44.014637+00:00")
+			assert.Equal(t, *o.OwnerAccountId, "1234567890")
+			assert.Equal(t, o.Namespace[0], "my_space")
+			assert.Equal(t, *o.NamespaceId, "0a8fcd4d-a22a-42a4-a3f6-d4a88027018f")
+			assert.Equal(t, *o.TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
 		},
 	},
 }
@@ -2479,25 +2468,17 @@ var testMockGetNamespaceErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket/?namespaces&space", urlStr)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetNamespaceRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *GetNamespaceResult, err error) {
@@ -2507,7 +2488,7 @@ var testMockGetNamespaceErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
@@ -2523,12 +2504,12 @@ var testMockGetNamespaceErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket/?namespaces&space", urlStr)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetNamespaceRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *GetNamespaceResult, err error) {
@@ -2574,30 +2555,30 @@ var testMockListNamespacesSuccessCases = []struct {
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
 		[]byte(`{
-  "continuationToken": "token-123",
+  "continuationToken": "CgxteV9uYW1lc3BhY2U-",
   "Namespaces": [{
-    "createdAt": "2026-01-31T10:56:21.000Z",
-    "createdBy": "aliyun",
-    "namespace": ["demo-space"],
-    "namespaceId": "123",
-    "ownerAccountId": "123456",
-    "tableBucketId": "1"
+    "createdAt": "2026-04-03T08:54:25.205905+00:00",
+    "createdBy": "1760225545089999",
+    "namespace": ["my_namespace"],
+    "namespaceId": "22af7160-82b5-4d6a-b9fb-4d14c6e01199",
+    "ownerAccountId": "1760225545089999",
+    "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f4"
   },
   {
-     "createdAt": "2026-02-31T10:56:21.000Z",
-    "createdBy": "aliyun",
-    "namespace": ["oss-space"],
-    "namespaceId": "123457",
-    "ownerAccountId": "123456",
-    "tableBucketId": "2"
+     "createdAt": "2026-04-03T08:59:25.205905+00:00",
+    "createdBy": "1760225545089999",
+    "namespace": ["demo_namespace"],
+    "namespaceId": "22af7160-82b5-4d6a-b9fb-4d14c6e01198",
+    "ownerAccountId": "1760225545089999",
+    "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5"
   }]
 }`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?namespaces", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListNamespacesRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *ListNamespacesResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -2605,21 +2586,21 @@ var testMockListNamespacesSuccessCases = []struct {
 			assert.Equal(t, "application/json", o.Headers.Get("Content-Type"))
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, *o.ContinuationToken, "token-123")
+			assert.Equal(t, *o.ContinuationToken, "CgxteV9uYW1lc3BhY2U-")
 			assert.Equal(t, len(o.Namespaces), 2)
-			assert.Equal(t, *o.Namespaces[0].CreatedAt, "2026-01-31T10:56:21.000Z")
-			assert.Equal(t, *o.Namespaces[0].CreatedBy, "aliyun")
-			assert.Equal(t, o.Namespaces[0].Namespace[0], "demo-space")
-			assert.Equal(t, *o.Namespaces[0].NamespaceId, "123")
-			assert.Equal(t, *o.Namespaces[0].OwnerAccountId, "123456")
-			assert.Equal(t, *o.Namespaces[0].TableBucketId, "1")
+			assert.Equal(t, *o.Namespaces[0].CreatedAt, "2026-04-03T08:54:25.205905+00:00")
+			assert.Equal(t, *o.Namespaces[0].CreatedBy, "1760225545089999")
+			assert.Equal(t, o.Namespaces[0].Namespace[0], "my_namespace")
+			assert.Equal(t, *o.Namespaces[0].NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01199")
+			assert.Equal(t, *o.Namespaces[0].OwnerAccountId, "1760225545089999")
+			assert.Equal(t, *o.Namespaces[0].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f4")
 
-			assert.Equal(t, *o.Namespaces[1].CreatedAt, "2026-02-31T10:56:21.000Z")
-			assert.Equal(t, *o.Namespaces[1].CreatedBy, "aliyun")
-			assert.Equal(t, o.Namespaces[1].Namespace[0], "oss-space")
-			assert.Equal(t, *o.Namespaces[1].NamespaceId, "123457")
-			assert.Equal(t, *o.Namespaces[1].OwnerAccountId, "123456")
-			assert.Equal(t, *o.Namespaces[1].TableBucketId, "2")
+			assert.Equal(t, *o.Namespaces[1].CreatedAt, "2026-04-03T08:59:25.205905+00:00")
+			assert.Equal(t, *o.Namespaces[1].CreatedBy, "1760225545089999")
+			assert.Equal(t, o.Namespaces[1].Namespace[0], "demo_namespace")
+			assert.Equal(t, *o.Namespaces[1].NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01198")
+			assert.Equal(t, *o.Namespaces[1].OwnerAccountId, "1760225545089999")
+			assert.Equal(t, *o.Namespaces[1].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
 		},
 	},
 }
@@ -2657,23 +2638,16 @@ var testMockListNamespacesErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0002-00000040",
 		},
 		[]byte(
-			`{
-  "Error": {
-    "Code": "InvalidAccessKeyId",
-    "Message": "The OSS Access Key Id you provided does not exist in our records.",
-    "RequestId": "65467C42E001B4333337****",
-    "SignatureProvided": "RizTbeKC/QlwxINq8xEdUPowc84=",
-    "EC": "0002-00000040"
-  }
-}`),
+			`{"message": "The OSS Access Key Id you provided does not exist in our records."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?namespaces", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListNamespacesRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *ListNamespacesResult, err error) {
 			assert.Nil(t, o)
@@ -2682,7 +2656,7 @@ var testMockListNamespacesErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
 			assert.Equal(t, "0002-00000040", serr.EC)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
@@ -2697,11 +2671,11 @@ var testMockListNamespacesErrorCases = []struct {
 		},
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?namespaces", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListNamespacesRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *ListNamespacesResult, err error) {
 			assert.Nil(t, o)
@@ -2747,11 +2721,11 @@ var testMockDeleteNamespaceSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket/?namespaces&space", urlStr)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteNamespaceRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *DeleteNamespaceResult, err error) {
@@ -2796,24 +2770,16 @@ var testMockDeleteNamespaceErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchNamespace",
-    "Message": "The specified namespace does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified namespace does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket/?namespaces&space", urlStr)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteNamespaceRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *DeleteNamespaceResult, err error) {
@@ -2823,7 +2789,7 @@ var testMockDeleteNamespaceErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchNamespace", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified namespace does not exist.", serr.Message)
 			assert.Equal(t, "0015-00000101", serr.EC)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
@@ -2835,24 +2801,16 @@ var testMockDeleteNamespaceErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000301",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "BucketNotEmpty",
-    "Message": "The bucket has objects. Please delete them first.",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000301"
-  }
-}`),
+		[]byte(`{"message": "The bucket has objects. Please delete them first."}`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket/?namespaces&space", urlStr)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteNamespaceRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *DeleteNamespaceResult, err error) {
@@ -2862,7 +2820,7 @@ var testMockDeleteNamespaceErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(409), serr.StatusCode)
-			assert.Equal(t, "BucketNotEmpty", serr.Code)
+			assert.Equal(t, "Conflict", serr.Code)
 			assert.Equal(t, "The bucket has objects. Please delete them first.", serr.Message)
 			assert.Equal(t, "0015-00000301", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)

@@ -2,14 +2,14 @@ package tables
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 )
 
 type CreateNamespaceRequest struct {
-	// The name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	// The namespace.
 	Namespace []string `input:"body,namespace,json,required"`
@@ -37,23 +37,19 @@ func (c *TablesClient) CreateNamespace(ctx context.Context, request *CreateNames
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
-
 	output, err := c.InvokeOperation(ctx, input, optFns...)
 	if err != nil {
 		return nil, err
 	}
 
 	result := &CreateNamespaceResult{}
-
 	if err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
@@ -62,8 +58,7 @@ func (c *TablesClient) CreateNamespace(ctx context.Context, request *CreateNames
 }
 
 type GetNamespaceRequest struct {
-	// The name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
@@ -93,16 +88,13 @@ func (c *TablesClient) GetNamespace(ctx context.Context, request *GetNamespaceRe
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
-	input.Parameters[*request.Namespace] = ""
 	output, err := c.InvokeOperation(ctx, input, optFns...)
 	if err != nil {
 		return nil, err
@@ -116,8 +108,7 @@ func (c *TablesClient) GetNamespace(ctx context.Context, request *GetNamespaceRe
 }
 
 type ListNamespacesRequest struct {
-	// The name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	// The token from which the ListNamespaces operation must start.
 	ContinuationToken *string `input:"query,continuationToken"`
@@ -163,12 +154,10 @@ func (c *TablesClient) ListNamespaces(ctx context.Context, request *ListNamespac
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -185,8 +174,7 @@ func (c *TablesClient) ListNamespaces(ctx context.Context, request *ListNamespac
 }
 
 type DeleteNamespaceRequest struct {
-	// The name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	// The namespace to delete.
 	Namespace *string `input:"nop,namespace,required"`
@@ -210,16 +198,13 @@ func (c *TablesClient) DeleteNamespace(ctx context.Context, request *DeleteNames
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
-	input.Parameters[*request.Namespace] = ""
 	output, err := c.InvokeOperation(ctx, input, optFns...)
 	if err != nil {
 		return nil, err

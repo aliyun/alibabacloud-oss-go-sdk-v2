@@ -2,12 +2,13 @@ package tables
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,18 +26,16 @@ func TestMarshalInput_CreateNamespace(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
 
 	request = &CreateNamespaceRequest{
-		Bucket: oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "CreateNamespace",
@@ -44,20 +43,18 @@ func TestMarshalInput_CreateNamespace(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace")
 
 	request = &CreateNamespaceRequest{
-		Bucket: oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: []string{
-			"test-namespace",
+			"test_namespace",
 		},
 	}
 	input = &oss.OperationInput{
@@ -66,18 +63,16 @@ func TestMarshalInput_CreateNamespace(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
 	assert.Equal(t, input.Parameters["namespaces"], "")
 	jsonStr, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(jsonStr), "{\"namespace\":[\"test-namespace\"]}")
+	assert.Equal(t, string(jsonStr), "{\"namespace\":[\"test_namespace\"]}")
 }
 
 func TestUnmarshalOutput_CreateNamespace(t *testing.T) {
@@ -88,7 +83,7 @@ func TestUnmarshalOutput_CreateNamespace(t *testing.T) {
 
 	body := `{
    "namespace": [ "test-namespace" ],
-   "tableBucketARN": "bucket-arn"
+   "tableBucketARN": "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"
 }`
 	output = &oss.OperationOutput{
 		StatusCode: 200,
@@ -108,7 +103,8 @@ func TestUnmarshalOutput_CreateNamespace(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 	assert.Equal(t, len(result.Namespace), 1)
 	assert.Equal(t, result.Namespace[0], "test-namespace")
-	assert.Equal(t, *result.TableBucketARN, "bucket-arn")
+	assert.Equal(t, result.Namespace, []string{"test-namespace"})
+	assert.Equal(t, *result.TableBucketARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
 
 	output = &oss.OperationOutput{
 		StatusCode: 409,
@@ -141,18 +137,16 @@ func TestMarshalInput_GetNamespace(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
 
 	request = &GetNamespaceRequest{
-		Bucket: oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetNamespace",
@@ -160,19 +154,17 @@ func TestMarshalInput_GetNamespace(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace")
 
 	request = &GetNamespaceRequest{
-		Bucket:    oss.Ptr("bucket"),
-		Namespace: oss.Ptr("test-namespace"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace: oss.Ptr("test_namespace"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetNamespace",
@@ -180,17 +172,15 @@ func TestMarshalInput_GetNamespace(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
-	input.Parameters[*request.Namespace] = ""
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
-	assert.Equal(t, input.Parameters["namespaces"], "")
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/test_namespace")
 }
 
 func TestUnmarshalOutput_GetNamespace(t *testing.T) {
@@ -199,12 +189,12 @@ func TestUnmarshalOutput_GetNamespace(t *testing.T) {
 	var output *oss.OperationOutput
 	var err error
 	body := `{
-   "createdAt": "2013-07-31T10:56:21.000Z",
-   "createdBy": "aliyun",
-   "namespace": ["123"],
-   "namespaceId": "123",
-   "ownerAccountId": "123456",
-   "tableBucketId": "1"
+   "createdAt": "2026-04-03T09:00:44.014637+00:00",
+   "createdBy": "1234567890",
+   "namespace": ["my_space"],
+   "namespaceId": "0a8fcd4d-a22a-42a4-a3f6-d4a88027018f",
+   "ownerAccountId": "1234567890",
+   "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5"
 }`
 	output = &oss.OperationOutput{
 		StatusCode: 200,
@@ -222,12 +212,12 @@ func TestUnmarshalOutput_GetNamespace(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
-	assert.Equal(t, *result.CreatedBy, "aliyun")
-	assert.Equal(t, *result.CreatedAt, "2013-07-31T10:56:21.000Z")
-	assert.Equal(t, *result.OwnerAccountId, "123456")
-	assert.Equal(t, result.Namespace[0], "123")
-	assert.Equal(t, *result.NamespaceId, "123")
-	assert.Equal(t, *result.TableBucketId, "1")
+	assert.Equal(t, *result.CreatedBy, "1234567890")
+	assert.Equal(t, *result.CreatedAt, "2026-04-03T09:00:44.014637+00:00")
+	assert.Equal(t, *result.OwnerAccountId, "1234567890")
+	assert.Equal(t, result.Namespace[0], "my_space")
+	assert.Equal(t, *result.NamespaceId, "0a8fcd4d-a22a-42a4-a3f6-d4a88027018f")
+	assert.Equal(t, *result.TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
 }
 
 func TestMarshalInput_ListNamespaces(t *testing.T) {
@@ -244,18 +234,16 @@ func TestMarshalInput_ListNamespaces(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
 
 	request = &ListNamespacesRequest{
-		Bucket: oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "ListNamespaces",
@@ -263,17 +251,15 @@ func TestMarshalInput_ListNamespaces(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 
 	request = &ListNamespacesRequest{
-		Bucket:        oss.Ptr("bucket"),
+		BucketArn:     oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		MaxNamespaces: 10,
 		Prefix:        oss.Ptr("/"),
 	}
@@ -283,19 +269,17 @@ func TestMarshalInput_ListNamespaces(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["maxNamespaces"], "10")
 	assert.Equal(t, input.Parameters["prefix"], "/")
 
 	request = &ListNamespacesRequest{
-		Bucket:            oss.Ptr("bucket"),
+		BucketArn:         oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		MaxNamespaces:     10,
 		Prefix:            oss.Ptr("/"),
 		ContinuationToken: oss.Ptr("123"),
@@ -306,13 +290,17 @@ func TestMarshalInput_ListNamespaces(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["maxNamespaces"], "10")
 	assert.Equal(t, input.Parameters["prefix"], "/")
 	assert.Equal(t, input.Parameters["continuationToken"], "123")
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket")
 }
 
 func TestUnmarshalOutput_ListNamespaces(t *testing.T) {
@@ -322,22 +310,22 @@ func TestUnmarshalOutput_ListNamespaces(t *testing.T) {
 	var err error
 
 	body := `{
-  "continuationToken": "token-123",
+  "continuationToken": "CgxteV9uYW1lc3BhY2U-",
   "Namespaces": [{
-    "createdAt": "2026-01-31T10:56:21.000Z",
-    "createdBy": "aliyun",
-    "namespace": ["demo-space"],
-    "namespaceId": "123",
-    "ownerAccountId": "123456",
-    "tableBucketId": "1"
+    "createdAt": "2026-04-03T08:54:25.205905+00:00",
+    "createdBy": "1760225545089999",
+    "namespace": ["my_namespace"],
+    "namespaceId": "22af7160-82b5-4d6a-b9fb-4d14c6e01199",
+    "ownerAccountId": "1760225545089999",
+    "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f4"
   },
   {
-     "createdAt": "2026-02-31T10:56:21.000Z",
-    "createdBy": "aliyun",
-    "namespace": ["oss-space"],
-    "namespaceId": "123457",
-    "ownerAccountId": "123456",
-    "tableBucketId": "2"
+     "createdAt": "2026-04-03T08:59:25.205905+00:00",
+    "createdBy": "1760225545089999",
+    "namespace": ["demo_namespace"],
+    "namespaceId": "22af7160-82b5-4d6a-b9fb-4d14c6e01198",
+    "ownerAccountId": "1760225545089999",
+    "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5"
   }]
 }`
 
@@ -357,21 +345,21 @@ func TestUnmarshalOutput_ListNamespaces(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "5374A2880232A65C2300****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
-	assert.Equal(t, *result.ContinuationToken, "token-123")
+	assert.Equal(t, *result.ContinuationToken, "CgxteV9uYW1lc3BhY2U-")
 	assert.Equal(t, len(result.Namespaces), 2)
-	assert.Equal(t, *result.Namespaces[0].CreatedAt, "2026-01-31T10:56:21.000Z")
-	assert.Equal(t, *result.Namespaces[0].CreatedBy, "aliyun")
-	assert.Equal(t, result.Namespaces[0].Namespace[0], "demo-space")
-	assert.Equal(t, *result.Namespaces[0].NamespaceId, "123")
-	assert.Equal(t, *result.Namespaces[0].OwnerAccountId, "123456")
-	assert.Equal(t, *result.Namespaces[0].TableBucketId, "1")
+	assert.Equal(t, *result.Namespaces[0].CreatedAt, "2026-04-03T08:54:25.205905+00:00")
+	assert.Equal(t, *result.Namespaces[0].CreatedBy, "1760225545089999")
+	assert.Equal(t, result.Namespaces[0].Namespace[0], "my_namespace")
+	assert.Equal(t, *result.Namespaces[0].NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01199")
+	assert.Equal(t, *result.Namespaces[0].OwnerAccountId, "1760225545089999")
+	assert.Equal(t, *result.Namespaces[0].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f4")
 
-	assert.Equal(t, *result.Namespaces[1].CreatedAt, "2026-02-31T10:56:21.000Z")
-	assert.Equal(t, *result.Namespaces[1].CreatedBy, "aliyun")
-	assert.Equal(t, result.Namespaces[1].Namespace[0], "oss-space")
-	assert.Equal(t, *result.Namespaces[1].NamespaceId, "123457")
-	assert.Equal(t, *result.Namespaces[1].OwnerAccountId, "123456")
-	assert.Equal(t, *result.Namespaces[1].TableBucketId, "2")
+	assert.Equal(t, *result.Namespaces[1].CreatedAt, "2026-04-03T08:59:25.205905+00:00")
+	assert.Equal(t, *result.Namespaces[1].CreatedBy, "1760225545089999")
+	assert.Equal(t, result.Namespaces[1].Namespace[0], "demo_namespace")
+	assert.Equal(t, *result.Namespaces[1].NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01198")
+	assert.Equal(t, *result.Namespaces[1].OwnerAccountId, "1760225545089999")
+	assert.Equal(t, *result.Namespaces[1].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
 
 	output = &oss.OperationOutput{
 		StatusCode: 403,
@@ -428,18 +416,16 @@ func TestMarshalInput_DeleteNamespace(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
 
 	request = &DeleteNamespaceRequest{
-		Bucket: oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteNamespace",
@@ -447,19 +433,17 @@ func TestMarshalInput_DeleteNamespace(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &DeleteNamespaceRequest{
-		Bucket:    oss.Ptr("bucket"),
-		Namespace: oss.Ptr("oss-space"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace: oss.Ptr("oss_space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteNamespace",
@@ -467,15 +451,15 @@ func TestMarshalInput_DeleteNamespace(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"namespaces": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"namespaces"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/oss_space")
 }
 
 func TestUnmarshalOutput_DeleteNamespace(t *testing.T) {
