@@ -43,6 +43,12 @@ func sortQuery(r *http.Request) string {
 	return u.String()
 }
 
+func addIsBucketArn() oss.OperationMetadata {
+	om := oss.OperationMetadata{}
+	om.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	return om
+}
+
 func testSetupMockServer(t *testing.T, statusCode int, headers map[string]string, body []byte,
 	chkfunc func(t *testing.T, r *http.Request)) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -79,12 +85,12 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/buckets", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"},\"name\":\"bucket\"}", string(requestBody))
+			assert.Equal(t, "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"},\"name\":\"bucket\"}", string(requestBody))
 
 		},
 		&oss.OperationInput{
@@ -93,8 +99,8 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 			Headers: map[string]string{
 				oss.HTTPHeaderContentType: contentTypeJSON,
 			},
-			Bucket: oss.Ptr("bucket"),
-			Body:   strings.NewReader(`{"encryptionConfiguration":{"kmsKeyArn":"arn","sseAlgorithm":"AES256"},"name":"bucket"}`),
+			Key:  oss.Ptr("buckets"),
+			Body: strings.NewReader(`{"encryptionConfiguration":{"kmsKeyArn":"","sseAlgorithm":"AES256"},"name":"bucket"}`),
 		},
 		func(t *testing.T, o *oss.OperationOutput) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -120,7 +126,7 @@ var testTablesInvokeOperationAnonymousCases = []struct {
    "type": "oss"
 }`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket/demo-bucket", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 		},
@@ -130,7 +136,9 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 			Headers: map[string]string{
 				oss.HTTPHeaderContentType: contentTypeJSON,
 			},
-			Key: oss.Ptr("buckets/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Bucket:     oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Key:        oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"))),
+			OpMetadata: addIsBucketArn(),
 		},
 		func(t *testing.T, o *oss.OperationOutput) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -152,7 +160,7 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket/demo-bucket", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&oss.OperationInput{
@@ -161,7 +169,9 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 			Headers: map[string]string{
 				oss.HTTPHeaderContentType: contentTypeJSON,
 			},
-			Key: oss.Ptr("buckets/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Bucket:     oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Key:        oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"))),
+			OpMetadata: addIsBucketArn(),
 		},
 		func(t *testing.T, o *oss.OperationOutput) {
 			assert.Equal(t, 204, o.StatusCode)
@@ -278,7 +288,6 @@ var testTablesInvokeOperationErrorCases = []struct {
 			assert.Equal(t, "Method Not Allowed", serr.Code)
 			assert.Equal(t, "0016-00000502", serr.EC)
 			assert.Equal(t, "57ABD896CCB80C366955****", serr.RequestID)
-			fmt.Printf("serr.Message:%#v\n", serr.Message)
 			assert.Contains(t, serr.Message, "The specified method is not allowed against this resource.")
 		},
 	},
@@ -982,15 +991,15 @@ var testMockPutTableBucketEncryptionSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket/?encryption", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"}}")
+			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"}}")
 		},
 		&PutTableBucketEncryptionRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			EncryptionConfiguration: &EncryptionConfiguration{
-				KmsKeyArn:    oss.Ptr("arn"),
+				KmsKeyArn:    oss.Ptr(""),
 				SseAlgorithm: oss.Ptr("AES256"),
 			},
 		},
@@ -1035,28 +1044,20 @@ var testMockPutTableBucketEncryptionErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket/?encryption", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"}}")
+			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"}}")
 		},
 		&PutTableBucketEncryptionRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			EncryptionConfiguration: &EncryptionConfiguration{
-				KmsKeyArn:    oss.Ptr("arn"),
+				KmsKeyArn:    oss.Ptr(""),
 				SseAlgorithm: oss.Ptr("AES256"),
 			},
 		},
@@ -1067,7 +1068,7 @@ var testMockPutTableBucketEncryptionErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "0015-00000101", serr.EC)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
@@ -1079,28 +1080,22 @@ var testMockPutTableBucketEncryptionErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
 		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
+    "message": "UserDisable"
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/bucket/?encryption", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"}}")
+			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"}}")
 		},
 		&PutTableBucketEncryptionRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			EncryptionConfiguration: &EncryptionConfiguration{
-				KmsKeyArn:    oss.Ptr("arn"),
+				KmsKeyArn:    oss.Ptr(""),
 				SseAlgorithm: oss.Ptr("AES256"),
 			},
 		},
@@ -1111,7 +1106,7 @@ var testMockPutTableBucketEncryptionErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
@@ -1154,24 +1149,24 @@ var testMockGetTableBucketEncryptionSuccessCases = []struct {
 		},
 		[]byte(`{
    "encryptionConfiguration": { 
-      "kmsKeyArn": "test-arn",
+      "kmsKeyArn": "",
       "sseAlgorithm": "AES256"
    }
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/bucket/?encryption", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketEncryptionRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketEncryptionResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, *o.EncryptionConfiguration.KmsKeyArn, "test-arn")
+			assert.Equal(t, *o.EncryptionConfiguration.KmsKeyArn, "")
 			assert.Equal(t, *o.EncryptionConfiguration.SseAlgorithm, "AES256")
 		},
 	},
@@ -1210,23 +1205,15 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/?encryption", r.URL.String())
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketEncryptionRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketEncryptionResult, err error) {
 			assert.Nil(t, o)
@@ -1235,7 +1222,7 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "0015-00000101", serr.EC)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
@@ -1247,24 +1234,15 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?encryption", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 		},
 		&GetTableBucketEncryptionRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketEncryptionResult, err error) {
 			assert.Nil(t, o)
@@ -1273,7 +1251,7 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
@@ -1289,11 +1267,10 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?encryption", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 		},
 		&GetTableBucketEncryptionRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketEncryptionResult, err error) {
 			assert.Nil(t, o)
@@ -1341,10 +1318,10 @@ var testMockDeleteTableBucketEncryptionSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?encryption", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
 		},
 		&DeleteTableBucketEncryptionRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketEncryptionResult, err error) {
 			assert.Equal(t, 204, o.StatusCode)
@@ -1389,24 +1366,16 @@ var testMockDeleteTableBucketEncryptionErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?encryption", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
 		},
 		&DeleteTableBucketEncryptionRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketEncryptionResult, err error) {
 			assert.Nil(t, o)
@@ -1415,7 +1384,7 @@ var testMockDeleteTableBucketEncryptionErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
 		},
@@ -1426,24 +1395,16 @@ var testMockDeleteTableBucketEncryptionErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?encryption", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
 		},
 		&DeleteTableBucketEncryptionRequest{
-			Bucket: oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketEncryptionResult, err error) {
 			assert.Nil(t, o)
@@ -1452,7 +1413,7 @@ var testMockDeleteTableBucketEncryptionErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
