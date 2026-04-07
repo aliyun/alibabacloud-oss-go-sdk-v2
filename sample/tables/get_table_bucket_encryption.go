@@ -17,7 +17,7 @@ var (
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
-	flag.StringVar(&bucketArn, "bucket-arn", "", "The bucket arn of the bucket.")
+	flag.StringVar(&bucketArn, "bucket-arn", "", "The arn of the table bucket.")
 }
 
 func main() {
