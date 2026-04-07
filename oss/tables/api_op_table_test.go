@@ -2,12 +2,13 @@ package tables
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,18 +26,16 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
 
 	request = &CreateTableRequest{
-		Bucket: oss.Ptr("oss-demo"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "CreateTable",
@@ -44,18 +43,16 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Namespace")
+	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &CreateTableRequest{
-		Bucket:    oss.Ptr("oss-demo"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
@@ -64,41 +61,17 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Format")
+	assert.Contains(t, err.Error(), "missing required field, Table.")
 
 	request = &CreateTableRequest{
-		Bucket:    oss.Ptr("oss-demo"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
-		Format:    oss.Ptr("iceberg"),
-	}
-	input = &oss.OperationInput{
-		OpName: "CreateTable",
-		Method: "PUT",
-		Headers: map[string]string{
-			oss.HTTPHeaderContentType: contentTypeJSON,
-		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-		},
-		Bucket: request.Bucket,
-	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Table")
-
-	request = &CreateTableRequest{
-		Bucket:    oss.Ptr("oss-demo"),
-		Namespace: oss.Ptr("space"),
-		Format:    oss.Ptr("iceberg"),
 		Table:     oss.Ptr("table"),
 	}
 	input = &oss.OperationInput{
@@ -107,21 +80,19 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Metadata")
+	assert.Contains(t, err.Error(), "missing required field, Format.")
 
 	request = &CreateTableRequest{
-		Bucket:    oss.Ptr("oss-demo"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
-		Format:    oss.Ptr("iceberg"),
 		Table:     oss.Ptr("table"),
+		Format:    oss.Ptr("ICEBERG"),
 	}
 	input = &oss.OperationInput{
 		OpName: "CreateTable",
@@ -129,59 +100,22 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Metadata")
-
-	request = &CreateTableRequest{
-		Bucket:    oss.Ptr("oss-demo"),
-		Namespace: oss.Ptr("space"),
-		Format:    oss.Ptr("iceberg"),
-		Table:     oss.Ptr("table"),
-		Metadata: &TableMetadata{
-			Iceberg: &MetadataIceberg{
-				Schema: map[string]any{
-					"fields": []map[string]any{
-						{
-							"name": "id", "type": "int", "required": true,
-						},
-						{
-							"name": "name", "type": "string",
-						},
-					},
-				},
-			},
-		},
-	}
-	input = &oss.OperationInput{
-		OpName: "CreateTable",
-		Method: "PUT",
-		Headers: map[string]string{
-			oss.HTTPHeaderContentType: contentTypeJSON,
-		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-		},
-		Bucket: request.Bucket,
-	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
-	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space")
 	jsonStr, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(jsonStr), "{\"format\":\"iceberg\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\"}")
+	assert.Equal(t, string(jsonStr), "{\"format\":\"ICEBERG\",\"name\":\"table\"}")
 
 	request = &CreateTableRequest{
-		Bucket:    oss.Ptr("oss-demo"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
-		Format:    oss.Ptr("iceberg"),
 		Table:     oss.Ptr("table"),
+		Format:    oss.Ptr("ICEBERG"),
 		Metadata: &TableMetadata{
 			Iceberg: &MetadataIceberg{
 				Schema: map[string]any{
@@ -197,11 +131,8 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 			},
 		},
 		EncryptionConfiguration: &EncryptionConfiguration{
-			KmsKeyArn:    oss.Ptr("arn"),
+			KmsKeyArn:    oss.Ptr(""),
 			SseAlgorithm: oss.Ptr("AES256"),
-		},
-		Tags: map[string]any{
-			"k1": "v1", "k2": "v2",
 		},
 	}
 	input = &oss.OperationInput{
@@ -210,17 +141,17 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space")
 	jsonStr, _ = io.ReadAll(input.Body)
-	assert.Equal(t, string(jsonStr), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"},\"format\":\"iceberg\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\",\"tags\":{\"k1\":\"v1\",\"k2\":\"v2\"}}")
+	assert.Equal(t, string(jsonStr), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"},\"format\":\"ICEBERG\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\"}")
 }
 
 func TestUnmarshalOutput_CreateTable(t *testing.T) {
@@ -230,8 +161,8 @@ func TestUnmarshalOutput_CreateTable(t *testing.T) {
 	var err error
 
 	body := `{
-   "tableARN": "acs:osstable:cn-hangzhou:123:bucket/table_name/table/123456",
-   "versionToken": "aaabbb"
+   "tableARN": "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/16dc6c23-7a64-4f55-af2f-ee243524a5cc",
+   "versionToken": "8c651fb37897499092bd95e1bc2816a9"
 }`
 	output = &oss.OperationOutput{
 		StatusCode: 200,
@@ -249,21 +180,12 @@ func TestUnmarshalOutput_CreateTable(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
-	assert.Equal(t, oss.ToString(result.TableARN), "acs:osstable:cn-hangzhou:123:bucket/table_name/table/123456")
-	assert.Equal(t, oss.ToString(result.VersionToken), "aaabbb")
+	assert.Equal(t, oss.ToString(result.TableArn), "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/16dc6c23-7a64-4f55-af2f-ee243524a5cc")
+	assert.Equal(t, oss.ToString(result.VersionToken), "8c651fb37897499092bd95e1bc2816a9")
 
-	body = `{
-  "Error": {
-    "Code": "AccessDenied",
-    "Message": "AccessDenied",
-    "RequestId": "568D5566F2D0F89F5C0E****",
-    "HostId": "test.oss.aliyuncs.com"
-  }
-}`
 	output = &oss.OperationOutput{
 		StatusCode: 403,
 		Status:     "AccessDenied",
-		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 			"Content-Type":     {"application/json"},
@@ -274,6 +196,22 @@ func TestUnmarshalOutput_CreateTable(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, resultErr.StatusCode, 403)
 	assert.Equal(t, resultErr.Status, "AccessDenied")
+	assert.Equal(t, resultErr.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, resultErr.Headers.Get("Content-Type"), "application/json")
+
+	output = &oss.OperationOutput{
+		StatusCode: 400,
+		Status:     "Bad Request",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/json"},
+		},
+	}
+	resultErr = &CreateTableResult{}
+	err = c.unmarshalOutput(resultErr, output, unmarshalBodyJsonStyle)
+	assert.Nil(t, err)
+	assert.Equal(t, resultErr.StatusCode, 400)
+	assert.Equal(t, resultErr.Status, "Bad Request")
 	assert.Equal(t, resultErr.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, resultErr.Headers.Get("Content-Type"), "application/json")
 }
@@ -292,17 +230,14 @@ func TestMarshalInput_GetTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"get-table": "",
-		},
-		Bucket: request.Bucket,
+		Key: oss.Ptr("get-table"),
 	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	err = checkGetTableRequest(request)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
 
 	request = &GetTableRequest{
-		Bucket: oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTable",
@@ -310,38 +245,15 @@ func TestMarshalInput_GetTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"get-table": "",
-		},
-		Bucket: request.Bucket,
+		Key: oss.Ptr("get-table"),
 	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	err = checkGetTableRequest(request)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Table.")
+	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
 
 	request = &GetTableRequest{
-		Bucket: oss.Ptr("bucket"),
-		Table:  oss.Ptr("table"),
-	}
-	input = &oss.OperationInput{
-		OpName: "GetTable",
-		Method: "GET",
-		Headers: map[string]string{
-			oss.HTTPHeaderContentType: contentTypeJSON,
-		},
-		Parameters: map[string]string{
-			"get-table": "",
-		},
-		Bucket: request.Bucket,
-	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Namespace.")
-
-	request = &GetTableRequest{
-		Bucket:    oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Table:     oss.Ptr("table"),
-		Namespace: oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTable",
@@ -349,20 +261,15 @@ func TestMarshalInput_GetTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"get-table": "",
-		},
-		Bucket: request.Bucket,
+		Key: oss.Ptr("get-table"),
 	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	err = checkGetTableRequest(request)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, TableArn.")
+	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
 
 	request = &GetTableRequest{
-		Bucket:    oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Table:     oss.Ptr("table"),
-		Namespace: oss.Ptr("space"),
-		TableArn:  oss.Ptr("table-arn"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTable",
@@ -370,21 +277,15 @@ func TestMarshalInput_GetTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"get-table": "",
-		},
-		Bucket: request.Bucket,
+		Key: oss.Ptr("get-table"),
 	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	err = checkGetTableRequest(request)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
+	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
 
 	request = &GetTableRequest{
-		Bucket:         oss.Ptr("bucket"),
-		Table:          oss.Ptr("table"),
-		Namespace:      oss.Ptr("space"),
-		TableArn:       oss.Ptr("table-arn"),
-		TableBucketARN: oss.Ptr("table-bucket-arn"),
+		TableArn:  oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTable",
@@ -392,17 +293,53 @@ func TestMarshalInput_GetTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"get-table": "",
-		},
-		Bucket: request.Bucket,
+		Key: oss.Ptr("get-table"),
 	}
+	err = checkGetTableRequest(request)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
+
+	request = &GetTableRequest{
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace: oss.Ptr("space"),
+		Table:     oss.Ptr("table"),
+	}
+	input = &oss.OperationInput{
+		OpName: "GetTable",
+		Method: "GET",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Key: oss.Ptr("get-table"),
+	}
+	err = checkGetTableRequest(request)
+	assert.Nil(t, err)
+	input.Bucket = parseBucketArn(request)
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
-	assert.Equal(t, input.Parameters["name"], "table")
-	assert.Equal(t, input.Parameters["namespace"], "space")
-	assert.Equal(t, input.Parameters["tableArn"], "table-arn")
-	assert.Equal(t, input.Parameters["tableBucketARN"], "table-bucket-arn")
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "get-table")
+
+	request = &GetTableRequest{
+		TableArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
+	}
+	input = &oss.OperationInput{
+		OpName: "GetTable",
+		Method: "GET",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Key: oss.Ptr("get-table"),
+	}
+	err = checkGetTableRequest(request)
+	assert.Nil(t, err)
+	input.Bucket = parseBucketArn(request)
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "get-table")
 }
 
 func TestUnmarshalOutput_GetTable(t *testing.T) {
@@ -411,22 +348,21 @@ func TestUnmarshalOutput_GetTable(t *testing.T) {
 	var output *oss.OperationOutput
 	var err error
 	body := `{
-   "createdAt": "2026-02-31T10:56:21.000Z",
-   "createdBy": "oss-create",
-   "format": "demo-format",
-   "metadataLocation": "location",
-   "modifiedAt": "2026-03-01T10:56:21.000Z",
-   "modifiedBy": "oss-modify",
-   "name": "table",
-   "namespace": [ "space" ],
-   "namespaceId": "space-01",
-   "ownerAccountId": "123",
-   "tableARN": "acs:osstable:cn-hangzhou:123:bucket/table_bucket/table/table_123",
-   "tableBucketId": "table_bucket_123",
-   "type": "oss",
-   "versionToken": "aaa",
-   "warehouseLocation": "bbb"
-}`
+    "createdAt": "2026-04-07T05:27:18.397920+00:00",
+    "createdBy": "1234567890",
+    "format": "ICEBERG",
+    "metadataLocation": "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss/metadata/00000-edb683a9-ce46-492a-a495-35e5b2f7a649.metadata.json",
+    "modifiedAt": "2026-04-07T05:27:18.397920+00:00",
+    "modifiedBy": "1234567890",
+    "name": "my_table",
+    "namespace": ["my_namespace"],
+    "namespaceId": "22af7160-82b5-4d6a-b9fb-4d14c6e01198",
+    "ownerAccountId": "1234567890",
+    "tableARN": "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9",
+    "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5",
+    "type": "customer",
+    "versionToken": "365f934c6e234f35ace5ae48f0a0d871",
+    "warehouseLocation": "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss"}`
 	output = &oss.OperationOutput{
 		StatusCode: 200,
 		Status:     "OK",
@@ -443,34 +379,25 @@ func TestUnmarshalOutput_GetTable(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
-	assert.Equal(t, *result.CreatedAt, "2026-02-31T10:56:21.000Z")
-	assert.Equal(t, *result.CreatedBy, "oss-create")
-	assert.Equal(t, *result.Format, "demo-format")
-	assert.Equal(t, *result.MetadataLocation, "location")
-	assert.Equal(t, *result.ModifiedAt, "2026-03-01T10:56:21.000Z")
-	assert.Equal(t, *result.ModifiedBy, "oss-modify")
-	assert.Equal(t, *result.Name, "table")
-	assert.Equal(t, result.Namespace[0], "space")
-	assert.Equal(t, *result.NamespaceId, "space-01")
-	assert.Equal(t, *result.OwnerAccountId, "123")
-	assert.Equal(t, *result.TableARN, "acs:osstable:cn-hangzhou:123:bucket/table_bucket/table/table_123")
-	assert.Equal(t, *result.TableBucketId, "table_bucket_123")
-	assert.Equal(t, *result.Type, "oss")
-	assert.Equal(t, *result.VersionToken, "aaa")
-	assert.Equal(t, *result.WarehouseLocation, "bbb")
+	assert.Equal(t, *result.CreatedAt, "2026-04-07T05:27:18.397920+00:00")
+	assert.Equal(t, *result.CreatedBy, "1234567890")
+	assert.Equal(t, *result.Format, "ICEBERG")
+	assert.Equal(t, *result.MetadataLocation, "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss/metadata/00000-edb683a9-ce46-492a-a495-35e5b2f7a649.metadata.json")
+	assert.Equal(t, *result.ModifiedAt, "2026-04-07T05:27:18.397920+00:00")
+	assert.Equal(t, *result.ModifiedBy, "1234567890")
+	assert.Equal(t, *result.Name, "my_table")
+	assert.Equal(t, result.Namespace[0], "my_namespace")
+	assert.Equal(t, *result.NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01198")
+	assert.Equal(t, *result.OwnerAccountId, "1234567890")
+	assert.Equal(t, *result.TableARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
+	assert.Equal(t, *result.TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
+	assert.Equal(t, *result.Type, "customer")
+	assert.Equal(t, *result.VersionToken, "365f934c6e234f35ace5ae48f0a0d871")
+	assert.Equal(t, *result.WarehouseLocation, "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss")
 
-	body = `{
-  "Error": {
-    "Code": "AccessDenied",
-    "Message": "AccessDenied",
-    "RequestId": "568D5566F2D0F89F5C0E****",
-    "HostId": "test.oss.aliyuncs.com"
-  }
-}`
 	output = &oss.OperationOutput{
 		StatusCode: 403,
 		Status:     "AccessDenied",
-		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 			"Content-Type":     {"application/json"},
@@ -499,14 +426,16 @@ func TestMarshalInput_ListTables(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
 
 	request = &ListTablesRequest{
-		Bucket: oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "ListTables",
@@ -514,14 +443,16 @@ func TestMarshalInput_ListTables(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &ListTablesRequest{
-		Bucket:    oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
@@ -530,14 +461,17 @@ func TestMarshalInput_ListTables(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
-	input.OpMetadata.Set(signer.SubResource, []string{"get-table"})
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket")
 
 	request = &ListTablesRequest{
-		Bucket:            oss.Ptr("bucket"),
+		BucketArn:         oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace:         oss.Ptr("space"),
 		ContinuationToken: oss.Ptr("token"),
 		MaxTables:         int32(1000),
@@ -549,10 +483,14 @@ func TestMarshalInput_ListTables(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket")
 	assert.Equal(t, input.Parameters["namespace"], "space")
 	assert.Equal(t, input.Parameters["continuationToken"], "token")
 	assert.Equal(t, input.Parameters["maxTables"], "1000")
@@ -565,30 +503,21 @@ func TestUnmarshalOutput_ListTables(t *testing.T) {
 	var output *oss.OperationOutput
 	var err error
 	body := `{
-  "continuationToken": "AAMA-EFRSURBSGk2VFNsQXNjVHQ2QU05UU5YN2xkME53VWI3U1B5RTl6WEh1UTRVc",
-  "tables": [
-    {
-      "createdAt": "2026-01-26T03:11:51.527997035Z",
-      "modifiedAt": "2026-01-26T03:11:51.527997035Z",
-      "name": "example_table",
-      "namespace": [
-        "my_namespace"
-      ],
-      "tableARN": "arn:aws:s3tables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/7568a090-50f8-4808-8c8d-930a2c264076",
-      "type": "customer"
-    },
-    {
-      "createdAt": "2026-01-26T03:16:46.622650810Z",
-      "modifiedAt": "2026-01-26T03:16:46.622650810Z",
-      "name": "example_table1",
-      "namespace": [
-        "my_namespace"
-      ],
-      "tableARN": "arn:aws:s3tables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/757c17c1-532e-4a45-b5b3-d8783374fc2a",
-      "type": "customer"
-    }
-  ]
-}`
+    "continuationToken": "Ci9teV90YWJsZV8xQGViOTk4ZjEwLWQyMGMtNGYyMi05YTc2LWVkNjRlOTY2OGY1Ng--",
+    "tables": [{
+            "createdAt": "2026-04-07T02:15:12.186626+00:00",
+            "modifiedAt": "2026-04-07T02:15:12.186626+00:00",
+            "name": "my_table",
+            "namespace": ["my_namespace"],
+            "tableARN": "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/0e5f5125-ec94-4a82-a630-d6feade09217",
+            "type": "customer"},
+        {
+            "createdAt": "2026-04-07T02:39:11.988947+00:00",
+            "modifiedAt": "2026-04-07T02:39:11.988947+00:00",
+            "name": "my_table_1",
+            "namespace": ["my_namespace"],
+            "tableARN": "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/eb998f10-d20c-4f22-9a76-ed64e9668f56",
+            "type": "customer"}]}`
 	output = &oss.OperationOutput{
 		StatusCode: 200,
 		Status:     "OK",
@@ -606,30 +535,23 @@ func TestUnmarshalOutput_ListTables(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 
-	assert.Equal(t, *result.ContinuationToken, "AAMA-EFRSURBSGk2VFNsQXNjVHQ2QU05UU5YN2xkME53VWI3U1B5RTl6WEh1UTRVc")
+	assert.Equal(t, *result.ContinuationToken, "Ci9teV90YWJsZV8xQGViOTk4ZjEwLWQyMGMtNGYyMi05YTc2LWVkNjRlOTY2OGY1Ng--")
 	assert.Equal(t, len(result.Tables), 2)
-	assert.Equal(t, *result.Tables[0].CreatedAt, "2026-01-26T03:11:51.527997035Z")
-	assert.Equal(t, *result.Tables[0].ModifiedAt, "2026-01-26T03:11:51.527997035Z")
-	assert.Equal(t, *result.Tables[0].Name, "example_table")
+	assert.Equal(t, *result.Tables[0].CreatedAt, "2026-04-07T02:15:12.186626+00:00")
+	assert.Equal(t, *result.Tables[0].ModifiedAt, "2026-04-07T02:15:12.186626+00:00")
+	assert.Equal(t, *result.Tables[0].Name, "my_table")
 	assert.Equal(t, result.Tables[0].Namespace[0], "my_namespace")
-	assert.Equal(t, *result.Tables[0].TableARN, "arn:aws:s3tables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/7568a090-50f8-4808-8c8d-930a2c264076")
+	assert.Equal(t, *result.Tables[0].TableARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/0e5f5125-ec94-4a82-a630-d6feade09217")
 	assert.Equal(t, *result.Tables[0].Type, "customer")
 
-	assert.Equal(t, *result.Tables[1].CreatedAt, "2026-01-26T03:16:46.622650810Z")
-	assert.Equal(t, *result.Tables[1].ModifiedAt, "2026-01-26T03:16:46.622650810Z")
-	assert.Equal(t, *result.Tables[1].Name, "example_table1")
+	assert.Equal(t, *result.Tables[1].CreatedAt, "2026-04-07T02:39:11.988947+00:00")
+	assert.Equal(t, *result.Tables[1].ModifiedAt, "2026-04-07T02:39:11.988947+00:00")
+	assert.Equal(t, *result.Tables[1].Name, "my_table_1")
 	assert.Equal(t, result.Tables[1].Namespace[0], "my_namespace")
-	assert.Equal(t, *result.Tables[1].TableARN, "arn:aws:s3tables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/757c17c1-532e-4a45-b5b3-d8783374fc2a")
+	assert.Equal(t, *result.Tables[1].TableARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/eb998f10-d20c-4f22-9a76-ed64e9668f56")
 	assert.Equal(t, *result.Tables[1].Type, "customer")
 
-	body = `{
-  "Error": {
-    "Code": "AccessDenied",
-    "Message": "AccessDenied",
-    "RequestId": "568D5566F2D0F89F5C0E****",
-    "HostId": "test.oss.aliyuncs.com"
-  }
-}`
+	body = `{"message": "AccessDenied"}`
 	output = &oss.OperationOutput{
 		StatusCode: 403,
 		Status:     "AccessDenied",
@@ -658,76 +580,73 @@ func TestMarshalInput_DeleteTable(t *testing.T) {
 	request = &DeleteTableRequest{}
 	input = &oss.OperationInput{
 		OpName: "DeleteTable",
-		Method: "GET",
+		Method: "DELETE",
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
 
 	request = &DeleteTableRequest{
-		Bucket: oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteTable",
-		Method: "GET",
+		Method: "DELETE",
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &DeleteTableRequest{
-		Bucket:    oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteTable",
-		Method: "GET",
+		Method: "DELETE",
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Table.")
 
 	request = &DeleteTableRequest{
-		Bucket:       oss.Ptr("bucket"),
+		BucketArn:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace:    oss.Ptr("space"),
 		Table:        oss.Ptr("table"),
 		VersionToken: oss.Ptr("version_token"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteTable",
-		Method: "GET",
+		Method: "DELETE",
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables": "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
-	assert.Equal(t, input.Parameters["tables"], "")
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table")
 	assert.Equal(t, input.Parameters["versionToken"], "version_token")
 }
 
@@ -782,20 +701,15 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"rename":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	err = checkRenameTableRequest(request)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "either NewTable or NewNamespace must be provided")
 
 	request = &RenameTableRequest{
-		Bucket: oss.Ptr("bucket"),
+		NewTable: oss.Ptr("new_table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",
@@ -803,21 +717,38 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"rename":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	err = checkRenameTableRequest(request)
+	assert.Nil(t, err)
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
+
+	request = &RenameTableRequest{
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		NewTable:  oss.Ptr("new_table"),
+	}
+	input = &oss.OperationInput{
+		OpName: "RenameTable",
+		Method: "PUT",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
+	}
+	err = checkRenameTableRequest(request)
+	assert.Nil(t, err)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &RenameTableRequest{
-		Bucket:    oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
+		NewTable:  oss.Ptr("new_table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",
@@ -825,43 +756,17 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"rename":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	err = checkRenameTableRequest(request)
+	assert.Nil(t, err)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Table.")
 
 	request = &RenameTableRequest{
-		Bucket:    oss.Ptr("bucket"),
-		Namespace: oss.Ptr("space"),
-		Table:     oss.Ptr("table"),
-	}
-	input = &oss.OperationInput{
-		OpName: "RenameTable",
-		Method: "PUT",
-		Headers: map[string]string{
-			oss.HTTPHeaderContentType: contentTypeJSON,
-		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"rename":                        "",
-		},
-		Bucket: request.Bucket,
-	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, NewNamespace.")
-
-	request = &RenameTableRequest{
-		Bucket:       oss.Ptr("bucket"),
+		BucketArn:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace:    oss.Ptr("space"),
 		Table:        oss.Ptr("table"),
 		NewNamespace: oss.Ptr("new-space"),
@@ -872,73 +777,45 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"rename":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, NewTable.")
-
-	request = &RenameTableRequest{
-		Bucket:       oss.Ptr("bucket"),
-		Namespace:    oss.Ptr("space"),
-		Table:        oss.Ptr("table"),
-		NewNamespace: oss.Ptr("new-space"),
-		NewTable:     oss.Ptr("new-table"),
-	}
-	input = &oss.OperationInput{
-		OpName: "RenameTable",
-		Method: "PUT",
-		Headers: map[string]string{
-			oss.HTTPHeaderContentType: contentTypeJSON,
-		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"rename":                        "",
-		},
-		Bucket: request.Bucket,
-	}
-	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, VersionToken.")
-
-	request = &RenameTableRequest{
-		Bucket:       oss.Ptr("bucket"),
-		Namespace:    oss.Ptr("space"),
-		Table:        oss.Ptr("table"),
-		NewNamespace: oss.Ptr("new-space"),
-		NewTable:     oss.Ptr("new-table"),
-		VersionToken: oss.Ptr("version-token"),
-	}
-	input = &oss.OperationInput{
-		OpName: "RenameTable",
-		Method: "PUT",
-		Headers: map[string]string{
-			oss.HTTPHeaderContentType: contentTypeJSON,
-		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"rename":                        "",
-		},
-		Bucket: request.Bucket,
-	}
+	err = checkRenameTableRequest(request)
+	assert.Nil(t, err)
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
-	assert.Equal(t, input.Parameters["tables"], "")
-	assert.Equal(t, input.Parameters["space"], "")
-	assert.Equal(t, input.Parameters["table"], "")
-	assert.Equal(t, input.Parameters["rename"], "")
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename")
 	body, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "{\"namespace\":\"new-space\",\"newName\":\"new-table\",\"versionToken\":\"version-token\"}")
+	assert.Equal(t, string(body), "{\"newNamespaceName\":\"new-space\"}")
+
+	request = &RenameTableRequest{
+		BucketArn:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:    oss.Ptr("space"),
+		Table:        oss.Ptr("table"),
+		NewNamespace: oss.Ptr("new-space"),
+		NewTable:     oss.Ptr("new-table"),
+		VersionToken: oss.Ptr("365f934c6e234f35ace5ae48f0a0d871"),
+	}
+	input = &oss.OperationInput{
+		OpName: "RenameTable",
+		Method: "PUT",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
+	}
+	err = checkRenameTableRequest(request)
+	assert.Nil(t, err)
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename")
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "{\"newName\":\"new-table\",\"newNamespaceName\":\"new-space\",\"versionToken\":\"365f934c6e234f35ace5ae48f0a0d871\"}")
 }
 
 func TestUnmarshalOutput_RenameTable(t *testing.T) {
@@ -948,8 +825,8 @@ func TestUnmarshalOutput_RenameTable(t *testing.T) {
 	var err error
 
 	output = &oss.OperationOutput{
-		StatusCode: 200,
-		Status:     "OK",
+		StatusCode: 204,
+		Status:     "No Content",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 		},
@@ -957,8 +834,8 @@ func TestUnmarshalOutput_RenameTable(t *testing.T) {
 	result := &RenameTableResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
 	assert.Nil(t, err)
-	assert.Equal(t, result.StatusCode, 200)
-	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.StatusCode, 204)
+	assert.Equal(t, result.Status, "No Content")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 
 	output = &oss.OperationOutput{

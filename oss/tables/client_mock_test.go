@@ -2860,42 +2860,35 @@ var testMockCreateTableSuccessCases = []struct {
 		map[string]string{
 			"x-oss-request-id": "534B371674E88A4D8906****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/json",
 		},
-		nil,
+		[]byte(`{
+			"tableARN": "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/16dc6c23-7a64-4f55-af2f-ee243524a5cc",
+			"versionToken": "8c651fb37897499092bd95e1bc2816a9"
+		}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?space&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, "{\"format\":\"iceberg\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\"}", string(requestBody))
+			assert.Equal(t, string(requestBody), "{\"format\":\"ICEBERG\",\"name\":\"table\"}")
 		},
 		&CreateTableRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
-			Format:    oss.Ptr("iceberg"),
 			Table:     oss.Ptr("table"),
-			Metadata: &TableMetadata{
-				Iceberg: &MetadataIceberg{
-					Schema: map[string]any{
-						"fields": []map[string]any{
-							{
-								"name": "id", "type": "int", "required": true,
-							},
-							{
-								"name": "name", "type": "string",
-							},
-						},
-					},
-				},
-			},
+			Format:    oss.Ptr("ICEBERG"),
 		},
 		func(t *testing.T, o *CreateTableResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+			assert.Equal(t, oss.ToString(o.TableArn), "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/16dc6c23-7a64-4f55-af2f-ee243524a5cc")
+			assert.Equal(t, oss.ToString(o.VersionToken), "8c651fb37897499092bd95e1bc2816a9")
 		},
 	},
 	{
@@ -2903,22 +2896,26 @@ var testMockCreateTableSuccessCases = []struct {
 		map[string]string{
 			"x-oss-request-id": "534B371674E88A4D8906****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/json",
 		},
-		nil,
+		[]byte(`{
+			"tableARN": "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/16dc6c23-7a64-4f55-af2f-ee243524a5cc",
+			"versionToken": "8c651fb37897499092bd95e1bc2816a9"
+		}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?space&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"},\"format\":\"iceberg\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\",\"storageClassConfiguration\":{\"storageClass\":\"Standard\"},\"tags\":{\"k1\":\"v1\",\"k2\":\"v2\"}}", string(requestBody))
+			assert.Equal(t, string(requestBody), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"},\"format\":\"ICEBERG\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\"}")
 		},
 		&CreateTableRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
-			Format:    oss.Ptr("iceberg"),
 			Table:     oss.Ptr("table"),
+			Format:    oss.Ptr("ICEBERG"),
 			Metadata: &TableMetadata{
 				Iceberg: &MetadataIceberg{
 					Schema: map[string]any{
@@ -2934,11 +2931,8 @@ var testMockCreateTableSuccessCases = []struct {
 				},
 			},
 			EncryptionConfiguration: &EncryptionConfiguration{
-				KmsKeyArn:    oss.Ptr("arn"),
+				KmsKeyArn:    oss.Ptr(""),
 				SseAlgorithm: oss.Ptr("AES256"),
-			},
-			Tags: map[string]any{
-				"k1": "v1", "k2": "v2",
 			},
 		},
 		func(t *testing.T, o *CreateTableResult, err error) {
@@ -2946,6 +2940,8 @@ var testMockCreateTableSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, oss.ToString(o.TableArn), "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/16dc6c23-7a64-4f55-af2f-ee243524a5cc")
+			assert.Equal(t, oss.ToString(o.VersionToken), "8c651fb37897499092bd95e1bc2816a9")
 		},
 	},
 }
@@ -2983,45 +2979,26 @@ var testMockCreateTableErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0002-00000040",
 		},
 		[]byte(
 			`{
-			  "Error": {
-				"Code": "SignatureDoesNotMatch",
-				"Message": "The request signature we calculated does not match the signature you provided. Check your key and signing method.",
-				"RequestId": "65467C42E001B4333337****",
-				"SignatureProvided": "RizTbeKC/QlwxINq8xEdUPowc84=",
-				"EC": "0002-00000040"
-			  }
+				"message": "The request signature we calculated does not match the signature you provided. Check your key and signing method."
 			}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?space&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, "{\"format\":\"iceberg\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\"}", string(requestBody))
+			assert.Equal(t, string(requestBody), "{\"format\":\"ICEBERG\",\"name\":\"table\"}")
 		},
 		&CreateTableRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
-			Format:    oss.Ptr("iceberg"),
 			Table:     oss.Ptr("table"),
-			Metadata: &TableMetadata{
-				Iceberg: &MetadataIceberg{
-					Schema: map[string]any{
-						"fields": []map[string]any{
-							{
-								"name": "id", "type": "int", "required": true,
-							},
-							{
-								"name": "name", "type": "string",
-							},
-						},
-					},
-				},
-			},
+			Format:    oss.Ptr("ICEBERG"),
 		},
 		func(t *testing.T, o *CreateTableResult, err error) {
 			assert.Nil(t, o)
@@ -3030,11 +3007,11 @@ var testMockCreateTableErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "SignatureDoesNotMatch", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "0002-00000040", serr.EC)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request signature we calculated does not match")
-			assert.Contains(t, serr.RequestTarget, "/bucket")
+			assert.Contains(t, serr.RequestTarget, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space")
 		},
 	},
 	{
@@ -3043,44 +3020,26 @@ var testMockCreateTableErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0015-00000104",
 		},
 		[]byte(
 			`{
-			  "Error": {
-				"Code": "ConflictException",
-				"Message": "The request failed because there is a conflict with a previous write. You can retry the request.",
-				"RequestId": "6548A043CA31D****",
-				"EC": "0015-00000104"
-			  }
+				"message": "The request failed because there is a conflict with a previous write. You can retry the request."
 			}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?space&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, "{\"format\":\"iceberg\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\"}", string(requestBody))
+			assert.Equal(t, string(requestBody), "{\"format\":\"ICEBERG\",\"name\":\"table\"}")
 		},
 		&CreateTableRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
-			Format:    oss.Ptr("iceberg"),
 			Table:     oss.Ptr("table"),
-			Metadata: &TableMetadata{
-				Iceberg: &MetadataIceberg{
-					Schema: map[string]any{
-						"fields": []map[string]any{
-							{
-								"name": "id", "type": "int", "required": true,
-							},
-							{
-								"name": "name", "type": "string",
-							},
-						},
-					},
-				},
-			},
+			Format:    oss.Ptr("ICEBERG"),
 		},
 		func(t *testing.T, o *CreateTableResult, err error) {
 			assert.Nil(t, o)
@@ -3089,11 +3048,11 @@ var testMockCreateTableErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(409), serr.StatusCode)
-			assert.Equal(t, "ConflictException", serr.Code)
+			assert.Equal(t, "Conflict", serr.Code)
 			assert.Equal(t, "0015-00000104", serr.EC)
-			assert.Equal(t, "6548A043CA31D****", serr.RequestID)
+			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request failed because there is a conflict with a previous write. You can retry the request.")
-			assert.Contains(t, serr.RequestTarget, "/bucket")
+			assert.Contains(t, serr.RequestTarget, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space")
 		},
 	},
 }
@@ -3133,34 +3092,31 @@ var testMockGetTableSuccessCases = []struct {
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
 		[]byte(`{
-   "createdAt": "2026-02-31T10:56:21.000Z",
-   "createdBy": "oss-create",
-   "format": "demo-format",
-   "metadataLocation": "location",
-   "modifiedAt": "2026-03-01T10:56:21.000Z",
-   "modifiedBy": "oss-modify",
-   "name": "table",
-   "namespace": [ "space" ],
-   "namespaceId": "space-01",
-   "ownerAccountId": "123",
-   "tableARN": "acs:osstable:cn-hangzhou:123:bucket/table_bucket/table/table_123",
-   "tableBucketId": "table_bucket_123",
-   "type": "oss",
-   "versionToken": "aaa",
-   "warehouseLocation": "bbb"
-}`),
+    "createdAt": "2026-04-07T05:27:18.397920+00:00",
+    "createdBy": "1234567890",
+    "format": "ICEBERG",
+    "metadataLocation": "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss/metadata/00000-edb683a9-ce46-492a-a495-35e5b2f7a649.metadata.json",
+    "modifiedAt": "2026-04-07T05:27:18.397920+00:00",
+    "modifiedBy": "1234567890",
+    "name": "my_table",
+    "namespace": ["my_namespace"],
+    "namespaceId": "22af7160-82b5-4d6a-b9fb-4d14c6e01198",
+    "ownerAccountId": "1234567890",
+    "tableARN": "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9",
+    "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5",
+    "type": "customer",
+    "versionToken": "365f934c6e234f35ace5ae48f0a0d871",
+    "warehouseLocation": "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?get-table&name=table&namespace=space&tableArn=table-arn&tableBucketARN=table-bucket-arn", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?name=table&namespace=space&tableBucketARN=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", strUrl)
 		},
 		&GetTableRequest{
-			Bucket:         oss.Ptr("bucket"),
-			Table:          oss.Ptr("table"),
-			Namespace:      oss.Ptr("space"),
-			TableArn:       oss.Ptr("table-arn"),
-			TableBucketARN: oss.Ptr("table-bucket-arn"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Namespace: oss.Ptr("space"),
+			Table:     oss.Ptr("table"),
 		},
 		func(t *testing.T, o *GetTableResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -3169,16 +3125,77 @@ var testMockGetTableSuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.Equal(t, o.Headers.Get("Content-Type"), "application/json")
-			assert.Equal(t, *o.CreatedAt, "2026-02-31T10:56:21.000Z")
-			assert.Equal(t, *o.CreatedBy, "oss-create")
-			assert.Equal(t, *o.Format, "demo-format")
-			assert.Equal(t, *o.MetadataLocation, "location")
-			assert.Equal(t, *o.ModifiedAt, "2026-03-01T10:56:21.000Z")
-			assert.Equal(t, *o.ModifiedBy, "oss-modify")
-			assert.Equal(t, *o.Name, "table")
-			assert.Equal(t, o.Namespace[0], "space")
-			assert.Equal(t, *o.NamespaceId, "space-01")
-			assert.Equal(t, *o.Type, "oss")
+			assert.Equal(t, *o.CreatedAt, "2026-04-07T05:27:18.397920+00:00")
+			assert.Equal(t, *o.CreatedBy, "1234567890")
+			assert.Equal(t, *o.Format, "ICEBERG")
+			assert.Equal(t, *o.MetadataLocation, "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss/metadata/00000-edb683a9-ce46-492a-a495-35e5b2f7a649.metadata.json")
+			assert.Equal(t, *o.ModifiedAt, "2026-04-07T05:27:18.397920+00:00")
+			assert.Equal(t, *o.ModifiedBy, "1234567890")
+			assert.Equal(t, *o.Name, "my_table")
+			assert.Equal(t, o.Namespace[0], "my_namespace")
+			assert.Equal(t, *o.NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01198")
+			assert.Equal(t, *o.OwnerAccountId, "1234567890")
+			assert.Equal(t, *o.TableARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
+			assert.Equal(t, *o.TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
+			assert.Equal(t, *o.Type, "customer")
+			assert.Equal(t, *o.VersionToken, "365f934c6e234f35ace5ae48f0a0d871")
+			assert.Equal(t, *o.WarehouseLocation, "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+    "createdAt": "2026-04-07T05:27:18.397920+00:00",
+    "createdBy": "1234567890",
+    "format": "ICEBERG",
+    "metadataLocation": "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss/metadata/00000-edb683a9-ce46-492a-a495-35e5b2f7a649.metadata.json",
+    "modifiedAt": "2026-04-07T05:27:18.397920+00:00",
+    "modifiedBy": "1234567890",
+    "name": "my_table",
+    "namespace": ["my_namespace"],
+    "namespaceId": "22af7160-82b5-4d6a-b9fb-4d14c6e01198",
+    "ownerAccountId": "1234567890",
+    "tableARN": "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9",
+    "tableBucketId": "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5",
+    "type": "customer",
+    "versionToken": "365f934c6e234f35ace5ae48f0a0d871",
+    "warehouseLocation": "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss"}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
+		},
+		&GetTableRequest{
+			TableArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
+		},
+		func(t *testing.T, o *GetTableResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/json", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, o.Headers.Get("Content-Type"), "application/json")
+			assert.Equal(t, *o.CreatedAt, "2026-04-07T05:27:18.397920+00:00")
+			assert.Equal(t, *o.CreatedBy, "1234567890")
+			assert.Equal(t, *o.Format, "ICEBERG")
+			assert.Equal(t, *o.MetadataLocation, "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss/metadata/00000-edb683a9-ce46-492a-a495-35e5b2f7a649.metadata.json")
+			assert.Equal(t, *o.ModifiedAt, "2026-04-07T05:27:18.397920+00:00")
+			assert.Equal(t, *o.ModifiedBy, "1234567890")
+			assert.Equal(t, *o.Name, "my_table")
+			assert.Equal(t, o.Namespace[0], "my_namespace")
+			assert.Equal(t, *o.NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01198")
+			assert.Equal(t, *o.OwnerAccountId, "1234567890")
+			assert.Equal(t, *o.TableARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
+			assert.Equal(t, *o.TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
+			assert.Equal(t, *o.Type, "customer")
+			assert.Equal(t, *o.VersionToken, "365f934c6e234f35ace5ae48f0a0d871")
+			assert.Equal(t, *o.WarehouseLocation, "oss://f13de3a6-de93-4801-vlz6uao35255n4bbo5q3sujl1fy83su13--table-oss")
 		},
 	},
 }
@@ -3216,29 +3233,17 @@ var testMockGetTableErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0015-00000101",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?get-table&name=table&namespace=space&tableArn=table-arn&tableBucketARN=table-bucket-arn", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
-			Bucket:         oss.Ptr("bucket"),
-			Table:          oss.Ptr("table"),
-			Namespace:      oss.Ptr("space"),
-			TableArn:       oss.Ptr("table-arn"),
-			TableBucketARN: oss.Ptr("table-bucket-arn"),
+			TableArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
 		},
 		func(t *testing.T, o *GetTableResult, err error) {
 			assert.Nil(t, o)
@@ -3247,7 +3252,7 @@ var testMockGetTableErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "0015-00000101", serr.EC)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
@@ -3259,29 +3264,17 @@ var testMockGetTableErrorCases = []struct {
 			"Content-Type":     "application/json",
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"x-oss-ec":         "0003-00000801",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?get-table&name=table&namespace=space&tableArn=table-arn&tableBucketARN=table-bucket-arn", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
-			Bucket:         oss.Ptr("bucket"),
-			Table:          oss.Ptr("table"),
-			Namespace:      oss.Ptr("space"),
-			TableArn:       oss.Ptr("table-arn"),
-			TableBucketARN: oss.Ptr("table-bucket-arn"),
+			TableArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
 		},
 		func(t *testing.T, o *GetTableResult, err error) {
 			assert.Nil(t, o)
@@ -3290,7 +3283,7 @@ var testMockGetTableErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
 			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
@@ -3308,14 +3301,10 @@ var testMockGetTableErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?get-table&name=table&namespace=space&tableArn=table-arn&tableBucketARN=table-bucket-arn", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
-			Bucket:         oss.Ptr("bucket"),
-			Table:          oss.Ptr("table"),
-			Namespace:      oss.Ptr("space"),
-			TableArn:       oss.Ptr("table-arn"),
-			TableBucketARN: oss.Ptr("table-bucket-arn"),
+			TableArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
 		},
 		func(t *testing.T, o *GetTableResult, err error) {
 			assert.Nil(t, o)
@@ -3363,23 +3352,23 @@ var testMockListTablesSuccessCases = []struct {
   "continuationToken": "AAMA-EFRSURBSGk2VFNsQXNjVHQ2QU05UU5YN2xkME53VWI3U1B5RTl6WEh1UTRVc",
   "tables": [
     {
-      "createdAt": "2026-01-26T03:11:51.527997035Z",
-      "modifiedAt": "2026-01-26T03:11:51.527997035Z",
+      "createdAt": "2026-04-07T02:15:12.186626+00:00",
+      "modifiedAt": "2026-04-07T02:15:12.186626+00:00",
       "name": "example_table",
       "namespace": [
         "my_namespace"
       ],
-      "tableARN": "arn:aws:s3tables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/7568a090-50f8-4808-8c8d-930a2c264076",
+      "tableARN": "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/7568a090-50f8-4808-8c8d-930a2c264076",
       "type": "customer"
     },
     {
-      "createdAt": "2026-01-26T03:16:46.622650810Z",
-      "modifiedAt": "2026-01-26T03:16:46.622650810Z",
+      "createdAt": "2026-04-07T02:15:12.186626+00:00",
+      "modifiedAt": "2026-04-07T02:15:12.186626+00:00",
       "name": "example_table1",
       "namespace": [
         "my_namespace"
       ],
-      "tableARN": "arn:aws:s3tables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/757c17c1-532e-4a45-b5b3-d8783374fc2a",
+      "tableARN": "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/757c17c1-532e-4a45-b5b3-d8783374fc2a",
       "type": "customer"
     }
   ]
@@ -3388,10 +3377,10 @@ var testMockListTablesSuccessCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?continuationToken=token&maxTables=1000&namespace=space&prefix=prefix&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?continuationToken=token&maxTables=1000&namespace=space&prefix=prefix", strUrl)
 		},
 		&ListTablesRequest{
-			Bucket:            oss.Ptr("bucket"),
+			BucketArn:         oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:         oss.Ptr("space"),
 			ContinuationToken: oss.Ptr("token"),
 			MaxTables:         int32(1000),
@@ -3405,18 +3394,18 @@ var testMockListTablesSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.Equal(t, *o.ContinuationToken, "AAMA-EFRSURBSGk2VFNsQXNjVHQ2QU05UU5YN2xkME53VWI3U1B5RTl6WEh1UTRVc")
 			assert.Equal(t, len(o.Tables), 2)
-			assert.Equal(t, *o.Tables[0].CreatedAt, "2026-01-26T03:11:51.527997035Z")
-			assert.Equal(t, *o.Tables[0].ModifiedAt, "2026-01-26T03:11:51.527997035Z")
+			assert.Equal(t, *o.Tables[0].CreatedAt, "2026-04-07T02:15:12.186626+00:00")
+			assert.Equal(t, *o.Tables[0].ModifiedAt, "2026-04-07T02:15:12.186626+00:00")
 			assert.Equal(t, *o.Tables[0].Name, "example_table")
 			assert.Equal(t, o.Tables[0].Namespace[0], "my_namespace")
-			assert.Equal(t, *o.Tables[0].TableARN, "arn:aws:s3tables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/7568a090-50f8-4808-8c8d-930a2c264076")
+			assert.Equal(t, *o.Tables[0].TableARN, "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/7568a090-50f8-4808-8c8d-930a2c264076")
 			assert.Equal(t, *o.Tables[0].Type, "customer")
 
-			assert.Equal(t, *o.Tables[1].CreatedAt, "2026-01-26T03:16:46.622650810Z")
-			assert.Equal(t, *o.Tables[1].ModifiedAt, "2026-01-26T03:16:46.622650810Z")
+			assert.Equal(t, *o.Tables[1].CreatedAt, "2026-04-07T02:15:12.186626+00:00")
+			assert.Equal(t, *o.Tables[1].ModifiedAt, "2026-04-07T02:15:12.186626+00:00")
 			assert.Equal(t, *o.Tables[1].Name, "example_table1")
 			assert.Equal(t, o.Tables[1].Namespace[0], "my_namespace")
-			assert.Equal(t, *o.Tables[1].TableARN, "arn:aws:s3tables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/757c17c1-532e-4a45-b5b3-d8783374fc2a")
+			assert.Equal(t, *o.Tables[1].TableARN, "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/757c17c1-532e-4a45-b5b3-d8783374fc2a")
 			assert.Equal(t, *o.Tables[1].Type, "customer")
 		},
 	},
@@ -3455,25 +3444,18 @@ var testMockListTablesErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0002-00000040",
 		},
 		[]byte(
-			`{
-  "Error": {
-    "Code": "InvalidAccessKeyId",
-    "Message": "The OSS Access Key Id you provided does not exist in our records.",
-    "RequestId": "65467C42E001B4333337****",
-    "SignatureProvided": "RizTbeKC/QlwxINq8xEdUPowc84=",
-    "EC": "0002-00000040"
-  }
-}`),
+			`{"message": "The OSS Access Key Id you provided does not exist in our records."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?namespace=space&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?namespace=space", strUrl)
 		},
 		&ListTablesRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *ListTablesResult, err error) {
@@ -3483,7 +3465,7 @@ var testMockListTablesErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
 			assert.Equal(t, "0002-00000040", serr.EC)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
@@ -3501,10 +3483,10 @@ var testMockListTablesErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?namespace=space&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?namespace=space", strUrl)
 		},
 		&ListTablesRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *ListTablesResult, err error) {
@@ -3553,10 +3535,10 @@ var testMockDeleteTableSuccessCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?name=table&namespace=space&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
 		},
 		&DeleteTableRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -3604,23 +3586,16 @@ var testMockDeleteTableErrorCases = []struct {
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
 		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
+    "message": "The specified bucket does not exist."
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?name=table&namespace=space&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
 		},
 		&DeleteTableRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -3631,9 +3606,8 @@ var testMockDeleteTableErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "0015-00000101", serr.EC)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
 		},
 	},
@@ -3645,23 +3619,16 @@ var testMockDeleteTableErrorCases = []struct {
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
 		[]byte(`{
-  "Error": {
-    "Code": "BucketNotEmpty",
-    "Message": "The bucket has objects. Please delete them first.",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000301"
-  }
+    "message": "The bucket has objects. Please delete them first."
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?name=table&namespace=space&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
 		},
 		&DeleteTableRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -3672,9 +3639,8 @@ var testMockDeleteTableErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(409), serr.StatusCode)
-			assert.Equal(t, "BucketNotEmpty", serr.Code)
+			assert.Equal(t, "Conflict", serr.Code)
 			assert.Equal(t, "The bucket has objects. Please delete them first.", serr.Message)
-			assert.Equal(t, "0015-00000301", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
 		},
 	},
@@ -3717,19 +3683,48 @@ var testMockRenameTableSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?rename&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, "{\"namespace\":\"new-space\",\"newName\":\"new-table\",\"versionToken\":\"version-token\"}", string(requestBody))
+			assert.Equal(t, "{\"newName\":\"new-table\",\"newNamespaceName\":\"new-space\",\"versionToken\":\"version-token\"}", string(requestBody))
 		},
 		&RenameTableRequest{
-			Bucket:       oss.Ptr("bucket"),
+			BucketArn:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:    oss.Ptr("space"),
 			Table:        oss.Ptr("table"),
 			NewNamespace: oss.Ptr("new-space"),
 			NewTable:     oss.Ptr("new-table"),
 			VersionToken: oss.Ptr("version-token"),
+		},
+		func(t *testing.T, o *RenameTableResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		nil,
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "PUT", r.Method)
+			strUrl := sortQuery(r)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
+			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
+			requestBody, err := io.ReadAll(r.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, "{\"newName\":\"new-table\"}", string(requestBody))
+		},
+		&RenameTableRequest{
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Namespace: oss.Ptr("space"),
+			Table:     oss.Ptr("table"),
+			NewTable:  oss.Ptr("new-table"),
 		},
 		func(t *testing.T, o *RenameTableResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -3773,28 +3768,23 @@ var testMockRenameTableErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0002-00000040",
 		},
 		[]byte(
 			`{
-			  "Error": {
-				"Code": "SignatureDoesNotMatch",
-				"Message": "The request signature we calculated does not match the signature you provided. Check your key and signing method.",
-				"RequestId": "65467C42E001B4333337****",
-				"SignatureProvided": "RizTbeKC/QlwxINq8xEdUPowc84=",
-				"EC": "0002-00000040"
-			  }
+				"message": "The request signature we calculated does not match the signature you provided. Check your key and signing method."
 			}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?rename&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, "{\"namespace\":\"new-space\",\"newName\":\"new-table\",\"versionToken\":\"version-token\"}", string(requestBody))
+			assert.Equal(t, "{\"newName\":\"new-table\",\"newNamespaceName\":\"new-space\",\"versionToken\":\"version-token\"}", string(requestBody))
 		},
 		&RenameTableRequest{
-			Bucket:       oss.Ptr("bucket"),
+			BucketArn:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:    oss.Ptr("space"),
 			Table:        oss.Ptr("table"),
 			NewNamespace: oss.Ptr("new-space"),
@@ -3808,11 +3798,11 @@ var testMockRenameTableErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "SignatureDoesNotMatch", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "0002-00000040", serr.EC)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request signature we calculated does not match")
-			assert.Contains(t, serr.RequestTarget, "/bucket")
+			assert.Contains(t, serr.RequestTarget, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename")
 		},
 	},
 	{
@@ -3821,27 +3811,23 @@ var testMockRenameTableErrorCases = []struct {
 			"x-oss-request-id": "65467C42E001B4333337****",
 			"Date":             "Thu, 15 May 2014 11:18:32 GMT",
 			"Content-Type":     "application/json",
+			"x-oss-ec":         "0015-00000104",
 		},
 		[]byte(
 			`{
-			  "Error": {
-				"Code": "ConflictException",
-				"Message": "The request failed because there is a conflict with a previous write. You can retry the request.",
-				"RequestId": "6548A043CA31D****",
-				"EC": "0015-00000104"
-			  }
+				"Message": "The request failed because there is a conflict with a previous write. You can retry the request."
 			}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?rename&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, "{\"namespace\":\"new-space\",\"newName\":\"new-table\",\"versionToken\":\"version-token\"}", string(requestBody))
+			assert.Equal(t, "{\"newName\":\"new-table\",\"newNamespaceName\":\"new-space\",\"versionToken\":\"version-token\"}", string(requestBody))
 		},
 		&RenameTableRequest{
-			Bucket:       oss.Ptr("bucket"),
+			BucketArn:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:    oss.Ptr("space"),
 			Table:        oss.Ptr("table"),
 			NewNamespace: oss.Ptr("new-space"),
@@ -3855,11 +3841,11 @@ var testMockRenameTableErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(409), serr.StatusCode)
-			assert.Equal(t, "ConflictException", serr.Code)
+			assert.Equal(t, "Conflict", serr.Code)
 			assert.Equal(t, "0015-00000104", serr.EC)
-			assert.Equal(t, "6548A043CA31D****", serr.RequestID)
+			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request failed because there is a conflict with a previous write. You can retry the request.")
-			assert.Contains(t, serr.RequestTarget, "/bucket")
+			assert.Contains(t, serr.RequestTarget, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename")
 		},
 	},
 }
