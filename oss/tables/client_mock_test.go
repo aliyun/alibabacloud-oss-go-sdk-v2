@@ -5243,403 +5243,6 @@ func TestMockGetTableMaintenanceConfiguration_Error(t *testing.T) {
 	}
 }
 
-var testMockSetTableMaintenanceJobStatusSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *SetTableMaintenanceJobStatusRequest
-	CheckOutputFn  func(t *testing.T, o *SetTableMaintenanceJobStatusResult, err error)
-}{
-	{
-		200,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "POST")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			assert.Equal(t, r.Header.Get("x-oss-tables-operation"), "")
-			body, err := io.ReadAll(r.Body)
-			assert.Nil(t, err)
-			assert.Equal(t, string(body), "{\"status\":{\"job\":{\"failureMessage\":\"no message\",\"lastRunTimestamp\":\"2026-02-31T10:56:21.000Z\",\"status\":\"success\"}},\"versionToken\":\"token\"}")
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?maintenance-job-status&space&table&tables", strUrl)
-		},
-		&SetTableMaintenanceJobStatusRequest{
-			Bucket:    oss.Ptr("bucket"),
-			Namespace: oss.Ptr("space"),
-			Table:     oss.Ptr("table"),
-			Status: &MaintenanceJobStatus{
-				Job: &MaintenanceJob{
-					FailureMessage:   oss.Ptr("no message"),
-					LastRunTimestamp: oss.Ptr("2026-02-31T10:56:21.000Z"),
-					Status:           oss.Ptr("success"),
-				},
-			},
-			VersionToken: oss.Ptr("token"),
-		},
-		func(t *testing.T, o *SetTableMaintenanceJobStatusResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-		},
-	},
-}
-
-func TestMockSetTableMaintenanceJobStatus_Success(t *testing.T) {
-	for _, c := range testMockSetTableMaintenanceJobStatusSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.SetTableMaintenanceJobStatus(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockSetTableMaintenanceJobStatusErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *SetTableMaintenanceJobStatusRequest
-	CheckOutputFn  func(t *testing.T, o *SetTableMaintenanceJobStatusResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "POST")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			assert.Equal(t, r.Header.Get("x-oss-tables-operation"), "")
-			body, err := io.ReadAll(r.Body)
-			assert.Nil(t, err)
-			assert.Equal(t, string(body), "{\"status\":{\"job\":{\"failureMessage\":\"no message\",\"lastRunTimestamp\":\"2026-02-31T10:56:21.000Z\",\"status\":\"success\"}},\"versionToken\":\"token\"}")
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?maintenance-job-status&space&table&tables", strUrl)
-		},
-		&SetTableMaintenanceJobStatusRequest{
-			Bucket:    oss.Ptr("bucket"),
-			Namespace: oss.Ptr("space"),
-			Table:     oss.Ptr("table"),
-			Status: &MaintenanceJobStatus{
-				Job: &MaintenanceJob{
-					FailureMessage:   oss.Ptr("no message"),
-					LastRunTimestamp: oss.Ptr("2026-02-31T10:56:21.000Z"),
-					Status:           oss.Ptr("success"),
-				},
-			},
-			VersionToken: oss.Ptr("token"),
-		},
-		func(t *testing.T, o *SetTableMaintenanceJobStatusResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "POST")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			assert.Equal(t, r.Header.Get("x-oss-tables-operation"), "")
-			body, err := io.ReadAll(r.Body)
-			assert.Nil(t, err)
-			assert.Equal(t, string(body), "{\"status\":{\"job\":{\"failureMessage\":\"no message\",\"lastRunTimestamp\":\"2026-02-31T10:56:21.000Z\",\"status\":\"success\"}},\"versionToken\":\"token\"}")
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?maintenance-job-status&space&table&tables", strUrl)
-		},
-		&SetTableMaintenanceJobStatusRequest{
-			Bucket:    oss.Ptr("bucket"),
-			Namespace: oss.Ptr("space"),
-			Table:     oss.Ptr("table"),
-			Status: &MaintenanceJobStatus{
-				Job: &MaintenanceJob{
-					FailureMessage:   oss.Ptr("no message"),
-					LastRunTimestamp: oss.Ptr("2026-02-31T10:56:21.000Z"),
-					Status:           oss.Ptr("success"),
-				},
-			},
-			VersionToken: oss.Ptr("token"),
-		},
-		func(t *testing.T, o *SetTableMaintenanceJobStatusResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-}
-
-func TestMockSetTableMaintenanceJobStatus_Error(t *testing.T) {
-	for _, c := range testMockSetTableMaintenanceJobStatusErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.SetTableMaintenanceJobStatus(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockSetTableMaintenanceJobStatusByTableArnSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *SetTableMaintenanceJobStatusByTableArnRequest
-	CheckOutputFn  func(t *testing.T, o *SetTableMaintenanceJobStatusResult, err error)
-}{
-	{
-		200,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(``),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "POST")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			assert.Equal(t, r.Header.Get("x-oss-table-arn"), "acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123")
-			assert.Equal(t, r.Header.Get("x-oss-tables-operation"), "")
-			body, err := io.ReadAll(r.Body)
-			assert.Nil(t, err)
-			assert.Equal(t, string(body), "{\"status\":{\"job\":{\"failureMessage\":\"no message\",\"lastRunTimestamp\":\"2026-02-31T10:56:21.000Z\",\"status\":\"success\"}},\"versionToken\":\"token\"}")
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/?maintenance-job-status&tables", strUrl)
-		},
-		&SetTableMaintenanceJobStatusByTableArnRequest{
-			TableArn: oss.Ptr("acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123"),
-			Status: &MaintenanceJobStatus{
-				Job: &MaintenanceJob{
-					FailureMessage:   oss.Ptr("no message"),
-					LastRunTimestamp: oss.Ptr("2026-02-31T10:56:21.000Z"),
-					Status:           oss.Ptr("success"),
-				},
-			},
-			VersionToken: oss.Ptr("token"),
-		},
-		func(t *testing.T, o *SetTableMaintenanceJobStatusResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-		},
-	},
-}
-
-func TestMockSetTableMaintenanceJobStatusByTableArn_Success(t *testing.T) {
-	for _, c := range testMockSetTableMaintenanceJobStatusByTableArnSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.SetTableMaintenanceJobStatusByTableArn(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockSetTableMaintenanceJobStatusByTableArnErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *SetTableMaintenanceJobStatusByTableArnRequest
-	CheckOutputFn  func(t *testing.T, o *SetTableMaintenanceJobStatusResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "POST")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			assert.Equal(t, r.Header.Get("x-oss-tables-operation"), "")
-			assert.Equal(t, r.Header.Get("x-oss-table-arn"), "acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123")
-			body, err := io.ReadAll(r.Body)
-			assert.Nil(t, err)
-			assert.Equal(t, string(body), "{\"status\":{\"job\":{\"failureMessage\":\"no message\",\"lastRunTimestamp\":\"2026-02-31T10:56:21.000Z\",\"status\":\"success\"}},\"versionToken\":\"token\"}")
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/?maintenance-job-status&tables", strUrl)
-		},
-		&SetTableMaintenanceJobStatusByTableArnRequest{
-			TableArn: oss.Ptr("acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123"),
-			Status: &MaintenanceJobStatus{
-				Job: &MaintenanceJob{
-					FailureMessage:   oss.Ptr("no message"),
-					LastRunTimestamp: oss.Ptr("2026-02-31T10:56:21.000Z"),
-					Status:           oss.Ptr("success"),
-				},
-			},
-			VersionToken: oss.Ptr("token"),
-		},
-		func(t *testing.T, o *SetTableMaintenanceJobStatusResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "POST")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			assert.Equal(t, r.Header.Get("x-oss-tables-operation"), "")
-			assert.Equal(t, r.Header.Get("x-oss-table-arn"), "acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123")
-			body, err := io.ReadAll(r.Body)
-			assert.Nil(t, err)
-			assert.Equal(t, string(body), "{\"status\":{\"job\":{\"failureMessage\":\"no message\",\"lastRunTimestamp\":\"2026-02-31T10:56:21.000Z\",\"status\":\"success\"}},\"versionToken\":\"token\"}")
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/?maintenance-job-status&tables", strUrl)
-		},
-		&SetTableMaintenanceJobStatusByTableArnRequest{
-			TableArn: oss.Ptr("acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123"),
-			Status: &MaintenanceJobStatus{
-				Job: &MaintenanceJob{
-					FailureMessage:   oss.Ptr("no message"),
-					LastRunTimestamp: oss.Ptr("2026-02-31T10:56:21.000Z"),
-					Status:           oss.Ptr("success"),
-				},
-			},
-			VersionToken: oss.Ptr("token"),
-		},
-		func(t *testing.T, o *SetTableMaintenanceJobStatusResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-}
-
-func TestMockSetTableMaintenanceJobStatusByTableArn_Error(t *testing.T) {
-	for _, c := range testMockSetTableMaintenanceJobStatusByTableArnErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.SetTableMaintenanceJobStatusByTableArn(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
 var testMockGetTableMaintenanceJobStatusSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
@@ -5656,24 +5259,25 @@ var testMockGetTableMaintenanceJobStatusSuccessCases = []struct {
 			"Content-Type":     "application/json",
 		},
 		[]byte(`{
-   "status": { 
-      "job" : { 
-         "failureMessage": "no message",
-         "lastRunTimestamp": "2026-02-31T10:56:21.000Z",
-         "status": "success"
-      }
-   },
-   "versionToken": "aaa",
-   "tableARN": "test-arn"
-}`),
+    "status": {
+        "icebergCompaction": {
+            "failureMessage": "internal error",
+            "lastRunTimestamp": "2026-04-08T08:37:07.988892Z",
+            "status": "Failed"},
+        "icebergSnapshotManagement": {
+            "failureMessage": "internal error",
+            "lastRunTimestamp": "2026-04-08T08:36:07.426846Z",
+            "status": "Failed"},
+        "icebergUnreferencedFileRemoval": {"status": "Disabled"}},
+    "tableARN": "acs:osstables:cn-beijing:123456:bucket/demo-bucket/table/eb998f10-d20c-4f22-9a76-ed64e9668f56"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?maintenance-job-status&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
 		},
 		&GetTableMaintenanceJobStatusRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -5682,11 +5286,14 @@ var testMockGetTableMaintenanceJobStatusSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, *o.MaintenanceJobStatus.Job.FailureMessage, "no message")
-			assert.Equal(t, *o.MaintenanceJobStatus.Job.Status, "success")
-			assert.Equal(t, *o.MaintenanceJobStatus.Job.LastRunTimestamp, "2026-02-31T10:56:21.000Z")
-			assert.Equal(t, *o.VersionToken, "aaa")
-			assert.Equal(t, *o.TableARN, "test-arn")
+			assert.Equal(t, *o.JobStatus.IcebergCompaction.FailureMessage, "internal error")
+			assert.Equal(t, *o.JobStatus.IcebergCompaction.Status, "Failed")
+			assert.Equal(t, *o.JobStatus.IcebergCompaction.LastRunTimestamp, "2026-04-08T08:37:07.988892Z")
+			assert.Equal(t, *o.JobStatus.IcebergSnapshotManagement.FailureMessage, "internal error")
+			assert.Equal(t, *o.JobStatus.IcebergSnapshotManagement.Status, "Failed")
+			assert.Equal(t, *o.JobStatus.IcebergSnapshotManagement.LastRunTimestamp, "2026-04-08T08:36:07.426846Z")
+			assert.Equal(t, *o.JobStatus.IcebergUnreferencedFileRemoval.Status, "Disabled")
+			assert.Equal(t, *o.TableArn, "acs:osstables:cn-beijing:123456:bucket/demo-bucket/table/eb998f10-d20c-4f22-9a76-ed64e9668f56")
 		},
 	},
 }
@@ -5725,24 +5332,15 @@ var testMockGetTableMaintenanceJobStatusErrorCases = []struct {
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?maintenance-job-status&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
 		},
 		&GetTableMaintenanceJobStatusRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -5753,7 +5351,7 @@ var testMockGetTableMaintenanceJobStatusErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
 		},
@@ -5765,24 +5363,15 @@ var testMockGetTableMaintenanceJobStatusErrorCases = []struct {
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?maintenance-job-status&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
 		},
 		&GetTableMaintenanceJobStatusRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -5793,9 +5382,8 @@ var testMockGetTableMaintenanceJobStatusErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
 		},
 	},
@@ -5816,183 +5404,6 @@ func TestMockGetTableMaintenanceJobStatus_Error(t *testing.T) {
 		assert.NotNil(t, c)
 
 		output, err := client.GetTableMaintenanceJobStatus(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockGetTableMaintenanceJobStatusByTableArnSuccessCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetTableMaintenanceJobStatusByTableArnRequest
-	CheckOutputFn  func(t *testing.T, o *GetTableMaintenanceJobStatusResult, err error)
-}{
-	{
-		200,
-		map[string]string{
-			"x-oss-request-id": "534B371674E88A4D8906****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-			"Content-Type":     "application/json",
-		},
-		[]byte(`{
-   "status": { 
-      "job" : { 
-         "failureMessage": "no message",
-         "lastRunTimestamp": "2026-02-31T10:56:21.000Z",
-         "status": "success"
-      }
-   },
-   "versionToken": "aaa",
-   "tableARN": "test-arn"
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "GET")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			assert.Equal(t, r.Header.Get("x-oss-table-arn"), "acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123")
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/?maintenance-job-status&tables", strUrl)
-		},
-		&GetTableMaintenanceJobStatusByTableArnRequest{
-			TableArn: oss.Ptr("acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123"),
-		},
-		func(t *testing.T, o *GetTableMaintenanceJobStatusResult, err error) {
-			assert.Equal(t, 200, o.StatusCode)
-			assert.Equal(t, "200 OK", o.Status)
-			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, *o.MaintenanceJobStatus.Job.FailureMessage, "no message")
-			assert.Equal(t, *o.MaintenanceJobStatus.Job.Status, "success")
-			assert.Equal(t, *o.MaintenanceJobStatus.Job.LastRunTimestamp, "2026-02-31T10:56:21.000Z")
-			assert.Equal(t, *o.VersionToken, "aaa")
-			assert.Equal(t, *o.TableARN, "test-arn")
-		},
-	},
-}
-
-func TestMockGetTableMaintenanceJobStatusByTableArn_Success(t *testing.T) {
-	for _, c := range testMockGetTableMaintenanceJobStatusByTableArnSuccessCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.GetTableMaintenanceJobStatusByTableArn(context.TODO(), c.Request)
-		c.CheckOutputFn(t, output, err)
-	}
-}
-
-var testMockGetTableMaintenanceJobStatusByTableArnErrorCases = []struct {
-	StatusCode     int
-	Headers        map[string]string
-	Body           []byte
-	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetTableMaintenanceJobStatusByTableArnRequest
-	CheckOutputFn  func(t *testing.T, o *GetTableMaintenanceJobStatusResult, err error)
-}{
-	{
-		404,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D9175B6FC201293AD****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "GET")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			assert.Equal(t, r.Header.Get("x-oss-table-arn"), "acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123")
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/?maintenance-job-status&tables", strUrl)
-		},
-		&GetTableMaintenanceJobStatusByTableArnRequest{
-			TableArn: oss.Ptr("acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123"),
-		},
-		func(t *testing.T, o *GetTableMaintenanceJobStatusResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
-		},
-	},
-	{
-		403,
-		map[string]string{
-			"Content-Type":     "application/json",
-			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
-			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
-		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
-		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, r.Method, "GET")
-			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
-			assert.Equal(t, r.Header.Get("x-oss-table-arn"), "acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123")
-			strUrl := sortQuery(r)
-			assert.Equal(t, "/?maintenance-job-status&tables", strUrl)
-		},
-		&GetTableMaintenanceJobStatusByTableArnRequest{
-			TableArn: oss.Ptr("acs:osstables:cn-hangzhou:123:bucket/oss-demo-bucket/table/table-123"),
-		},
-		func(t *testing.T, o *GetTableMaintenanceJobStatusResult, err error) {
-			assert.Nil(t, o)
-			assert.NotNil(t, err)
-			var serr *oss.ServiceError
-			errors.As(err, &serr)
-			assert.NotNil(t, serr)
-			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
-			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
-			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
-		},
-	},
-}
-
-func TestMockGetTableMaintenanceJobStatusByTableArn_Error(t *testing.T) {
-	for _, c := range testMockGetTableMaintenanceJobStatusByTableArnErrorCases {
-		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
-		defer server.Close()
-		assert.NotNil(t, server)
-
-		cfg := oss.LoadDefaultConfig().
-			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
-			WithRegion("cn-hangzhou").
-			WithEndpoint(server.URL)
-
-		client := NewTablesClient(cfg)
-		assert.NotNil(t, c)
-
-		output, err := client.GetTableMaintenanceJobStatusByTableArn(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
