@@ -2,28 +2,69 @@ package tables
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 )
 
 type GetTableMaintenanceConfigurationRequest struct {
-	// The name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
 	Table *string `input:"nop,name,required"`
+
+	TableArn *string `input:"header,x-oss-table-arn"`
 
 	oss.RequestCommon
 }
 
 type GetTableMaintenanceConfigurationResult struct {
 	// The container that stores the maintenance configuration of the table bucket.
-	Configuration *MaintenanceConfiguration `output:"body,configuration,json"`
+	Configuration *TableMaintenanceConfiguration `output:"body,configuration,json"`
 
-	TableARN *string `output:"body,TableARN,json"`
+	TableArn *string `output:"body,TableARN,json"`
 
 	oss.ResultCommon
+}
+
+type TableMaintenanceConfiguration struct {
+	IcebergCompaction *IcebergCompaction `json:"icebergCompaction"`
+
+	IcebergSnapshotManagement *IcebergSnapshotManagement `json:"icebergSnapshotManagement"`
+}
+
+type IcebergCompaction struct {
+	Settings *IcebergCompactionSettings `json:"settings"`
+
+	Status *string `json:"status"`
+}
+
+type IcebergCompactionSettings struct {
+	IcebergCompaction *IcebergCompactionSettingsDetail `json:"icebergCompaction"`
+}
+
+type IcebergCompactionSettingsDetail struct {
+	Strategy *string `json:"strategy"`
+
+	TargetFileSizeMB *int `json:"targetFileSizeMB"`
+}
+
+type IcebergSnapshotManagement struct {
+	Settings *IcebergSnapshotManagementSettings `json:"settings"`
+
+	Status *string `json:"status"`
+}
+
+type IcebergSnapshotManagementSettings struct {
+	IcebergSnapshotManagement *IcebergSnapshotManagementSettingsDetail `json:"icebergSnapshotManagement"`
+}
+
+type IcebergSnapshotManagementSettingsDetail struct {
+	MaxSnapshotAgeHours *int `json:"maxSnapshotAgeHours"`
+
+	MinSnapshotsToKeep *int `json:"minSnapshotsToKeep"`
 }
 
 // GetTableMaintenanceConfiguration Queries the maintenance config of a table.
@@ -38,14 +79,10 @@ func (c *TablesClient) GetTableMaintenanceConfiguration(ctx context.Context, req
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"maintenance-job-status":        "",
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -61,17 +98,30 @@ func (c *TablesClient) GetTableMaintenanceConfiguration(ctx context.Context, req
 }
 
 type PutTableMaintenanceConfigurationRequest struct {
-	// This name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
 	Table *string `input:"nop,name,required"`
 
-	// The container that stores the maintenance configuration of the table bucket.
-	IcebergUnreferencedFileRemoval *IcebergUnreferencedFileRemoval `input:"body,icebergUnreferencedFileRemoval,json,required"`
+	Type *string `input:"nop,type,required"`
+
+	// The container that stores the maintenance configuration of the table.
+	Value *TableMaintenanceValue `input:"body,value,json,required"`
 
 	oss.RequestCommon
+}
+
+type TableMaintenanceValue struct {
+	Settings *TableMaintenanceSettings `json:"settings"`
+
+	Status *string `json:"status"`
+}
+
+type TableMaintenanceSettings struct {
+	IcebergCompaction *IcebergCompactionSettingsDetail `json:"icebergCompaction,omitempty"`
+
+	IcebergSnapshotManagement *IcebergSnapshotManagementSettingsDetail `json:"icebergSnapshotManagement,omitempty"`
 }
 
 type PutTableMaintenanceConfigurationResult struct {
@@ -90,14 +140,10 @@ func (c *TablesClient) PutTableMaintenanceConfiguration(ctx context.Context, req
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"maintenance-job-status":        "",
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table), oss.ToString(request.Type))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
