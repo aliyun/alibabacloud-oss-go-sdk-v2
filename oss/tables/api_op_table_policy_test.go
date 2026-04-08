@@ -2,9 +2,10 @@ package tables
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
-	"strings"
+	"net/url"
 	"testing"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
@@ -25,20 +26,16 @@ func TestMarshalInput_PutTablePolicy(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn")
 
 	request = &PutTablePolicyRequest{
-		Bucket: oss.Ptr("oss-demo"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "PutTablePolicy",
@@ -46,20 +43,16 @@ func TestMarshalInput_PutTablePolicy(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace")
 
 	request = &PutTablePolicyRequest{
-		Bucket:    oss.Ptr("oss-demo"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
@@ -68,20 +61,16 @@ func TestMarshalInput_PutTablePolicy(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Table")
 
 	request = &PutTablePolicyRequest{
-		Bucket:    oss.Ptr("oss-demo"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 		Table:     oss.Ptr("table"),
 	}
@@ -91,23 +80,19 @@ func TestMarshalInput_PutTablePolicy(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Body")
+	assert.Contains(t, err.Error(), "missing required field, ResourcePolicy.")
 
 	request = &PutTablePolicyRequest{
-		Bucket:    oss.Ptr("bucket"),
-		Namespace: oss.Ptr("space"),
-		Table:     oss.Ptr("xfz-table-bucket"),
-		Body:      strings.NewReader(`{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/xfz-table-bucket/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`),
+		BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:      oss.Ptr("space"),
+		Table:          oss.Ptr("xfz-table-bucket"),
+		ResourcePolicy: oss.Ptr("{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"),
 	}
 	input = &oss.OperationInput{
 		OpName: "PutTablePolicy",
@@ -115,23 +100,18 @@ func TestMarshalInput_PutTablePolicy(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
-	assert.Equal(t, input.Parameters["tables"], "")
-	assert.Equal(t, input.Parameters["policy"], "")
-	assert.Equal(t, input.Parameters["space"], "")
-	assert.Equal(t, input.Parameters["table"], "")
+
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/xfz-table-bucket/policy")
 	jsonStr, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(jsonStr), `{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/xfz-table-bucket/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`)
+	assert.Equal(t, string(jsonStr), `{"resourcePolicy":"{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"}`)
 }
 
 func TestUnmarshalOutput_PutTablePolicy(t *testing.T) {
@@ -156,14 +136,7 @@ func TestUnmarshalOutput_PutTablePolicy(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 
-	body := `{
-  "Error": {
-    "Code": "AccessDenied",
-    "Message": "AccessDenied",
-    "RequestId": "568D5566F2D0F89F5C0E****",
-    "HostId": "test.oss.aliyuncs.com"
-  }
-}`
+	body := `{"message": "AccessDenied"}`
 	output = &oss.OperationOutput{
 		StatusCode: 403,
 		Status:     "AccessDenied",
@@ -196,20 +169,16 @@ func TestMarshalInput_GetTablePolicy(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
 
 	request = &GetTablePolicyRequest{
-		Bucket: oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTablePolicy",
@@ -217,20 +186,16 @@ func TestMarshalInput_GetTablePolicy(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &GetTablePolicyRequest{
-		Bucket:    oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
@@ -239,20 +204,16 @@ func TestMarshalInput_GetTablePolicy(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Table.")
 
 	request = &GetTablePolicyRequest{
-		Bucket:    oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Table:     oss.Ptr("table"),
 		Namespace: oss.Ptr("space"),
 	}
@@ -262,20 +223,14 @@ func TestMarshalInput_GetTablePolicy(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
-	assert.Equal(t, input.Parameters["tables"], "")
-	assert.Equal(t, input.Parameters["policy"], "")
-	assert.Equal(t, input.Parameters["space"], "")
-	assert.Equal(t, input.Parameters["table"], "")
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy")
 }
 
 func TestUnmarshalOutput_GetTablePolicy(t *testing.T) {
@@ -283,7 +238,7 @@ func TestUnmarshalOutput_GetTablePolicy(t *testing.T) {
 	assert.NotNil(t, c)
 	var output *oss.OperationOutput
 	var err error
-	body := `{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/xfz-table-bucket/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`
+	body := `{"resourcePolicy":"{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"}`
 	output = &oss.OperationOutput{
 		StatusCode: 200,
 		Status:     "OK",
@@ -293,27 +248,17 @@ func TestUnmarshalOutput_GetTablePolicy(t *testing.T) {
 			"Content-Type":     {"application/json"},
 		},
 	}
-	policy, err := io.ReadAll(output.Body)
-	assert.Nil(t, err)
-	defer output.Body.Close()
-	result := &GetTablePolicyResult{
-		Body: string(policy),
-	}
+	result := &GetTablePolicyResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 200)
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
-	assert.Equal(t, result.Body, `{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/xfz-table-bucket/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`)
+	assert.Equal(t, *result.ResourcePolicy, `{"Version":"1","Statement":[{"Action":["oss:GetTable"],"Effect":"Allow","Principal":["9876543210"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*"]}]}`)
 
 	body = `{
-  "Error": {
-    "Code": "AccessDenied",
-    "Message": "AccessDenied",
-    "RequestId": "568D5566F2D0F89F5C0E****",
-    "HostId": "test.oss.aliyuncs.com"
-  }
+    "message": "AccessDenied"
 }`
 	output = &oss.OperationOutput{
 		StatusCode: 403,
@@ -324,11 +269,7 @@ func TestUnmarshalOutput_GetTablePolicy(t *testing.T) {
 			"Content-Type":     {"application/json"},
 		},
 	}
-	policy, err = io.ReadAll(output.Body)
-	assert.Nil(t, err)
-	result = &GetTablePolicyResult{
-		Body: string(policy),
-	}
+	result = &GetTablePolicyResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)
@@ -347,90 +288,73 @@ func TestMarshalInput_DeleteTablePolicy(t *testing.T) {
 	request = &DeleteTablePolicyRequest{}
 	input = &oss.OperationInput{
 		OpName: "DeleteTablePolicy",
-		Method: "GET",
+		Method: "DELETE",
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket.")
+	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
 
 	request = &DeleteTablePolicyRequest{
-		Bucket: oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteTablePolicy",
-		Method: "GET",
+		Method: "DELETE",
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &DeleteTablePolicyRequest{
-		Bucket:    oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteTablePolicy",
-		Method: "GET",
+		Method: "DELETE",
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Table.")
 
 	request = &DeleteTablePolicyRequest{
-		Bucket:    oss.Ptr("bucket"),
+		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 		Table:     oss.Ptr("table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteTablePolicy",
-		Method: "GET",
+		Method: "DELETE",
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
-	assert.Equal(t, input.Parameters["tables"], "")
-	assert.Equal(t, input.Parameters["policy"], "")
-	assert.Equal(t, input.Parameters["space"], "")
-	assert.Equal(t, input.Parameters["table"], "")
+	assert.Equal(t, input.Method,"DELETE")
+	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy")
 }
 
 func TestUnmarshalOutput_DeleteTablePolicy(t *testing.T) {

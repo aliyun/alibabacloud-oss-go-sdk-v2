@@ -2,21 +2,20 @@ package tables
 
 import (
 	"context"
-	"io"
+	"fmt"
+	"net/url"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 )
 
 type PutTablePolicyRequest struct {
-	// The name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
 	Table *string `input:"nop,name,required"`
 
-	// The request parameters.
-	Body io.Reader `input:"body,nop,required"`
+	ResourcePolicy *string `input:"body,resourcePolicy,required,json"`
 
 	oss.RequestCommon
 }
@@ -37,14 +36,10 @@ func (c *TablesClient) PutTablePolicy(ctx context.Context, request *PutTablePoli
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -64,8 +59,7 @@ func (c *TablesClient) PutTablePolicy(ctx context.Context, request *PutTablePoli
 }
 
 type GetTablePolicyRequest struct {
-	// The name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
@@ -75,7 +69,7 @@ type GetTablePolicyRequest struct {
 }
 
 type GetTablePolicyResult struct {
-	Body string
+	ResourcePolicy *string `output:"body,resourcePolicy,json"`
 
 	oss.ResultCommon
 }
@@ -92,14 +86,10 @@ func (c *TablesClient) GetTablePolicy(ctx context.Context, request *GetTablePoli
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -109,14 +99,7 @@ func (c *TablesClient) GetTablePolicy(ctx context.Context, request *GetTablePoli
 		return nil, err
 	}
 
-	body, err := io.ReadAll(output.Body)
-	defer output.Body.Close()
-	if err != nil {
-		return nil, err
-	}
-	result := &GetTablePolicyResult{
-		Body: string(body),
-	}
+	result := &GetTablePolicyResult{}
 	if err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
@@ -125,8 +108,7 @@ func (c *TablesClient) GetTablePolicy(ctx context.Context, request *GetTablePoli
 }
 
 type DeleteTablePolicyRequest struct {
-	// The name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
@@ -151,14 +133,10 @@ func (c *TablesClient) DeleteTablePolicy(ctx context.Context, request *DeleteTab
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-			"policy":                        "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}

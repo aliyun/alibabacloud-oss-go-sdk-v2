@@ -399,7 +399,7 @@ func TestUnmarshalOutput_ListTableBuckets(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 
 	body = `{
-    "message": "AccessDenied",
+    "message": "AccessDenied"
 }`
 	output = &oss.OperationOutput{
 		StatusCode: 403,

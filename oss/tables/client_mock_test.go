@@ -3887,17 +3887,17 @@ var testMockPutTablePolicySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, `{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/table/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`, string(requestBody))
+			assert.Equal(t, `{"resourcePolicy":"{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"}`, string(requestBody))
 		},
 		&PutTablePolicyRequest{
-			Bucket:    oss.Ptr("bucket"),
-			Namespace: oss.Ptr("space"),
-			Table:     oss.Ptr("table"),
-			Body:      strings.NewReader(`{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/table/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`),
+			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Namespace:      oss.Ptr("space"),
+			Table:          oss.Ptr("table"),
+			ResourcePolicy: oss.Ptr("{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"),
 		},
 		func(t *testing.T, o *PutTablePolicyResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -3943,29 +3943,21 @@ var testMockPutTablePolicyErrorCases = []struct {
 			"Content-Type":     "application/json",
 		},
 		[]byte(
-			`{
-			  "Error": {
-				"Code": "SignatureDoesNotMatch",
-				"Message": "The request signature we calculated does not match the signature you provided. Check your key and signing method.",
-				"RequestId": "65467C42E001B4333337****",
-				"SignatureProvided": "RizTbeKC/QlwxINq8xEdUPowc84=",
-				"EC": "0002-00000040"
-			  }
-			}`),
+			`{"message": "The request signature we calculated does not match the signature you provided. Check your key and signing method."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, `{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/table/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`, string(requestBody))
+			assert.Equal(t, `{"resourcePolicy":"{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"}`, string(requestBody))
 		},
 		&PutTablePolicyRequest{
-			Bucket:    oss.Ptr("bucket"),
-			Namespace: oss.Ptr("space"),
-			Table:     oss.Ptr("table"),
-			Body:      strings.NewReader(`{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/table/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`),
+			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Namespace:      oss.Ptr("space"),
+			Table:          oss.Ptr("table"),
+			ResourcePolicy: oss.Ptr("{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"),
 		},
 		func(t *testing.T, o *PutTablePolicyResult, err error) {
 			assert.Nil(t, o)
@@ -3974,11 +3966,9 @@ var testMockPutTablePolicyErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "SignatureDoesNotMatch", serr.Code)
-			assert.Equal(t, "0002-00000040", serr.EC)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request signature we calculated does not match")
-			assert.Contains(t, serr.RequestTarget, "/bucket")
 		},
 	},
 	{
@@ -3989,28 +3979,21 @@ var testMockPutTablePolicyErrorCases = []struct {
 			"Content-Type":     "application/json",
 		},
 		[]byte(
-			`{
-			  "Error": {
-				"Code": "ConflictException",
-				"Message": "The request failed because there is a conflict with a previous write. You can retry the request.",
-				"RequestId": "6548A043CA31D****",
-				"EC": "0015-00000104"
-			  }
-			}`),
+			`{"message": "The request failed because there is a conflict with a previous write. You can retry the request."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
-			assert.Equal(t, `{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/table/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`, string(requestBody))
+			assert.Equal(t, `{"resourcePolicy":"{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"}`, string(requestBody))
 		},
 		&PutTablePolicyRequest{
-			Bucket:    oss.Ptr("bucket"),
-			Namespace: oss.Ptr("space"),
-			Table:     oss.Ptr("table"),
-			Body:      strings.NewReader(`{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/table/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`),
+			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			Namespace:      oss.Ptr("space"),
+			Table:          oss.Ptr("table"),
+			ResourcePolicy: oss.Ptr("{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"),
 		},
 		func(t *testing.T, o *PutTablePolicyResult, err error) {
 			assert.Nil(t, o)
@@ -4019,11 +4002,9 @@ var testMockPutTablePolicyErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(409), serr.StatusCode)
-			assert.Equal(t, "ConflictException", serr.Code)
-			assert.Equal(t, "0015-00000104", serr.EC)
-			assert.Equal(t, "6548A043CA31D****", serr.RequestID)
+			assert.Equal(t, "Conflict", serr.Code)
+			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request failed because there is a conflict with a previous write. You can retry the request.")
-			assert.Contains(t, serr.RequestTarget, "/bucket")
 		},
 	},
 }
@@ -4062,15 +4043,15 @@ var testMockGetTablePolicySuccessCases = []struct {
 			"x-oss-request-id": "534B371674E88A4D8906****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
-		[]byte(`{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/xfz-table-bucket/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`),
+		[]byte(`{"resourcePolicy":"{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&GetTablePolicyRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Table:     oss.Ptr("table"),
 			Namespace: oss.Ptr("space"),
 		},
@@ -4081,7 +4062,7 @@ var testMockGetTablePolicySuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.Equal(t, o.Headers.Get("Content-Type"), "application/json")
-			assert.Equal(t, o.Body, `{"resourcePolicy":"\"Version\":\"2012-10-17\",\"Id\":\"DeleteTable\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"OSS\":\"arn:oss:iam::651322719100:user/jiangqi\"},\"Action\":[\"osstables:DeleteTable\",\"osstables:UpdateTableMetadataLocation\",\"osstables:PutTableData\",\"osstables:GetTableMetadataLocation\"],\"Resource\":\"arn:oss:osstables:cn-hangzhou:651322719100:bucket/xfz-table-bucket/table/af5ab6a4-f9a5-4d9b-8e89-eb9c6f1c0c8f\""}`)
+			assert.Equal(t, *o.ResourcePolicy, `{"Version":"1","Statement":[{"Action":["oss:GetTable"],"Effect":"Allow","Principal":["9876543210"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*"]}]}`)
 		},
 	},
 }
@@ -4134,10 +4115,10 @@ var testMockGetTablePolicyErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&GetTablePolicyRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Table:     oss.Ptr("table"),
 			Namespace: oss.Ptr("space"),
 		},
@@ -4175,10 +4156,10 @@ var testMockGetTablePolicyErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&GetTablePolicyRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Table:     oss.Ptr("table"),
 			Namespace: oss.Ptr("space"),
 		},
@@ -4234,10 +4215,10 @@ var testMockDeleteTablePolicySuccessCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&DeleteTablePolicyRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -4284,24 +4265,15 @@ var testMockDeleteTablePolicyErrorCases = []struct {
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&DeleteTablePolicyRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -4312,9 +4284,8 @@ var testMockDeleteTablePolicyErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "0015-00000101", serr.EC)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
 		},
 	},
@@ -4325,24 +4296,15 @@ var testMockDeleteTablePolicyErrorCases = []struct {
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "BucketNotEmpty",
-    "Message": "The bucket has objects. Please delete them first.",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000301"
-  }
-}`),
+		[]byte(`{"message": "The bucket has objects. Please delete them first."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?policy&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&DeleteTablePolicyRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -4353,9 +4315,8 @@ var testMockDeleteTablePolicyErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(409), serr.StatusCode)
-			assert.Equal(t, "BucketNotEmpty", serr.Code)
+			assert.Equal(t, "Conflict", serr.Code)
 			assert.Equal(t, "The bucket has objects. Please delete them first.", serr.Message)
-			assert.Equal(t, "0015-00000301", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
 		},
 	},
