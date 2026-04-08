@@ -4595,18 +4595,18 @@ var testMockGetTableMetadataLocationSuccessCases = []struct {
 			"Content-Type":     "application/json",
 		},
 		[]byte(`{
-   "metadataLocation": "location",
-   "warehouseLocation": "bbb",
-   "versionToken": "aaa"
+   "metadataLocation": "oss://data-bucket/metadata/00000-xxx.metadata.json",
+   "warehouseLocation": "oss://eb998f10-d20c-4f22-bmz18s1enia50ot33z1i51zzrrb51b9tc--table-oss",
+   "versionToken": "f62eb60ebcd1405db129f4ac86569e2d"
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?metadata-location&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&GetTableMetadataLocationRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -4616,9 +4616,9 @@ var testMockGetTableMetadataLocationSuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 
-			assert.Equal(t, *o.MetadataLocation, "location")
-			assert.Equal(t, *o.VersionToken, "aaa")
-			assert.Equal(t, *o.WarehouseLocation, "bbb")
+			assert.Equal(t, *o.MetadataLocation, "oss://data-bucket/metadata/00000-xxx.metadata.json")
+			assert.Equal(t, *o.VersionToken, "f62eb60ebcd1405db129f4ac86569e2d")
+			assert.Equal(t, *o.WarehouseLocation, "oss://eb998f10-d20c-4f22-bmz18s1enia50ot33z1i51zzrrb51b9tc--table-oss")
 		},
 	},
 }
@@ -4657,24 +4657,15 @@ var testMockGetTableMetadataLocationErrorCases = []struct {
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified table does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?metadata-location&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&GetTableMetadataLocationRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -4685,9 +4676,8 @@ var testMockGetTableMetadataLocationErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
-			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
-			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+			assert.Equal(t, "Not Found", serr.Code)
+			assert.Equal(t, "The specified table does not exist.", serr.Message)
 		},
 	},
 	{
@@ -4697,24 +4687,15 @@ var testMockGetTableMetadataLocationErrorCases = []struct {
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?metadata-location&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&GetTableMetadataLocationRequest{
-			Bucket:    oss.Ptr("bucket"),
+			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Table:     oss.Ptr("table"),
 		},
@@ -4725,9 +4706,8 @@ var testMockGetTableMetadataLocationErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
 		},
 	},
@@ -4765,8 +4745,15 @@ var testMockUpdateTableMetadataLocationSuccessCases = []struct {
 		map[string]string{
 			"x-oss-request-id": "534B371674E88A4D8906****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/json",
 		},
-		[]byte(``),
+		[]byte(`{
+   "metadataLocation": "location",
+   "name": "table",
+   "namespace": [ "space" ],
+   "tableARN": "acs:osstable:cn-hangzhou:123:bucket/demo-bucket/table/table_123",
+   "versionToken": "aaa"
+}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, r.Method, "PUT")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
@@ -4774,10 +4761,10 @@ var testMockUpdateTableMetadataLocationSuccessCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, string(body), "{\"metadataLocation\":\"location\",\"versionToken\":\"version-token\"}")
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?metadata-location&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&UpdateTableMetadataLocationRequest{
-			Bucket:           oss.Ptr("bucket"),
+			BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:        oss.Ptr("space"),
 			Table:            oss.Ptr("table"),
 			MetadataLocation: oss.Ptr("location"),
@@ -4788,6 +4775,11 @@ var testMockUpdateTableMetadataLocationSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, *o.MetadataLocation, "location")
+			assert.Equal(t, *o.Name, "table")
+			assert.Equal(t, o.Namespace[0], "space")
+			assert.Equal(t, *o.TableArn, "acs:osstable:cn-hangzhou:123:bucket/demo-bucket/table/table_123")
+			assert.Equal(t, *o.VersionToken, "aaa")
 		},
 	},
 }
@@ -4826,16 +4818,7 @@ var testMockUpdateTableMetadataLocationErrorCases = []struct {
 			"x-oss-request-id": "5C3D9175B6FC201293AD****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "NoSuchBucket",
-    "Message": "The specified bucket does not exist.",
-    "RequestId": "5C3D9175B6FC201293AD****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0015-00000101"
-  }
-}`),
+		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, r.Method, "PUT")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
@@ -4843,10 +4826,10 @@ var testMockUpdateTableMetadataLocationErrorCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, string(body), "{\"metadataLocation\":\"location\",\"versionToken\":\"version-token\"}")
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?metadata-location&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&UpdateTableMetadataLocationRequest{
-			Bucket:           oss.Ptr("bucket"),
+			BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:        oss.Ptr("space"),
 			Table:            oss.Ptr("table"),
 			MetadataLocation: oss.Ptr("location"),
@@ -4859,7 +4842,7 @@ var testMockUpdateTableMetadataLocationErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(404), serr.StatusCode)
-			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "Not Found", serr.Code)
 			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
 			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
 		},
@@ -4871,16 +4854,7 @@ var testMockUpdateTableMetadataLocationErrorCases = []struct {
 			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
 		},
-		[]byte(`{
-  "Error": {
-    "Code": "UserDisable",
-    "Message": "UserDisable",
-    "RequestId": "5C3D8D2A0ACA54D87B43****",
-    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
-    "BucketName": "test",
-    "EC": "0003-00000801"
-  }
-}`),
+		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, r.Method, "PUT")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
@@ -4888,10 +4862,10 @@ var testMockUpdateTableMetadataLocationErrorCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, string(body), "{\"metadataLocation\":\"location\",\"versionToken\":\"version-token\"}")
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/bucket/?metadata-location&space&table&tables", strUrl)
+			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&UpdateTableMetadataLocationRequest{
-			Bucket:           oss.Ptr("bucket"),
+			BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:        oss.Ptr("space"),
 			Table:            oss.Ptr("table"),
 			MetadataLocation: oss.Ptr("location"),
@@ -4904,9 +4878,8 @@ var testMockUpdateTableMetadataLocationErrorCases = []struct {
 			errors.As(err, &serr)
 			assert.NotNil(t, serr)
 			assert.Equal(t, int(403), serr.StatusCode)
-			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "Forbidden", serr.Code)
 			assert.Equal(t, "UserDisable", serr.Message)
-			assert.Equal(t, "0003-00000801", serr.EC)
 			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
 		},
 	},

@@ -2,13 +2,14 @@ package tables
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 )
 
 type GetTableMetadataLocationRequest struct {
-	// The name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
@@ -37,14 +38,10 @@ func (c *TablesClient) GetTableMetadataLocation(ctx context.Context, request *Ge
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"metadata-location":             "",
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -60,8 +57,7 @@ func (c *TablesClient) GetTableMetadataLocation(ctx context.Context, request *Ge
 }
 
 type UpdateTableMetadataLocationRequest struct {
-	// The name of the table bucket.
-	Bucket *string `input:"host,bucket,required"`
+	BucketArn *string `input:"nop,bucketArn,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
@@ -78,7 +74,7 @@ type UpdateTableMetadataLocationResult struct {
 	MetadataLocation *string  `json:"metadataLocation"`
 	Name             *string  `json:"name"`
 	Namespace        []string `json:"namespace"`
-	TableARN         *string  `json:"tableARN"`
+	TableArn         *string  `json:"tableARN"`
 	VersionToken     *string  `json:"versionToken"`
 
 	oss.ResultCommon
@@ -96,14 +92,10 @@ func (c *TablesClient) UpdateTableMetadataLocation(ctx context.Context, request 
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Parameters: map[string]string{
-			"metadata-location":             "",
-			"tables":                        "",
-			oss.ToString(request.Namespace): "",
-			oss.ToString(request.Table):     "",
-		},
-		Bucket: request.Bucket,
+		Bucket: request.BucketArn,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
 	}
+	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
