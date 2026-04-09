@@ -27,11 +27,11 @@ type CreateTableRequest struct {
 }
 
 type TableMetadata struct {
-	Iceberg *MetadataIceberg `json:"iceberg"`
+	Iceberg *MetadataIceberg `json:"iceberg,omitempty"`
 }
 
 type MetadataIceberg struct {
-	Schema map[string]any `json:"schema"`
+	Schema map[string]any `json:"schema,omitempty"`
 }
 
 type CreateTableResult struct {

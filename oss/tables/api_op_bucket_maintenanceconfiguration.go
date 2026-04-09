@@ -38,8 +38,8 @@ type IcebergSettings struct {
 }
 
 type SettingsDetail struct {
-	NonCurrentDays   *int `json:"nonCurrentDays"`
-	UnreferencedDays *int `json:"unreferencedDays"`
+	NonCurrentDays   *int `json:"nonCurrentDays,omitempty"`
+	UnreferencedDays *int `json:"unreferencedDays,omitempty"`
 }
 
 // GetTableBucketMaintenanceConfiguration Queries the maintenance config of a bucket.
@@ -84,13 +84,13 @@ type PutTableBucketMaintenanceConfigurationRequest struct {
 }
 
 type MaintenanceValue struct {
-	Settings *MaintenanceSettings `json:"settings"`
+	Settings *MaintenanceSettings `json:"settings,omitempty"`
 
-	Status *string `json:"status"`
+	Status *string `json:"status,omitempty"`
 }
 
 type MaintenanceSettings struct {
-	IcebergUnreferencedFileRemoval *SettingsDetail `json:"icebergUnreferencedFileRemoval"`
+	IcebergUnreferencedFileRemoval *SettingsDetail `json:"icebergUnreferencedFileRemoval,omitempty"`
 }
 
 type PutTableBucketMaintenanceConfigurationResult struct {

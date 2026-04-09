@@ -106,8 +106,8 @@ func TestUnmarshalOutput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 	var output *oss.OperationOutput
 	var err error
 	output = &oss.OperationOutput{
-		StatusCode: 200,
-		Status:     "OK",
+		StatusCode: 204,
+		Status:     "No Content",
 		Headers: http.Header{
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 		},
@@ -115,8 +115,8 @@ func TestUnmarshalOutput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 	result := &PutTableBucketMaintenanceConfigurationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
 	assert.Nil(t, err)
-	assert.Equal(t, result.StatusCode, 200)
-	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.StatusCode, 204)
+	assert.Equal(t, result.Status, "No Content")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 
 	output = &oss.OperationOutput{

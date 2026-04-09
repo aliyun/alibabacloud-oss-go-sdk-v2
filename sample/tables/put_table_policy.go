@@ -62,7 +62,7 @@ func main() {
 			   "Statement":[
 			   {
 				 "Action":[
-				   "oss:GetTable",
+				   "oss:GetTable"
 				],
 				"Effect":"Deny",
 				"Principal":["1234567890"],

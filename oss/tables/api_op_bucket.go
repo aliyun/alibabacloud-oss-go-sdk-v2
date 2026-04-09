@@ -19,9 +19,9 @@ type CreateTableBucketRequest struct {
 }
 
 type EncryptionConfiguration struct {
-	KmsKeyArn *string `json:"kmsKeyArn"`
+	KmsKeyArn *string `json:"kmsKeyArn,omitempty"`
 
-	SseAlgorithm *string `json:"sseAlgorithm"`
+	SseAlgorithm *string `json:"sseAlgorithm,omitempty"`
 }
 
 type CreateTableBucketResult struct {

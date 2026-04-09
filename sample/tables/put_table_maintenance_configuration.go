@@ -80,7 +80,7 @@ func main() {
 	//		Status: oss.Ptr("enabled"),
 	//		Settings: &tables.TableMaintenanceSettings{
 	//			IcebergSnapshotManagement: &tables.IcebergSnapshotManagementSettingsDetail{
-	//				MaxSnapshotAgeHours: oss.Ptr(int(350)),
+	//				MaxSnapshotAgeHours: oss.Ptr(350),
 	//				MinSnapshotsToKeep:  oss.Ptr(1),
 	//			},
 	//		},

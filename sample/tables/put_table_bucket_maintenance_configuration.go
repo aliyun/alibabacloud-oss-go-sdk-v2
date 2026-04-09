@@ -44,11 +44,11 @@ func main() {
 		Value: &tables.MaintenanceValue{
 			Settings: &tables.MaintenanceSettings{
 				IcebergUnreferencedFileRemoval: &tables.SettingsDetail{
-					UnreferencedDays: oss.Ptr(int(4)),
+					UnreferencedDays: oss.Ptr(4),
 					NonCurrentDays:   oss.Ptr(10),
 				},
 			},
-			Status: oss.Ptr("disabled"),
+			Status: oss.Ptr("enabled"),
 		},
 	})
 
