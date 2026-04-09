@@ -239,7 +239,7 @@ func TestUnmarshalOutput_GetTableBucketMaintenanceConfiguration(t *testing.T) {
 	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Settings.IcebergUnreferencedFileRemoval.UnreferencedDays, 10)
 	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Settings.IcebergUnreferencedFileRemoval.NonCurrentDays, 2147483647)
 	assert.Equal(t, *result.Configuration.IcebergUnreferencedFileRemoval.Status, "enabled")
-	assert.Equal(t, *result.TableBucketARN, "acs:osstables:cn-beijing:123456:bucket/demo-bucket")
+	assert.Equal(t, *result.TableBucketArn, "acs:osstables:cn-beijing:123456:bucket/demo-bucket")
 
 	output = &oss.OperationOutput{
 		StatusCode: 404,

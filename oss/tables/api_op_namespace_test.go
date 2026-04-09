@@ -104,7 +104,7 @@ func TestUnmarshalOutput_CreateNamespace(t *testing.T) {
 	assert.Equal(t, len(result.Namespace), 1)
 	assert.Equal(t, result.Namespace[0], "test-namespace")
 	assert.Equal(t, result.Namespace, []string{"test-namespace"})
-	assert.Equal(t, *result.TableBucketARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *result.TableBucketArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
 
 	output = &oss.OperationOutput{
 		StatusCode: 409,
@@ -138,7 +138,7 @@ func TestMarshalInput_GetNamespace(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -155,7 +155,7 @@ func TestMarshalInput_GetNamespace(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -173,7 +173,7 @@ func TestMarshalInput_GetNamespace(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -417,7 +417,7 @@ func TestMarshalInput_DeleteNamespace(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -434,7 +434,7 @@ func TestMarshalInput_DeleteNamespace(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -452,7 +452,7 @@ func TestMarshalInput_DeleteNamespace(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)

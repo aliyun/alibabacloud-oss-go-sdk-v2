@@ -37,7 +37,7 @@ func (c *TablesClient) GetTableEncryption(ctx context.Context, request *GetTable
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/encryption", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace), oss.ToString(request.Table))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/encryption", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

@@ -20,7 +20,7 @@ type CreateNamespaceRequest struct {
 type CreateNamespaceResult struct {
 	Namespace []string `json:"namespace"`
 
-	TableBucketARN *string `json:"tableBucketARN"`
+	TableBucketArn *string `json:"tableBucketARN"`
 
 	oss.ResultCommon
 }
@@ -89,7 +89,7 @@ func (c *TablesClient) GetNamespace(ctx context.Context, request *GetNamespaceRe
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -199,7 +199,7 @@ func (c *TablesClient) DeleteNamespace(ctx context.Context, request *DeleteNames
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Namespace))),
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

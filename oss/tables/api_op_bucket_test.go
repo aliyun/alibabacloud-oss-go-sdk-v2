@@ -100,7 +100,7 @@ func TestUnmarshalOutput_CreateTableBucket(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
-	assert.Equal(t, oss.ToString(result.BucketArn), "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, oss.ToString(result.Arn), "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
 
 	output = &oss.OperationOutput{
 		StatusCode: 409,
@@ -259,7 +259,7 @@ func TestUnmarshalOutput_GetTableBucket(t *testing.T) {
 	assert.Equal(t, result.Status, "OK")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
-	assert.Equal(t, *result.BucketArn, "acs:osstables:cn-beijing:12345657890:bucket/demo-bucket")
+	assert.Equal(t, *result.Arn, "acs:osstables:cn-beijing:12345657890:bucket/demo-bucket")
 	assert.Equal(t, *result.Name, "demo-bucket")
 	assert.Equal(t, *result.CreatedAt, "2026-04-01T09:42:50.000000+00:00")
 	assert.Equal(t, *result.OwnerAccountId, "12345657890")
@@ -370,14 +370,14 @@ func TestUnmarshalOutput_ListTableBuckets(t *testing.T) {
 	assert.Equal(t, *result.ContinuationToken, "Cj5hY3M6b3NzdGFibGVzOmNuLWJlaWppbmc6MTc2MDIyNTU0NTA4NDMzMTpidWNrZXQvZGVtby13YWxrZXItMQ--")
 	assert.Equal(t, len(result.Buckets), 2)
 	assert.Equal(t, *result.Buckets[0].CreatedAt, "2026-04-02T05:27:31.000000+00:00")
-	assert.Equal(t, *result.Buckets[0].BucketArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *result.Buckets[0].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
 	assert.Equal(t, *result.Buckets[0].Name, "demo-bucket")
 	assert.Equal(t, *result.Buckets[0].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
 	assert.Equal(t, *result.Buckets[0].OwnerAccountId, "1234567890")
 	assert.Equal(t, *result.Buckets[0].Type, "customer")
 
 	assert.Equal(t, *result.Buckets[1].CreatedAt, "2026-04-02T05:27:32.000000+00:00")
-	assert.Equal(t, *result.Buckets[1].BucketArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket-1")
+	assert.Equal(t, *result.Buckets[1].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket-1")
 	assert.Equal(t, *result.Buckets[1].Name, "demo-bucket-1")
 	assert.Equal(t, *result.Buckets[1].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f3")
 	assert.Equal(t, *result.Buckets[1].OwnerAccountId, "1234567890")

@@ -18,7 +18,7 @@ type GetTableBucketMaintenanceConfigurationResult struct {
 	// The container that stores the maintenance configuration of the table bucket.
 	Configuration *MaintenanceConfiguration `output:"body,configuration,json"`
 
-	TableBucketARN *string `output:"body,tableBucketARN,json"`
+	TableBucketArn *string `output:"body,tableBucketARN,json"`
 
 	oss.ResultCommon
 }

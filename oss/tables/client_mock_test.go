@@ -348,7 +348,7 @@ var testMockCreateTableBucketSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/bucket", *o.BucketArn)
+			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/bucket", *o.Arn)
 		},
 	},
 	{
@@ -372,7 +372,7 @@ var testMockCreateTableBucketSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/bucket", *o.BucketArn)
+			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/bucket", *o.Arn)
 		},
 	},
 }
@@ -538,7 +538,7 @@ var testMockGetTableBucketSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 
 			assert.Equal(t, o.Headers.Get("Content-Type"), "application/json")
-			assert.Equal(t, *o.BucketArn, "acs:osstables:cn-beijing:12345657890:bucket/demo-bucket")
+			assert.Equal(t, *o.Arn, "acs:osstables:cn-beijing:12345657890:bucket/demo-bucket")
 			assert.Equal(t, *o.Name, "demo-bucket")
 			assert.Equal(t, *o.CreatedAt, "2026-04-01T09:42:50.000000+00:00")
 			assert.Equal(t, *o.OwnerAccountId, "12345657890")
@@ -726,14 +726,14 @@ var testMockListTableBucketsSuccessCases = []struct {
 			assert.Equal(t, *o.ContinuationToken, "Cj5hY3M6b3NzdGFibGVzOmNuLWJlaWppbmc6MTc2MDIyNTU0NTA4NDMzMTpidWNrZXQvZGVtby13YWxrZXItMQ--")
 			assert.Equal(t, len(o.Buckets), 2)
 			assert.Equal(t, *o.Buckets[0].CreatedAt, "2026-04-02T05:27:31.000000+00:00")
-			assert.Equal(t, *o.Buckets[0].BucketArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+			assert.Equal(t, *o.Buckets[0].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
 			assert.Equal(t, *o.Buckets[0].Name, "demo-bucket")
 			assert.Equal(t, *o.Buckets[0].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
 			assert.Equal(t, *o.Buckets[0].OwnerAccountId, "1234567890")
 			assert.Equal(t, *o.Buckets[0].Type, "customer")
 
 			assert.Equal(t, *o.Buckets[1].CreatedAt, "2026-04-02T05:27:32.000000+00:00")
-			assert.Equal(t, *o.Buckets[1].BucketArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket-1")
+			assert.Equal(t, *o.Buckets[1].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket-1")
 			assert.Equal(t, *o.Buckets[1].Name, "demo-bucket-1")
 			assert.Equal(t, *o.Buckets[1].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f3")
 			assert.Equal(t, *o.Buckets[1].OwnerAccountId, "1234567890")
@@ -2111,7 +2111,7 @@ var testMockGetTableBucketMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.IcebergUnreferencedFileRemoval.UnreferencedDays, 10)
 			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.IcebergUnreferencedFileRemoval.NonCurrentDays, 2147483647)
 			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Status, "enabled")
-			assert.Equal(t, *o.TableBucketARN, "acs:osstables:cn-beijing:123456:bucket/demo-bucket")
+			assert.Equal(t, *o.TableBucketArn, "acs:osstables:cn-beijing:123456:bucket/demo-bucket")
 		},
 	},
 }
@@ -2257,7 +2257,7 @@ var testMockCreateNamespaceSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket", *o.TableBucketARN)
+			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket", *o.TableBucketArn)
 			assert.Equal(t, "space", o.Namespace[0])
 		},
 	},
@@ -3135,7 +3135,7 @@ var testMockGetTableSuccessCases = []struct {
 			assert.Equal(t, o.Namespace[0], "my_namespace")
 			assert.Equal(t, *o.NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01198")
 			assert.Equal(t, *o.OwnerAccountId, "1234567890")
-			assert.Equal(t, *o.TableARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
+			assert.Equal(t, *o.TableArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
 			assert.Equal(t, *o.TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
 			assert.Equal(t, *o.Type, "customer")
 			assert.Equal(t, *o.VersionToken, "365f934c6e234f35ace5ae48f0a0d871")
@@ -3191,7 +3191,7 @@ var testMockGetTableSuccessCases = []struct {
 			assert.Equal(t, o.Namespace[0], "my_namespace")
 			assert.Equal(t, *o.NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01198")
 			assert.Equal(t, *o.OwnerAccountId, "1234567890")
-			assert.Equal(t, *o.TableARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
+			assert.Equal(t, *o.TableArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
 			assert.Equal(t, *o.TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
 			assert.Equal(t, *o.Type, "customer")
 			assert.Equal(t, *o.VersionToken, "365f934c6e234f35ace5ae48f0a0d871")
@@ -3398,14 +3398,14 @@ var testMockListTablesSuccessCases = []struct {
 			assert.Equal(t, *o.Tables[0].ModifiedAt, "2026-04-07T02:15:12.186626+00:00")
 			assert.Equal(t, *o.Tables[0].Name, "example_table")
 			assert.Equal(t, o.Tables[0].Namespace[0], "my_namespace")
-			assert.Equal(t, *o.Tables[0].TableARN, "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/7568a090-50f8-4808-8c8d-930a2c264076")
+			assert.Equal(t, *o.Tables[0].TableArn, "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/7568a090-50f8-4808-8c8d-930a2c264076")
 			assert.Equal(t, *o.Tables[0].Type, "customer")
 
 			assert.Equal(t, *o.Tables[1].CreatedAt, "2026-04-07T02:15:12.186626+00:00")
 			assert.Equal(t, *o.Tables[1].ModifiedAt, "2026-04-07T02:15:12.186626+00:00")
 			assert.Equal(t, *o.Tables[1].Name, "example_table1")
 			assert.Equal(t, o.Tables[1].Namespace[0], "my_namespace")
-			assert.Equal(t, *o.Tables[1].TableARN, "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/757c17c1-532e-4a45-b5b3-d8783374fc2a")
+			assert.Equal(t, *o.Tables[1].TableArn, "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/757c17c1-532e-4a45-b5b3-d8783374fc2a")
 			assert.Equal(t, *o.Tables[1].Type, "customer")
 		},
 	},

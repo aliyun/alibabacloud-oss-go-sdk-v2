@@ -25,7 +25,7 @@ type EncryptionConfiguration struct {
 }
 
 type CreateTableBucketResult struct {
-	BucketArn *string `json:"arn"`
+	Arn *string `json:"arn"`
 
 	oss.ResultCommon
 }
@@ -70,7 +70,7 @@ type GetTableBucketRequest struct {
 }
 
 type GetTableBucketResult struct {
-	BucketArn      *string `json:"arn"`
+	Arn            *string `json:"arn"`
 	CreatedAt      *string `json:"createdAt"`
 	Name           *string `json:"name"`
 	OwnerAccountId *string `json:"ownerAccountId"`
@@ -136,7 +136,7 @@ type ListTableBucketsResult struct {
 }
 
 type TableBucketProperties struct {
-	BucketArn      *string `json:"arn"`
+	Arn            *string `json:"arn"`
 	CreatedAt      *string `json:"createdAt"`
 	Name           *string `json:"name"`
 	OwnerAccountId *string `json:"ownerAccountId"`
