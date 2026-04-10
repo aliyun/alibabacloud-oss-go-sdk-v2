@@ -70,7 +70,7 @@ func main() {
 	result, err := client.UpdateTableMetadataLocation(context.TODO(), &tables.UpdateTableMetadataLocationRequest{
 		BucketArn:        oss.Ptr(bucketArn),
 		Namespace:        oss.Ptr(nameSpace),
-		Table:            oss.Ptr(table),
+		Name:            oss.Ptr(table),
 		MetadataLocation: oss.Ptr(location),
 		VersionToken:     oss.Ptr(token),
 	})

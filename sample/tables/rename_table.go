@@ -63,8 +63,8 @@ func main() {
 	result, err := client.RenameTable(context.TODO(), &tables.RenameTableRequest{
 		BucketArn: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
-		Table:     oss.Ptr(table),
-		NewTable:  oss.Ptr(newTable),
+		Name:      oss.Ptr(table),
+		NewName:   oss.Ptr(newTable),
 	})
 
 	if err != nil {

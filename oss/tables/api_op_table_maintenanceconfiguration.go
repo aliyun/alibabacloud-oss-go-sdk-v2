@@ -13,7 +13,7 @@ type GetTableMaintenanceConfigurationRequest struct {
 
 	Namespace *string `input:"nop,namespace,required"`
 
-	Table *string `input:"nop,name,required"`
+	Name *string `input:"nop,name,required"`
 
 	TableArn *string `input:"header,x-oss-table-arn"`
 
@@ -80,7 +80,7 @@ func (c *TablesClient) GetTableMaintenanceConfiguration(ctx context.Context, req
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -102,7 +102,7 @@ type PutTableMaintenanceConfigurationRequest struct {
 
 	Namespace *string `input:"nop,namespace,required"`
 
-	Table *string `input:"nop,name,required"`
+	Name *string `input:"nop,name,required"`
 
 	Type *string `input:"nop,type,required"`
 
@@ -141,7 +141,7 @@ func (c *TablesClient) PutTableMaintenanceConfiguration(ctx context.Context, req
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

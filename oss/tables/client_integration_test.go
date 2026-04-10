@@ -82,11 +82,11 @@ func randLowStr(n int) string {
 }
 
 func cleanBucket(bucketInfo TableBucketProperties, t *testing.T) {
-	assert.NotEmpty(t, *bucketInfo.BucketArn)
+	assert.NotEmpty(t, *bucketInfo.Arn)
 	var c *TablesClient
 	c = getDefaultClient()
 	assert.NotNil(t, c)
-	cleanTablesAndNamespaces(c, *bucketInfo.BucketArn, t)
+	cleanTablesAndNamespaces(c, *bucketInfo.Arn, t)
 }
 
 func deleteBucket(bucketArn string, t *testing.T) {
@@ -140,7 +140,7 @@ func cleanTablesAndNamespaces(c *TablesClient, bucketArn string, t *testing.T) {
 					_, err = c.DeleteTable(context.TODO(), &DeleteTableRequest{
 						BucketArn: oss.Ptr(bucketArn),
 						Namespace: oss.Ptr(namespace.Namespace[0]),
-						Table:     table.Name,
+						Name:      table.Name,
 					})
 					assert.Nil(t, err)
 				}
@@ -226,7 +226,7 @@ func TestInvokeOperation_TableBucketPolicy(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	// PutBucketPolicy
 	policy := `{"resourcePolicy":"{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Deny\",\"Principal\":[\"1234567890\"],\"Resource\":[\"acs:osstable:cn-beijing:1234567890:bucket/demo-bucket\"]}]}"}`
@@ -291,7 +291,7 @@ func TestTableBucket(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	_, err = client.GetTableBucket(context.TODO(), &GetTableBucketRequest{
 		BucketArn: bucketArn,
@@ -368,7 +368,7 @@ func TestTableBucketEncryption(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	putResult, err := client.PutTableBucketEncryption(context.TODO(), &PutTableBucketEncryptionRequest{
 		BucketArn: bucketArn,
@@ -449,7 +449,7 @@ func TestTableBucketPolicy(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	putResult, err := client.PutTableBucketPolicy(context.TODO(), &PutTableBucketPolicyRequest{
 		BucketArn:      bucketArn,
@@ -534,7 +534,7 @@ func TestTableBucketMaintenance(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	putResult, err := client.PutTableBucketMaintenanceConfiguration(context.TODO(), &PutTableBucketMaintenanceConfigurationRequest{
 		BucketArn: bucketArn,
@@ -608,7 +608,7 @@ func TestNamespace(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	putResult, err := client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
@@ -710,7 +710,7 @@ func TestTable(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
@@ -723,7 +723,7 @@ func TestTable(t *testing.T) {
 	putResult, err := client.CreateTable(context.TODO(), &CreateTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
 	})
 	assert.Nil(t, err)
@@ -734,7 +734,7 @@ func TestTable(t *testing.T) {
 	getResult, err := client.GetTable(context.TODO(), &GetTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
@@ -756,8 +756,8 @@ func TestTable(t *testing.T) {
 	reResult, err := client.RenameTable(context.TODO(), &RenameTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
-		NewTable:  oss.Ptr(newTableName),
+		Name:      oss.Ptr(tableName),
+		NewName:   oss.Ptr(newTableName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 204, reResult.StatusCode)
@@ -767,7 +767,7 @@ func TestTable(t *testing.T) {
 	delResult, err := client.DeleteTable(context.TODO(), &DeleteTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(newTableName),
+		Name:      oss.Ptr(newTableName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 204, delResult.StatusCode)
@@ -779,7 +779,7 @@ func TestTable(t *testing.T) {
 	_, err = invalidAkClient.CreateTable(context.TODO(), &CreateTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
 	})
 	assert.NotNil(t, err)
@@ -793,7 +793,7 @@ func TestTable(t *testing.T) {
 	_, err = client.GetTable(context.TODO(), &GetTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -819,8 +819,8 @@ func TestTable(t *testing.T) {
 	_, err = invalidAkClient.RenameTable(context.TODO(), &RenameTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
-		NewTable:  oss.Ptr(newTableName),
+		Name:      oss.Ptr(tableName),
+		NewName:   oss.Ptr(newTableName),
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -833,7 +833,7 @@ func TestTable(t *testing.T) {
 	_, err = client.DeleteTable(context.TODO(), &DeleteTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -855,7 +855,7 @@ func TestTableMetadataLocation(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
@@ -868,7 +868,7 @@ func TestTableMetadataLocation(t *testing.T) {
 	_, err = client.CreateTable(context.TODO(), &CreateTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
 	})
 	assert.Nil(t, err)
@@ -877,7 +877,7 @@ func TestTableMetadataLocation(t *testing.T) {
 	getResult, err := client.GetTableMetadataLocation(context.TODO(), &GetTableMetadataLocationRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
@@ -889,7 +889,7 @@ func TestTableMetadataLocation(t *testing.T) {
 	_, err = invalidAkClient.GetTableMetadataLocation(context.TODO(), &GetTableMetadataLocationRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.NotNil(t, err)
 	var serr *oss.ServiceError
@@ -902,7 +902,7 @@ func TestTableMetadataLocation(t *testing.T) {
 	_, err = client.UpdateTableMetadataLocation(context.TODO(), &UpdateTableMetadataLocationRequest{
 		BucketArn:        bucketArn,
 		Namespace:        oss.Ptr(spaceName),
-		Table:            oss.Ptr(tableName),
+		Name:             oss.Ptr(tableName),
 		VersionToken:     getResult.VersionToken,
 		MetadataLocation: getResult.MetadataLocation,
 	})
@@ -926,7 +926,7 @@ func TestTableEncryption(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
@@ -939,7 +939,7 @@ func TestTableEncryption(t *testing.T) {
 	_, err = client.CreateTable(context.TODO(), &CreateTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
 	})
 	assert.Nil(t, err)
@@ -948,7 +948,7 @@ func TestTableEncryption(t *testing.T) {
 	getResult, err := client.GetTableEncryption(context.TODO(), &GetTableEncryptionRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
@@ -960,7 +960,7 @@ func TestTableEncryption(t *testing.T) {
 	_, err = invalidAkClient.GetTableEncryption(context.TODO(), &GetTableEncryptionRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.NotNil(t, err)
 	var serr *oss.ServiceError
@@ -982,7 +982,7 @@ func TestTablePolicy(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
@@ -995,7 +995,7 @@ func TestTablePolicy(t *testing.T) {
 	_, err = client.CreateTable(context.TODO(), &CreateTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
 	})
 	assert.Nil(t, err)
@@ -1017,7 +1017,7 @@ func TestTablePolicy(t *testing.T) {
 	putResult, err := client.PutTablePolicy(context.TODO(), &PutTablePolicyRequest{
 		BucketArn:      bucketArn,
 		Namespace:      oss.Ptr(spaceName),
-		Table:          oss.Ptr(tableName),
+		Name:           oss.Ptr(tableName),
 		ResourcePolicy: oss.Ptr(policy),
 	})
 	assert.Nil(t, err)
@@ -1028,7 +1028,7 @@ func TestTablePolicy(t *testing.T) {
 	getResult, err := client.GetTablePolicy(context.TODO(), &GetTablePolicyRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
@@ -1038,7 +1038,7 @@ func TestTablePolicy(t *testing.T) {
 	delResult, err := client.DeleteTablePolicy(context.TODO(), &DeleteTablePolicyRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 204, delResult.StatusCode)
@@ -1050,7 +1050,7 @@ func TestTablePolicy(t *testing.T) {
 	_, err = invalidAkClient.PutTablePolicy(context.TODO(), &PutTablePolicyRequest{
 		BucketArn:      bucketArn,
 		Namespace:      oss.Ptr(spaceName),
-		Table:          oss.Ptr(tableName),
+		Name:           oss.Ptr(tableName),
 		ResourcePolicy: oss.Ptr(policy),
 	})
 	assert.NotNil(t, err)
@@ -1064,7 +1064,7 @@ func TestTablePolicy(t *testing.T) {
 	_, err = client.GetTablePolicy(context.TODO(), &GetTablePolicyRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -1077,7 +1077,7 @@ func TestTablePolicy(t *testing.T) {
 	_, err = invalidAkClient.DeleteTablePolicy(context.TODO(), &DeleteTablePolicyRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -1099,7 +1099,7 @@ func TestTableMaintenance(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
@@ -1112,7 +1112,7 @@ func TestTableMaintenance(t *testing.T) {
 	_, err = client.CreateTable(context.TODO(), &CreateTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
 	})
 	assert.Nil(t, err)
@@ -1121,7 +1121,7 @@ func TestTableMaintenance(t *testing.T) {
 	putResult, err := client.PutTableMaintenanceConfiguration(context.TODO(), &PutTableMaintenanceConfigurationRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Type:      oss.Ptr("icebergCompaction"),
 		Value: &TableMaintenanceValue{
 			Status: oss.Ptr("enabled"),
@@ -1141,7 +1141,7 @@ func TestTableMaintenance(t *testing.T) {
 	putResult, err = client.PutTableMaintenanceConfiguration(context.TODO(), &PutTableMaintenanceConfigurationRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Type:      oss.Ptr("icebergSnapshotManagement"),
 		Value: &TableMaintenanceValue{
 			Status: oss.Ptr("enabled"),
@@ -1161,7 +1161,7 @@ func TestTableMaintenance(t *testing.T) {
 	getResult, err := client.GetTableMaintenanceConfiguration(context.TODO(), &GetTableMaintenanceConfigurationRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
@@ -1173,7 +1173,7 @@ func TestTableMaintenance(t *testing.T) {
 	_, err = invalidAkClient.PutTableMaintenanceConfiguration(context.TODO(), &PutTableMaintenanceConfigurationRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Type:      oss.Ptr("icebergSnapshotManagement"),
 		Value: &TableMaintenanceValue{
 			Status: oss.Ptr("enabled"),
@@ -1196,7 +1196,7 @@ func TestTableMaintenance(t *testing.T) {
 	_, err = invalidAkClient.GetTableMaintenanceConfiguration(context.TODO(), &GetTableMaintenanceConfigurationRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -1218,7 +1218,7 @@ func TestTableMaintenanceJobStatus(t *testing.T) {
 		Bucket: oss.Ptr(bucketName),
 	})
 	assert.Nil(t, err)
-	bucketArn := result.BucketArn
+	bucketArn := result.Arn
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
@@ -1231,7 +1231,7 @@ func TestTableMaintenanceJobStatus(t *testing.T) {
 	_, err = client.CreateTable(context.TODO(), &CreateTableRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
 	})
 	assert.Nil(t, err)
@@ -1240,7 +1240,7 @@ func TestTableMaintenanceJobStatus(t *testing.T) {
 	_, err = client.PutTableMaintenanceConfiguration(context.TODO(), &PutTableMaintenanceConfigurationRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 		Type:      oss.Ptr("icebergCompaction"),
 		Value: &TableMaintenanceValue{
 			Status: oss.Ptr("enabled"),
@@ -1257,7 +1257,7 @@ func TestTableMaintenanceJobStatus(t *testing.T) {
 	getResult, err := client.GetTableMaintenanceJobStatus(context.TODO(), &GetTableMaintenanceJobStatusRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
@@ -1269,7 +1269,7 @@ func TestTableMaintenanceJobStatus(t *testing.T) {
 	_, err = invalidAkClient.GetTableMaintenanceJobStatus(context.TODO(), &GetTableMaintenanceJobStatusRequest{
 		BucketArn: bucketArn,
 		Namespace: oss.Ptr(spaceName),
-		Table:     oss.Ptr(tableName),
+		Name:      oss.Ptr(tableName),
 	})
 	assert.NotNil(t, err)
 	var serr *oss.ServiceError

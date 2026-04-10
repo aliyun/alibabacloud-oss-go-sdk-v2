@@ -57,7 +57,7 @@ func main() {
 	result, err := client.DeleteTable(context.TODO(), &tables.DeleteTableRequest{
 		BucketArn: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
-		Table:     oss.Ptr(table),
+		Name:     oss.Ptr(table),
 	})
 
 	if err != nil {

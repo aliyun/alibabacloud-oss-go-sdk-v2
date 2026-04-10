@@ -13,7 +13,7 @@ type PutTablePolicyRequest struct {
 
 	Namespace *string `input:"nop,namespace,required"`
 
-	Table *string `input:"nop,name,required"`
+	Name *string `input:"nop,name,required"`
 
 	ResourcePolicy *string `input:"body,resourcePolicy,required,json"`
 
@@ -37,7 +37,7 @@ func (c *TablesClient) PutTablePolicy(ctx context.Context, request *PutTablePoli
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -63,7 +63,7 @@ type GetTablePolicyRequest struct {
 
 	Namespace *string `input:"nop,namespace,required"`
 
-	Table *string `input:"nop,name,required"`
+	Name *string `input:"nop,name,required"`
 
 	oss.RequestCommon
 }
@@ -87,7 +87,7 @@ func (c *TablesClient) GetTablePolicy(ctx context.Context, request *GetTablePoli
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -112,7 +112,7 @@ type DeleteTablePolicyRequest struct {
 
 	Namespace *string `input:"nop,namespace,required"`
 
-	Table *string `input:"nop,name,required"`
+	Name *string `input:"nop,name,required"`
 
 	oss.RequestCommon
 }
@@ -134,7 +134,7 @@ func (c *TablesClient) DeleteTablePolicy(ctx context.Context, request *DeleteTab
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

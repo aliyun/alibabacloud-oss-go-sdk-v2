@@ -55,7 +55,7 @@ func main() {
 	result, err := client.GetTablePolicy(context.TODO(), &tables.GetTablePolicyRequest{
 		BucketArn: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
-		Table:     oss.Ptr(table),
+		Name:     oss.Ptr(table),
 	})
 
 	if err != nil {

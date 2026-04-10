@@ -13,7 +13,7 @@ type GetTableMetadataLocationRequest struct {
 
 	Namespace *string `input:"nop,namespace,required"`
 
-	Table *string `input:"nop,name,required"`
+	Name *string `input:"nop,name,required"`
 
 	oss.RequestCommon
 }
@@ -39,7 +39,7 @@ func (c *TablesClient) GetTableMetadataLocation(ctx context.Context, request *Ge
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -61,7 +61,7 @@ type UpdateTableMetadataLocationRequest struct {
 
 	Namespace *string `input:"nop,namespace,required"`
 
-	Table *string `input:"nop,name,required"`
+	Name *string `input:"nop,name,required"`
 
 	MetadataLocation *string `input:"body,metadataLocation,required,json"`
 
@@ -93,7 +93,7 @@ func (c *TablesClient) UpdateTableMetadataLocation(ctx context.Context, request 
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

@@ -44,7 +44,7 @@ func main() {
 	result, err := client.GetTable(context.TODO(), &tables.GetTableRequest{
 		BucketArn: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
-		Table:     oss.Ptr(table),
+		Name:     oss.Ptr(table),
 	})
 
 	// function two

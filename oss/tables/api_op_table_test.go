@@ -67,12 +67,12 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Table.")
+	assert.Contains(t, err.Error(), "missing required field, Name.")
 
 	request = &CreateTableRequest{
 		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
-		Table:     oss.Ptr("table"),
+		Name:      oss.Ptr("table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "CreateTable",
@@ -91,7 +91,7 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 	request = &CreateTableRequest{
 		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
-		Table:     oss.Ptr("table"),
+		Name:      oss.Ptr("table"),
 		Format:    oss.Ptr("ICEBERG"),
 	}
 	input = &oss.OperationInput{
@@ -114,10 +114,10 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 	request = &CreateTableRequest{
 		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
-		Table:     oss.Ptr("table"),
+		Name:      oss.Ptr("table"),
 		Format:    oss.Ptr("ICEBERG"),
 		Metadata: &TableMetadata{
-			Iceberg: &MetadataIceberg{
+			Iceberg: &IcebergMetadata{
 				Schema: map[string]any{
 					"fields": []map[string]any{
 						{
@@ -253,7 +253,7 @@ func TestMarshalInput_GetTable(t *testing.T) {
 
 	request = &GetTableRequest{
 		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Table:     oss.Ptr("table"),
+		Name:      oss.Ptr("table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTable",
@@ -269,7 +269,7 @@ func TestMarshalInput_GetTable(t *testing.T) {
 
 	request = &GetTableRequest{
 		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Table:     oss.Ptr("table"),
+		Name:      oss.Ptr("table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTable",
@@ -302,7 +302,7 @@ func TestMarshalInput_GetTable(t *testing.T) {
 	request = &GetTableRequest{
 		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
-		Table:     oss.Ptr("table"),
+		Name:      oss.Ptr("table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTable",
@@ -585,7 +585,7 @@ func TestMarshalInput_DeleteTable(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -602,7 +602,7 @@ func TestMarshalInput_DeleteTable(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -620,17 +620,17 @@ func TestMarshalInput_DeleteTable(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Table.")
+	assert.Contains(t, err.Error(), "missing required field, Name.")
 
 	request = &DeleteTableRequest{
 		BucketArn:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace:    oss.Ptr("space"),
-		Table:        oss.Ptr("table"),
+		Name:         oss.Ptr("table"),
 		VersionToken: oss.Ptr("version_token"),
 	}
 	input = &oss.OperationInput{
@@ -640,7 +640,7 @@ func TestMarshalInput_DeleteTable(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -702,14 +702,14 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	err = checkRenameTableRequest(request)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "either NewTable or NewNamespace must be provided")
 
 	request = &RenameTableRequest{
-		NewTable: oss.Ptr("new_table"),
+		NewName: oss.Ptr("new_table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",
@@ -718,7 +718,7 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	err = checkRenameTableRequest(request)
 	assert.Nil(t, err)
@@ -728,7 +728,7 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 
 	request = &RenameTableRequest{
 		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		NewTable:  oss.Ptr("new_table"),
+		NewName:   oss.Ptr("new_table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",
@@ -737,7 +737,7 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	err = checkRenameTableRequest(request)
 	assert.Nil(t, err)
@@ -748,7 +748,7 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 	request = &RenameTableRequest{
 		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
-		NewTable:  oss.Ptr("new_table"),
+		NewName:   oss.Ptr("new_table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",
@@ -757,19 +757,19 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	err = checkRenameTableRequest(request)
 	assert.Nil(t, err)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Table.")
+	assert.Contains(t, err.Error(), "missing required field, Name.")
 
 	request = &RenameTableRequest{
-		BucketArn:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace:    oss.Ptr("space"),
-		Table:        oss.Ptr("table"),
-		NewNamespace: oss.Ptr("new-space"),
+		BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:        oss.Ptr("space"),
+		Name:             oss.Ptr("table"),
+		NewNamespaceName: oss.Ptr("new-space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",
@@ -778,7 +778,7 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	err = checkRenameTableRequest(request)
 	assert.Nil(t, err)
@@ -791,12 +791,12 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 	assert.Equal(t, string(body), "{\"newNamespaceName\":\"new-space\"}")
 
 	request = &RenameTableRequest{
-		BucketArn:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace:    oss.Ptr("space"),
-		Table:        oss.Ptr("table"),
-		NewNamespace: oss.Ptr("new-space"),
-		NewTable:     oss.Ptr("new-table"),
-		VersionToken: oss.Ptr("365f934c6e234f35ace5ae48f0a0d871"),
+		BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:        oss.Ptr("space"),
+		Name:             oss.Ptr("table"),
+		NewNamespaceName: oss.Ptr("new-space"),
+		NewName:          oss.Ptr("new-table"),
+		VersionToken:     oss.Ptr("365f934c6e234f35ace5ae48f0a0d871"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",
@@ -805,7 +805,7 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	err = checkRenameTableRequest(request)
 	assert.Nil(t, err)

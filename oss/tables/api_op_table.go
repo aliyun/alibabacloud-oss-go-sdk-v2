@@ -14,7 +14,7 @@ type CreateTableRequest struct {
 
 	Namespace *string `input:"nop,Namespace,required"`
 
-	Table *string `input:"body,name,json,required"`
+	Name *string `input:"body,name,json,required"`
 
 	Format *string `input:"body,format,json,required"`
 
@@ -27,10 +27,10 @@ type CreateTableRequest struct {
 }
 
 type TableMetadata struct {
-	Iceberg *MetadataIceberg `json:"iceberg,omitempty"`
+	Iceberg *IcebergMetadata `json:"iceberg,omitempty"`
 }
 
-type MetadataIceberg struct {
+type IcebergMetadata struct {
 	Schema map[string]any `json:"schema,omitempty"`
 }
 
@@ -80,7 +80,7 @@ type GetTableRequest struct {
 	BucketArn *string `input:"query,tableBucketARN"`
 
 	// The name of the table.
-	Table *string `input:"query,name"`
+	Name *string `input:"query,name"`
 
 	Namespace *string `input:"query,namespace"`
 
@@ -216,7 +216,7 @@ type DeleteTableRequest struct {
 
 	Namespace *string `input:"nop,namespace,required"`
 
-	Table *string `input:"nop,name,required"`
+	Name *string `input:"nop,name,required"`
 
 	VersionToken *string `input:"query,versionToken"`
 
@@ -240,7 +240,7 @@ func (c *TablesClient) DeleteTable(ctx context.Context, request *DeleteTableRequ
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -265,11 +265,11 @@ type RenameTableRequest struct {
 
 	Namespace *string `input:"nop,namespace,required"`
 
-	Table *string `input:"nop,name,required"`
+	Name *string `input:"nop,name,required"`
 
-	NewNamespace *string `input:"body,newNamespaceName,json"`
+	NewNamespaceName *string `input:"body,newNamespaceName,json"`
 
-	NewTable *string `input:"body,newName,json"`
+	NewName *string `input:"body,newName,json"`
 
 	VersionToken *string `input:"body,versionToken,json"`
 
@@ -293,7 +293,7 @@ func (c *TablesClient) RenameTable(ctx context.Context, request *RenameTableRequ
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Table)))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	if err = checkRenameTableRequest(request); err != nil {
 		return nil, err
@@ -318,17 +318,17 @@ func (c *TablesClient) RenameTable(ctx context.Context, request *RenameTableRequ
 }
 
 func checkGetTableRequest(request *GetTableRequest) error {
-	if request.TableArn == nil && (request.BucketArn == nil || request.Namespace == nil || request.Table == nil) {
+	if request.TableArn == nil && (request.BucketArn == nil || request.Namespace == nil || request.Name == nil) {
 		return fmt.Errorf("must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
 	}
-	if request.TableArn != nil && (request.BucketArn != nil || request.Namespace != nil || request.Table != nil) {
+	if request.TableArn != nil && (request.BucketArn != nil || request.Namespace != nil || request.Name != nil) {
 		return fmt.Errorf("must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
 	}
 	return nil
 }
 
 func checkRenameTableRequest(request *RenameTableRequest) error {
-	if request.NewTable == nil && request.NewNamespace == nil {
+	if request.NewName == nil && request.NewNamespaceName == nil {
 		return fmt.Errorf("either NewTable or NewNamespace must be provided")
 	}
 	return nil

@@ -57,7 +57,7 @@ func main() {
 	result, err := client.PutTableMaintenanceConfiguration(context.TODO(), &tables.PutTableMaintenanceConfigurationRequest{
 		BucketArn: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
-		Table:     oss.Ptr(table),
+		Name:     oss.Ptr(table),
 		Type:      oss.Ptr("icebergCompaction"),
 		Value: &tables.TableMaintenanceValue{
 			Status: oss.Ptr("enabled"),
@@ -74,7 +74,7 @@ func main() {
 	//result, err := client.PutTableMaintenanceConfiguration(context.TODO(), &tables.PutTableMaintenanceConfigurationRequest{
 	//	BucketArn: oss.Ptr(bucketArn),
 	//	Namespace: oss.Ptr(nameSpace),
-	//	Table:     oss.Ptr(table),
+	//	Name:     oss.Ptr(table),
 	//	Type:      oss.Ptr("icebergSnapshotManagement"),
 	//	Value: &tables.TableMaintenanceValue{
 	//		Status: oss.Ptr("enabled"),

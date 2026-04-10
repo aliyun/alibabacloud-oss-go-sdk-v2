@@ -56,7 +56,7 @@ func main() {
 	result, err := client.GetTableMetadataLocation(context.TODO(), &tables.GetTableMetadataLocationRequest{
 		BucketArn: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
-		Table:     oss.Ptr(table),
+		Name:     oss.Ptr(table),
 	})
 
 	if err != nil {

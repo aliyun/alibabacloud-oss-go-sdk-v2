@@ -55,7 +55,7 @@ func main() {
 	result, err := client.PutTablePolicy(context.TODO(), &tables.PutTablePolicyRequest{
 		BucketArn: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
-		Table:     oss.Ptr(table),
+		Name:     oss.Ptr(table),
 		ResourcePolicy: oss.Ptr(`
 			{
 			   "Version":"1",

@@ -55,7 +55,7 @@ func main() {
 	result, err := client.CreateTable(context.TODO(), &tables.CreateTableRequest{
 		BucketArn: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
-		Table:     oss.Ptr(table),
+		Name:      oss.Ptr(table),
 		Format:    oss.Ptr("ICEBERG"),
 	})
 
