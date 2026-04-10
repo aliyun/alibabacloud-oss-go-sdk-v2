@@ -10,7 +10,7 @@ import (
 
 type PutTableBucketEncryptionRequest struct {
 	// The name of the bucket.
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	// The encryption of the table bucket.
 	EncryptionConfiguration *EncryptionConfiguration `input:"body,encryptionConfiguration,json,required"`
@@ -34,8 +34,8 @@ func (c *TablesClient) PutTableBucketEncryption(ctx context.Context, request *Pu
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/encryption", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/encryption", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -56,7 +56,7 @@ func (c *TablesClient) PutTableBucketEncryption(ctx context.Context, request *Pu
 }
 
 type GetTableBucketEncryptionRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	oss.RequestCommon
 }
@@ -79,8 +79,8 @@ func (c *TablesClient) GetTableBucketEncryption(ctx context.Context, request *Ge
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/encryption", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/encryption", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -101,7 +101,7 @@ func (c *TablesClient) GetTableBucketEncryption(ctx context.Context, request *Ge
 }
 
 type DeleteTableBucketEncryptionRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	oss.RequestCommon
 }
@@ -122,8 +122,8 @@ func (c *TablesClient) DeleteTableBucketEncryption(ctx context.Context, request 
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/encryption", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/encryption", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

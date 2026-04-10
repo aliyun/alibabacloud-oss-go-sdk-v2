@@ -46,7 +46,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	p := client.NewListTablesPaginator(&tables.ListTablesRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
 	})
 

@@ -9,20 +9,20 @@ import (
 )
 
 type GetTableMaintenanceJobStatusRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
 	Name *string `input:"nop,name,required"`
 
-	TableArn *string `input:"header,x-oss-table-arn"`
+	TableARN *string `input:"header,x-oss-table-arn"`
 
 	oss.RequestCommon
 }
 
 type GetTableMaintenanceJobStatusResult struct {
 	JobStatus *MaintenanceJobStatus `json:"status"`
-	TableArn  *string               `json:"tableARN"`
+	TableARN  *string               `json:"tableARN"`
 
 	oss.ResultCommon
 }
@@ -51,8 +51,8 @@ func (c *TablesClient) GetTableMaintenanceJobStatus(ctx context.Context, request
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

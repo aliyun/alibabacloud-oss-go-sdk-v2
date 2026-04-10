@@ -10,9 +10,9 @@ import (
 )
 
 type CreateTableRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
-	Namespace *string `input:"nop,Namespace,required"`
+	Namespace *string `input:"nop,namespace,required"`
 
 	Name *string `input:"body,name,json,required"`
 
@@ -35,7 +35,7 @@ type IcebergMetadata struct {
 }
 
 type CreateTableResult struct {
-	TableArn *string `json:"tableARN"`
+	TableARN *string `json:"tableARN"`
 
 	VersionToken *string `json:"versionToken"`
 
@@ -54,8 +54,8 @@ func (c *TablesClient) CreateTable(ctx context.Context, request *CreateTableRequ
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -77,14 +77,14 @@ func (c *TablesClient) CreateTable(ctx context.Context, request *CreateTableRequ
 }
 
 type GetTableRequest struct {
-	BucketArn *string `input:"query,tableBucketARN"`
+	TableBucketARN *string `input:"query,tableBucketARN"`
 
 	// The name of the table.
 	Name *string `input:"query,name"`
 
 	Namespace *string `input:"query,namespace"`
 
-	TableArn *string `input:"query,tableArn"`
+	TableARN *string `input:"query,tableArn"`
 
 	oss.RequestCommon
 }
@@ -100,7 +100,7 @@ type GetTableResult struct {
 	Namespace         []string `json:"namespace"`
 	NamespaceId       *string  `json:"namespaceId"`
 	OwnerAccountId    *string  `json:"ownerAccountId"`
-	TableArn          *string  `json:"tableARN"`
+	TableARN          *string  `json:"tableARN"`
 	TableBucketId     *string  `json:"tableBucketId"`
 	Type              *string  `json:"type"`
 	VersionToken      *string  `json:"versionToken"`
@@ -144,7 +144,7 @@ func (c *TablesClient) GetTable(ctx context.Context, request *GetTableRequest, o
 }
 
 type ListTablesRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	Namespace *string `input:"query,namespace,required"`
 
@@ -166,17 +166,17 @@ type ListTablesResult struct {
 	ContinuationToken *string `json:"continuationToken"`
 
 	// The container that stores information about s.
-	Tables []TableProperties `json:"tables"`
+	Tables []TableSummary `json:"tables"`
 
 	oss.ResultCommon
 }
 
-type TableProperties struct {
+type TableSummary struct {
 	CreatedAt  *string  `json:"createdAt"`
 	ModifiedAt *string  `json:"modifiedAt"`
 	Name       *string  `json:"name"`
 	Namespace  []string `json:"namespace"`
-	TableArn   *string  `json:"tableARN"`
+	TableARN   *string  `json:"tableARN"`
 	Type       *string  `json:"type"`
 }
 
@@ -192,8 +192,8 @@ func (c *TablesClient) ListTables(ctx context.Context, request *ListTablesReques
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -212,7 +212,7 @@ func (c *TablesClient) ListTables(ctx context.Context, request *ListTablesReques
 }
 
 type DeleteTableRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
@@ -239,8 +239,8 @@ func (c *TablesClient) DeleteTable(ctx context.Context, request *DeleteTableRequ
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -261,13 +261,13 @@ func (c *TablesClient) DeleteTable(ctx context.Context, request *DeleteTableRequ
 }
 
 type RenameTableRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
 	Name *string `input:"nop,name,required"`
 
-	NewNamespaceName *string `input:"body,newNamespaceName,json"`
+	NewNamespace *string `input:"body,newNamespaceName,json"`
 
 	NewName *string `input:"body,newName,json"`
 
@@ -292,8 +292,8 @@ func (c *TablesClient) RenameTable(ctx context.Context, request *RenameTableRequ
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/rename", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	if err = checkRenameTableRequest(request); err != nil {
 		return nil, err
@@ -318,17 +318,17 @@ func (c *TablesClient) RenameTable(ctx context.Context, request *RenameTableRequ
 }
 
 func checkGetTableRequest(request *GetTableRequest) error {
-	if request.TableArn == nil && (request.BucketArn == nil || request.Namespace == nil || request.Name == nil) {
+	if request.TableARN == nil && (request.TableBucketARN == nil || request.Namespace == nil || request.Name == nil) {
 		return fmt.Errorf("must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
 	}
-	if request.TableArn != nil && (request.BucketArn != nil || request.Namespace != nil || request.Name != nil) {
+	if request.TableARN != nil && (request.TableBucketARN != nil || request.Namespace != nil || request.Name != nil) {
 		return fmt.Errorf("must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
 	}
 	return nil
 }
 
 func checkRenameTableRequest(request *RenameTableRequest) error {
-	if request.NewName == nil && request.NewNamespaceName == nil {
+	if request.NewName == nil && request.NewNamespace == nil {
 		return fmt.Errorf("either NewTable or NewNamespace must be provided")
 	}
 	return nil
@@ -336,10 +336,10 @@ func checkRenameTableRequest(request *RenameTableRequest) error {
 
 func parseBucketArn(request *GetTableRequest) *string {
 	switch {
-	case request.BucketArn != nil:
-		return request.BucketArn
-	case request.TableArn != nil:
-		if vals := strings.Split(oss.ToString(request.TableArn), "/table"); len(vals) > 0 {
+	case request.TableBucketARN != nil:
+		return request.TableBucketARN
+	case request.TableARN != nil:
+		if vals := strings.Split(oss.ToString(request.TableARN), "/table"); len(vals) > 0 {
 			return oss.Ptr(vals[0])
 		}
 	}

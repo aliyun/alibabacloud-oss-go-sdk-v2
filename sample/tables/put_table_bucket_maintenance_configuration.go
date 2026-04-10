@@ -39,7 +39,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.PutTableBucketMaintenanceConfiguration(context.TODO(), &tables.PutTableBucketMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 		Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
 		Value: &tables.MaintenanceValue{
 			Settings: &tables.MaintenanceSettings{

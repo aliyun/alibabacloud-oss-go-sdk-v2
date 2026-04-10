@@ -39,7 +39,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	p := client.NewListNameSpacesPaginator(&tables.ListNamespacesRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 	})
 
 	var i int

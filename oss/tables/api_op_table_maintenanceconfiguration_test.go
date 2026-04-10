@@ -26,16 +26,16 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
+	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
 
 	request = &PutTableMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "PutTableMaintenanceConfiguration",
@@ -43,8 +43,8 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -52,7 +52,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &PutTableMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("oss-space"),
 	}
 	input = &oss.OperationInput{
@@ -61,8 +61,8 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -70,7 +70,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Name.")
 
 	request = &PutTableMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("oss-space"),
 		Name:      oss.Ptr("oss-table"),
 	}
@@ -80,8 +80,8 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -89,7 +89,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Type.")
 
 	request = &PutTableMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("oss-space"),
 		Name:      oss.Ptr("oss-table"),
 		Type:      oss.Ptr("icebergCompaction"),
@@ -100,8 +100,8 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -109,7 +109,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Value.")
 
 	request = &PutTableMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("oss-space"),
 		Name:      oss.Ptr("oss-table"),
 		Type:      oss.Ptr("icebergSnapshotManagement"),
@@ -129,8 +129,8 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -142,7 +142,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 	assert.Equal(t, string(body), "{\"value\":{\"settings\":{\"icebergSnapshotManagement\":{\"maxSnapshotAgeHours\":350,\"minSnapshotsToKeep\":1}},\"status\":\"enabled\"}}")
 
 	request = &PutTableMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("oss-space"),
 		Name:      oss.Ptr("oss-table"),
 		Type:      oss.Ptr("icebergCompaction"),
@@ -162,8 +162,8 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -256,16 +256,16 @@ func TestMarshalInput_GetTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
+	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
 
 	request = &GetTableMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableMaintenanceConfiguration",
@@ -273,8 +273,8 @@ func TestMarshalInput_GetTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -282,7 +282,7 @@ func TestMarshalInput_GetTableMaintenanceConfiguration(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &GetTableMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("oss-space"),
 	}
 	input = &oss.OperationInput{
@@ -291,8 +291,8 @@ func TestMarshalInput_GetTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -300,7 +300,7 @@ func TestMarshalInput_GetTableMaintenanceConfiguration(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Name.")
 
 	request = &GetTableMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("oss-space"),
 		Name:      oss.Ptr("oss-table"),
 	}
@@ -310,8 +310,8 @@ func TestMarshalInput_GetTableMaintenanceConfiguration(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -372,7 +372,7 @@ func TestUnmarshalOutput_GetTableMaintenanceConfiguration(t *testing.T) {
 	assert.Equal(t, *result.Configuration.IcebergSnapshotManagement.Settings.IcebergSnapshotManagement.MaxSnapshotAgeHours, 720)
 	assert.Equal(t, *result.Configuration.IcebergSnapshotManagement.Settings.IcebergSnapshotManagement.MinSnapshotsToKeep, 1)
 	assert.Equal(t, *result.Configuration.IcebergSnapshotManagement.Status, "enabled")
-	assert.Equal(t, *result.TableArn, "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/table_id")
+	assert.Equal(t, *result.TableARN, "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/table_id")
 
 	output = &oss.OperationOutput{
 		StatusCode: 404,

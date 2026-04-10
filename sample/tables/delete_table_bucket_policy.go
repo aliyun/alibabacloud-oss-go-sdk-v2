@@ -39,7 +39,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.DeleteTableBucketPolicy(context.TODO(), &tables.DeleteTableBucketPolicyRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 	})
 
 	if err != nil {

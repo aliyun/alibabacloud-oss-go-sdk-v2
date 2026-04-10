@@ -39,7 +39,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.DeleteNamespace(context.TODO(), &tables.DeleteNamespaceRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr("my_space"),
 	})
 

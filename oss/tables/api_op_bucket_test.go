@@ -27,15 +27,15 @@ func TestMarshalInput_CreateTableBucket(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Bucket: request.Name,
 		Key:    oss.Ptr("buckets"),
 	}
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, Bucket")
+	assert.Contains(t, err.Error(), "missing required field, Name")
 
 	request = &CreateTableBucketRequest{
-		Bucket: oss.Ptr("oss-demo"),
+		Name: oss.Ptr("oss-demo"),
 	}
 	input = &oss.OperationInput{
 		OpName: "CreateTableBucket",
@@ -43,7 +43,7 @@ func TestMarshalInput_CreateTableBucket(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Bucket: request.Name,
 		Key:    oss.Ptr("buckets"),
 	}
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -54,7 +54,7 @@ func TestMarshalInput_CreateTableBucket(t *testing.T) {
 	assert.Equal(t, string(jsonStr), "{\"name\":\"oss-demo\"}")
 
 	request = &CreateTableBucketRequest{
-		Bucket: oss.Ptr("oss-demo"),
+		Name: oss.Ptr("oss-demo"),
 		EncryptionConfiguration: &EncryptionConfiguration{
 			KmsKeyArn:    oss.Ptr("arn"),
 			SseAlgorithm: oss.Ptr("AES256"),
@@ -66,7 +66,7 @@ func TestMarshalInput_CreateTableBucket(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.Bucket,
+		Bucket: request.Name,
 		Key:    oss.Ptr("buckets"),
 	}
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -150,16 +150,16 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
+	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
 
 	request = &GetTableBucketRequest{
-		BucketArn: oss.Ptr("invlid-arn"),
+		TableBucketARN: oss.Ptr("invlid-arn"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableBucket",
@@ -167,8 +167,8 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -176,7 +176,7 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 	assert.Contains(t, err.Error(), "malformed ARN - doesn't start with 'acs:'")
 
 	request = &GetTableBucketRequest{
-		BucketArn: oss.Ptr("acs:osstables"),
+		TableBucketARN: oss.Ptr("acs:osstables"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableBucket",
@@ -184,8 +184,8 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -193,7 +193,7 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 	assert.Contains(t, err.Error(), "malformed ARN - no service specified")
 
 	request = &GetTableBucketRequest{
-		BucketArn: oss.Ptr("acs:osstables:oss-cn-beijing"),
+		TableBucketARN: oss.Ptr("acs:osstables:oss-cn-beijing"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableBucket",
@@ -201,8 +201,8 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -210,7 +210,7 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 	assert.Contains(t, err.Error(), "malformed ARN - no region specified")
 
 	request = &GetTableBucketRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableBucket",
@@ -218,13 +218,13 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
-	assert.Equal(t, input.Bucket, request.BucketArn)
+	assert.Equal(t, input.Bucket, request.TableBucketARN)
 	assert.Equal(t, *input.Key, "buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket")
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
 	assert.Equal(t, *input.Key, "buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket")
@@ -368,20 +368,20 @@ func TestUnmarshalOutput_ListTableBuckets(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "5374A2880232A65C2300****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
 	assert.Equal(t, *result.ContinuationToken, "Cj5hY3M6b3NzdGFibGVzOmNuLWJlaWppbmc6MTc2MDIyNTU0NTA4NDMzMTpidWNrZXQvZGVtby13YWxrZXItMQ--")
-	assert.Equal(t, len(result.Buckets), 2)
-	assert.Equal(t, *result.Buckets[0].CreatedAt, "2026-04-02T05:27:31.000000+00:00")
-	assert.Equal(t, *result.Buckets[0].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
-	assert.Equal(t, *result.Buckets[0].Name, "demo-bucket")
-	assert.Equal(t, *result.Buckets[0].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
-	assert.Equal(t, *result.Buckets[0].OwnerAccountId, "1234567890")
-	assert.Equal(t, *result.Buckets[0].Type, "customer")
+	assert.Equal(t, len(result.TableBuckets), 2)
+	assert.Equal(t, *result.TableBuckets[0].CreatedAt, "2026-04-02T05:27:31.000000+00:00")
+	assert.Equal(t, *result.TableBuckets[0].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+	assert.Equal(t, *result.TableBuckets[0].Name, "demo-bucket")
+	assert.Equal(t, *result.TableBuckets[0].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
+	assert.Equal(t, *result.TableBuckets[0].OwnerAccountId, "1234567890")
+	assert.Equal(t, *result.TableBuckets[0].Type, "customer")
 
-	assert.Equal(t, *result.Buckets[1].CreatedAt, "2026-04-02T05:27:32.000000+00:00")
-	assert.Equal(t, *result.Buckets[1].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket-1")
-	assert.Equal(t, *result.Buckets[1].Name, "demo-bucket-1")
-	assert.Equal(t, *result.Buckets[1].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f3")
-	assert.Equal(t, *result.Buckets[1].OwnerAccountId, "1234567890")
-	assert.Equal(t, *result.Buckets[1].Type, "customer")
+	assert.Equal(t, *result.TableBuckets[1].CreatedAt, "2026-04-02T05:27:32.000000+00:00")
+	assert.Equal(t, *result.TableBuckets[1].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket-1")
+	assert.Equal(t, *result.TableBuckets[1].Name, "demo-bucket-1")
+	assert.Equal(t, *result.TableBuckets[1].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f3")
+	assert.Equal(t, *result.TableBuckets[1].OwnerAccountId, "1234567890")
+	assert.Equal(t, *result.TableBuckets[1].Type, "customer")
 
 	output = &oss.OperationOutput{
 		StatusCode: 403,
@@ -433,16 +433,16 @@ func TestMarshalInput_DeleteTableBucket(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, BucketArn")
+	assert.Contains(t, err.Error(), "missing required field, TableBucketARN")
 
 	request = &DeleteTableBucketRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteTableBucket",
@@ -450,13 +450,13 @@ func TestMarshalInput_DeleteTableBucket(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
-	assert.Equal(t, input.Bucket, request.BucketArn)
+	assert.Equal(t, input.Bucket, request.TableBucketARN)
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
 	assert.Equal(t, *input.Key, "buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket")
 }

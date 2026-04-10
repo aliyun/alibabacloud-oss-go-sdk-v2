@@ -26,16 +26,16 @@ func TestMarshalInput_GetTableMetadataLocation(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
+	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
 
 	request = &GetTableMetadataLocationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableMetadataLocation",
@@ -43,8 +43,8 @@ func TestMarshalInput_GetTableMetadataLocation(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -52,7 +52,7 @@ func TestMarshalInput_GetTableMetadataLocation(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &GetTableMetadataLocationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
@@ -61,8 +61,8 @@ func TestMarshalInput_GetTableMetadataLocation(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -70,7 +70,7 @@ func TestMarshalInput_GetTableMetadataLocation(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Name.")
 
 	request = &GetTableMetadataLocationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 		Name:      oss.Ptr("table"),
 	}
@@ -80,8 +80,8 @@ func TestMarshalInput_GetTableMetadataLocation(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -185,16 +185,16 @@ func TestMarshalInput_UpdateTableMetadataLocation(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
+	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
 
 	request = &UpdateTableMetadataLocationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "UpdateTableMetadataLocation",
@@ -202,8 +202,8 @@ func TestMarshalInput_UpdateTableMetadataLocation(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -211,7 +211,7 @@ func TestMarshalInput_UpdateTableMetadataLocation(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &UpdateTableMetadataLocationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
@@ -220,8 +220,8 @@ func TestMarshalInput_UpdateTableMetadataLocation(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -229,7 +229,7 @@ func TestMarshalInput_UpdateTableMetadataLocation(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Name.")
 
 	request = &UpdateTableMetadataLocationRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 		Name:      oss.Ptr("table"),
 	}
@@ -239,8 +239,8 @@ func TestMarshalInput_UpdateTableMetadataLocation(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -248,7 +248,7 @@ func TestMarshalInput_UpdateTableMetadataLocation(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, MetadataLocation.")
 
 	request = &UpdateTableMetadataLocationRequest{
-		BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace:        oss.Ptr("space"),
 		Name:             oss.Ptr("table"),
 		MetadataLocation: oss.Ptr("location"),
@@ -259,8 +259,8 @@ func TestMarshalInput_UpdateTableMetadataLocation(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -268,7 +268,7 @@ func TestMarshalInput_UpdateTableMetadataLocation(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, VersionToken.")
 
 	request = &UpdateTableMetadataLocationRequest{
-		BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace:        oss.Ptr("space"),
 		Name:             oss.Ptr("table"),
 		MetadataLocation: oss.Ptr("location"),
@@ -280,8 +280,8 @@ func TestMarshalInput_UpdateTableMetadataLocation(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -325,7 +325,7 @@ func TestUnmarshalOutput_UpdateTableMetadataLocation(t *testing.T) {
 	assert.Equal(t, *result.MetadataLocation, "location")
 	assert.Equal(t, *result.Name, "table")
 	assert.Equal(t, result.Namespace[0], "space")
-	assert.Equal(t, *result.TableArn, "acs:osstable:cn-hangzhou:123:bucket/table_bucket/table/table_123")
+	assert.Equal(t, *result.TableARN, "acs:osstable:cn-hangzhou:123:bucket/table_bucket/table/table_123")
 	assert.Equal(t, *result.VersionToken, "aaa")
 
 	output = &oss.OperationOutput{

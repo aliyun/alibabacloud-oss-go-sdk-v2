@@ -9,7 +9,7 @@ import (
 )
 
 type GetTableMetadataLocationRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
@@ -38,8 +38,8 @@ func (c *TablesClient) GetTableMetadataLocation(ctx context.Context, request *Ge
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -57,7 +57,7 @@ func (c *TablesClient) GetTableMetadataLocation(ctx context.Context, request *Ge
 }
 
 type UpdateTableMetadataLocationRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
@@ -74,7 +74,7 @@ type UpdateTableMetadataLocationResult struct {
 	MetadataLocation *string  `json:"metadataLocation"`
 	Name             *string  `json:"name"`
 	Namespace        []string `json:"namespace"`
-	TableArn         *string  `json:"tableARN"`
+	TableARN         *string  `json:"tableARN"`
 	VersionToken     *string  `json:"versionToken"`
 
 	oss.ResultCommon
@@ -92,8 +92,8 @@ func (c *TablesClient) UpdateTableMetadataLocation(ctx context.Context, request 
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/metadata-location", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

@@ -26,16 +26,16 @@ func TestMarshalInput_GetTableMaintenanceJobStatus(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "missing required field, BucketArn.")
+	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
 
 	request = &GetTableMaintenanceJobStatusRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableMaintenanceJobStatus",
@@ -43,8 +43,8 @@ func TestMarshalInput_GetTableMaintenanceJobStatus(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -52,7 +52,7 @@ func TestMarshalInput_GetTableMaintenanceJobStatus(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
 
 	request = &GetTableMaintenanceJobStatusRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
@@ -61,8 +61,8 @@ func TestMarshalInput_GetTableMaintenanceJobStatus(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -70,10 +70,10 @@ func TestMarshalInput_GetTableMaintenanceJobStatus(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Name.")
 
 	request = &GetTableMaintenanceJobStatusRequest{
-		BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace: oss.Ptr("space"),
 		Name:      oss.Ptr("table"),
-		TableArn:  oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/demo-table/table-123456"),
+		TableARN:  oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/demo-table/table-123456"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableMaintenanceJobStatus",
@@ -81,8 +81,8 @@ func TestMarshalInput_GetTableMaintenanceJobStatus(t *testing.T) {
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -134,7 +134,7 @@ func TestUnmarshalOutput_GetTableMaintenanceJobStatus(t *testing.T) {
 	assert.Equal(t, *result.JobStatus.IcebergSnapshotManagement.Status, "Failed")
 	assert.Equal(t, *result.JobStatus.IcebergSnapshotManagement.LastRunTimestamp, "2026-04-08T08:36:07.426846Z")
 	assert.Equal(t, *result.JobStatus.IcebergUnreferencedFileRemoval.Status, "Disabled")
-	assert.Equal(t, *result.TableArn, "acs:osstables:cn-beijing:123456:bucket/demo-bucket/table/eb998f10-d20c-4f22-9a76-ed64e9668f56")
+	assert.Equal(t, *result.TableARN, "acs:osstables:cn-beijing:123456:bucket/demo-bucket/table/eb998f10-d20c-4f22-9a76-ed64e9668f56")
 
 	output = &oss.OperationOutput{
 		StatusCode: 404,

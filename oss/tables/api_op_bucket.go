@@ -10,7 +10,7 @@ import (
 
 type CreateTableBucketRequest struct {
 	// The name of the table bucket to create.
-	Bucket *string `input:"body,name,json,required"`
+	Name *string `input:"body,name,json,required"`
 
 	// The encryption of the table bucket.
 	EncryptionConfiguration *EncryptionConfiguration `input:"body,encryptionConfiguration,json"`
@@ -64,7 +64,7 @@ func (c *TablesClient) CreateTableBucket(ctx context.Context, request *CreateTab
 }
 
 type GetTableBucketRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	oss.RequestCommon
 }
@@ -92,8 +92,8 @@ func (c *TablesClient) GetTableBucket(ctx context.Context, request *GetTableBuck
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -130,12 +130,12 @@ type ListTableBucketsResult struct {
 	ContinuationToken *string `json:"continuationToken"`
 
 	// The container that stores information about buckets.
-	Buckets []TableBucketProperties `json:"tableBuckets"`
+	TableBuckets []TableBucketSummary `json:"tableBuckets"`
 
 	oss.ResultCommon
 }
 
-type TableBucketProperties struct {
+type TableBucketSummary struct {
 	Arn            *string `json:"arn"`
 	CreatedAt      *string `json:"createdAt"`
 	Name           *string `json:"name"`
@@ -175,7 +175,7 @@ func (c *TablesClient) ListTableBuckets(ctx context.Context, request *ListTableB
 
 type DeleteTableBucketRequest struct {
 	// The bucket arn of the table bucket to delete.
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	oss.RequestCommon
 }
@@ -196,8 +196,8 @@ func (c *TablesClient) DeleteTableBucket(ctx context.Context, request *DeleteTab
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

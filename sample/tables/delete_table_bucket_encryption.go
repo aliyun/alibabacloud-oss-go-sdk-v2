@@ -39,7 +39,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.DeleteTableBucketEncryption(context.TODO(), &tables.DeleteTableBucketEncryptionRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 	})
 
 	if err != nil {

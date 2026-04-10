@@ -54,7 +54,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.GetTableMetadataLocation(context.TODO(), &tables.GetTableMetadataLocationRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
 		Name:     oss.Ptr(table),
 	})

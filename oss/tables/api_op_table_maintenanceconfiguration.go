@@ -9,13 +9,13 @@ import (
 )
 
 type GetTableMaintenanceConfigurationRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
 	Name *string `input:"nop,name,required"`
 
-	TableArn *string `input:"header,x-oss-table-arn"`
+	TableARN *string `input:"header,x-oss-table-arn"`
 
 	oss.RequestCommon
 }
@@ -24,7 +24,7 @@ type GetTableMaintenanceConfigurationResult struct {
 	// The container that stores the maintenance configuration of the table bucket.
 	Configuration *TableMaintenanceConfiguration `output:"body,configuration,json"`
 
-	TableArn *string `output:"body,TableARN,json"`
+	TableARN *string `output:"body,tableARN,json"`
 
 	oss.ResultCommon
 }
@@ -79,8 +79,8 @@ func (c *TablesClient) GetTableMaintenanceConfiguration(ctx context.Context, req
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -98,7 +98,7 @@ func (c *TablesClient) GetTableMaintenanceConfiguration(ctx context.Context, req
 }
 
 type PutTableMaintenanceConfigurationRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
@@ -140,8 +140,8 @@ func (c *TablesClient) PutTableMaintenanceConfiguration(ctx context.Context, req
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

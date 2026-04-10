@@ -54,7 +54,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.GetTableMaintenanceConfiguration(context.TODO(), &tables.GetTableMaintenanceConfigurationRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
 		Name:     oss.Ptr(table),
 	})

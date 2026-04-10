@@ -9,7 +9,7 @@ import (
 )
 
 type CreateNamespaceRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	// The namespace.
 	Namespace []string `input:"body,namespace,json,required"`
@@ -20,7 +20,7 @@ type CreateNamespaceRequest struct {
 type CreateNamespaceResult struct {
 	Namespace []string `json:"namespace"`
 
-	TableBucketArn *string `json:"tableBucketARN"`
+	TableBucketARN *string `json:"tableBucketARN"`
 
 	oss.ResultCommon
 }
@@ -37,8 +37,8 @@ func (c *TablesClient) CreateNamespace(ctx context.Context, request *CreateNames
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -58,7 +58,7 @@ func (c *TablesClient) CreateNamespace(ctx context.Context, request *CreateNames
 }
 
 type GetNamespaceRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	Namespace *string `input:"nop,namespace,required"`
 
@@ -88,8 +88,8 @@ func (c *TablesClient) GetNamespace(ctx context.Context, request *GetNamespaceRe
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -108,7 +108,7 @@ func (c *TablesClient) GetNamespace(ctx context.Context, request *GetNamespaceRe
 }
 
 type ListNamespacesRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	// The token from which the ListNamespaces operation must start.
 	ContinuationToken *string `input:"query,continuationToken"`
@@ -128,12 +128,12 @@ type ListNamespacesResult struct {
 	ContinuationToken *string `json:"continuationToken"`
 
 	// The container that stores information about namespaces.
-	Namespaces []NamespaceProperties `json:"namespaces"`
+	Namespaces []NamespaceSummary `json:"namespaces"`
 
 	oss.ResultCommon
 }
 
-type NamespaceProperties struct {
+type NamespaceSummary struct {
 	CreatedAt      *string  `json:"createdAt"`
 	CreatedBy      *string  `json:"createdBy"`
 	Namespace      []string `json:"namespace"`
@@ -154,8 +154,8 @@ func (c *TablesClient) ListNamespaces(ctx context.Context, request *ListNamespac
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -174,7 +174,7 @@ func (c *TablesClient) ListNamespaces(ctx context.Context, request *ListNamespac
 }
 
 type DeleteNamespaceRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	// The namespace to delete.
 	Namespace *string `input:"nop,namespace,required"`
@@ -198,8 +198,8 @@ func (c *TablesClient) DeleteNamespace(ctx context.Context, request *DeleteNames
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.BucketArn)), url.QueryEscape(oss.ToString(request.Namespace)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

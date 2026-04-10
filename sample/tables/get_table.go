@@ -42,14 +42,14 @@ func main() {
 
 	// function one
 	result, err := client.GetTable(context.TODO(), &tables.GetTableRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
 		Name:     oss.Ptr(table),
 	})
 
 	// function two
 	//result, err := client.GetTable(context.TODO(), &tables.GetTableRequest{
-	//	TableArn: oss.Ptr(tableArn),
+	//	TableARN: oss.Ptr(tableArn),
 	//})
 
 	if err != nil {

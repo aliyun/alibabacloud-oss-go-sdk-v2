@@ -55,7 +55,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.DeleteTable(context.TODO(), &tables.DeleteTableRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
 		Name:     oss.Ptr(table),
 	})

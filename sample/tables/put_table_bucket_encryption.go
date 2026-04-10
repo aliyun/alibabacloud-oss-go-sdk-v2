@@ -39,7 +39,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.PutTableBucketEncryption(context.TODO(), &tables.PutTableBucketEncryptionRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 		EncryptionConfiguration: &tables.EncryptionConfiguration{
 			SseAlgorithm: oss.Ptr("AES256"),
 		},

@@ -53,7 +53,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.GetTablePolicy(context.TODO(), &tables.GetTablePolicyRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
 		Name:     oss.Ptr(table),
 	})

@@ -81,7 +81,7 @@ func randLowStr(n int) string {
 	return strings.ToLower(randStr(n))
 }
 
-func cleanBucket(bucketInfo TableBucketProperties, t *testing.T) {
+func cleanBucket(bucketInfo TableBucketSummary, t *testing.T) {
 	assert.NotEmpty(t, *bucketInfo.Arn)
 	var c *TablesClient
 	c = getDefaultClient()
@@ -105,10 +105,10 @@ func cleanBuckets(prefix string, t *testing.T) {
 		}
 		result, err := c.ListTableBuckets(context.TODO(), request)
 		assert.Nil(t, err)
-		if len(result.Buckets) == 0 {
+		if len(result.TableBuckets) == 0 {
 			return
 		}
-		for _, b := range result.Buckets {
+		for _, b := range result.TableBuckets {
 			cleanBucket(b, t)
 		}
 	}
@@ -119,7 +119,7 @@ func cleanTablesAndNamespaces(c *TablesClient, bucketArn string, t *testing.T) {
 	var listNamespaceRequest *ListNamespacesRequest
 	var listTablesRequest *ListTablesRequest
 	listNamespaceRequest = &ListNamespacesRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 	}
 	pagNamespaces := c.NewListNameSpacesPaginator(listNamespaceRequest)
 	for pagNamespaces.HasNext() {
@@ -128,7 +128,7 @@ func cleanTablesAndNamespaces(c *TablesClient, bucketArn string, t *testing.T) {
 		assert.Nil(t, err)
 		for _, namespace := range page.Namespaces {
 			listTablesRequest = &ListTablesRequest{
-				BucketArn: oss.Ptr(bucketArn),
+				TableBucketARN: oss.Ptr(bucketArn),
 				Namespace: oss.Ptr(namespace.Namespace[0]),
 			}
 			pagTables := c.NewListTablesPaginator(listTablesRequest)
@@ -138,7 +138,7 @@ func cleanTablesAndNamespaces(c *TablesClient, bucketArn string, t *testing.T) {
 				assert.Nil(t, err)
 				for _, table := range page2.Tables {
 					_, err = c.DeleteTable(context.TODO(), &DeleteTableRequest{
-						BucketArn: oss.Ptr(bucketArn),
+						TableBucketARN: oss.Ptr(bucketArn),
 						Namespace: oss.Ptr(namespace.Namespace[0]),
 						Name:      table.Name,
 					})
@@ -146,7 +146,7 @@ func cleanTablesAndNamespaces(c *TablesClient, bucketArn string, t *testing.T) {
 				}
 			}
 			_, err = c.DeleteNamespace(context.TODO(), &DeleteNamespaceRequest{
-				BucketArn: oss.Ptr(bucketArn),
+				TableBucketARN: oss.Ptr(bucketArn),
 				Namespace: oss.Ptr(namespace.Namespace[0]),
 			})
 			dumpErrIfNotNil(err)
@@ -154,7 +154,7 @@ func cleanTablesAndNamespaces(c *TablesClient, bucketArn string, t *testing.T) {
 		}
 	}
 	_, err = c.DeleteTableBucket(context.TODO(), &DeleteTableBucketRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 	})
 	dumpErrIfNotNil(err)
 	assert.Nil(t, err)
@@ -294,7 +294,7 @@ func TestTableBucket(t *testing.T) {
 	bucketArn := result.Arn
 
 	_, err = client.GetTableBucket(context.TODO(), &GetTableBucketRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.Nil(t, err)
 
@@ -302,10 +302,10 @@ func TestTableBucket(t *testing.T) {
 		Prefix: oss.Ptr(bucketNamePrefix),
 	})
 	assert.Nil(t, err)
-	assert.True(t, len(list.Buckets) > 0)
+	assert.True(t, len(list.TableBuckets) > 0)
 
 	_, err = client.DeleteTableBucket(context.TODO(), &DeleteTableBucketRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.Nil(t, err)
 
@@ -325,7 +325,7 @@ func TestTableBucket(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.GetTableBucket(context.TODO(), &GetTableBucketRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -346,7 +346,7 @@ func TestTableBucket(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.DeleteTableBucket(context.TODO(), &DeleteTableBucketRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -371,7 +371,7 @@ func TestTableBucketEncryption(t *testing.T) {
 	bucketArn := result.Arn
 
 	putResult, err := client.PutTableBucketEncryption(context.TODO(), &PutTableBucketEncryptionRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		EncryptionConfiguration: &EncryptionConfiguration{
 			SseAlgorithm: oss.Ptr("AES256"),
 		},
@@ -383,7 +383,7 @@ func TestTableBucketEncryption(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	getResult, err := client.GetTableBucketEncryption(context.TODO(), &GetTableBucketEncryptionRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
@@ -391,7 +391,7 @@ func TestTableBucketEncryption(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	delResult, err := client.DeleteTableBucketEncryption(context.TODO(), &DeleteTableBucketEncryptionRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 204, delResult.StatusCode)
@@ -402,7 +402,7 @@ func TestTableBucketEncryption(t *testing.T) {
 	invalidAkClient := getInvalidAkClient()
 
 	_, err = invalidAkClient.PutTableBucketEncryption(context.TODO(), &PutTableBucketEncryptionRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		EncryptionConfiguration: &EncryptionConfiguration{
 			SseAlgorithm: oss.Ptr("AES256"),
 		},
@@ -416,7 +416,7 @@ func TestTableBucketEncryption(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = invalidAkClient.GetTableBucketEncryption(context.TODO(), &GetTableBucketEncryptionRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -427,7 +427,7 @@ func TestTableBucketEncryption(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = invalidAkClient.DeleteTableBucketEncryption(context.TODO(), &DeleteTableBucketEncryptionRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -452,7 +452,7 @@ func TestTableBucketPolicy(t *testing.T) {
 	bucketArn := result.Arn
 
 	putResult, err := client.PutTableBucketPolicy(context.TODO(), &PutTableBucketPolicyRequest{
-		BucketArn:      bucketArn,
+		TableBucketARN:      bucketArn,
 		ResourcePolicy: oss.Ptr(`{"Version":"1","Statement":[{"Action":["oss:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-beijing:1234567890:bucket/demo-bucket"]}]}`),
 	})
 	assert.Nil(t, err)
@@ -461,7 +461,7 @@ func TestTableBucketPolicy(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	getResult, err := client.GetTableBucketPolicy(context.TODO(), &GetTableBucketPolicyRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
@@ -469,7 +469,7 @@ func TestTableBucketPolicy(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	delResult, err := client.DeleteTableBucketPolicy(context.TODO(), &DeleteTableBucketPolicyRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 204, delResult.StatusCode)
@@ -480,7 +480,7 @@ func TestTableBucketPolicy(t *testing.T) {
 	invalidAkClient := getInvalidAkClient()
 
 	_, err = invalidAkClient.PutTableBucketPolicy(context.TODO(), &PutTableBucketPolicyRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		ResourcePolicy: oss.Ptr(`(
 		{
 			"Version":"1",
@@ -501,7 +501,7 @@ func TestTableBucketPolicy(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.GetTableBucketPolicy(context.TODO(), &GetTableBucketPolicyRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -512,7 +512,7 @@ func TestTableBucketPolicy(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = invalidAkClient.DeleteTableBucketPolicy(context.TODO(), &DeleteTableBucketPolicyRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -537,7 +537,7 @@ func TestTableBucketMaintenance(t *testing.T) {
 	bucketArn := result.Arn
 
 	putResult, err := client.PutTableBucketMaintenanceConfiguration(context.TODO(), &PutTableBucketMaintenanceConfigurationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
 		Value: &MaintenanceValue{
 			Settings: &MaintenanceSettings{
@@ -555,7 +555,7 @@ func TestTableBucketMaintenance(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	getResult, err := client.GetTableBucketMaintenanceConfiguration(context.TODO(), &GetTableBucketMaintenanceConfigurationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
@@ -565,7 +565,7 @@ func TestTableBucketMaintenance(t *testing.T) {
 	// test server error
 	invalidAkClient := getInvalidAkClient()
 	_, err = invalidAkClient.PutTableBucketMaintenanceConfiguration(context.TODO(), &PutTableBucketMaintenanceConfigurationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
 		Value: &MaintenanceValue{
 			Settings: &MaintenanceSettings{
@@ -586,7 +586,7 @@ func TestTableBucketMaintenance(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = invalidAkClient.GetTableBucketMaintenanceConfiguration(context.TODO(), &GetTableBucketMaintenanceConfigurationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 	})
 	assert.NotNil(t, err)
 	serr = nil
@@ -612,7 +612,7 @@ func TestNamespace(t *testing.T) {
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	putResult, err := client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: []string{spaceName},
 	})
 	assert.Nil(t, err)
@@ -621,7 +621,7 @@ func TestNamespace(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	getResult, err := client.GetNamespace(context.TODO(), &GetNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 	})
 	assert.Nil(t, err)
@@ -630,7 +630,7 @@ func TestNamespace(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	listResult, err := client.ListNamespaces(context.TODO(), &ListNamespacesRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Prefix:    oss.Ptr(spaceNamePrefix),
 	})
 	assert.Nil(t, err)
@@ -640,7 +640,7 @@ func TestNamespace(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	delResult, err := client.DeleteNamespace(context.TODO(), &DeleteNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 	})
 	assert.Nil(t, err)
@@ -651,7 +651,7 @@ func TestNamespace(t *testing.T) {
 	// test server error
 	invalidAkClient := getInvalidAkClient()
 	_, err = invalidAkClient.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: []string{spaceName},
 	})
 	assert.NotNil(t, err)
@@ -663,7 +663,7 @@ func TestNamespace(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.GetNamespace(context.TODO(), &GetNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 	})
 	assert.NotNil(t, err)
@@ -675,7 +675,7 @@ func TestNamespace(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = invalidAkClient.ListNamespaces(context.TODO(), &ListNamespacesRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Prefix:    oss.Ptr(spaceNamePrefix),
 	})
 	assert.NotNil(t, err)
@@ -687,7 +687,7 @@ func TestNamespace(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.DeleteNamespace(context.TODO(), &DeleteNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 	})
 	assert.NotNil(t, err)
@@ -714,14 +714,14 @@ func TestTable(t *testing.T) {
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: []string{spaceName},
 	})
 	assert.Nil(t, err)
 
 	tableName := tableNamePrefix + "_" + randLowStr(5)
 	putResult, err := client.CreateTable(context.TODO(), &CreateTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
@@ -732,7 +732,7 @@ func TestTable(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	getResult, err := client.GetTable(context.TODO(), &GetTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -742,7 +742,7 @@ func TestTable(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	listResult, err := client.ListTables(context.TODO(), &ListTablesRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Prefix:    oss.Ptr(tableNamePrefix),
 	})
@@ -754,7 +754,7 @@ func TestTable(t *testing.T) {
 
 	newTableName := tableNamePrefix + "_" + randLowStr(6)
 	reResult, err := client.RenameTable(context.TODO(), &RenameTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		NewName:   oss.Ptr(newTableName),
@@ -765,7 +765,7 @@ func TestTable(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	delResult, err := client.DeleteTable(context.TODO(), &DeleteTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(newTableName),
 	})
@@ -777,7 +777,7 @@ func TestTable(t *testing.T) {
 	// test server error
 	invalidAkClient := getInvalidAkClient()
 	_, err = invalidAkClient.CreateTable(context.TODO(), &CreateTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
@@ -791,7 +791,7 @@ func TestTable(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.GetTable(context.TODO(), &GetTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -804,7 +804,7 @@ func TestTable(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = invalidAkClient.ListTables(context.TODO(), &ListTablesRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Prefix:    oss.Ptr(tableNamePrefix),
 	})
@@ -817,7 +817,7 @@ func TestTable(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = invalidAkClient.RenameTable(context.TODO(), &RenameTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		NewName:   oss.Ptr(newTableName),
@@ -831,7 +831,7 @@ func TestTable(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.DeleteTable(context.TODO(), &DeleteTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -859,14 +859,14 @@ func TestTableMetadataLocation(t *testing.T) {
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: []string{spaceName},
 	})
 	assert.Nil(t, err)
 
 	tableName := tableNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateTable(context.TODO(), &CreateTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
@@ -875,7 +875,7 @@ func TestTableMetadataLocation(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	getResult, err := client.GetTableMetadataLocation(context.TODO(), &GetTableMetadataLocationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -887,7 +887,7 @@ func TestTableMetadataLocation(t *testing.T) {
 	// test server error
 	invalidAkClient := getInvalidAkClient()
 	_, err = invalidAkClient.GetTableMetadataLocation(context.TODO(), &GetTableMetadataLocationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -900,7 +900,7 @@ func TestTableMetadataLocation(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.UpdateTableMetadataLocation(context.TODO(), &UpdateTableMetadataLocationRequest{
-		BucketArn:        bucketArn,
+		TableBucketARN:        bucketArn,
 		Namespace:        oss.Ptr(spaceName),
 		Name:             oss.Ptr(tableName),
 		VersionToken:     getResult.VersionToken,
@@ -930,14 +930,14 @@ func TestTableEncryption(t *testing.T) {
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: []string{spaceName},
 	})
 	assert.Nil(t, err)
 
 	tableName := tableNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateTable(context.TODO(), &CreateTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
@@ -946,7 +946,7 @@ func TestTableEncryption(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	getResult, err := client.GetTableEncryption(context.TODO(), &GetTableEncryptionRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -958,7 +958,7 @@ func TestTableEncryption(t *testing.T) {
 	// test server error
 	invalidAkClient := getInvalidAkClient()
 	_, err = invalidAkClient.GetTableEncryption(context.TODO(), &GetTableEncryptionRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -986,14 +986,14 @@ func TestTablePolicy(t *testing.T) {
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: []string{spaceName},
 	})
 	assert.Nil(t, err)
 
 	tableName := tableNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateTable(context.TODO(), &CreateTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
@@ -1015,7 +1015,7 @@ func TestTablePolicy(t *testing.T) {
 			  ]
 			 }`
 	putResult, err := client.PutTablePolicy(context.TODO(), &PutTablePolicyRequest{
-		BucketArn:      bucketArn,
+		TableBucketARN:      bucketArn,
 		Namespace:      oss.Ptr(spaceName),
 		Name:           oss.Ptr(tableName),
 		ResourcePolicy: oss.Ptr(policy),
@@ -1026,7 +1026,7 @@ func TestTablePolicy(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	getResult, err := client.GetTablePolicy(context.TODO(), &GetTablePolicyRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -1036,7 +1036,7 @@ func TestTablePolicy(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	delResult, err := client.DeleteTablePolicy(context.TODO(), &DeleteTablePolicyRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -1048,7 +1048,7 @@ func TestTablePolicy(t *testing.T) {
 	// test server error
 	invalidAkClient := getInvalidAkClient()
 	_, err = invalidAkClient.PutTablePolicy(context.TODO(), &PutTablePolicyRequest{
-		BucketArn:      bucketArn,
+		TableBucketARN:      bucketArn,
 		Namespace:      oss.Ptr(spaceName),
 		Name:           oss.Ptr(tableName),
 		ResourcePolicy: oss.Ptr(policy),
@@ -1062,7 +1062,7 @@ func TestTablePolicy(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.GetTablePolicy(context.TODO(), &GetTablePolicyRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -1075,7 +1075,7 @@ func TestTablePolicy(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = invalidAkClient.DeleteTablePolicy(context.TODO(), &DeleteTablePolicyRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -1103,14 +1103,14 @@ func TestTableMaintenance(t *testing.T) {
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: []string{spaceName},
 	})
 	assert.Nil(t, err)
 
 	tableName := tableNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateTable(context.TODO(), &CreateTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
@@ -1119,7 +1119,7 @@ func TestTableMaintenance(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	putResult, err := client.PutTableMaintenanceConfiguration(context.TODO(), &PutTableMaintenanceConfigurationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Type:      oss.Ptr("icebergCompaction"),
@@ -1139,7 +1139,7 @@ func TestTableMaintenance(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	putResult, err = client.PutTableMaintenanceConfiguration(context.TODO(), &PutTableMaintenanceConfigurationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Type:      oss.Ptr("icebergSnapshotManagement"),
@@ -1159,7 +1159,7 @@ func TestTableMaintenance(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	getResult, err := client.GetTableMaintenanceConfiguration(context.TODO(), &GetTableMaintenanceConfigurationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -1171,7 +1171,7 @@ func TestTableMaintenance(t *testing.T) {
 	// test server error
 	invalidAkClient := getInvalidAkClient()
 	_, err = invalidAkClient.PutTableMaintenanceConfiguration(context.TODO(), &PutTableMaintenanceConfigurationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Type:      oss.Ptr("icebergSnapshotManagement"),
@@ -1194,7 +1194,7 @@ func TestTableMaintenance(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = invalidAkClient.GetTableMaintenanceConfiguration(context.TODO(), &GetTableMaintenanceConfigurationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -1222,14 +1222,14 @@ func TestTableMaintenanceJobStatus(t *testing.T) {
 
 	spaceName := spaceNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: []string{spaceName},
 	})
 	assert.Nil(t, err)
 
 	tableName := tableNamePrefix + "_" + randLowStr(5)
 	_, err = client.CreateTable(context.TODO(), &CreateTableRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Format:    oss.Ptr("ICEBERG"),
@@ -1238,7 +1238,7 @@ func TestTableMaintenanceJobStatus(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	_, err = client.PutTableMaintenanceConfiguration(context.TODO(), &PutTableMaintenanceConfigurationRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 		Type:      oss.Ptr("icebergCompaction"),
@@ -1255,7 +1255,7 @@ func TestTableMaintenanceJobStatus(t *testing.T) {
 	assert.Nil(t, err)
 
 	getResult, err := client.GetTableMaintenanceJobStatus(context.TODO(), &GetTableMaintenanceJobStatusRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})
@@ -1267,7 +1267,7 @@ func TestTableMaintenanceJobStatus(t *testing.T) {
 	// test server error
 	invalidAkClient := getInvalidAkClient()
 	_, err = invalidAkClient.GetTableMaintenanceJobStatus(context.TODO(), &GetTableMaintenanceJobStatusRequest{
-		BucketArn: bucketArn,
+		TableBucketARN: bucketArn,
 		Namespace: oss.Ptr(spaceName),
 		Name:      oss.Ptr(tableName),
 	})

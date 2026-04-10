@@ -61,7 +61,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.RenameTable(context.TODO(), &tables.RenameTableRequest{
-		BucketArn: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(bucketArn),
 		Namespace: oss.Ptr(nameSpace),
 		Name:      oss.Ptr(table),
 		NewName:   oss.Ptr(newTable),

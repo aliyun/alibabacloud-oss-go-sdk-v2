@@ -9,7 +9,7 @@ import (
 )
 
 type GetTableBucketMaintenanceConfigurationRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	oss.RequestCommon
 }
@@ -18,7 +18,7 @@ type GetTableBucketMaintenanceConfigurationResult struct {
 	// The container that stores the maintenance configuration of the table bucket.
 	Configuration *MaintenanceConfiguration `output:"body,configuration,json"`
 
-	TableBucketArn *string `output:"body,tableBucketARN,json"`
+	TableBucketARN *string `output:"body,tableBucketARN,json"`
 
 	oss.ResultCommon
 }
@@ -54,8 +54,8 @@ func (c *TablesClient) GetTableBucketMaintenanceConfiguration(ctx context.Contex
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance", url.QueryEscape(oss.ToString(request.BucketArn)))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
@@ -73,7 +73,7 @@ func (c *TablesClient) GetTableBucketMaintenanceConfiguration(ctx context.Contex
 }
 
 type PutTableBucketMaintenanceConfigurationRequest struct {
-	BucketArn *string `input:"nop,bucketArn,required"`
+	TableBucketARN *string `input:"nop,tableBucketARN,required"`
 
 	Type *string `input:"nop,type,required"`
 
@@ -109,8 +109,8 @@ func (c *TablesClient) PutTableBucketMaintenanceConfiguration(ctx context.Contex
 		Headers: map[string]string{
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
-		Bucket: request.BucketArn,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.BucketArn)), oss.ToString(request.Type))),
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), oss.ToString(request.Type))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {

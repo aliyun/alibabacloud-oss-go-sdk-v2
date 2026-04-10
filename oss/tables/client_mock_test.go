@@ -337,8 +337,8 @@ var testMockCreateTableBucketSuccessCases = []struct {
 			assert.Equal(t, "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"arn\",\"sseAlgorithm\":\"AES256\"},\"name\":\"bucket\"}", string(requestBody))
 		},
 		&CreateTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
-			EncryptionConfiguration: &EncryptionConfiguration{
+				Name: oss.Ptr("bucket"),
+				EncryptionConfiguration: &EncryptionConfiguration{
 				KmsKeyArn:    oss.Ptr("arn"),
 				SseAlgorithm: oss.Ptr("AES256"),
 			},
@@ -365,8 +365,8 @@ var testMockCreateTableBucketSuccessCases = []struct {
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&CreateTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
+				Name: oss.Ptr("bucket"),
+			},
 		func(t *testing.T, o *CreateTableBucketResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
@@ -425,8 +425,8 @@ var testMockCreateTableBucketErrorCases = []struct {
 			assert.Equal(t, "{\"name\":\"bucket\"}", string(requestBody))
 		},
 		&CreateTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
+				Name: oss.Ptr("bucket"),
+			},
 		func(t *testing.T, o *CreateTableBucketResult, err error) {
 			assert.Nil(t, o)
 			assert.NotNil(t, err)
@@ -462,8 +462,8 @@ var testMockCreateTableBucketErrorCases = []struct {
 			assert.Equal(t, "{\"name\":\"bucket\"}", string(requestBody))
 		},
 		&CreateTableBucketRequest{
-			Bucket: oss.Ptr("bucket"),
-		},
+				Name: oss.Ptr("bucket"),
+			},
 		func(t *testing.T, o *CreateTableBucketResult, err error) {
 			assert.Nil(t, o)
 			assert.NotNil(t, err)
@@ -528,7 +528,7 @@ var testMockGetTableBucketSuccessCases = []struct {
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -590,7 +590,7 @@ var testMockGetTableBucketErrorCases = []struct {
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketResult, err error) {
 			assert.Nil(t, o)
@@ -620,7 +620,7 @@ var testMockGetTableBucketErrorCases = []struct {
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketResult, err error) {
 			assert.Nil(t, o)
@@ -649,7 +649,7 @@ var testMockGetTableBucketErrorCases = []struct {
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketResult, err error) {
 			assert.Nil(t, o)
@@ -724,20 +724,20 @@ var testMockListTableBucketsSuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.Equal(t, *o.ContinuationToken, "Cj5hY3M6b3NzdGFibGVzOmNuLWJlaWppbmc6MTc2MDIyNTU0NTA4NDMzMTpidWNrZXQvZGVtby13YWxrZXItMQ--")
-			assert.Equal(t, len(o.Buckets), 2)
-			assert.Equal(t, *o.Buckets[0].CreatedAt, "2026-04-02T05:27:31.000000+00:00")
-			assert.Equal(t, *o.Buckets[0].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
-			assert.Equal(t, *o.Buckets[0].Name, "demo-bucket")
-			assert.Equal(t, *o.Buckets[0].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
-			assert.Equal(t, *o.Buckets[0].OwnerAccountId, "1234567890")
-			assert.Equal(t, *o.Buckets[0].Type, "customer")
+			assert.Equal(t, len(o.TableBuckets), 2)
+			assert.Equal(t, *o.TableBuckets[0].CreatedAt, "2026-04-02T05:27:31.000000+00:00")
+			assert.Equal(t, *o.TableBuckets[0].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
+			assert.Equal(t, *o.TableBuckets[0].Name, "demo-bucket")
+			assert.Equal(t, *o.TableBuckets[0].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
+			assert.Equal(t, *o.TableBuckets[0].OwnerAccountId, "1234567890")
+			assert.Equal(t, *o.TableBuckets[0].Type, "customer")
 
-			assert.Equal(t, *o.Buckets[1].CreatedAt, "2026-04-02T05:27:32.000000+00:00")
-			assert.Equal(t, *o.Buckets[1].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket-1")
-			assert.Equal(t, *o.Buckets[1].Name, "demo-bucket-1")
-			assert.Equal(t, *o.Buckets[1].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f3")
-			assert.Equal(t, *o.Buckets[1].OwnerAccountId, "1234567890")
-			assert.Equal(t, *o.Buckets[1].Type, "customer")
+			assert.Equal(t, *o.TableBuckets[1].CreatedAt, "2026-04-02T05:27:32.000000+00:00")
+			assert.Equal(t, *o.TableBuckets[1].Arn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket-1")
+			assert.Equal(t, *o.TableBuckets[1].Name, "demo-bucket-1")
+			assert.Equal(t, *o.TableBuckets[1].TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f3")
+			assert.Equal(t, *o.TableBuckets[1].OwnerAccountId, "1234567890")
+			assert.Equal(t, *o.TableBuckets[1].Type, "customer")
 		},
 	},
 }
@@ -857,7 +857,7 @@ var testMockDeleteTableBucketSuccessCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteTableBucketRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketResult, err error) {
 			assert.Equal(t, 204, o.StatusCode)
@@ -909,7 +909,7 @@ var testMockDeleteTableBucketErrorCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteTableBucketRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketResult, err error) {
 			assert.Nil(t, o)
@@ -938,7 +938,7 @@ var testMockDeleteTableBucketErrorCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteTableBucketRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketResult, err error) {
 			assert.Nil(t, o)
@@ -997,7 +997,7 @@ var testMockPutTableBucketEncryptionSuccessCases = []struct {
 			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"}}")
 		},
 		&PutTableBucketEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			EncryptionConfiguration: &EncryptionConfiguration{
 				KmsKeyArn:    oss.Ptr(""),
 				SseAlgorithm: oss.Ptr("AES256"),
@@ -1055,7 +1055,7 @@ var testMockPutTableBucketEncryptionErrorCases = []struct {
 			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"}}")
 		},
 		&PutTableBucketEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			EncryptionConfiguration: &EncryptionConfiguration{
 				KmsKeyArn:    oss.Ptr(""),
 				SseAlgorithm: oss.Ptr("AES256"),
@@ -1093,7 +1093,7 @@ var testMockPutTableBucketEncryptionErrorCases = []struct {
 			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"}}")
 		},
 		&PutTableBucketEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			EncryptionConfiguration: &EncryptionConfiguration{
 				KmsKeyArn:    oss.Ptr(""),
 				SseAlgorithm: oss.Ptr("AES256"),
@@ -1159,7 +1159,7 @@ var testMockGetTableBucketEncryptionSuccessCases = []struct {
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketEncryptionResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -1213,7 +1213,7 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketEncryptionResult, err error) {
 			assert.Nil(t, o)
@@ -1242,7 +1242,7 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 		},
 		&GetTableBucketEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketEncryptionResult, err error) {
 			assert.Nil(t, o)
@@ -1270,7 +1270,7 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 		},
 		&GetTableBucketEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketEncryptionResult, err error) {
 			assert.Nil(t, o)
@@ -1321,7 +1321,7 @@ var testMockDeleteTableBucketEncryptionSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
 		},
 		&DeleteTableBucketEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketEncryptionResult, err error) {
 			assert.Equal(t, 204, o.StatusCode)
@@ -1375,7 +1375,7 @@ var testMockDeleteTableBucketEncryptionErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
 		},
 		&DeleteTableBucketEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketEncryptionResult, err error) {
 			assert.Nil(t, o)
@@ -1404,7 +1404,7 @@ var testMockDeleteTableBucketEncryptionErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
 		},
 		&DeleteTableBucketEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketEncryptionResult, err error) {
 			assert.Nil(t, o)
@@ -1462,7 +1462,7 @@ var testMockPutTableBucketPolicySuccessCases = []struct {
 			assert.Equal(t, string(data), "{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}")
 		},
 		&PutTableBucketPolicyRequest{
-			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			ResourcePolicy: oss.Ptr(`{"Version":"1","Statement":[{"Action":["oss:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket"]}]}`),
 		},
 		func(t *testing.T, o *PutTableBucketPolicyResult, err error) {
@@ -1518,7 +1518,7 @@ var testMockPutTableBucketPolicyErrorCases = []struct {
 			assert.Equal(t, string(data), "{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}")
 		},
 		&PutTableBucketPolicyRequest{
-			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			ResourcePolicy: oss.Ptr(`{"Version":"1","Statement":[{"Action":["oss:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket"]}]}`),
 		},
 		func(t *testing.T, o *PutTableBucketPolicyResult, err error) {
@@ -1550,7 +1550,7 @@ var testMockPutTableBucketPolicyErrorCases = []struct {
 			assert.Equal(t, string(data), "{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}")
 		},
 		&PutTableBucketPolicyRequest{
-			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			ResourcePolicy: oss.Ptr(`{"Version":"1","Statement":[{"Action":["oss:GetTable"],"Effect":"Deny","Principal":["1234567890"],"Resource":["acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket"]}]}`),
 		},
 		func(t *testing.T, o *PutTableBucketPolicyResult, err error) {
@@ -1608,7 +1608,7 @@ var testMockGetTableBucketPolicySuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
 		},
 		&GetTableBucketPolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketPolicyResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -1661,7 +1661,7 @@ var testMockGetTableBucketPolicyErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketPolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketPolicyResult, err error) {
 			assert.Nil(t, o)
@@ -1692,7 +1692,7 @@ var testMockGetTableBucketPolicyErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&GetTableBucketPolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketPolicyResult, err error) {
 			assert.Nil(t, o)
@@ -1749,7 +1749,7 @@ var testMockDeleteTableBucketPolicySuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&DeleteTableBucketPolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketPolicyResult, err error) {
 			assert.Equal(t, 204, o.StatusCode)
@@ -1804,7 +1804,7 @@ var testMockDeleteTableBucketPolicyErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&DeleteTableBucketPolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketPolicyResult, err error) {
 			assert.Nil(t, o)
@@ -1833,7 +1833,7 @@ var testMockDeleteTableBucketPolicyErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&DeleteTableBucketPolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *DeleteTableBucketPolicyResult, err error) {
 			assert.Nil(t, o)
@@ -1891,7 +1891,7 @@ var testMockPutTableBucketMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":10,\"unreferencedDays\":4}},\"status\":\"disabled\"}}")
 		},
 		&PutTableBucketMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
 			Value: &MaintenanceValue{
 				Settings: &MaintenanceSettings{
@@ -1924,7 +1924,7 @@ var testMockPutTableBucketMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":1,\"unreferencedDays\":2147483647}},\"status\":\"enabled\"}}")
 		},
 		&PutTableBucketMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
 			Value: &MaintenanceValue{
 				Settings: &MaintenanceSettings{
@@ -1988,7 +1988,7 @@ var testMockPutTableBucketMaintenanceConfigurationErrorCases = []struct {
 			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":1,\"unreferencedDays\":2147483647}},\"status\":\"enabled\"}}")
 		},
 		&PutTableBucketMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
 			Value: &MaintenanceValue{
 				Settings: &MaintenanceSettings{
@@ -2028,7 +2028,7 @@ var testMockPutTableBucketMaintenanceConfigurationErrorCases = []struct {
 			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":1,\"unreferencedDays\":2147483647}},\"status\":\"enabled\"}}")
 		},
 		&PutTableBucketMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
 			Value: &MaintenanceValue{
 				Settings: &MaintenanceSettings{
@@ -2101,7 +2101,7 @@ var testMockGetTableBucketMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketMaintenanceConfigurationResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -2111,7 +2111,7 @@ var testMockGetTableBucketMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.IcebergUnreferencedFileRemoval.UnreferencedDays, 10)
 			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Settings.IcebergUnreferencedFileRemoval.NonCurrentDays, 2147483647)
 			assert.Equal(t, *o.Configuration.IcebergUnreferencedFileRemoval.Status, "enabled")
-			assert.Equal(t, *o.TableBucketArn, "acs:osstables:cn-beijing:123456:bucket/demo-bucket")
+			assert.Equal(t, *o.TableBucketARN, "acs:osstables:cn-beijing:123456:bucket/demo-bucket")
 		},
 	},
 }
@@ -2157,7 +2157,7 @@ var testMockGetTableBucketMaintenanceConfigurationErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketMaintenanceConfigurationResult, err error) {
 			assert.Nil(t, o)
@@ -2185,7 +2185,7 @@ var testMockGetTableBucketMaintenanceConfigurationErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *GetTableBucketMaintenanceConfigurationResult, err error) {
 			assert.Nil(t, o)
@@ -2249,7 +2249,7 @@ var testMockCreateNamespaceSuccessCases = []struct {
 			assert.Equal(t, "{\"namespace\":[\"space\"]}", string(requestBody))
 		},
 		&CreateNamespaceRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: []string{"space"},
 		},
 		func(t *testing.T, o *CreateNamespaceResult, err error) {
@@ -2257,7 +2257,7 @@ var testMockCreateNamespaceSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket", *o.TableBucketArn)
+			assert.Equal(t, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket", *o.TableBucketARN)
 			assert.Equal(t, "space", o.Namespace[0])
 		},
 	},
@@ -2311,7 +2311,7 @@ var testMockCreateNamespaceErrorCases = []struct {
 			assert.Equal(t, "{\"namespace\":[\"space\"]}", string(requestBody))
 		},
 		&CreateNamespaceRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: []string{"space"},
 		},
 		func(t *testing.T, o *CreateNamespaceResult, err error) {
@@ -2348,7 +2348,7 @@ var testMockCreateNamespaceErrorCases = []struct {
 			assert.Equal(t, "{\"namespace\":[\"space\"]}", string(requestBody))
 		},
 		&CreateNamespaceRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: []string{"space"},
 		},
 		func(t *testing.T, o *CreateNamespaceResult, err error) {
@@ -2415,7 +2415,7 @@ var testMockGetNamespaceSuccessCases = []struct {
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetNamespaceRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *GetNamespaceResult, err error) {
@@ -2478,7 +2478,7 @@ var testMockGetNamespaceErrorCases = []struct {
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetNamespaceRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *GetNamespaceResult, err error) {
@@ -2509,7 +2509,7 @@ var testMockGetNamespaceErrorCases = []struct {
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetNamespaceRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *GetNamespaceResult, err error) {
@@ -2578,7 +2578,7 @@ var testMockListNamespacesSuccessCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListNamespacesRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *ListNamespacesResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -2647,7 +2647,7 @@ var testMockListNamespacesErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListNamespacesRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *ListNamespacesResult, err error) {
 			assert.Nil(t, o)
@@ -2675,7 +2675,7 @@ var testMockListNamespacesErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListNamespacesRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		},
 		func(t *testing.T, o *ListNamespacesResult, err error) {
 			assert.Nil(t, o)
@@ -2725,7 +2725,7 @@ var testMockDeleteNamespaceSuccessCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteNamespaceRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *DeleteNamespaceResult, err error) {
@@ -2779,7 +2779,7 @@ var testMockDeleteNamespaceErrorCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteNamespaceRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *DeleteNamespaceResult, err error) {
@@ -2810,7 +2810,7 @@ var testMockDeleteNamespaceErrorCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteNamespaceRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *DeleteNamespaceResult, err error) {
@@ -2876,7 +2876,7 @@ var testMockCreateTableSuccessCases = []struct {
 			assert.Equal(t, string(requestBody), "{\"format\":\"ICEBERG\",\"name\":\"table\"}")
 		},
 		&CreateTableRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 			Format:    oss.Ptr("ICEBERG"),
@@ -2887,7 +2887,7 @@ var testMockCreateTableSuccessCases = []struct {
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 
-			assert.Equal(t, oss.ToString(o.TableArn), "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/16dc6c23-7a64-4f55-af2f-ee243524a5cc")
+			assert.Equal(t, oss.ToString(o.TableARN), "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/16dc6c23-7a64-4f55-af2f-ee243524a5cc")
 			assert.Equal(t, oss.ToString(o.VersionToken), "8c651fb37897499092bd95e1bc2816a9")
 		},
 	},
@@ -2912,7 +2912,7 @@ var testMockCreateTableSuccessCases = []struct {
 			assert.Equal(t, string(requestBody), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"},\"format\":\"ICEBERG\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\"}")
 		},
 		&CreateTableRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 			Format:    oss.Ptr("ICEBERG"),
@@ -2940,7 +2940,7 @@ var testMockCreateTableSuccessCases = []struct {
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
-			assert.Equal(t, oss.ToString(o.TableArn), "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/16dc6c23-7a64-4f55-af2f-ee243524a5cc")
+			assert.Equal(t, oss.ToString(o.TableARN), "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/16dc6c23-7a64-4f55-af2f-ee243524a5cc")
 			assert.Equal(t, oss.ToString(o.VersionToken), "8c651fb37897499092bd95e1bc2816a9")
 		},
 	},
@@ -2995,7 +2995,7 @@ var testMockCreateTableErrorCases = []struct {
 			assert.Equal(t, string(requestBody), "{\"format\":\"ICEBERG\",\"name\":\"table\"}")
 		},
 		&CreateTableRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 			Format:    oss.Ptr("ICEBERG"),
@@ -3036,7 +3036,7 @@ var testMockCreateTableErrorCases = []struct {
 			assert.Equal(t, string(requestBody), "{\"format\":\"ICEBERG\",\"name\":\"table\"}")
 		},
 		&CreateTableRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 			Format:    oss.Ptr("ICEBERG"),
@@ -3114,7 +3114,7 @@ var testMockGetTableSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?name=table&namespace=space&tableBucketARN=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", strUrl)
 		},
 		&GetTableRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -3135,7 +3135,7 @@ var testMockGetTableSuccessCases = []struct {
 			assert.Equal(t, o.Namespace[0], "my_namespace")
 			assert.Equal(t, *o.NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01198")
 			assert.Equal(t, *o.OwnerAccountId, "1234567890")
-			assert.Equal(t, *o.TableArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
+			assert.Equal(t, *o.TableARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
 			assert.Equal(t, *o.TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
 			assert.Equal(t, *o.Type, "customer")
 			assert.Equal(t, *o.VersionToken, "365f934c6e234f35ace5ae48f0a0d871")
@@ -3172,7 +3172,7 @@ var testMockGetTableSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
-			TableArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
+			TableARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
 		},
 		func(t *testing.T, o *GetTableResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -3191,7 +3191,7 @@ var testMockGetTableSuccessCases = []struct {
 			assert.Equal(t, o.Namespace[0], "my_namespace")
 			assert.Equal(t, *o.NamespaceId, "22af7160-82b5-4d6a-b9fb-4d14c6e01198")
 			assert.Equal(t, *o.OwnerAccountId, "1234567890")
-			assert.Equal(t, *o.TableArn, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
+			assert.Equal(t, *o.TableARN, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9")
 			assert.Equal(t, *o.TableBucketId, "340c6672-0a1f-4426-aff9-1a8e2ac7b0f5")
 			assert.Equal(t, *o.Type, "customer")
 			assert.Equal(t, *o.VersionToken, "365f934c6e234f35ace5ae48f0a0d871")
@@ -3243,7 +3243,7 @@ var testMockGetTableErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
-			TableArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
+			TableARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
 		},
 		func(t *testing.T, o *GetTableResult, err error) {
 			assert.Nil(t, o)
@@ -3274,7 +3274,7 @@ var testMockGetTableErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
-			TableArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
+			TableARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
 		},
 		func(t *testing.T, o *GetTableResult, err error) {
 			assert.Nil(t, o)
@@ -3304,7 +3304,7 @@ var testMockGetTableErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
-			TableArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
+			TableARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
 		},
 		func(t *testing.T, o *GetTableResult, err error) {
 			assert.Nil(t, o)
@@ -3380,7 +3380,7 @@ var testMockListTablesSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?continuationToken=token&maxTables=1000&namespace=space&prefix=prefix", strUrl)
 		},
 		&ListTablesRequest{
-			BucketArn:         oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:         oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:         oss.Ptr("space"),
 			ContinuationToken: oss.Ptr("token"),
 			MaxTables:         int32(1000),
@@ -3398,14 +3398,14 @@ var testMockListTablesSuccessCases = []struct {
 			assert.Equal(t, *o.Tables[0].ModifiedAt, "2026-04-07T02:15:12.186626+00:00")
 			assert.Equal(t, *o.Tables[0].Name, "example_table")
 			assert.Equal(t, o.Tables[0].Namespace[0], "my_namespace")
-			assert.Equal(t, *o.Tables[0].TableArn, "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/7568a090-50f8-4808-8c8d-930a2c264076")
+			assert.Equal(t, *o.Tables[0].TableARN, "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/7568a090-50f8-4808-8c8d-930a2c264076")
 			assert.Equal(t, *o.Tables[0].Type, "customer")
 
 			assert.Equal(t, *o.Tables[1].CreatedAt, "2026-04-07T02:15:12.186626+00:00")
 			assert.Equal(t, *o.Tables[1].ModifiedAt, "2026-04-07T02:15:12.186626+00:00")
 			assert.Equal(t, *o.Tables[1].Name, "example_table1")
 			assert.Equal(t, o.Tables[1].Namespace[0], "my_namespace")
-			assert.Equal(t, *o.Tables[1].TableArn, "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/757c17c1-532e-4a45-b5b3-d8783374fc2a")
+			assert.Equal(t, *o.Tables[1].TableARN, "acs:osstables:ap-southeast-1:651322719100:bucket/donggu-table-bucket-test/table/757c17c1-532e-4a45-b5b3-d8783374fc2a")
 			assert.Equal(t, *o.Tables[1].Type, "customer")
 		},
 	},
@@ -3455,7 +3455,7 @@ var testMockListTablesErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?namespace=space", strUrl)
 		},
 		&ListTablesRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *ListTablesResult, err error) {
@@ -3486,7 +3486,7 @@ var testMockListTablesErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?namespace=space", strUrl)
 		},
 		&ListTablesRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 		},
 		func(t *testing.T, o *ListTablesResult, err error) {
@@ -3538,7 +3538,7 @@ var testMockDeleteTableSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
 		},
 		&DeleteTableRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -3595,7 +3595,7 @@ var testMockDeleteTableErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
 		},
 		&DeleteTableRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -3628,7 +3628,7 @@ var testMockDeleteTableErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
 		},
 		&DeleteTableRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -3690,10 +3690,10 @@ var testMockRenameTableSuccessCases = []struct {
 			assert.Equal(t, "{\"newName\":\"new-table\",\"newNamespaceName\":\"new-space\",\"versionToken\":\"version-token\"}", string(requestBody))
 		},
 		&RenameTableRequest{
-			BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:        oss.Ptr("space"),
 			Name:             oss.Ptr("table"),
-			NewNamespaceName: oss.Ptr("new-space"),
+			NewNamespace: oss.Ptr("new-space"),
 			NewName:          oss.Ptr("new-table"),
 			VersionToken:     oss.Ptr("version-token"),
 		},
@@ -3721,7 +3721,7 @@ var testMockRenameTableSuccessCases = []struct {
 			assert.Equal(t, "{\"newName\":\"new-table\"}", string(requestBody))
 		},
 		&RenameTableRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 			NewName:   oss.Ptr("new-table"),
@@ -3784,10 +3784,10 @@ var testMockRenameTableErrorCases = []struct {
 			assert.Equal(t, "{\"newName\":\"new-table\",\"newNamespaceName\":\"new-space\",\"versionToken\":\"version-token\"}", string(requestBody))
 		},
 		&RenameTableRequest{
-			BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:        oss.Ptr("space"),
 			Name:             oss.Ptr("table"),
-			NewNamespaceName: oss.Ptr("new-space"),
+			NewNamespace: oss.Ptr("new-space"),
 			NewName:          oss.Ptr("new-table"),
 			VersionToken:     oss.Ptr("version-token"),
 		},
@@ -3827,10 +3827,10 @@ var testMockRenameTableErrorCases = []struct {
 			assert.Equal(t, "{\"newName\":\"new-table\",\"newNamespaceName\":\"new-space\",\"versionToken\":\"version-token\"}", string(requestBody))
 		},
 		&RenameTableRequest{
-			BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:        oss.Ptr("space"),
 			Name:             oss.Ptr("table"),
-			NewNamespaceName: oss.Ptr("new-space"),
+			NewNamespace: oss.Ptr("new-space"),
 			NewName:          oss.Ptr("new-table"),
 			VersionToken:     oss.Ptr("version-token"),
 		},
@@ -3894,7 +3894,7 @@ var testMockPutTablePolicySuccessCases = []struct {
 			assert.Equal(t, `{"resourcePolicy":"{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"}`, string(requestBody))
 		},
 		&PutTablePolicyRequest{
-			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:      oss.Ptr("space"),
 			Name:           oss.Ptr("table"),
 			ResourcePolicy: oss.Ptr("{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"),
@@ -3954,7 +3954,7 @@ var testMockPutTablePolicyErrorCases = []struct {
 			assert.Equal(t, `{"resourcePolicy":"{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"}`, string(requestBody))
 		},
 		&PutTablePolicyRequest{
-			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:      oss.Ptr("space"),
 			Name:           oss.Ptr("table"),
 			ResourcePolicy: oss.Ptr("{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"),
@@ -3990,7 +3990,7 @@ var testMockPutTablePolicyErrorCases = []struct {
 			assert.Equal(t, `{"resourcePolicy":"{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"}`, string(requestBody))
 		},
 		&PutTablePolicyRequest{
-			BucketArn:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:      oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:      oss.Ptr("space"),
 			Name:           oss.Ptr("table"),
 			ResourcePolicy: oss.Ptr("{\"Version\":\"1\",\"Statement\":[{\"Action\":[\"oss:GetTable\"],\"Effect\":\"Allow\",\"Principal\":[\"9876543210\"],\"Resource\":[\"acs:osstable:cn-hangzhou:1234567890:bucket/my-table-bucket/table/*\"]}]}"),
@@ -4051,7 +4051,7 @@ var testMockGetTablePolicySuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&GetTablePolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Name:      oss.Ptr("table"),
 			Namespace: oss.Ptr("space"),
 		},
@@ -4118,7 +4118,7 @@ var testMockGetTablePolicyErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&GetTablePolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Name:      oss.Ptr("table"),
 			Namespace: oss.Ptr("space"),
 		},
@@ -4159,7 +4159,7 @@ var testMockGetTablePolicyErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&GetTablePolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Name:      oss.Ptr("table"),
 			Namespace: oss.Ptr("space"),
 		},
@@ -4218,7 +4218,7 @@ var testMockDeleteTablePolicySuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&DeleteTablePolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -4273,7 +4273,7 @@ var testMockDeleteTablePolicyErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&DeleteTablePolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -4304,7 +4304,7 @@ var testMockDeleteTablePolicyErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&DeleteTablePolicyRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -4369,7 +4369,7 @@ var testMockGetTableEncryptionSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
 		},
 		&GetTableEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -4426,7 +4426,7 @@ var testMockGetTableEncryptionErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
 		},
 		&GetTableEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -4457,7 +4457,7 @@ var testMockGetTableEncryptionErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
 		},
 		&GetTableEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -4488,7 +4488,7 @@ var testMockGetTableEncryptionErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
 		},
 		&GetTableEncryptionRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -4547,7 +4547,7 @@ var testMockGetTableMetadataLocationSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&GetTableMetadataLocationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -4606,7 +4606,7 @@ var testMockGetTableMetadataLocationErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&GetTableMetadataLocationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -4636,7 +4636,7 @@ var testMockGetTableMetadataLocationErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&GetTableMetadataLocationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -4705,7 +4705,7 @@ var testMockUpdateTableMetadataLocationSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&UpdateTableMetadataLocationRequest{
-			BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:        oss.Ptr("space"),
 			Name:             oss.Ptr("table"),
 			MetadataLocation: oss.Ptr("location"),
@@ -4719,7 +4719,7 @@ var testMockUpdateTableMetadataLocationSuccessCases = []struct {
 			assert.Equal(t, *o.MetadataLocation, "location")
 			assert.Equal(t, *o.Name, "table")
 			assert.Equal(t, o.Namespace[0], "space")
-			assert.Equal(t, *o.TableArn, "acs:osstable:cn-hangzhou:123:bucket/demo-bucket/table/table_123")
+			assert.Equal(t, *o.TableARN, "acs:osstable:cn-hangzhou:123:bucket/demo-bucket/table/table_123")
 			assert.Equal(t, *o.VersionToken, "aaa")
 		},
 	},
@@ -4770,7 +4770,7 @@ var testMockUpdateTableMetadataLocationErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&UpdateTableMetadataLocationRequest{
-			BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:        oss.Ptr("space"),
 			Name:             oss.Ptr("table"),
 			MetadataLocation: oss.Ptr("location"),
@@ -4806,7 +4806,7 @@ var testMockUpdateTableMetadataLocationErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&UpdateTableMetadataLocationRequest{
-			BucketArn:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace:        oss.Ptr("space"),
 			Name:             oss.Ptr("table"),
 			MetadataLocation: oss.Ptr("location"),
@@ -4870,7 +4870,7 @@ var testMockPutTableMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergSnapshotManagement", strUrl)
 		},
 		&PutTableMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 			Type:      oss.Ptr("icebergSnapshotManagement"),
@@ -4908,7 +4908,7 @@ var testMockPutTableMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergCompaction", strUrl)
 		},
 		&PutTableMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 			Type:      oss.Ptr("icebergCompaction"),
@@ -4976,7 +4976,7 @@ var testMockPutTableMaintenanceConfigurationErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergCompaction", strUrl)
 		},
 		&PutTableMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 			Type:      oss.Ptr("icebergCompaction"),
@@ -5020,7 +5020,7 @@ var testMockPutTableMaintenanceConfigurationErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergCompaction", strUrl)
 		},
 		&PutTableMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 			Type:      oss.Ptr("icebergCompaction"),
@@ -5112,7 +5112,7 @@ var testMockGetTableMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance", strUrl)
 		},
 		&GetTableMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -5128,7 +5128,7 @@ var testMockGetTableMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, *o.Configuration.IcebergSnapshotManagement.Settings.IcebergSnapshotManagement.MaxSnapshotAgeHours, 720)
 			assert.Equal(t, *o.Configuration.IcebergSnapshotManagement.Settings.IcebergSnapshotManagement.MinSnapshotsToKeep, 1)
 			assert.Equal(t, *o.Configuration.IcebergSnapshotManagement.Status, "enabled")
-			assert.Equal(t, *o.TableArn, "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/table_id")
+			assert.Equal(t, *o.TableARN, "acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket/table/table_id")
 		},
 	},
 }
@@ -5175,7 +5175,7 @@ var testMockGetTableMaintenanceConfigurationErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance", strUrl)
 		},
 		&GetTableMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -5206,7 +5206,7 @@ var testMockGetTableMaintenanceConfigurationErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance", strUrl)
 		},
 		&GetTableMaintenanceConfigurationRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -5277,7 +5277,7 @@ var testMockGetTableMaintenanceJobStatusSuccessCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
 		},
 		&GetTableMaintenanceJobStatusRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -5293,7 +5293,7 @@ var testMockGetTableMaintenanceJobStatusSuccessCases = []struct {
 			assert.Equal(t, *o.JobStatus.IcebergSnapshotManagement.Status, "Failed")
 			assert.Equal(t, *o.JobStatus.IcebergSnapshotManagement.LastRunTimestamp, "2026-04-08T08:36:07.426846Z")
 			assert.Equal(t, *o.JobStatus.IcebergUnreferencedFileRemoval.Status, "Disabled")
-			assert.Equal(t, *o.TableArn, "acs:osstables:cn-beijing:123456:bucket/demo-bucket/table/eb998f10-d20c-4f22-9a76-ed64e9668f56")
+			assert.Equal(t, *o.TableARN, "acs:osstables:cn-beijing:123456:bucket/demo-bucket/table/eb998f10-d20c-4f22-9a76-ed64e9668f56")
 		},
 	},
 }
@@ -5340,7 +5340,7 @@ var testMockGetTableMaintenanceJobStatusErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
 		},
 		&GetTableMaintenanceJobStatusRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
@@ -5371,7 +5371,7 @@ var testMockGetTableMaintenanceJobStatusErrorCases = []struct {
 			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
 		},
 		&GetTableMaintenanceJobStatusRequest{
-			BucketArn: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 			Namespace: oss.Ptr("space"),
 			Name:      oss.Ptr("table"),
 		},
