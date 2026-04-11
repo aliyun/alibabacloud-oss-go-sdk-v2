@@ -39,7 +39,7 @@ func (c *TablesClient) PutTablePolicy(ctx context.Context, request *PutTablePoli
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *TablesClient) GetTablePolicy(ctx context.Context, request *GetTablePoli
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (c *TablesClient) DeleteTablePolicy(ctx context.Context, request *DeleteTab
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}

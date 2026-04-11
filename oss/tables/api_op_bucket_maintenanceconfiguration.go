@@ -57,7 +57,7 @@ func (c *TablesClient) GetTableBucketMaintenanceConfiguration(ctx context.Contex
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (c *TablesClient) PutTableBucketMaintenanceConfiguration(ctx context.Contex
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), oss.ToString(request.Type))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}

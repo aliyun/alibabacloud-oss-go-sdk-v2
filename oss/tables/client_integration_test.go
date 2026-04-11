@@ -241,7 +241,7 @@ func TestInvokeOperation_TableBucketPolicy(t *testing.T) {
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(bucketArn)))),
 		Body:   strings.NewReader(policy),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	output, err := client.InvokeOperation(context.TODO(), input)
 	assert.NoError(t, err)
 
@@ -252,7 +252,7 @@ func TestInvokeOperation_TableBucketPolicy(t *testing.T) {
 		Bucket: bucketArn,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(bucketArn)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	output, err = client.InvokeOperation(context.TODO(), input)
 	assert.NoError(t, err)
 	policy1, err := io.ReadAll(output.Body)
@@ -269,7 +269,7 @@ func TestInvokeOperation_TableBucketPolicy(t *testing.T) {
 		Bucket: bucketArn,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(bucketArn)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	output, err = client.InvokeOperation(context.TODO(), input)
 	assert.NoError(t, err)
 	// discard body

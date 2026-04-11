@@ -29,7 +29,7 @@ func TestMarshalInput_CreateNamespace(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
@@ -46,7 +46,7 @@ func TestMarshalInput_CreateNamespace(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace")
@@ -66,7 +66,7 @@ func TestMarshalInput_CreateNamespace(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
@@ -140,7 +140,7 @@ func TestMarshalInput_GetNamespace(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
@@ -157,7 +157,7 @@ func TestMarshalInput_GetNamespace(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace")
@@ -175,7 +175,7 @@ func TestMarshalInput_GetNamespace(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)
@@ -237,7 +237,7 @@ func TestMarshalInput_ListNamespaces(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
@@ -254,7 +254,7 @@ func TestMarshalInput_ListNamespaces(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 
@@ -272,7 +272,7 @@ func TestMarshalInput_ListNamespaces(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["maxNamespaces"], "10")
@@ -293,7 +293,7 @@ func TestMarshalInput_ListNamespaces(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["maxNamespaces"], "10")
@@ -419,7 +419,7 @@ func TestMarshalInput_DeleteNamespace(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
@@ -436,7 +436,7 @@ func TestMarshalInput_DeleteNamespace(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Namespace.")
@@ -454,7 +454,7 @@ func TestMarshalInput_DeleteNamespace(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers["Content-Type"], contentTypeJSON)

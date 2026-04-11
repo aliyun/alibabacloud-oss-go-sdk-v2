@@ -45,7 +45,7 @@ func sortQuery(r *http.Request) string {
 
 func addIsBucketArn() oss.OperationMetadata {
 	om := oss.OperationMetadata{}
-	om.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	om.Add(oss.OpMetaKeyIsBucketArn, true)
 	return om
 }
 

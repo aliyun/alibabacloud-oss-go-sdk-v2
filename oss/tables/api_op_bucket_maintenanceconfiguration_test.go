@@ -29,7 +29,7 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), oss.ToString(request.Type))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, TableBucketARN")
@@ -46,7 +46,7 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), oss.ToString(request.Type))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Type.")
@@ -64,7 +64,7 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), oss.ToString(request.Type))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Value.")
@@ -91,7 +91,7 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), oss.ToString(request.Type))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers[oss.HTTPHeaderContentType], contentTypeJSON)
@@ -184,7 +184,7 @@ func TestMarshalInput_GetTableBucketMaintenanceConfiguration(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
@@ -201,7 +201,7 @@ func TestMarshalInput_GetTableBucketMaintenanceConfiguration(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Headers[oss.HTTPHeaderContentType], contentTypeJSON)

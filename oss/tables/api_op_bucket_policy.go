@@ -36,7 +36,7 @@ func (c *TablesClient) PutTableBucketPolicy(ctx context.Context, request *PutTab
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (c *TablesClient) GetTableBucketPolicy(ctx context.Context, request *GetTab
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (c *TablesClient) DeleteTableBucketPolicy(ctx context.Context, request *Del
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}

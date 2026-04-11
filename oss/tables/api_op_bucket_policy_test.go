@@ -30,7 +30,7 @@ func TestMarshalInput_PutTableBucketPolicy(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
@@ -47,7 +47,7 @@ func TestMarshalInput_PutTableBucketPolicy(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, ResourcePolicy.")
@@ -66,7 +66,7 @@ func TestMarshalInput_PutTableBucketPolicy(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")
@@ -159,7 +159,7 @@ func TestMarshalInput_GetTableBucketPolicy(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
@@ -177,7 +177,7 @@ func TestMarshalInput_GetTableBucketPolicy(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
@@ -259,7 +259,7 @@ func TestMarshalInput_DeleteTableBucketPolicy(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, TableBucketARN")
@@ -273,7 +273,7 @@ func TestMarshalInput_DeleteTableBucketPolicy(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/policy", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, *input.Bucket, "acs:osstables:cn-beijing:1234567890:bucket/demo-bucket")

@@ -99,7 +99,7 @@ func validateInput(input *oss.OperationInput) error {
 	}
 
 	if input.Bucket != nil {
-		if input.OpMetadata.Get(oss.OpMetaKeyRequestIsBucketArn) == true {
+		if input.OpMetadata.Get(oss.OpMetaKeyIsBucketArn) == true {
 			return oss.AssertValidateArnBucket(oss.ToString(input.Bucket))
 		} else {
 			if !oss.IsValidBucketName(input.Bucket) {

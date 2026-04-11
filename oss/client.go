@@ -806,7 +806,7 @@ func validateInput(input *OperationInput) error {
 	}
 
 	if input.Bucket != nil {
-		if input.OpMetadata.Get(OpMetaKeyRequestIsBucketArn) == true {
+		if input.OpMetadata.Get(OpMetaKeyIsBucketArn) == true {
 			return AssertValidateArnBucket(ToString(input.Bucket))
 		} else {
 			if !IsValidBucketName(input.Bucket) {

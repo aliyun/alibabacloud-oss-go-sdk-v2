@@ -153,7 +153,7 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, TableBucketARN.")
@@ -170,7 +170,7 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "malformed ARN - doesn't start with 'acs:'")
@@ -187,7 +187,7 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "malformed ARN - no service specified")
@@ -204,7 +204,7 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "malformed ARN - no region specified")
@@ -221,7 +221,7 @@ func TestMarshalInput_GetTableBucket(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Bucket, request.TableBucketARN)
@@ -436,7 +436,7 @@ func TestMarshalInput_DeleteTableBucket(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, TableBucketARN")
@@ -453,7 +453,7 @@ func TestMarshalInput_DeleteTableBucket(t *testing.T) {
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("buckets/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Bucket, request.TableBucketARN)

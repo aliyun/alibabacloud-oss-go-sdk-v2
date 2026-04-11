@@ -54,7 +54,7 @@ func (c *TablesClient) GetTableMaintenanceJobStatus(ctx context.Context, request
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance-job-status", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}

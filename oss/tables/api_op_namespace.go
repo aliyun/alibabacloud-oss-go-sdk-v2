@@ -40,7 +40,7 @@ func (c *TablesClient) CreateNamespace(ctx context.Context, request *CreateNames
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (c *TablesClient) GetNamespace(ctx context.Context, request *GetNamespaceRe
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (c *TablesClient) ListNamespaces(ctx context.Context, request *ListNamespac
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInput(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (c *TablesClient) DeleteNamespace(ctx context.Context, request *DeleteNames
 		Bucket: request.TableBucketARN,
 		Key:    oss.Ptr(fmt.Sprintf("namespaces/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
 	}
-	input.OpMetadata.Add(oss.OpMetaKeyRequestIsBucketArn, true)
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
 	}
