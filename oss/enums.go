@@ -341,4 +341,5 @@ func (f AuthMethodType) String() string {
 const (
 	OpMetaKeyResponsHandler     string = "opm-response-handler"
 	OpMetaKeyRequestBodyTracker string = "opm-request-body-tracker"
+	OpMetaKeyIsBucketArn        string = "opm-is-bucket-arn"
 )
