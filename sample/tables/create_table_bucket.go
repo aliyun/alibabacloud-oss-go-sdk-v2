@@ -12,17 +12,17 @@ import (
 
 var (
 	region string
-	bucket string
+	name   string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
-	flag.StringVar(&bucket, "bucket", "", "The bucket name of the bucket.")
+	flag.StringVar(&name, "name", "", "The name of the bucket.")
 }
 
 func main() {
 	flag.Parse()
-	if len(bucket) == 0 {
+	if len(name) == 0 {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, bucket name required")
 	}
@@ -39,7 +39,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.CreateTableBucket(context.TODO(), &tables.CreateTableBucketRequest{
-		Bucket: oss.Ptr(bucket),
+		Name: oss.Ptr(name),
 	})
 
 	if err != nil {

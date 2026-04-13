@@ -11,18 +11,18 @@ import (
 )
 
 var (
-	region    string
-	bucketArn string
-	nameSpace string
-	table     string
-	tableArn  string
+	region         string
+	tableBucketArn string
+	namespace      string
+	name           string
+	tableArn       string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
-	flag.StringVar(&bucketArn, "bucket-arn", "", "The arn of the table bucket.")
-	flag.StringVar(&nameSpace, "name-space", "", "The name of the name space.")
-	flag.StringVar(&table, "table", "", "The name of the table.")
+	flag.StringVar(&tableBucketArn, "table-bucket-arn", "", "The arn of the table bucket.")
+	flag.StringVar(&namespace, "namespace", "", "The name of the namespace.")
+	flag.StringVar(&name, "name", "", "The name of the table.")
 	flag.StringVar(&tableArn, "table-arn", "", "The arn of the table.")
 }
 
@@ -42,9 +42,9 @@ func main() {
 
 	// function one
 	result, err := client.GetTable(context.TODO(), &tables.GetTableRequest{
-		TableBucketARN: oss.Ptr(bucketArn),
-		Namespace: oss.Ptr(nameSpace),
-		Name:     oss.Ptr(table),
+		TableBucketARN: oss.Ptr(tableBucketArn),
+		Namespace:      oss.Ptr(namespace),
+		Name:           oss.Ptr(name),
 	})
 
 	// function two

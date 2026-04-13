@@ -11,17 +11,17 @@ import (
 )
 
 var (
-	region    string
-	bucketArn string
-	nameSpace string
-	table     string
+	region         string
+	tableBucketArn string
+	namespace      string
+	name           string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
-	flag.StringVar(&bucketArn, "bucket-arn", "", "The arn of the table bucket.")
-	flag.StringVar(&nameSpace, "name-space", "", "The name of the name space.")
-	flag.StringVar(&table, "table", "", "The name of the table.")
+	flag.StringVar(&tableBucketArn, "table-bucket-arn", "", "The arn of the table bucket.")
+	flag.StringVar(&namespace, "namespace", "", "The name of the namespace.")
+	flag.StringVar(&name, "name", "", "The name of the table.")
 }
 
 func main() {
@@ -32,17 +32,17 @@ func main() {
 		log.Fatalf("invalid parameters, region required")
 	}
 
-	if len(bucketArn) == 0 {
+	if len(tableBucketArn) == 0 {
 		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, bucket arn required")
+		log.Fatalf("invalid parameters, table bucket arn required")
 	}
 
-	if len(nameSpace) == 0 {
+	if len(namespace) == 0 {
 		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, name space required")
+		log.Fatalf("invalid parameters, namespace name required")
 	}
 
-	if len(table) == 0 {
+	if len(name) == 0 {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, table name required")
 	}
@@ -54,9 +54,9 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.GetTableMaintenanceConfiguration(context.TODO(), &tables.GetTableMaintenanceConfigurationRequest{
-		TableBucketARN: oss.Ptr(bucketArn),
-		Namespace: oss.Ptr(nameSpace),
-		Name:     oss.Ptr(table),
+		TableBucketARN: oss.Ptr(tableBucketArn),
+		Namespace:      oss.Ptr(namespace),
+		Name:           oss.Ptr(name),
 	})
 
 	if err != nil {

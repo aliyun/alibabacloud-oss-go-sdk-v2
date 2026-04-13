@@ -11,20 +11,20 @@ import (
 )
 
 var (
-	region    string
-	bucketArn string
+	region         string
+	tableBucketArn string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
-	flag.StringVar(&bucketArn, "bucket-arn", "", "The arn of the table bucket.")
+	flag.StringVar(&tableBucketArn, "table-bucket-arn", "", "The arn of the table bucket.")
 }
 
 func main() {
 	flag.Parse()
-	if len(bucketArn) == 0 {
+	if len(tableBucketArn) == 0 {
 		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, bucket arn required")
+		log.Fatalf("invalid parameters, table bucket arn required")
 	}
 
 	if len(region) == 0 {
@@ -39,8 +39,8 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.PutTableBucketMaintenanceConfiguration(context.TODO(), &tables.PutTableBucketMaintenanceConfigurationRequest{
-		TableBucketARN: oss.Ptr(bucketArn),
-		Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
+		TableBucketARN: oss.Ptr(tableBucketArn),
+		Type:           oss.Ptr("icebergUnreferencedFileRemoval"),
 		Value: &tables.MaintenanceValue{
 			Settings: &tables.MaintenanceSettings{
 				IcebergUnreferencedFileRemoval: &tables.SettingsDetail{
