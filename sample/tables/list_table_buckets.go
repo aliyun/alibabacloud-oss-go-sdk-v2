@@ -46,7 +46,7 @@ func main() {
 
 		// Log the objects found
 		for _, b := range page.TableBuckets {
-			log.Printf("Table Bucket %v,%v,%v,%v,%v,%v\n", oss.ToString(b.Name), oss.ToString(b.TableBucketARN), oss.ToString(b.OwnerAccountId), oss.ToString(b.TableBucketId), oss.ToString(b.CreatedAt), oss.ToString(b.Type))
+			log.Printf("Table Bucket %v,%v,%v,%v,%v,%v\n", oss.ToString(b.Name), oss.ToString(b.Arn), oss.ToString(b.OwnerAccountId), oss.ToString(b.TableBucketId), oss.ToString(b.CreatedAt), oss.ToString(b.Type))
 		}
 	}
 }

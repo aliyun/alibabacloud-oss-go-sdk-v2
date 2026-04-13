@@ -11,20 +11,20 @@ import (
 )
 
 var (
-	region    string
-	bucketArn string
+	region         string
+	tableBucketArn string
 )
 
 func init() {
 	flag.StringVar(&region, "region", "", "The region in which the bucket is located.")
-	flag.StringVar(&bucketArn, "bucket-arn", "", "The arn of the table bucket.")
+	flag.StringVar(&tableBucketArn, "table-bucket-arn", "", "The arn of the table bucket.")
 }
 
 func main() {
 	flag.Parse()
-	if len(bucketArn) == 0 {
+	if len(tableBucketArn) == 0 {
 		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, bucket arn required")
+		log.Fatalf("invalid parameters, table bucket arn required")
 	}
 
 	if len(region) == 0 {
@@ -39,7 +39,7 @@ func main() {
 	client := tables.NewTablesClient(cfg)
 
 	result, err := client.PutTableBucketPolicy(context.TODO(), &tables.PutTableBucketPolicyRequest{
-		TableBucketARN: oss.Ptr(bucketArn),
+		TableBucketARN: oss.Ptr(tableBucketArn),
 		ResourcePolicy: oss.Ptr(`
 			{
 			   "Version":"1",
