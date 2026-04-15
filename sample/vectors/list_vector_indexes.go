@@ -38,10 +38,6 @@ func main() {
 		flag.PrintDefaults()
 		log.Fatalf("invalid parameters, accounId required")
 	}
-	if len(indexName) == 0 {
-		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, index required")
-	}
 
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
