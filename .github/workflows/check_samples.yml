@@ -1,0 +1,75 @@
+name: Check Sample Code Compilation
+
+on:
+  push:
+    paths:
+      - 'sample/**'
+      - 'oss/**'
+      - 'go.mod'
+      - 'go.sum'
+  pull_request:
+    paths:
+      - 'sample/**'
+      - 'oss/**'
+      - 'go.mod'
+      - 'go.sum'
+
+jobs:
+  check-samples:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.21', '1.22', '1.23']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Install main module dependencies
+        run: |
+          cd ${{ github.workspace }}
+          go mod download
+
+      - name: Check main sample directory compilation
+        run: |
+          cd ${{ github.workspace }}/sample
+          failed=0
+          for f in *.go; do
+            if [ "$f" != "kms.go" ]; then
+              if ! go build -o /dev/null "$f" 2>&1; then
+                echo "FAILED: $f"
+                failed=1
+              else
+                echo "SUCCESS: $f"
+              fi
+            fi
+          done
+          if [ $failed -eq 1 ]; then
+            echo "Some samples failed to compile"
+            exit 1
+          fi
+
+      - name: Check vectors sample compilation
+        run: |
+          cd ${{ github.workspace }}/sample/vectors
+          failed=0
+          for f in *.go; do
+            if ! go build -o /dev/null "$f" 2>&1; then
+              echo "FAILED: $f"
+              failed=1
+            else
+              echo "SUCCESS: $f"
+            fi
+          done
+          if [ $failed -eq 1 ]; then
+            echo "Some vector samples failed to compile"
+            exit 1
+          fi
+
+      - name: Summary
+        run: echo "All sample code compiled successfully!"

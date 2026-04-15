@@ -31,11 +31,6 @@ func main() {
 		log.Fatalf("invalid parameters, region required")
 	}
 
-	if len(objectName) == 0 {
-		flag.PrintDefaults()
-		log.Fatalf("invalid parameters, object name required")
-	}
-
 	cfg := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
 		WithRegion(region)
