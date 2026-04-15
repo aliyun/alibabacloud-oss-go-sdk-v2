@@ -48,6 +48,9 @@ type Config struct {
 	// read & write timeout
 	ReadWriteTimeout *time.Duration
 
+	// max connection
+	MaxConnections *int
+
 	// Skip server certificate verification
 	InsecureSkipVerify *bool
 
@@ -120,7 +123,7 @@ type Config struct {
 	// The account id
 	AccountId *string
 
-  // Local address to bind to for outgoing connections.
+	// Local address to bind to for outgoing connections.
 	BindAddress net.IP
 }
 
@@ -194,6 +197,11 @@ func (c *Config) WithConnectTimeout(value time.Duration) *Config {
 
 func (c *Config) WithReadWriteTimeout(value time.Duration) *Config {
 	c.ReadWriteTimeout = Ptr(value)
+	return c
+}
+
+func (c *Config) WithMaxConnections(value int) *Config {
+	c.MaxConnections = Ptr(value)
 	return c
 }
 

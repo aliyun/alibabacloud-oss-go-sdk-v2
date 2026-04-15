@@ -180,6 +180,10 @@ func resolveHTTPClient(cfg *Config, o *Options, inner *innerOptions) {
 		}
 	}
 
+	if cfg.MaxConnections != nil {
+		custom = append(custom, transport.MaxConnections(*cfg.MaxConnections))
+	}
+
 	//config in transport  package
 	tcfg := &transport.Config{}
 	if cfg.ConnectTimeout != nil {

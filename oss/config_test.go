@@ -25,6 +25,7 @@ func TestConfigDefault(t *testing.T) {
 	assert.Nil(t, config.UseCName)
 	assert.Nil(t, config.ConnectTimeout)
 	assert.Nil(t, config.ReadWriteTimeout)
+	assert.Nil(t, config.MaxConnections)
 	assert.Nil(t, config.InsecureSkipVerify)
 	assert.Nil(t, config.EnabledRedirect)
 	assert.Nil(t, config.ProxyHost)
@@ -84,6 +85,9 @@ func TestConfigDefault(t *testing.T) {
 
 	config.WithReadWriteTimeout(50 * time.Second)
 	assert.Equal(t, 50*time.Second, *config.ReadWriteTimeout)
+
+	config.WithMaxConnections(10)
+	assert.Equal(t, 10, *config.MaxConnections)
 
 	config.WithInsecureSkipVerify(true)
 	assert.Equal(t, true, *config.InsecureSkipVerify)
