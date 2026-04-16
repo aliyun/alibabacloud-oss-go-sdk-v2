@@ -27,7 +27,7 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -44,7 +44,7 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -53,7 +53,7 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 
 	request = &PutTableBucketMaintenanceConfigurationRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Type:      oss.Ptr("IcebergUnreferencedFileRemoval"),
+		Type:           oss.Ptr("IcebergUnreferencedFileRemoval"),
 	}
 	input = &oss.OperationInput{
 		OpName: "PutTableBucketMaintenanceConfiguration",
@@ -62,7 +62,7 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -71,7 +71,7 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 
 	request = &PutTableBucketMaintenanceConfigurationRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Type:      oss.Ptr("icebergUnreferencedFileRemoval"),
+		Type:           oss.Ptr("icebergUnreferencedFileRemoval"),
 		Value: &MaintenanceValue{
 			Settings: &MaintenanceSettings{
 				IcebergUnreferencedFileRemoval: &SettingsDetail{
@@ -89,7 +89,7 @@ func TestMarshalInput_PutTableBucketMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("buckets/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
