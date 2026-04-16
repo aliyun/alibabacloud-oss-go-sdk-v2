@@ -27,7 +27,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -44,7 +44,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -53,7 +53,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 
 	request = &PutTableMaintenanceConfigurationRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("oss-space"),
+		Namespace:      oss.Ptr("oss-space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "PutTableMaintenanceConfiguration",
@@ -62,7 +62,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -71,8 +71,8 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 
 	request = &PutTableMaintenanceConfigurationRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("oss-space"),
-		Name:      oss.Ptr("oss-table"),
+		Namespace:      oss.Ptr("oss-space"),
+		Name:           oss.Ptr("oss-table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "PutTableMaintenanceConfiguration",
@@ -81,7 +81,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -90,9 +90,9 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 
 	request = &PutTableMaintenanceConfigurationRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("oss-space"),
-		Name:      oss.Ptr("oss-table"),
-		Type:      oss.Ptr("icebergCompaction"),
+		Namespace:      oss.Ptr("oss-space"),
+		Name:           oss.Ptr("oss-table"),
+		Type:           oss.Ptr("icebergCompaction"),
 	}
 	input = &oss.OperationInput{
 		OpName: "PutTableMaintenanceConfiguration",
@@ -101,7 +101,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -110,9 +110,9 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 
 	request = &PutTableMaintenanceConfigurationRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("oss-space"),
-		Name:      oss.Ptr("oss-table"),
-		Type:      oss.Ptr("icebergSnapshotManagement"),
+		Namespace:      oss.Ptr("oss-space"),
+		Name:           oss.Ptr("oss-table"),
+		Type:           oss.Ptr("icebergSnapshotManagement"),
 		Value: &TableMaintenanceValue{
 			Status: oss.Ptr("enabled"),
 			Settings: &TableMaintenanceSettings{
@@ -130,7 +130,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -143,9 +143,9 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 
 	request = &PutTableMaintenanceConfigurationRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("oss-space"),
-		Name:      oss.Ptr("oss-table"),
-		Type:      oss.Ptr("icebergCompaction"),
+		Namespace:      oss.Ptr("oss-space"),
+		Name:           oss.Ptr("oss-table"),
+		Type:           oss.Ptr("icebergCompaction"),
 		Value: &TableMaintenanceValue{
 			Status: oss.Ptr("enabled"),
 			Settings: &TableMaintenanceSettings{
@@ -163,7 +163,7 @@ func TestMarshalInput_PutTableMaintenanceConfiguration(t *testing.T) {
 			oss.HTTPHeaderContentType: contentTypeJSON,
 		},
 		Bucket: request.TableBucketARN,
-		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), oss.ToString(request.Type))),
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s/%s/maintenance/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)), url.QueryEscape(oss.ToString(request.Name)), url.QueryEscape(oss.ToString(request.Type)))),
 	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
@@ -283,7 +283,7 @@ func TestMarshalInput_GetTableMaintenanceConfiguration(t *testing.T) {
 
 	request = &GetTableMaintenanceConfigurationRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("oss-space"),
+		Namespace:      oss.Ptr("oss-space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableMaintenanceConfiguration",
@@ -301,8 +301,8 @@ func TestMarshalInput_GetTableMaintenanceConfiguration(t *testing.T) {
 
 	request = &GetTableMaintenanceConfigurationRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("oss-space"),
-		Name:      oss.Ptr("oss-table"),
+		Namespace:      oss.Ptr("oss-space"),
+		Name:           oss.Ptr("oss-table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTableMaintenanceConfiguration",

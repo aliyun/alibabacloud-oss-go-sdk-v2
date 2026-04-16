@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
@@ -54,7 +53,7 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 
 	request = &CreateTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("space"),
+		Namespace:      oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "CreateTable",
@@ -72,8 +71,8 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 
 	request = &CreateTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("space"),
-		Name:      oss.Ptr("table"),
+		Namespace:      oss.Ptr("space"),
+		Name:           oss.Ptr("table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "CreateTable",
@@ -91,9 +90,9 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 
 	request = &CreateTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("space"),
-		Name:      oss.Ptr("table"),
-		Format:    oss.Ptr("ICEBERG"),
+		Namespace:      oss.Ptr("space"),
+		Name:           oss.Ptr("table"),
+		Format:         oss.Ptr("ICEBERG"),
 	}
 	input = &oss.OperationInput{
 		OpName: "CreateTable",
@@ -114,9 +113,9 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 
 	request = &CreateTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("space"),
-		Name:      oss.Ptr("table"),
-		Format:    oss.Ptr("ICEBERG"),
+		Namespace:      oss.Ptr("space"),
+		Name:           oss.Ptr("table"),
+		Format:         oss.Ptr("ICEBERG"),
 		Metadata: &TableMetadata{
 			Iceberg: &IcebergMetadata{
 				Schema: map[string]any{
@@ -254,7 +253,7 @@ func TestMarshalInput_GetTable(t *testing.T) {
 
 	request = &GetTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Name:      oss.Ptr("table"),
+		Name:           oss.Ptr("table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTable",
@@ -270,7 +269,7 @@ func TestMarshalInput_GetTable(t *testing.T) {
 
 	request = &GetTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Name:      oss.Ptr("table"),
+		Name:           oss.Ptr("table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTable",
@@ -285,7 +284,7 @@ func TestMarshalInput_GetTable(t *testing.T) {
 	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
 
 	request = &GetTableRequest{
-		TableARN:  oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
+		TableARN:       oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 	}
 	input = &oss.OperationInput{
@@ -301,9 +300,7 @@ func TestMarshalInput_GetTable(t *testing.T) {
 	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
 
 	request = &GetTableRequest{
-		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("space"),
-		Name:      oss.Ptr("table"),
+		TableARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket1/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
 	}
 	input = &oss.OperationInput{
 		OpName: "GetTable",
@@ -315,13 +312,44 @@ func TestMarshalInput_GetTable(t *testing.T) {
 	}
 	err = checkGetTableRequest(request)
 	assert.Nil(t, err)
-	if request.TableARN != nil {
-		if vals := strings.Split(oss.ToString(request.TableARN), "/table"); len(vals) > 0 {
-			input.Bucket = oss.Ptr(vals[0])
-		}
-	} else {
-		input.Bucket = request.TableBucketARN
+	input.Bucket, err = parseBucketArn(request)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "malformed table arn")
+
+	request = &GetTableRequest{
+		TableARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table-1313/f13de3a6-de93-4801-bd7f-a09c124177d9"),
 	}
+	input = &oss.OperationInput{
+		OpName: "GetTable",
+		Method: "GET",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Key: oss.Ptr("get-table"),
+	}
+	err = checkGetTableRequest(request)
+	assert.Nil(t, err)
+	input.Bucket, err = parseBucketArn(request)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "malformed table arn")
+
+	request = &GetTableRequest{
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:      oss.Ptr("space"),
+		Name:           oss.Ptr("table"),
+	}
+	input = &oss.OperationInput{
+		OpName: "GetTable",
+		Method: "GET",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Key: oss.Ptr("get-table"),
+	}
+	err = checkGetTableRequest(request)
+	assert.Nil(t, err)
+	input.Bucket, err = parseBucketArn(request)
+	assert.Nil(t, err)
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
@@ -341,13 +369,8 @@ func TestMarshalInput_GetTable(t *testing.T) {
 	}
 	err = checkGetTableRequest(request)
 	assert.Nil(t, err)
-	if request.TableARN != nil {
-		if vals := strings.Split(oss.ToString(request.TableARN), "/table"); len(vals) > 0 {
-			input.Bucket = oss.Ptr(vals[0])
-		}
-	} else {
-		input.Bucket = request.TableBucketARN
-	}
+	input.Bucket, err = parseBucketArn(request)
+	assert.Nil(t, err)
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
 	assert.Nil(t, err)
@@ -466,7 +489,7 @@ func TestMarshalInput_ListTables(t *testing.T) {
 
 	request = &ListTablesRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("space"),
+		Namespace:      oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "ListTables",
@@ -484,7 +507,7 @@ func TestMarshalInput_ListTables(t *testing.T) {
 	assert.Equal(t, *input.Key, "tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket")
 
 	request = &ListTablesRequest{
-		TableBucketARN:         oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		TableBucketARN:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
 		Namespace:         oss.Ptr("space"),
 		ContinuationToken: oss.Ptr("token"),
 		MaxTables:         int32(1000),
@@ -624,7 +647,7 @@ func TestMarshalInput_DeleteTable(t *testing.T) {
 
 	request = &DeleteTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("space"),
+		Namespace:      oss.Ptr("space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteTable",
@@ -641,10 +664,10 @@ func TestMarshalInput_DeleteTable(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Name.")
 
 	request = &DeleteTableRequest{
-		TableBucketARN:    oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace:    oss.Ptr("space"),
-		Name:         oss.Ptr("table"),
-		VersionToken: oss.Ptr("version_token"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:      oss.Ptr("space"),
+		Name:           oss.Ptr("table"),
+		VersionToken:   oss.Ptr("version_token"),
 	}
 	input = &oss.OperationInput{
 		OpName: "DeleteTable",
@@ -741,7 +764,7 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 
 	request = &RenameTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		NewName:   oss.Ptr("new_table"),
+		NewName:        oss.Ptr("new_table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",
@@ -760,8 +783,8 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 
 	request = &RenameTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace: oss.Ptr("space"),
-		NewName:   oss.Ptr("new_table"),
+		Namespace:      oss.Ptr("space"),
+		NewName:        oss.Ptr("new_table"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",
@@ -779,10 +802,10 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Name.")
 
 	request = &RenameTableRequest{
-		TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace:        oss.Ptr("space"),
-		Name:             oss.Ptr("table"),
-		NewNamespace: oss.Ptr("new-space"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:      oss.Ptr("space"),
+		Name:           oss.Ptr("table"),
+		NewNamespace:   oss.Ptr("new-space"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",
@@ -804,12 +827,12 @@ func TestMarshalInput_RenameTable(t *testing.T) {
 	assert.Equal(t, string(body), "{\"newNamespaceName\":\"new-space\"}")
 
 	request = &RenameTableRequest{
-		TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Namespace:        oss.Ptr("space"),
-		Name:             oss.Ptr("table"),
-		NewNamespace: oss.Ptr("new-space"),
-		NewName:          oss.Ptr("new-table"),
-		VersionToken:     oss.Ptr("365f934c6e234f35ace5ae48f0a0d871"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:      oss.Ptr("space"),
+		Name:           oss.Ptr("table"),
+		NewNamespace:   oss.Ptr("new-space"),
+		NewName:        oss.Ptr("new-table"),
+		VersionToken:   oss.Ptr("365f934c6e234f35ace5ae48f0a0d871"),
 	}
 	input = &oss.OperationInput{
 		OpName: "RenameTable",

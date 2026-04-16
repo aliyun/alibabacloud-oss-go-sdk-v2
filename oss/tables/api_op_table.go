@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/arn"
 )
 
 type CreateTableRequest struct {
@@ -126,7 +127,10 @@ func (c *TablesClient) GetTable(ctx context.Context, request *GetTableRequest, o
 	if err = checkGetTableRequest(request); err != nil {
 		return nil, err
 	}
-	input.Bucket = parseBucketArn(request)
+	input.Bucket, err = parseBucketArn(request)
+	if err != nil {
+		return nil, err
+	}
 	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
 	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
 		return nil, err
@@ -334,14 +338,29 @@ func checkRenameTableRequest(request *RenameTableRequest) error {
 	return nil
 }
 
-func parseBucketArn(request *GetTableRequest) *string {
+func parseBucketArn(request *GetTableRequest) (*string, error) {
+	var err error
+	var parsedArn *arn.Arn
 	switch {
 	case request.TableBucketARN != nil:
-		return request.TableBucketARN
-	case request.TableARN != nil:
-		if vals := strings.Split(oss.ToString(request.TableARN), "/table"); len(vals) > 0 {
-			return oss.Ptr(vals[0])
+		_, err = arn.ParseArn(oss.ToString(request.TableBucketARN))
+		if err != nil {
+			return nil, err
 		}
+		return request.TableBucketARN, err
+	case request.TableARN != nil:
+		parsedArn, err = arn.ParseArn(oss.ToString(request.TableARN))
+		if err != nil {
+			return nil, err
+		}
+		if oss.ToString(parsedArn.Resource().ResourceType()) == "bucket" && strings.HasPrefix(oss.ToString(parsedArn.Resource().Qualifier()), "table/") {
+			if vals := strings.Split(oss.ToString(request.TableARN), "/table"); len(vals) > 0 {
+				return oss.Ptr(vals[0]), err
+			}
+		} else {
+			return nil, fmt.Errorf("malformed table arn")
+		}
+
 	}
-	return nil
+	return nil, err
 }

@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	arn2 "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/arn"
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/arn"
 )
 
 func isValidRegion(region string) bool {
@@ -101,18 +101,18 @@ func IsValidMethod(method string) bool {
 }
 
 func AssertValidateArnBucket(bucket string) error {
-	arn, err := arn2.ParseArn(bucket)
+	parsedArn, err := arn.ParseArn(bucket)
 	if err != nil {
 		return err
 	}
 
 	// must have account id
-	if arn.AccountId() == nil || *arn.AccountId() == "" {
+	if parsedArn.AccountId() == nil || *parsedArn.AccountId() == "" {
 		return errors.New("OperationInput.bucket does not contain account id")
 	}
 
 	// must have bucket resource
-	resource := arn.Resource()
+	resource := parsedArn.Resource()
 	resourceType := ""
 	if resource.ResourceType() != nil {
 		resourceType = *resource.ResourceType()
