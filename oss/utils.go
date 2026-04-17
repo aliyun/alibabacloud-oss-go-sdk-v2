@@ -412,3 +412,11 @@ func IsEmptyValue(v reflect.Value) bool {
 func EscapePath(path string, encodeSep bool) string {
 	return escapePath(path, encodeSep)
 }
+
+func extractStatusCode(status string) string {
+	parts := strings.SplitN(status, " ", 2)
+	if len(parts) > 1 {
+		return parts[1]
+	}
+	return ""
+}
