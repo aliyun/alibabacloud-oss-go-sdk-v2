@@ -234,7 +234,7 @@ func TestMarshalInput_GetTable(t *testing.T) {
 	}
 	err = checkGetTableRequest(request)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
+	assert.Contains(t, err.Error(), "missing required field, TableBucketARN")
 
 	request = &GetTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -249,7 +249,23 @@ func TestMarshalInput_GetTable(t *testing.T) {
 	}
 	err = checkGetTableRequest(request)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
+	assert.Contains(t, err.Error(), "missing required field, Namespace")
+
+	request = &GetTableRequest{
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:      oss.Ptr("namespace"),
+	}
+	input = &oss.OperationInput{
+		OpName: "GetTable",
+		Method: "GET",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Key: oss.Ptr("get-table"),
+	}
+	err = checkGetTableRequest(request)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Name")
 
 	request = &GetTableRequest{
 		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -265,23 +281,7 @@ func TestMarshalInput_GetTable(t *testing.T) {
 	}
 	err = checkGetTableRequest(request)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
-
-	request = &GetTableRequest{
-		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
-		Name:           oss.Ptr("table"),
-	}
-	input = &oss.OperationInput{
-		OpName: "GetTable",
-		Method: "GET",
-		Headers: map[string]string{
-			oss.HTTPHeaderContentType: contentTypeJSON,
-		},
-		Key: oss.Ptr("get-table"),
-	}
-	err = checkGetTableRequest(request)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
+	assert.Contains(t, err.Error(), "missing required field, Namespace")
 
 	request = &GetTableRequest{
 		TableARN:       oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),

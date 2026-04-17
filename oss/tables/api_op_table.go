@@ -322,12 +322,22 @@ func (c *TablesClient) RenameTable(ctx context.Context, request *RenameTableRequ
 }
 
 func checkGetTableRequest(request *GetTableRequest) error {
-	if request.TableARN == nil && (request.TableBucketARN == nil || request.Namespace == nil || request.Name == nil) {
-		return fmt.Errorf("must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
+	if request.TableBucketARN != nil {
+		if request.TableARN != nil {
+			return fmt.Errorf("must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
+		}
+		if request.Namespace == nil {
+			return oss.NewErrParamRequired("Namespace")
+		}
+		if request.Name == nil {
+			return oss.NewErrParamRequired("Name")
+		}
+	} else if request.TableARN != nil {
+		// PASS
+	} else {
+		return oss.NewErrParamRequired("TableBucketARN")
 	}
-	if request.TableARN != nil && (request.TableBucketARN != nil || request.Namespace != nil || request.Name != nil) {
-		return fmt.Errorf("must provide either table arn alone OR all of (table bucket arn, namespace, table name) together")
-	}
+
 	return nil
 }
 
@@ -339,17 +349,8 @@ func checkRenameTableRequest(request *RenameTableRequest) error {
 }
 
 func parseBucketArn(request *GetTableRequest) (*string, error) {
-	var err error
-	var parsedArn *arn.Arn
-	switch {
-	case request.TableBucketARN != nil:
-		_, err = arn.ParseArn(oss.ToString(request.TableBucketARN))
-		if err != nil {
-			return nil, err
-		}
-		return request.TableBucketARN, err
-	case request.TableARN != nil:
-		parsedArn, err = arn.ParseArn(oss.ToString(request.TableARN))
+	if request.TableARN != nil {
+		parsedArn, err := arn.ParseArn(oss.ToString(request.TableARN))
 		if err != nil {
 			return nil, err
 		}
@@ -360,7 +361,7 @@ func parseBucketArn(request *GetTableRequest) (*string, error) {
 		} else {
 			return nil, fmt.Errorf("malformed table arn")
 		}
-
 	}
-	return nil, err
+
+	return request.TableBucketARN, nil
 }

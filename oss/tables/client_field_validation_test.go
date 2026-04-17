@@ -302,7 +302,7 @@ func TestClient_GetTable_FieldValidation(t *testing.T) {
 	req = &GetTableRequest{}
 	_, err = client.GetTable(context.Background(), req)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "must provide either table arn alone OR all of")
+	assert.Contains(t, err.Error(), "missing required field, TableBucketARN")
 }
 
 func TestClient_DeleteTable_FieldValidation(t *testing.T) {
@@ -473,7 +473,7 @@ func TestClient_PutTableBucketEncryption_FieldValidation(t *testing.T) {
 
 	// not table bucket arn - must provide all required body fields first
 	req = &PutTableBucketEncryptionRequest{
-		TableBucketARN:      oss.Ptr("bucket-name"),
+		TableBucketARN: oss.Ptr("bucket-name"),
 		EncryptionConfiguration: &EncryptionConfiguration{
 			SseAlgorithm: oss.Ptr("AES256"),
 		},
@@ -484,7 +484,7 @@ func TestClient_PutTableBucketEncryption_FieldValidation(t *testing.T) {
 
 	// table bucket arn with invalid bucket name
 	req = &PutTableBucketEncryptionRequest{
-		TableBucketARN:      oss.Ptr("acs:osstables:cn-beijing:123456:bucket/test-table?1234"),
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:123456:bucket/test-table?1234"),
 		EncryptionConfiguration: &EncryptionConfiguration{
 			SseAlgorithm: oss.Ptr("AES256"),
 		},
