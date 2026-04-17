@@ -5108,6 +5108,212 @@ func TestClientExtension(t *testing.T) {
 	assert.Equal(t, hashA.Sum64(), hash.Sum64())
 }
 
+func TestGetObjectToFileV2(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+
+	objectName := objectNamePrefix + randLowStr(6)
+	content := randStr(3*1024*1024 + 1234)
+	_, err = client.PutObject(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Body:   strings.NewReader(content),
+	})
+	assert.Nil(t, err)
+
+	// Compute expected CRC64
+	expectedHash := NewCRC64(0)
+	expectedHash.Write([]byte(content))
+	expectedCRC := expectedHash.Sum64()
+
+	// 1. Basic full download
+	localFile := randStr(8) + "-v2-integ"
+	defer os.Remove(localFile)
+
+	result, err := client.GetObjectToFileV2(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+		},
+		localFile,
+		nil,
+	)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assert.NotEmpty(t, result.Headers.Get("X-Oss-Request-Id"))
+	assert.NotEmpty(t, ToString(result.ETag))
+	assert.NotEmpty(t, ToString(result.HashCRC64))
+
+	downloaded, err := os.ReadFile(localFile)
+	assert.Nil(t, err)
+	assert.Equal(t, len(content), len(downloaded))
+	assert.Equal(t, content, string(downloaded))
+
+	fileHash := NewCRC64(0)
+	fileHash.Write(downloaded)
+	assert.Equal(t, expectedCRC, fileHash.Sum64())
+
+	// 2. Full download with progress
+	localFileProgress := randStr(8) + "-v2-integ-prog"
+	defer os.Remove(localFileProgress)
+
+	var lastTransferred, lastTotal int64
+	var progressCalled bool
+	result, err = client.GetObjectToFileV2(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+			ProgressFn: func(increment, transferred, total int64) {
+				progressCalled = true
+				lastTransferred = transferred
+				lastTotal = total
+			},
+		},
+		localFileProgress,
+		nil,
+	)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assert.True(t, progressCalled)
+	assert.Equal(t, int64(len(content)), lastTransferred)
+	assert.Equal(t, int64(len(content)), lastTotal)
+
+	downloaded, err = os.ReadFile(localFileProgress)
+	assert.Nil(t, err)
+	assert.Equal(t, content, string(downloaded))
+
+	// 3. Full download with writeBufferSize
+	localFileBuf := randStr(8) + "-v2-integ-buf"
+	defer os.Remove(localFileBuf)
+
+	bufSize := 64 * 1024
+	result, err = client.GetObjectToFileV2(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+		},
+		localFileBuf,
+		&bufSize,
+	)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	downloaded, err = os.ReadFile(localFileBuf)
+	assert.Nil(t, err)
+	assert.Equal(t, content, string(downloaded))
+
+	// 4. Range download — first 1024 bytes
+	localFileRange := randStr(8) + "-v2-integ-range"
+	defer os.Remove(localFileRange)
+
+	result, err = client.GetObjectToFileV2(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+			Range:  Ptr("bytes=0-1023"),
+		},
+		localFileRange,
+		nil,
+	)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	downloaded, err = os.ReadFile(localFileRange)
+	assert.Nil(t, err)
+	assert.Equal(t, 1024, len(downloaded))
+	assert.Equal(t, content[:1024], string(downloaded))
+
+	// 5. Range download — middle range
+	localFileRange2 := randStr(8) + "-v2-integ-range2"
+	defer os.Remove(localFileRange2)
+
+	result, err = client.GetObjectToFileV2(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+			Range:  Ptr("bytes=1024-2047"),
+		},
+		localFileRange2,
+		nil,
+	)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	downloaded, err = os.ReadFile(localFileRange2)
+	assert.Nil(t, err)
+	assert.Equal(t, 1024, len(downloaded))
+	assert.Equal(t, content[1024:2048], string(downloaded))
+
+	// 6. Range download with progress
+	localFileRangeProg := randStr(8) + "-v2-integ-range-prog"
+	defer os.Remove(localFileRangeProg)
+
+	progressCalled = false
+	lastTransferred = 0
+	result, err = client.GetObjectToFileV2(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectName),
+			Range:  Ptr("bytes=0-1023"),
+			ProgressFn: func(increment, transferred, total int64) {
+				progressCalled = true
+				lastTransferred = transferred
+			},
+		},
+		localFileRangeProg,
+		nil,
+	)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assert.True(t, progressCalled)
+	assert.Equal(t, int64(1024), lastTransferred)
+
+	// 7. Nil request
+	_, err = client.GetObjectToFileV2(context.TODO(), nil, "test.txt", nil)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "request")
+
+	// 8. Non-existent bucket
+	bucketNameNotExist := bucketNamePrefix + randLowStr(6) + "not-exist"
+	localFileErr := randStr(8) + "-v2-integ-err"
+	defer os.Remove(localFileErr)
+
+	_, err = client.GetObjectToFileV2(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketNameNotExist),
+			Key:    Ptr(objectName),
+		},
+		localFileErr,
+		nil,
+	)
+	assert.NotNil(t, err)
+	var serr *ServiceError
+	errors.As(err, &serr)
+	assert.Equal(t, 404, serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+
+	// 9. Non-existent key
+	_, err = client.GetObjectToFileV2(context.TODO(),
+		&GetObjectRequest{
+			Bucket: Ptr(bucketName),
+			Key:    Ptr(objectNamePrefix + "not-exist-key"),
+		},
+		localFileErr,
+		nil,
+	)
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, 404, serr.StatusCode)
+	assert.Equal(t, "NoSuchKey", serr.Code)
+}
+
 func TestProcessObject(t *testing.T) {
 	after := before(t)
 	defer after(t)
