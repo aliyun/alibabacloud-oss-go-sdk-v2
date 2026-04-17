@@ -1,8 +1,12 @@
 package oss
 
 import (
+	"errors"
+	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/arn"
 )
 
 func isValidRegion(region string) bool {
@@ -94,4 +98,41 @@ func IsValidBucketName(bucketName *string) bool {
 
 func IsValidMethod(method string) bool {
 	return isValidMethod(method)
+}
+
+func AssertValidateArnBucket(bucket string) error {
+	parsedArn, err := arn.ParseArn(bucket)
+	if err != nil {
+		return err
+	}
+
+	// must have account id
+	if parsedArn.AccountId() == nil || *parsedArn.AccountId() == "" {
+		return errors.New("OperationInput.bucket does not contain account id")
+	}
+
+	// must have bucket resource
+	resource := parsedArn.Resource()
+	resourceType := ""
+	if resource.ResourceType() != nil {
+		resourceType = *resource.ResourceType()
+	}
+
+	qualifier := ""
+	if resource.Qualifier() != nil {
+		qualifier = *resource.Qualifier()
+	}
+
+	if resourceType != "bucket" ||
+		strings.TrimSpace(resource.Resource()) == "" ||
+		qualifier != "" {
+		return fmt.Errorf("operationInput.bucket is not bucket arn, got %s", bucket)
+	}
+
+	// check bucket value
+	if !isValidBucketName(Ptr(resource.Resource())) {
+		return fmt.Errorf("bucket resource is invalid, got %s", bucket)
+	}
+
+	return nil
 }
