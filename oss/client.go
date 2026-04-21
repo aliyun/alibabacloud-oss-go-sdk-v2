@@ -1573,3 +1573,18 @@ func MarshalUpdateContentMd5(request any, input *OperationInput) error {
 func UnmarshalDiscardBody(result any, output *OperationOutput) error {
 	return discardBody(result, output)
 }
+
+// MarshalInput marshals the request into operation input (exposed to external modules)
+func (c *Client) MarshalInput(request any, input *OperationInput, handlers ...func(any, *OperationInput) error) error {
+	return c.marshalInput(request, input, handlers...)
+}
+
+// UnmarshalOutput unmarshals the operation output into the result (exposed to external modules)
+func (c *Client) UnmarshalOutput(result any, output *OperationOutput, handlers ...func(any, *OperationOutput) error) error {
+	return c.unmarshalOutput(result, output, handlers...)
+}
+
+// ToClientError converts an error to a client error (exposed to external modules)
+func (c *Client) ToClientError(err error, opName string, output *OperationOutput) error {
+	return c.toClientError(err, opName, output)
+}
