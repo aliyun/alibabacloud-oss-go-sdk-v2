@@ -3,28 +3,28 @@ package dataprocess
 import (
 	"context"
 	"encoding/xml"
-
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 )
 
 // Dataset represents a dataset in OSS Data Process
 type Dataset struct {
-	XMLName                 xml.Name          `xml:"Dataset"`
-	BindCount               *int64            `xml:"BindCount,omitempty"`
-	CreateTime              *string           `xml:"CreateTime,omitempty"`
-	DatasetMaxBindCount     *int64            `xml:"DatasetMaxBindCount,omitempty"`
-	DatasetMaxEntityCount   *int64            `xml:"DatasetMaxEntityCount,omitempty"`
-	DatasetMaxFileCount     *int64            `xml:"DatasetMaxFileCount,omitempty"`
-	DatasetMaxRelationCount *int64            `xml:"DatasetMaxRelationCount,omitempty"`
-	DatasetMaxTotalFileSize *int64            `xml:"DatasetMaxTotalFileSize,omitempty"`
-	DatasetName             *string           `xml:"DatasetName,omitempty"`
-	Description             *string           `xml:"Description,omitempty"`
-	FileCount               *int64            `xml:"FileCount,omitempty"`
-	TemplateId              *string           `xml:"TemplateId,omitempty"`
-	TotalFileSize           *int64            `xml:"TotalFileSize,omitempty"`
-	UpdateTime              *string           `xml:"UpdateTime,omitempty"`
-	WorkflowParameters      *WorkflowParameters `xml:"WorkflowParameters,omitempty"`
-	DatasetConfig           *DatasetConfig    `xml:"DatasetConfig,omitempty"`
+	XMLName                  xml.Name            `xml:"Dataset"`
+	BindCount                *int64              `xml:"BindCount,omitempty"`
+	CreateTime               *string             `xml:"CreateTime,omitempty"`
+	DatasetMaxBindCount      *int64              `xml:"DatasetMaxBindCount,omitempty"`
+	DatasetMaxEntityCount    *int64              `xml:"DatasetMaxEntityCount,omitempty"`
+	DatasetMaxFileCount      *int64              `xml:"DatasetMaxFileCount,omitempty"`
+	DatasetMaxRelationCount  *int64              `xml:"DatasetMaxRelationCount,omitempty"`
+	DatasetMaxTotalFileSize  *int64              `xml:"DatasetMaxTotalFileSize,omitempty"`
+	DatasetName              *string             `xml:"DatasetName,omitempty"`
+	Description              *string             `xml:"Description,omitempty"`
+	FileCount                *int64              `xml:"FileCount,omitempty"`
+	TemplateId               *string             `xml:"TemplateId,omitempty"`
+	TotalFileSize            *int64              `xml:"TotalFileSize,omitempty"`
+	UpdateTime               *string             `xml:"UpdateTime,omitempty"`
+	WorkflowParameters       *WorkflowParameters `xml:"WorkflowParameters,omitempty"`
+	WorkflowParametersString *string             `xml:"WorkflowParametersString,omitempty"`
+	DatasetConfig            *DatasetConfig      `xml:"DatasetConfig,omitempty"`
 }
 
 // WorkflowParameters represents the workflow parameters configuration
@@ -43,7 +43,7 @@ type WorkflowParameter struct {
 
 // DatasetConfig represents the dataset configuration
 type DatasetConfig struct {
-	XMLName  xml.Name       `xml:"DatasetConfig"`
+	XMLName  xml.Name        `xml:"DatasetConfig"`
 	Insights *InsightsConfig `xml:"Insights,omitempty"`
 }
 
@@ -56,22 +56,24 @@ type InsightsConfig struct {
 	EnableImage *bool    `xml:"EnableImage,omitempty"`
 	EnableVideo *bool    `xml:"EnableVideo,omitempty"`
 	EnableAudio *bool    `xml:"EnableAudio,omitempty"`
+	Language    *string  `xml:"Language,omitempty"`
 }
 
 // CreateDatasetRequest defines the request for creating a dataset
 type CreateDatasetRequest struct {
-	Bucket           *string `input:"host,bucket,required"`
-	DatasetName      *string `input:"query,datasetName,required"`
-	Description      *string `input:"query,description"`
-	TemplateId       *string `input:"query,templateId"`
+	Bucket             *string `input:"host,bucket,required"`
+	DatasetName        *string `input:"query,datasetName,required"`
+	Description        *string `input:"query,description"`
+	TemplateId         *string `input:"query,templateId"`
+	ClusterType        *string `input:"query,clusterType"`
 	WorkflowParameters *string `input:"query,workflowParameters"`
-	DatasetConfig    *string `input:"query,datasetConfig"`
+	DatasetConfig      *string `input:"query,datasetConfig"`
 	oss.RequestCommon
 }
 
 // CreateDatasetResult defines the result for CreateDataset operation
 type CreateDatasetResult struct {
-	XMLName xml.Name `xml:"CreateDatasetResult"`
+	XMLName xml.Name `xml:"CreateDatasetResponse"`
 	Dataset *Dataset `xml:"Dataset"`
 	oss.ResultCommon
 }
@@ -130,7 +132,7 @@ type GetDatasetRequest struct {
 
 // GetDatasetResult defines the result for GetDataset operation
 type GetDatasetResult struct {
-	XMLName xml.Name `xml:"GetDatasetResult"`
+	XMLName xml.Name `xml:"GetDatasetResponse"`
 	Dataset *Dataset `xml:"Dataset"`
 	oss.ResultCommon
 }
@@ -181,18 +183,18 @@ func (c *Client) GetDataset(ctx context.Context, request *GetDatasetRequest, opt
 
 // UpdateDatasetRequest defines the request for updating a dataset
 type UpdateDatasetRequest struct {
-	Bucket           *string `input:"host,bucket,required"`
-	DatasetName      *string `input:"query,datasetName,required"`
-	Description      *string `input:"query,description"`
-	TemplateId       *string `input:"query,templateId"`
+	Bucket             *string `input:"host,bucket,required"`
+	DatasetName        *string `input:"query,datasetName,required"`
+	Description        *string `input:"query,description"`
+	TemplateId         *string `input:"query,templateId"`
 	WorkflowParameters *string `input:"query,workflowParameters"`
-	DatasetConfig    *string `input:"query,datasetConfig"`
+	DatasetConfig      *string `input:"query,datasetConfig"`
 	oss.RequestCommon
 }
 
 // UpdateDatasetResult defines the result for UpdateDataset operation
 type UpdateDatasetResult struct {
-	XMLName xml.Name `xml:"UpdateDatasetResult"`
+	XMLName xml.Name `xml:"UpdateDatasetResponse"`
 	Dataset *Dataset `xml:"Dataset"`
 	oss.ResultCommon
 }
@@ -300,23 +302,12 @@ type ListDatasetsRequest struct {
 	oss.RequestCommon
 }
 
-// ListDatasetsItem represents a single dataset item in the list
-type ListDatasetsItem struct {
-	XMLName     xml.Name `xml:"Dataset"`
-	DatasetName *string  `xml:"DatasetName,omitempty"`
-	Description *string  `xml:"Description,omitempty"`
-	CreateTime  *string  `xml:"CreateTime,omitempty"`
-	UpdateTime  *string  `xml:"UpdateTime,omitempty"`
-	FileCount   *int64   `xml:"FileCount,omitempty"`
-	TemplateId  *string  `xml:"TemplateId,omitempty"`
-}
-
 // ListDatasetsResult defines the result for ListDatasets operation
 type ListDatasetsResult struct {
-	XMLName    xml.Name           `xml:"ListDatasetsResult"`
-	Datasets   []ListDatasetsItem `xml:"Datasets>Dataset,omitempty"`
-	NextToken  *string            `xml:"NextToken,omitempty"`
-	MaxResults *int64             `xml:"MaxResults,omitempty"`
+	XMLName    xml.Name  `xml:"ListDatasetsResponse"`
+	Datasets   []Dataset `xml:"Datasets>Dataset,omitempty"`
+	NextToken  *string   `xml:"NextToken,omitempty"`
+	MaxResults *int64    `xml:"MaxResults,omitempty"`
 	oss.ResultCommon
 }
 
