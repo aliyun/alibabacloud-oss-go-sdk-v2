@@ -3,6 +3,7 @@ package dataprocess
 import (
 	"context"
 	"encoding/xml"
+
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 )
 
@@ -421,32 +422,29 @@ type File struct {
 	ContentMd5                            *string              `xml:"ContentMd5,omitempty"`
 	SequenceNumber                        *int64               `xml:"SequenceNumber,omitempty"`
 	SemanticSimilarity                    *float64             `xml:"SemanticSimilarity,omitempty"`
-	// TODO
-	OSSUserMeta     any    `xml:"OSSUserMeta,omitempty"`
-	OSSTaggingCount *int64 `xml:"OSSTaggingCount,omitempty"`
-	// TODO
-	OSSTagging      any     `xml:"OSSTagging,omitempty"`
-	OSSExpiration   *string `xml:"OSSExpiration,omitempty"`
-	OSSVersionId    *string `xml:"OSSVersionId,omitempty"`
-	OSSDeleteMarker *string `xml:"OSSDeleteMarker,omitempty"`
-	OSSObjectType   *string `xml:"OSSObjectType,omitempty"`
-	CustomId        *string `xml:"CustomId,omitempty"`
-	// TODO
-	CustomLabels   any            `xml:"CustomLabels,omitempty"`
-	StreamCount    *int64         `xml:"StreamCount,omitempty"`
-	ProgramCount   *int64         `xml:"ProgramCount,omitempty"`
-	FormatName     *string        `xml:"FormatName,omitempty"`
-	FormatLongName *string        `xml:"FormatLongName,omitempty"`
-	StartTime      *float64       `xml:"StartTime,omitempty"`
-	Bitrate        *int64         `xml:"Bitrate,omitempty"`
-	Duration       *float64       `xml:"Duration,omitempty"`
-	SemanticTypes  []string       `xml:"SemanticTypes>SemanticType,omitempty"`
-	Elements       []Element      `xml:"Elements>Element,omitempty"`
-	SceneElements  []SceneElement `xml:"SceneElements>SceneElement,omitempty"`
-	OCRTexts       *string        `xml:"OCRTexts,omitempty"`
-	Reason         *string        `xml:"Reason,omitempty"`
-	ObjectStatus   *string        `xml:"ObjectStatus,omitempty"`
-	Insights       *Insights      `xml:"Insights,omitempty"`
+	OSSUserMeta                           MapEntry             `xml:"OSSUserMeta,omitempty"`
+	OSSTaggingCount                       *int64               `xml:"OSSTaggingCount,omitempty"`
+	OSSTagging                            MapEntry             `xml:"OSSTagging,omitempty"`
+	OSSExpiration                         *string              `xml:"OSSExpiration,omitempty"`
+	OSSVersionId                          *string              `xml:"OSSVersionId,omitempty"`
+	OSSDeleteMarker                       *string              `xml:"OSSDeleteMarker,omitempty"`
+	OSSObjectType                         *string              `xml:"OSSObjectType,omitempty"`
+	CustomId                              *string              `xml:"CustomId,omitempty"`
+	CustomLabels                          MapEntry             `xml:"CustomLabels,omitempty"`
+	StreamCount                           *int64               `xml:"StreamCount,omitempty"`
+	ProgramCount                          *int64               `xml:"ProgramCount,omitempty"`
+	FormatName                            *string              `xml:"FormatName,omitempty"`
+	FormatLongName                        *string              `xml:"FormatLongName,omitempty"`
+	StartTime                             *float64             `xml:"StartTime,omitempty"`
+	Bitrate                               *int64               `xml:"Bitrate,omitempty"`
+	Duration                              *float64             `xml:"Duration,omitempty"`
+	SemanticTypes                         []string             `xml:"SemanticTypes>SemanticType,omitempty"`
+	Elements                              []Element            `xml:"Elements>Element,omitempty"`
+	SceneElements                         []SceneElement       `xml:"SceneElements>SceneElement,omitempty"`
+	OCRTexts                              *string              `xml:"OCRTexts,omitempty"`
+	Reason                                *string              `xml:"Reason,omitempty"`
+	ObjectStatus                          *string              `xml:"ObjectStatus,omitempty"`
+	Insights                              *Insights            `xml:"Insights,omitempty"`
 }
 
 // SemanticQueryResult defines the result for SemanticQuery operation
