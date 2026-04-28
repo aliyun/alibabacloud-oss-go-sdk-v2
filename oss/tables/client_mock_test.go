@@ -126,7 +126,7 @@ var testTablesInvokeOperationAnonymousCases = []struct {
    "type": "oss"
 }`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 		},
@@ -160,7 +160,7 @@ var testTablesInvokeOperationAnonymousCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&oss.OperationInput{
@@ -222,7 +222,7 @@ var testTablesInvokeOperationErrorCases = []struct {
 		[]byte(
 			`{"message": "Missing Some Required Arguments."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 			requestBody, err := io.ReadAll(r.Body)
@@ -262,7 +262,7 @@ var testTablesInvokeOperationErrorCases = []struct {
 		[]byte(
 			`{"message": "The specified method is not allowed against this resource."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/bucket/", r.URL.String())
+			assert.Equal(t, "/", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 			requestBody, err := io.ReadAll(r.Body)
@@ -523,7 +523,7 @@ var testMockGetTableBucketSuccessCases = []struct {
    "type": "oss"
 }`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
@@ -585,7 +585,7 @@ var testMockGetTableBucketErrorCases = []struct {
 		},
 		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
@@ -615,7 +615,7 @@ var testMockGetTableBucketErrorCases = []struct {
 		},
 		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
@@ -644,7 +644,7 @@ var testMockGetTableBucketErrorCases = []struct {
 		},
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
@@ -853,7 +853,7 @@ var testMockDeleteTableBucketSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteTableBucketRequest{
@@ -905,7 +905,7 @@ var testMockDeleteTableBucketErrorCases = []struct {
 		},
 		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteTableBucketRequest{
@@ -934,7 +934,7 @@ var testMockDeleteTableBucketErrorCases = []struct {
 		},
 		[]byte(`{"message": "The bucket has objects. Please delete them first."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteTableBucketRequest{
@@ -991,7 +991,7 @@ var testMockPutTableBucketEncryptionSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"}}")
@@ -1049,7 +1049,7 @@ var testMockPutTableBucketEncryptionErrorCases = []struct {
 		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"}}")
@@ -1087,7 +1087,7 @@ var testMockPutTableBucketEncryptionErrorCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 			assert.Equal(t, contentTypeJSON, r.Header.Get(oss.HTTPHeaderContentType))
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"}}")
@@ -1155,7 +1155,7 @@ var testMockGetTableBucketEncryptionSuccessCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
 		&GetTableBucketEncryptionRequest{
@@ -1209,7 +1209,7 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 		},
 		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketEncryptionRequest{
@@ -1239,7 +1239,7 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 		},
 		&GetTableBucketEncryptionRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -1267,7 +1267,7 @@ var testMockGetTableBucketEncryptionErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", r.URL.String())
 		},
 		&GetTableBucketEncryptionRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -1318,7 +1318,7 @@ var testMockDeleteTableBucketEncryptionSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
 		},
 		&DeleteTableBucketEncryptionRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -1372,7 +1372,7 @@ var testMockDeleteTableBucketEncryptionErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
 		},
 		&DeleteTableBucketEncryptionRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -1401,7 +1401,7 @@ var testMockDeleteTableBucketEncryptionErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/encryption", strUrl)
 		},
 		&DeleteTableBucketEncryptionRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -1456,7 +1456,7 @@ var testMockPutTableBucketPolicySuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}")
@@ -1513,7 +1513,7 @@ var testMockPutTableBucketPolicyErrorCases = []struct {
     "Message": "The specified bucket does not exist."
 }`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}")
 		},
@@ -1545,7 +1545,7 @@ var testMockPutTableBucketPolicyErrorCases = []struct {
 		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}")
 		},
@@ -1605,7 +1605,7 @@ var testMockGetTableBucketPolicySuccessCases = []struct {
 		[]byte("{\"resourcePolicy\":\"{\\\"Version\\\":\\\"1\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"oss:GetTable\\\"],\\\"Effect\\\":\\\"Deny\\\",\\\"Principal\\\":[\\\"1234567890\\\"],\\\"Resource\\\":[\\\"acs:osstable:cn-hangzhou:1234567890:bucket/demo-bucket\\\"]}]}\"}"),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
 		},
 		&GetTableBucketPolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -1657,7 +1657,7 @@ var testMockGetTableBucketPolicyErrorCases = []struct {
 		},
 		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketPolicyRequest{
@@ -1689,7 +1689,7 @@ var testMockGetTableBucketPolicyErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&GetTableBucketPolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -1746,7 +1746,7 @@ var testMockDeleteTableBucketPolicySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&DeleteTableBucketPolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -1801,7 +1801,7 @@ var testMockDeleteTableBucketPolicyErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&DeleteTableBucketPolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -1830,7 +1830,7 @@ var testMockDeleteTableBucketPolicyErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "DELETE", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/policy", strUrl)
 		},
 		&DeleteTableBucketPolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -1885,7 +1885,7 @@ var testMockPutTableBucketMaintenanceConfigurationSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":10,\"unreferencedDays\":4}},\"status\":\"disabled\"}}")
@@ -1918,7 +1918,7 @@ var testMockPutTableBucketMaintenanceConfigurationSuccessCases = []struct {
 		},
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":1,\"unreferencedDays\":2147483647}},\"status\":\"enabled\"}}")
@@ -1982,7 +1982,7 @@ var testMockPutTableBucketMaintenanceConfigurationErrorCases = []struct {
 		},
 		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":1,\"unreferencedDays\":2147483647}},\"status\":\"enabled\"}}")
@@ -2022,7 +2022,7 @@ var testMockPutTableBucketMaintenanceConfigurationErrorCases = []struct {
 		},
 		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance/icebergUnreferencedFileRemoval", r.URL.String())
 			assert.Equal(t, "PUT", r.Method)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "{\"value\":{\"settings\":{\"icebergUnreferencedFileRemoval\":{\"nonCurrentDays\":1,\"unreferencedDays\":2147483647}},\"status\":\"enabled\"}}")
@@ -2097,7 +2097,7 @@ var testMockGetTableBucketMaintenanceConfigurationSuccessCases = []struct {
             "status": "enabled"}},
     "tableBucketARN": "acs:osstables:cn-beijing:123456:bucket/demo-bucket"}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketMaintenanceConfigurationRequest{
@@ -2153,7 +2153,7 @@ var testMockGetTableBucketMaintenanceConfigurationErrorCases = []struct {
 		},
 		[]byte(`{"message": "The specified bucket does not exist."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketMaintenanceConfigurationRequest{
@@ -2181,7 +2181,7 @@ var testMockGetTableBucketMaintenanceConfigurationErrorCases = []struct {
 		},
 		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance", r.URL.String())
+			assert.Equal(t, "/buckets/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/maintenance", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&GetTableBucketMaintenanceConfigurationRequest{
@@ -2242,7 +2242,7 @@ var testMockCreateNamespaceSuccessCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -2304,7 +2304,7 @@ var testMockCreateNamespaceErrorCases = []struct {
 			}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -2341,7 +2341,7 @@ var testMockCreateNamespaceErrorCases = []struct {
 			}`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -2410,7 +2410,7 @@ var testMockGetNamespaceSuccessCases = []struct {
 }`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
@@ -2473,7 +2473,7 @@ var testMockGetNamespaceErrorCases = []struct {
 		[]byte(`{"message": "UserDisable"}`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
@@ -2504,7 +2504,7 @@ var testMockGetNamespaceErrorCases = []struct {
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 		},
@@ -2574,7 +2574,7 @@ var testMockListNamespacesSuccessCases = []struct {
   }]
 }`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListNamespacesRequest{
@@ -2643,7 +2643,7 @@ var testMockListNamespacesErrorCases = []struct {
 		[]byte(
 			`{"message": "The OSS Access Key Id you provided does not exist in our records."}`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListNamespacesRequest{
@@ -2671,7 +2671,7 @@ var testMockListNamespacesErrorCases = []struct {
 		},
 		[]byte(`StrField1>StrField1</StrField1><StrField2>StrField2<`),
 		func(t *testing.T, r *http.Request) {
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", r.URL.String())
 			assert.Equal(t, "GET", r.Method)
 		},
 		&ListNamespacesRequest{
@@ -2721,7 +2721,7 @@ var testMockDeleteNamespaceSuccessCases = []struct {
 		[]byte(``),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteNamespaceRequest{
@@ -2775,7 +2775,7 @@ var testMockDeleteNamespaceErrorCases = []struct {
 		[]byte(`{"message": "The specified namespace does not exist."}`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteNamespaceRequest{
@@ -2806,7 +2806,7 @@ var testMockDeleteNamespaceErrorCases = []struct {
 		[]byte(`{"message": "The bucket has objects. Please delete them first."}`),
 		func(t *testing.T, r *http.Request) {
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
+			assert.Equal(t, "/namespaces/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", urlStr)
 			assert.Equal(t, "DELETE", r.Method)
 		},
 		&DeleteNamespaceRequest{
@@ -2869,7 +2869,7 @@ var testMockCreateTableSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -2905,7 +2905,7 @@ var testMockCreateTableSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -2988,7 +2988,7 @@ var testMockCreateTableErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -3011,7 +3011,7 @@ var testMockCreateTableErrorCases = []struct {
 			assert.Equal(t, "0002-00000040", serr.EC)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request signature we calculated does not match")
-			assert.Contains(t, serr.RequestTarget, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space")
+			assert.Contains(t, serr.RequestTarget, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space")
 		},
 	},
 	{
@@ -3029,7 +3029,7 @@ var testMockCreateTableErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -3052,7 +3052,7 @@ var testMockCreateTableErrorCases = []struct {
 			assert.Equal(t, "0015-00000104", serr.EC)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request failed because there is a conflict with a previous write. You can retry the request.")
-			assert.Contains(t, serr.RequestTarget, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space")
+			assert.Contains(t, serr.RequestTarget, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space")
 		},
 	},
 }
@@ -3111,7 +3111,7 @@ var testMockGetTableSuccessCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?name=table&namespace=space&tableBucketARN=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", strUrl)
+			assert.Equal(t, "/get-table?name=table&namespace=space&tableBucketARN=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket", strUrl)
 		},
 		&GetTableRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -3169,7 +3169,7 @@ var testMockGetTableSuccessCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
+			assert.Equal(t, "/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
 			TableARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
@@ -3240,7 +3240,7 @@ var testMockGetTableErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
+			assert.Equal(t, "/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
 			TableARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
@@ -3271,7 +3271,7 @@ var testMockGetTableErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
+			assert.Equal(t, "/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
 			TableARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
@@ -3301,7 +3301,7 @@ var testMockGetTableErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
+			assert.Equal(t, "/get-table?tableArn=acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket%2Ftable%2Ff13de3a6-de93-4801-bd7f-a09c124177d9", strUrl)
 		},
 		&GetTableRequest{
 			TableARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/table/f13de3a6-de93-4801-bd7f-a09c124177d9"),
@@ -3377,7 +3377,7 @@ var testMockListTablesSuccessCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?continuationToken=token&maxTables=1000&namespace=space&prefix=prefix", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?continuationToken=token&maxTables=1000&namespace=space&prefix=prefix", strUrl)
 		},
 		&ListTablesRequest{
 			TableBucketARN:         oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -3452,7 +3452,7 @@ var testMockListTablesErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?namespace=space", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?namespace=space", strUrl)
 		},
 		&ListTablesRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -3483,7 +3483,7 @@ var testMockListTablesErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?namespace=space", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket?namespace=space", strUrl)
 		},
 		&ListTablesRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -3535,7 +3535,7 @@ var testMockDeleteTableSuccessCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
 		},
 		&DeleteTableRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -3592,7 +3592,7 @@ var testMockDeleteTableErrorCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
 		},
 		&DeleteTableRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -3625,7 +3625,7 @@ var testMockDeleteTableErrorCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table", strUrl)
 		},
 		&DeleteTableRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -3683,7 +3683,7 @@ var testMockRenameTableSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -3714,7 +3714,7 @@ var testMockRenameTableSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -3777,7 +3777,7 @@ var testMockRenameTableErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -3802,7 +3802,7 @@ var testMockRenameTableErrorCases = []struct {
 			assert.Equal(t, "0002-00000040", serr.EC)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request signature we calculated does not match")
-			assert.Contains(t, serr.RequestTarget, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename")
+			assert.Contains(t, serr.RequestTarget, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename")
 		},
 	},
 	{
@@ -3820,7 +3820,7 @@ var testMockRenameTableErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -3845,7 +3845,7 @@ var testMockRenameTableErrorCases = []struct {
 			assert.Equal(t, "0015-00000104", serr.EC)
 			assert.Equal(t, "65467C42E001B4333337****", serr.RequestID)
 			assert.Contains(t, serr.Message, "The request failed because there is a conflict with a previous write. You can retry the request.")
-			assert.Contains(t, serr.RequestTarget, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename")
+			assert.Contains(t, serr.RequestTarget, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/rename")
 		},
 	},
 }
@@ -3887,7 +3887,7 @@ var testMockPutTablePolicySuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -3947,7 +3947,7 @@ var testMockPutTablePolicyErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -3983,7 +3983,7 @@ var testMockPutTablePolicyErrorCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "PUT", r.Method)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			requestBody, err := io.ReadAll(r.Body)
 			assert.Nil(t, err)
@@ -4048,7 +4048,7 @@ var testMockGetTablePolicySuccessCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&GetTablePolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4115,7 +4115,7 @@ var testMockGetTablePolicyErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&GetTablePolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4156,7 +4156,7 @@ var testMockGetTablePolicyErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&GetTablePolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4215,7 +4215,7 @@ var testMockDeleteTablePolicySuccessCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&DeleteTablePolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4270,7 +4270,7 @@ var testMockDeleteTablePolicyErrorCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&DeleteTablePolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4301,7 +4301,7 @@ var testMockDeleteTablePolicyErrorCases = []struct {
 			assert.Equal(t, "DELETE", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/policy", strUrl)
 		},
 		&DeleteTablePolicyRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4366,7 +4366,7 @@ var testMockGetTableEncryptionSuccessCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
 		},
 		&GetTableEncryptionRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4423,7 +4423,7 @@ var testMockGetTableEncryptionErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
 		},
 		&GetTableEncryptionRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4454,7 +4454,7 @@ var testMockGetTableEncryptionErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
 		},
 		&GetTableEncryptionRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4485,7 +4485,7 @@ var testMockGetTableEncryptionErrorCases = []struct {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/encryption", strUrl)
 		},
 		&GetTableEncryptionRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4544,7 +4544,7 @@ var testMockGetTableMetadataLocationSuccessCases = []struct {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&GetTableMetadataLocationRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4603,7 +4603,7 @@ var testMockGetTableMetadataLocationErrorCases = []struct {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&GetTableMetadataLocationRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4633,7 +4633,7 @@ var testMockGetTableMetadataLocationErrorCases = []struct {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&GetTableMetadataLocationRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4702,7 +4702,7 @@ var testMockUpdateTableMetadataLocationSuccessCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, string(body), "{\"metadataLocation\":\"location\",\"versionToken\":\"version-token\"}")
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&UpdateTableMetadataLocationRequest{
 			TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4767,7 +4767,7 @@ var testMockUpdateTableMetadataLocationErrorCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, string(body), "{\"metadataLocation\":\"location\",\"versionToken\":\"version-token\"}")
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&UpdateTableMetadataLocationRequest{
 			TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4803,7 +4803,7 @@ var testMockUpdateTableMetadataLocationErrorCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, string(body), "{\"metadataLocation\":\"location\",\"versionToken\":\"version-token\"}")
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/metadata-location", strUrl)
 		},
 		&UpdateTableMetadataLocationRequest{
 			TableBucketARN:        oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4867,7 +4867,7 @@ var testMockPutTableMaintenanceConfigurationSuccessCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, string(body), "{\"value\":{\"settings\":{\"icebergSnapshotManagement\":{\"maxSnapshotAgeHours\":350,\"minSnapshotsToKeep\":1}},\"status\":\"enabled\"}}")
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergSnapshotManagement", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergSnapshotManagement", strUrl)
 		},
 		&PutTableMaintenanceConfigurationRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4905,7 +4905,7 @@ var testMockPutTableMaintenanceConfigurationSuccessCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, string(body), "{\"value\":{\"settings\":{\"icebergCompaction\":{\"strategy\":\"auto\",\"targetFileSizeMB\":400}},\"status\":\"enabled\"}}")
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergCompaction", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergCompaction", strUrl)
 		},
 		&PutTableMaintenanceConfigurationRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -4973,7 +4973,7 @@ var testMockPutTableMaintenanceConfigurationErrorCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, string(body), "{\"value\":{\"settings\":{\"icebergCompaction\":{\"strategy\":\"auto\",\"targetFileSizeMB\":400}},\"status\":\"enabled\"}}")
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergCompaction", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergCompaction", strUrl)
 		},
 		&PutTableMaintenanceConfigurationRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -5017,7 +5017,7 @@ var testMockPutTableMaintenanceConfigurationErrorCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, string(body), "{\"value\":{\"settings\":{\"icebergCompaction\":{\"strategy\":\"auto\",\"targetFileSizeMB\":400}},\"status\":\"enabled\"}}")
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergCompaction", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance/icebergCompaction", strUrl)
 		},
 		&PutTableMaintenanceConfigurationRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -5109,7 +5109,7 @@ var testMockGetTableMaintenanceConfigurationSuccessCases = []struct {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance", strUrl)
 		},
 		&GetTableMaintenanceConfigurationRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -5172,7 +5172,7 @@ var testMockGetTableMaintenanceConfigurationErrorCases = []struct {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance", strUrl)
 		},
 		&GetTableMaintenanceConfigurationRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -5203,7 +5203,7 @@ var testMockGetTableMaintenanceConfigurationErrorCases = []struct {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance", strUrl)
 		},
 		&GetTableMaintenanceConfigurationRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -5274,7 +5274,7 @@ var testMockGetTableMaintenanceJobStatusSuccessCases = []struct {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
 		},
 		&GetTableMaintenanceJobStatusRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -5337,7 +5337,7 @@ var testMockGetTableMaintenanceJobStatusErrorCases = []struct {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
 		},
 		&GetTableMaintenanceJobStatusRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
@@ -5368,7 +5368,7 @@ var testMockGetTableMaintenanceJobStatusErrorCases = []struct {
 			assert.Equal(t, r.Method, "GET")
 			assert.Equal(t, r.Header.Get(oss.HTTPHeaderContentType), contentTypeJSON)
 			strUrl := sortQuery(r)
-			assert.Equal(t, "/acs:osstables:cn-beijing:1234567890:bucket/demo-bucket/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
+			assert.Equal(t, "/tables/acs%3Aosstables%3Acn-beijing%3A1234567890%3Abucket%2Fdemo-bucket/space/table/maintenance-job-status", strUrl)
 		},
 		&GetTableMaintenanceJobStatusRequest{
 			TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
