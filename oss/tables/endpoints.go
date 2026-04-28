@@ -25,17 +25,13 @@ func (p *endpointProvider) BuildURL(input *oss.OperationInput) string {
 		host = p.endpoint.Host
 	} else {
 		switch p.endpointType {
-		default: // UrlStyleVirtualHosted
+		case oss.UrlStyleVirtualHosted:
 			// acs:osstables:cn-hangzhou:account:bucket/bucketName
 			vals1 := strings.Split(*input.Bucket, ":")
 			vals2 := strings.Split(vals1[4], "/")
 			host = fmt.Sprintf("%s-%s.%s", vals2[1], vals1[3], p.endpoint.Host)
-		case oss.UrlStylePath:
+		default: //case oss.UrlStylePath:
 			host = p.endpoint.Host
-			paths = append(paths, *input.Bucket)
-			if input.Key == nil {
-				paths = append(paths, "")
-			}
 		}
 	}
 

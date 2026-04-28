@@ -357,6 +357,89 @@ func TestTableBucket(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 }
 
+func TestTableBucketUsePathStyle(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(5)
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessID_, accessKey_)).
+		WithRegion(region_).
+		WithEndpoint(endpoint_).
+		WithUsePathStyle(true)
+
+	client := NewTablesClient(cfg)
+
+	result, err := client.CreateTableBucket(context.TODO(), &CreateTableBucketRequest{
+		Name: oss.Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+	bucketArn := result.Arn
+
+	_, err = client.GetTableBucket(context.TODO(), &GetTableBucketRequest{
+		TableBucketARN: bucketArn,
+	})
+	assert.Nil(t, err)
+
+	list, err := client.ListTableBuckets(context.TODO(), &ListTableBucketsRequest{
+		Prefix: oss.Ptr(bucketNamePrefix),
+	})
+	assert.Nil(t, err)
+	assert.True(t, len(list.TableBuckets) > 0)
+
+	_, err = client.DeleteTableBucket(context.TODO(), &DeleteTableBucketRequest{
+		TableBucketARN: bucketArn,
+	})
+	assert.Nil(t, err)
+
+	// test server error
+	invalidAkClient := getInvalidAkClient()
+	bucketNameNotExist := bucketNamePrefix + "not-exist"
+
+	_, err = invalidAkClient.CreateTableBucket(context.TODO(), &CreateTableBucketRequest{
+		Name: oss.Ptr(bucketNameNotExist),
+	})
+	assert.NotNil(t, err)
+	var serr *oss.ServiceError
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "Forbidden", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = client.GetTableBucket(context.TODO(), &GetTableBucketRequest{
+		TableBucketARN: bucketArn,
+	})
+	assert.NotNil(t, err)
+	serr = nil
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "Not Found", serr.Code)
+	assert.Equal(t, "The specified table bucket does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = invalidAkClient.ListTableBuckets(context.TODO(), &ListTableBucketsRequest{
+		Prefix: oss.Ptr(bucketNamePrefix),
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "Forbidden", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = client.DeleteTableBucket(context.TODO(), &DeleteTableBucketRequest{
+		TableBucketARN: bucketArn,
+	})
+	assert.NotNil(t, err)
+	serr = nil
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "Not Found", serr.Code)
+	assert.Equal(t, "The specified table bucket does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+}
+
 func TestTableBucketEncryption(t *testing.T) {
 	after := before(t)
 	defer after(t)
@@ -699,12 +782,271 @@ func TestNamespace(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 }
 
+func TestNamespaceUsePathStyle(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(5)
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessID_, accessKey_)).
+		WithRegion(region_).
+		WithEndpoint(endpoint_).
+		WithUsePathStyle(true)
+
+	client := NewTablesClient(cfg)
+
+	result, err := client.CreateTableBucket(context.TODO(), &CreateTableBucketRequest{
+		Name: oss.Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+	bucketArn := result.Arn
+
+	spaceName := spaceNamePrefix + "_" + randLowStr(5)
+	putResult, err := client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      []string{spaceName},
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getResult, err := client.GetNamespace(context.TODO(), &GetNamespaceRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	listResult, err := client.ListNamespaces(context.TODO(), &ListNamespacesRequest{
+		TableBucketARN: bucketArn,
+		Prefix:         oss.Ptr(spaceNamePrefix),
+	})
+	assert.Nil(t, err)
+	assert.True(t, len(listResult.Namespaces) > 0)
+	assert.Equal(t, 200, listResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	delResult, err := client.DeleteNamespace(context.TODO(), &DeleteNamespaceRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	// test server error
+	invalidAkClient := getInvalidAkClient()
+	_, err = invalidAkClient.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      []string{spaceName},
+	})
+	assert.NotNil(t, err)
+	var serr *oss.ServiceError
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "Forbidden", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = client.GetNamespace(context.TODO(), &GetNamespaceRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+	})
+	assert.NotNil(t, err)
+	serr = nil
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "Not Found", serr.Code)
+	assert.Equal(t, "The specified namespace does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = invalidAkClient.ListNamespaces(context.TODO(), &ListNamespacesRequest{
+		TableBucketARN: bucketArn,
+		Prefix:         oss.Ptr(spaceNamePrefix),
+	})
+	assert.NotNil(t, err)
+	serr = nil
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "Forbidden", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = client.DeleteNamespace(context.TODO(), &DeleteNamespaceRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+	})
+	assert.NotNil(t, err)
+	serr = nil
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "Not Found", serr.Code)
+	assert.Equal(t, "The specified namespace does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+}
+
 func TestTable(t *testing.T) {
 	after := before(t)
 	defer after(t)
 
 	bucketName := bucketNamePrefix + randLowStr(5)
 	client := getDefaultClient()
+
+	result, err := client.CreateTableBucket(context.TODO(), &CreateTableBucketRequest{
+		Name: oss.Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+	bucketArn := result.Arn
+
+	spaceName := spaceNamePrefix + "_" + randLowStr(5)
+	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      []string{spaceName},
+	})
+	assert.Nil(t, err)
+
+	tableName := tableNamePrefix + "_" + randLowStr(5)
+	putResult, err := client.CreateTable(context.TODO(), &CreateTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(tableName),
+		Format:         oss.Ptr("ICEBERG"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	getResult, err := client.GetTable(context.TODO(), &GetTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(tableName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	listResult, err := client.ListTables(context.TODO(), &ListTablesRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Prefix:         oss.Ptr(tableNamePrefix),
+	})
+	assert.Nil(t, err)
+	assert.True(t, len(listResult.Tables) > 0)
+	assert.Equal(t, 200, listResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	newTableName := tableNamePrefix + "_" + randLowStr(6)
+	reResult, err := client.RenameTable(context.TODO(), &RenameTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(tableName),
+		NewName:        oss.Ptr(newTableName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 204, reResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	delResult, err := client.DeleteTable(context.TODO(), &DeleteTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(newTableName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delResult.StatusCode)
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	// test server error
+	invalidAkClient := getInvalidAkClient()
+	_, err = invalidAkClient.CreateTable(context.TODO(), &CreateTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(tableName),
+		Format:         oss.Ptr("ICEBERG"),
+	})
+	assert.NotNil(t, err)
+	var serr *oss.ServiceError
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "Forbidden", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = client.GetTable(context.TODO(), &GetTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(tableName),
+	})
+	assert.NotNil(t, err)
+	serr = nil
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "Not Found", serr.Code)
+	assert.Equal(t, "The specified table does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = invalidAkClient.ListTables(context.TODO(), &ListTablesRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Prefix:         oss.Ptr(tableNamePrefix),
+	})
+	assert.NotNil(t, err)
+	serr = nil
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "Forbidden", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = invalidAkClient.RenameTable(context.TODO(), &RenameTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(tableName),
+		NewName:        oss.Ptr(newTableName),
+	})
+	assert.NotNil(t, err)
+	serr = nil
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "Forbidden", serr.Code)
+	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = client.DeleteTable(context.TODO(), &DeleteTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(tableName),
+	})
+	assert.NotNil(t, err)
+	serr = nil
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "Not Found", serr.Code)
+	assert.Equal(t, "The specified table does not exist.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+}
+
+func TestTableUsePathStyle(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(5)
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessID_, accessKey_)).
+		WithRegion(region_).
+		WithEndpoint(endpoint_).
+		WithUsePathStyle(true)
+
+	client := NewTablesClient(cfg)
 
 	result, err := client.CreateTableBucket(context.TODO(), &CreateTableBucketRequest{
 		Name: oss.Ptr(bucketName),
