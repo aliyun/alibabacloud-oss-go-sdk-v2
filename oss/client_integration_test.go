@@ -10567,3 +10567,112 @@ func TestCopierWithNoCheckCrossBucketFlags(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "Normal", ToString(headResult1.ObjectType))
 }
+
+func TestDoMetaQueryAction(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	var err error
+	bucketName := bucketNamePrefix + randLowStr(6)
+	dataSetName := objectNamePrefix + randLowStr(6)
+	client := getDefaultClient()
+	_, err = client.PutBucket(context.TODO(), &PutBucketRequest{
+		Bucket: Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+
+	var serr *ServiceError
+	_, err = client.DoMetaQueryAction(context.TODO(), &DoMetaQueryActionRequest{
+		Bucket: Ptr(bucketName),
+		Action: Ptr("createDataset"),
+		RequestCommon: RequestCommon{
+			Parameters: map[string]string{
+				"datasetName": dataSetName,
+			},
+		},
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(400), serr.StatusCode)
+	assert.Equal(t, "OperationNotSupported", serr.Code)
+	assert.Equal(t, "The operation is not supported for this resource", serr.Message)
+	assert.Equal(t, "0037-00000001", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = client.DoMetaQueryAction(context.TODO(), &DoMetaQueryActionRequest{
+		Bucket: Ptr(bucketName),
+		Action: Ptr("createDataset"),
+		RequestCommon: RequestCommon{
+			Parameters: map[string]string{
+				"datasetName": dataSetName,
+			},
+		},
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(400), serr.StatusCode)
+	assert.Equal(t, "OperationNotSupported", serr.Code)
+	assert.Equal(t, "The operation is not supported for this resource", serr.Message)
+	assert.Equal(t, "0037-00000001", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = client.DoMetaQueryAction(context.TODO(), &DoMetaQueryActionRequest{
+		Bucket: Ptr(bucketName),
+		Action: Ptr("listDatasets"),
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(400), serr.StatusCode)
+	assert.Equal(t, "OperationNotSupported", serr.Code)
+	assert.Equal(t, "The operation is not supported for this resource", serr.Message)
+	assert.Equal(t, "0037-00000001", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+
+	bucketNameNotExist := bucketName + "-not-exist"
+	_, err = client.DoMetaQueryAction(context.TODO(), &DoMetaQueryActionRequest{
+		Bucket: Ptr(bucketNameNotExist),
+		Action: Ptr("listDatasets"),
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchBucket", serr.Code)
+	assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+	assert.Equal(t, "0015-00000101", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+	time.Sleep(1 * time.Second)
+}
+
+func TestDoDataPipeLineAction(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	var err error
+	client := getDefaultClient()
+
+	_, err = client.DoDataPipeLineAction(context.TODO(), &DoDataPipeLineActionRequest{
+		Action: Ptr("listDataPipelineConfigurations"),
+	})
+	assert.Nil(t, err)
+
+	var serr *ServiceError
+	_, err = client.DoDataPipeLineAction(context.TODO(), &DoDataPipeLineActionRequest{
+		Action: Ptr("putDataPipelineConfiguration"),
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(400), serr.StatusCode)
+	assert.Equal(t, "InvalidAction.putDataPipelineConfiguration", serr.Code)
+	assert.Equal(t, "The specified action putDataPipelineConfigurations is not valid.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+
+	_, err = client.DoDataPipeLineAction(context.TODO(), &DoDataPipeLineActionRequest{
+		Action: Ptr("getDataPipelineConfiguration"),
+	})
+	assert.NotNil(t, err)
+	errors.As(err, &serr)
+	assert.Equal(t, int(400), serr.StatusCode)
+	assert.Equal(t, "InvalidAction.getDataPipelineConfiguration", serr.Code)
+	assert.Equal(t, "The specified action getDataPipelineConfigurations is not valid.", serr.Message)
+	assert.NotEmpty(t, serr.RequestID)
+}
