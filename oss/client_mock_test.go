@@ -37735,3 +37735,529 @@ func TestMockGetObjectLegalHold_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
+
+var testMockDoMetaQueryActionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DoMetaQueryActionRequest
+	CheckOutputFn  func(t *testing.T, o *DoMetaQueryActionResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<CreateDatasetResponse>
+<Dataset>
+<DatasetName>test-dataset</DatasetName>
+<WorkflowParameters></WorkflowParameters>
+<WorkflowParametersString></WorkflowParametersString>
+<TemplateId>Official:OSSBasicMeta</TemplateId>
+<CreateTime>2026-04-22T11:39:28.148283473+08:00</CreateTime>
+<UpdateTime>2026-04-22T11:39:28.148283473+08:00</UpdateTime>
+<Description>this is a demo</Description>
+<DatasetMaxBindCount>10</DatasetMaxBindCount>
+<DatasetMaxFileCount>100000000</DatasetMaxFileCount>
+<DatasetMaxEntityCount>10000000000</DatasetMaxEntityCount>
+<DatasetMaxRelationCount>100000000000</DatasetMaxRelationCount>
+<DatasetMaxTotalFileSize>90000000000000000</DatasetMaxTotalFileSize>
+<DatasetConfig><Insights><Language>zh</Language></Insights></DatasetConfig>
+</Dataset>
+</CreateDatasetResponse>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?action=createDataset&clusterType=auto&datasetName=your_dataset&description=this+is+a+demo&metaQuery&templateId=Official%3AOSSBasicMeta", urlStr)
+		},
+		&DoMetaQueryActionRequest{
+			Bucket: Ptr("bucket"),
+			Action: Ptr("createDataset"),
+			RequestCommon: RequestCommon{
+				Parameters: map[string]string{
+					"datasetName": "your_dataset",
+					"description": "this is a demo",
+					"templateId":  "Official:OSSBasicMeta",
+					"clusterType": "auto",
+				},
+			},
+		},
+		func(t *testing.T, o *DoMetaQueryActionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+			getBody, err := io.ReadAll(o.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, string(getBody), "<CreateDatasetResponse>\n<Dataset>\n<DatasetName>test-dataset</DatasetName>\n<WorkflowParameters></WorkflowParameters>\n<WorkflowParametersString></WorkflowParametersString>\n<TemplateId>Official:OSSBasicMeta</TemplateId>\n<CreateTime>2026-04-22T11:39:28.148283473+08:00</CreateTime>\n<UpdateTime>2026-04-22T11:39:28.148283473+08:00</UpdateTime>\n<Description>this is a demo</Description>\n<DatasetMaxBindCount>10</DatasetMaxBindCount>\n<DatasetMaxFileCount>100000000</DatasetMaxFileCount>\n<DatasetMaxEntityCount>10000000000</DatasetMaxEntityCount>\n<DatasetMaxRelationCount>100000000000</DatasetMaxRelationCount>\n<DatasetMaxTotalFileSize>90000000000000000</DatasetMaxTotalFileSize>\n<DatasetConfig><Insights><Language>zh</Language></Insights></DatasetConfig>\n</Dataset>\n</CreateDatasetResponse>")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<ListDatasetsResponse><Datasets><Dataset><DatasetName>oss_1760225545084331_demo-1889</DatasetName><WorkflowParameters></WorkflowParameters><WorkflowParametersString></WorkflowParametersString><TemplateId>Official:OSSBasicMeta</TemplateId><CreateTime>2026-04-28T15:03:47.028110649+08:00</CreateTime><UpdateTime>2026-04-28T15:03:47.156498415+08:00</UpdateTime><DatasetMaxBindCount>10</DatasetMaxBindCount><DatasetMaxFileCount>100000000</DatasetMaxFileCount><DatasetMaxEntityCount>10000000000</DatasetMaxEntityCount><DatasetMaxRelationCount>100000000000</DatasetMaxRelationCount><DatasetMaxTotalFileSize>90000000000000000</DatasetMaxTotalFileSize><DatasetConfig><Insights><Language>zh-Hans</Language></Insights></DatasetConfig></Dataset></Datasets></ListDatasetsResponse>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?action=listDatasets&metaQuery", urlStr)
+		},
+		&DoMetaQueryActionRequest{
+			Bucket: Ptr("bucket"),
+			Action: Ptr("listDatasets"),
+		},
+		func(t *testing.T, o *DoMetaQueryActionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+			getBody, err := io.ReadAll(o.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, string(getBody), "<ListDatasetsResponse><Datasets><Dataset><DatasetName>oss_1760225545084331_demo-1889</DatasetName><WorkflowParameters></WorkflowParameters><WorkflowParametersString></WorkflowParametersString><TemplateId>Official:OSSBasicMeta</TemplateId><CreateTime>2026-04-28T15:03:47.028110649+08:00</CreateTime><UpdateTime>2026-04-28T15:03:47.156498415+08:00</UpdateTime><DatasetMaxBindCount>10</DatasetMaxBindCount><DatasetMaxFileCount>100000000</DatasetMaxFileCount><DatasetMaxEntityCount>10000000000</DatasetMaxEntityCount><DatasetMaxRelationCount>100000000000</DatasetMaxRelationCount><DatasetMaxTotalFileSize>90000000000000000</DatasetMaxTotalFileSize><DatasetConfig><Insights><Language>zh-Hans</Language></Insights></DatasetConfig></Dataset></Datasets></ListDatasetsResponse>")
+		},
+	},
+}
+
+func TestMockDoMetaQueryAction_Success(t *testing.T) {
+	for _, c := range testMockDoMetaQueryActionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.DoMetaQueryAction(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDoMetaQueryActionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DoMetaQueryActionRequest
+	CheckOutputFn  func(t *testing.T, o *DoMetaQueryActionResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>InvalidArgument</Code>
+ <Message>no such bucket access control exists</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>***-test.example.com</HostId>
+ <ArgumentName>x-oss-acl</ArgumentName>
+ <ArgumentValue>error-acl</ArgumentValue>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?action=listDatasets&metaQuery", urlStr)
+		},
+		&DoMetaQueryActionRequest{
+			Bucket: Ptr("bucket"),
+			Action: Ptr("listDatasets"),
+		},
+		func(t *testing.T, o *DoMetaQueryActionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "no such bucket access control exists", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?action=listDatasets&metaQuery", urlStr)
+		},
+		&DoMetaQueryActionRequest{
+			Bucket: Ptr("bucket"),
+			Action: Ptr("listDatasets"),
+		},
+		func(t *testing.T, o *DoMetaQueryActionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>NoSuchBucket</Code>
+ <Message>The specified bucket does not exist.</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0015-00000101</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/bucket/?action=listDatasets&metaQuery", urlStr)
+		},
+		&DoMetaQueryActionRequest{
+			Bucket: Ptr("bucket"),
+			Action: Ptr("listDatasets"),
+		},
+		func(t *testing.T, o *DoMetaQueryActionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDoMetaQueryAction_Error(t *testing.T) {
+	for _, c := range testMockDoMetaQueryActionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.DoMetaQueryAction(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDoDataPipeLineActionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DoDataPipeLineActionRequest
+	CheckOutputFn  func(t *testing.T, o *DoDataPipeLineActionResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8" ?>
+<ListDataPipelineConfigurationsResult>
+  <DataPipelineConfigurations>
+    <DataPipelineConfiguration>
+      <DataPipelineName>my-data-pipeline</DataPipelineName>
+      <DataPipelineDescription>使用百炼多模态模型为业务数据向量化</DataPipelineDescription>
+      <DataPipelineRole>my-data-pipeline-role</DataPipelineRole>
+      <Status>Running</Status>
+      <Sources>
+          <InputBucket>my-bucket</InputBucket>
+          <InputDataScope>All</InputDataScope>
+          <IgnoreDelete>true</IgnoreDelete>
+          <FilterConfiguration>
+              <PrefixSet>prefix1/</PrefixSet>
+              <PrefixSet>prefix2/prefix3/</PrefixSet>
+              <ObjectMediaTypes>text</ObjectMediaTypes>
+              <ObjectMediaTypes>image</ObjectMediaTypes>
+              <ObjectMediaTypes>video</ObjectMediaTypes>
+          </FilterConfiguration>
+      </Sources>
+      <DataPipelineEmbeddingConfiguration>
+          <EmbeddingProvider>bailian</EmbeddingProvider>
+          <ApiKey>xxxx</ApiKey>
+          <Model>qwen2.5-vl-embedding</Model>
+          <FPS>1</FPS>
+      </DataPipelineEmbeddingConfiguration>
+      <Destination>
+          <VectorBucketName>my-vector-bucket</VectorBucketName>
+          <VectorIndexNames>my-index</VectorIndexNames>
+          <VectorKeyPrefix></VectorKeyPrefix>
+          <ObjectTagToMetadata>key1</ObjectTagToMetadata>
+          <ObjectTagToMetadata>key2</ObjectTagToMetadata>
+          <UsermetaToMetadata>x-oss-meta-key1</UsermetaToMetadata>
+      </Destination>
+      <DataPipelineError>
+          <ErrorMode>ignoreAndRecord</ErrorMode>
+          <ErrorBucket>my-error-bucket</ErrorBucket>
+          <ErrorPrefix>error-output/</ErrorPrefix>
+      </DataPipelineError>
+      <CreateTime>2021-06-29T14:50:13.011643661+08:00</CreateTime>
+    </DataPipelineConfiguration>
+  </DataPipelineConfigurations>
+  <NextToken>xxx</NextToken>
+</ListDataPipelineConfigurationsResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?action=listDataPipelineConfigurations&dataPipeline", urlStr)
+		},
+		&DoDataPipeLineActionRequest{
+			Action: Ptr("listDataPipelineConfigurations"),
+		},
+		func(t *testing.T, o *DoDataPipeLineActionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+			getBody, err := io.ReadAll(o.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, string(getBody), "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<ListDataPipelineConfigurationsResult>\n  <DataPipelineConfigurations>\n    <DataPipelineConfiguration>\n      <DataPipelineName>my-data-pipeline</DataPipelineName>\n      <DataPipelineDescription>使用百炼多模态模型为业务数据向量化</DataPipelineDescription>\n      <DataPipelineRole>my-data-pipeline-role</DataPipelineRole>\n      <Status>Running</Status>\n      <Sources>\n          <InputBucket>my-bucket</InputBucket>\n          <InputDataScope>All</InputDataScope>\n          <IgnoreDelete>true</IgnoreDelete>\n          <FilterConfiguration>\n              <PrefixSet>prefix1/</PrefixSet>\n              <PrefixSet>prefix2/prefix3/</PrefixSet>\n              <ObjectMediaTypes>text</ObjectMediaTypes>\n              <ObjectMediaTypes>image</ObjectMediaTypes>\n              <ObjectMediaTypes>video</ObjectMediaTypes>\n          </FilterConfiguration>\n      </Sources>\n      <DataPipelineEmbeddingConfiguration>\n          <EmbeddingProvider>bailian</EmbeddingProvider>\n          <ApiKey>xxxx</ApiKey>\n          <Model>qwen2.5-vl-embedding</Model>\n          <FPS>1</FPS>\n      </DataPipelineEmbeddingConfiguration>\n      <Destination>\n          <VectorBucketName>my-vector-bucket</VectorBucketName>\n          <VectorIndexNames>my-index</VectorIndexNames>\n          <VectorKeyPrefix></VectorKeyPrefix>\n          <ObjectTagToMetadata>key1</ObjectTagToMetadata>\n          <ObjectTagToMetadata>key2</ObjectTagToMetadata>\n          <UsermetaToMetadata>x-oss-meta-key1</UsermetaToMetadata>\n      </Destination>\n      <DataPipelineError>\n          <ErrorMode>ignoreAndRecord</ErrorMode>\n          <ErrorBucket>my-error-bucket</ErrorBucket>\n          <ErrorPrefix>error-output/</ErrorPrefix>\n      </DataPipelineError>\n      <CreateTime>2021-06-29T14:50:13.011643661+08:00</CreateTime>\n    </DataPipelineConfiguration>\n  </DataPipelineConfigurations>\n  <NextToken>xxx</NextToken>\n</ListDataPipelineConfigurationsResult>")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8" ?>
+<DataPipelineConfiguration>
+  <DataPipelineName>data-pipeline</DataPipelineName>
+  <DataPipelineDescription>使用百炼多模态模型为业务数据向量化</DataPipelineDescription>
+  <DataPipelineRole>my-data-pipeline-role</DataPipelineRole>
+  <Status>Running</Status>
+  <Sources>
+      <InputBucket>my-bucket</InputBucket>
+      <InputDataScope>All</InputDataScope>
+      <IgnoreDelete>true</IgnoreDelete>
+      <FilterConfiguration>
+          <PrefixSet>prefix1/</PrefixSet>
+          <PrefixSet>prefix2/prefix3/</PrefixSet>
+          <ObjectMediaTypes>text</ObjectMediaTypes>
+          <ObjectMediaTypes>image</ObjectMediaTypes>
+          <ObjectMediaTypes>video</ObjectMediaTypes>
+      </FilterConfiguration>
+  </Sources>
+  <DataPipelineEmbeddingConfiguration>
+      <EmbeddingProvider>bailian</EmbeddingProvider>
+      <ApiKey>xxxx</ApiKey>
+      <Model>qwen2.5-vl-embedding</Model>
+      <FPS>1</FPS>
+  </DataPipelineEmbeddingConfiguration>
+  <Destination>
+      <VectorBucketName>my-vector-bucket</VectorBucketName>
+      <VectorIndexNames>my-index</VectorIndexNames>
+      <VectorKeyPrefix></VectorKeyPrefix>
+      <ObjectTagToMetadata>key1</ObjectTagToMetadata>
+      <ObjectTagToMetadata>key2</ObjectTagToMetadata>
+      <UsermetaToMetadata>x-oss-meta-key1</UsermetaToMetadata>
+  </Destination>
+  <DataPipelineError>
+      <ErrorMode>ignoreAndRecord</ErrorMode>
+      <ErrorBucket>my-error-bucket</ErrorBucket>
+      <ErrorPrefix>error-output/</ErrorPrefix>
+  </DataPipelineError>
+  <CreateTime>2021-06-29T14:50:13.011643661+08:00</CreateTime>
+</DataPipelineConfiguration>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?action=getDataPipelineConfiguration&dataPipeline&dataPipelineName=data-pipeline", urlStr)
+		},
+		&DoDataPipeLineActionRequest{
+			Action: Ptr("getDataPipelineConfiguration"),
+			RequestCommon: RequestCommon{
+				Parameters: map[string]string{
+					"dataPipelineName": "data-pipeline",
+				},
+			},
+		},
+		func(t *testing.T, o *DoDataPipeLineActionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+
+			getBody, err := io.ReadAll(o.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, string(getBody), "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<DataPipelineConfiguration>\n  <DataPipelineName>data-pipeline</DataPipelineName>\n  <DataPipelineDescription>使用百炼多模态模型为业务数据向量化</DataPipelineDescription>\n  <DataPipelineRole>my-data-pipeline-role</DataPipelineRole>\n  <Status>Running</Status>\n  <Sources>\n      <InputBucket>my-bucket</InputBucket>\n      <InputDataScope>All</InputDataScope>\n      <IgnoreDelete>true</IgnoreDelete>\n      <FilterConfiguration>\n          <PrefixSet>prefix1/</PrefixSet>\n          <PrefixSet>prefix2/prefix3/</PrefixSet>\n          <ObjectMediaTypes>text</ObjectMediaTypes>\n          <ObjectMediaTypes>image</ObjectMediaTypes>\n          <ObjectMediaTypes>video</ObjectMediaTypes>\n      </FilterConfiguration>\n  </Sources>\n  <DataPipelineEmbeddingConfiguration>\n      <EmbeddingProvider>bailian</EmbeddingProvider>\n      <ApiKey>xxxx</ApiKey>\n      <Model>qwen2.5-vl-embedding</Model>\n      <FPS>1</FPS>\n  </DataPipelineEmbeddingConfiguration>\n  <Destination>\n      <VectorBucketName>my-vector-bucket</VectorBucketName>\n      <VectorIndexNames>my-index</VectorIndexNames>\n      <VectorKeyPrefix></VectorKeyPrefix>\n      <ObjectTagToMetadata>key1</ObjectTagToMetadata>\n      <ObjectTagToMetadata>key2</ObjectTagToMetadata>\n      <UsermetaToMetadata>x-oss-meta-key1</UsermetaToMetadata>\n  </Destination>\n  <DataPipelineError>\n      <ErrorMode>ignoreAndRecord</ErrorMode>\n      <ErrorBucket>my-error-bucket</ErrorBucket>\n      <ErrorPrefix>error-output/</ErrorPrefix>\n  </DataPipelineError>\n  <CreateTime>2021-06-29T14:50:13.011643661+08:00</CreateTime>\n</DataPipelineConfiguration>")
+		},
+	},
+}
+
+func TestMockDoDataPipeLineAction_Success(t *testing.T) {
+	for _, c := range testMockDoDataPipeLineActionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.DoDataPipeLineAction(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockDoDataPipeLineActionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *DoDataPipeLineActionRequest
+	CheckOutputFn  func(t *testing.T, o *DoDataPipeLineActionResult, err error)
+}{
+	{
+		400,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>InvalidArgument</Code>
+ <Message>no such bucket access control exists</Message>
+ <RequestId>5C3D9175B6FC201293AD****</RequestId>
+ <HostId>***-test.example.com</HostId>
+ <ArgumentName>x-oss-acl</ArgumentName>
+ <ArgumentValue>error-acl</ArgumentValue>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?action=listDataPipelineConfigurations&dataPipeline", urlStr)
+		},
+		&DoDataPipeLineActionRequest{
+			Action: Ptr("listDataPipelineConfigurations"),
+		},
+		func(t *testing.T, o *DoDataPipeLineActionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(400), serr.StatusCode)
+			assert.Equal(t, "InvalidArgument", serr.Code)
+			assert.Equal(t, "no such bucket access control exists", serr.Message)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/xml",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+ <Code>UserDisable</Code>
+ <Message>UserDisable</Message>
+ <RequestId>5C3D8D2A0ACA54D87B43****</RequestId>
+ <HostId>test.oss-cn-hangzhou.aliyuncs.com</HostId>
+ <BucketName>test</BucketName>
+ <EC>0003-00000801</EC>
+</Error>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?action=listDataPipelineConfigurations&dataPipeline", urlStr)
+		},
+		&DoDataPipeLineActionRequest{
+			Action: Ptr("listDataPipelineConfigurations"),
+		},
+		func(t *testing.T, o *DoDataPipeLineActionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockDoDataPipeLineAction_Error(t *testing.T) {
+	for _, c := range testMockDoDataPipeLineActionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.DoDataPipeLineAction(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
