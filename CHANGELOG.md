@@ -1,5 +1,14 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.5.0 日期：2026-04-28
+### 变更内容
+- Feature：Add tables bucket
+- Feature：Add dataprocess client
+- Feature：Add GetObjectToFileV2 api
+- Feature：Add DoDataPipeLineAction api
+- Feature：Add DoMetaQueryAction api
+- Feature：Config supports MaxConnections option
+
 ## 版本号：v1.4.1 日期：2026-03-30
 ### 变更内容
 - Feature：Add object worm api
