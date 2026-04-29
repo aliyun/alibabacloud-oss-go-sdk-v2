@@ -10661,9 +10661,9 @@ func TestDoDataPipeLineAction(t *testing.T) {
 	})
 	assert.NotNil(t, err)
 	errors.As(err, &serr)
-	assert.Equal(t, int(400), serr.StatusCode)
-	assert.Equal(t, "InvalidAction.putDataPipelineConfiguration", serr.Code)
-	assert.Equal(t, "The specified action putDataPipelineConfigurations is not valid.", serr.Message)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchDataPipeline", serr.Code)
+	assert.Equal(t, "The specified resource dataPipeline is not found.", serr.Message)
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.DoDataPipeLineAction(context.TODO(), &DoDataPipeLineActionRequest{
@@ -10671,8 +10671,8 @@ func TestDoDataPipeLineAction(t *testing.T) {
 	})
 	assert.NotNil(t, err)
 	errors.As(err, &serr)
-	assert.Equal(t, int(400), serr.StatusCode)
-	assert.Equal(t, "InvalidAction.getDataPipelineConfiguration", serr.Code)
-	assert.Equal(t, "The specified action getDataPipelineConfigurations is not valid.", serr.Message)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchDataPipeline", serr.Code)
+	assert.Equal(t, "The specified resource dataPipeline is not found.", serr.Message)
 	assert.NotEmpty(t, serr.RequestID)
 }
