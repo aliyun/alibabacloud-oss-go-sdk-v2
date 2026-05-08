@@ -46,10 +46,10 @@ func updateEndpoint(cfg *oss.Config) {
 	}
 
 	if oss.ToBool(cfg.UseInternalEndpoint) {
-		cfg.Endpoint = oss.Ptr(fmt.Sprintf("oss-%s-internal.oss-tables.aliyuncs.com", region))
+		cfg.Endpoint = oss.Ptr(fmt.Sprintf("%s-internal.oss-tables.aliyuncs.com", region))
 
 	} else {
-		cfg.Endpoint = oss.Ptr(fmt.Sprintf("oss-%s.oss-tables.aliyuncs.com", region))
+		cfg.Endpoint = oss.Ptr(fmt.Sprintf("%s.oss-tables.aliyuncs.com", region))
 	}
 }
 
