@@ -1,5 +1,9 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.5.1 日期：2026-05-08
+### 变更内容
+- Update：Adjust endpoint construction in table EndpointProvider
+
 ## 版本号：v1.5.0 日期：2026-04-28
 ### 变更内容
 - Feature：Add tables bucket
