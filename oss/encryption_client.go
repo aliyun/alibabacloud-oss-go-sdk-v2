@@ -208,6 +208,9 @@ func (e *EncryptionClient) getObjectSecurely(ctx context.Context, request *GetOb
 		}
 
 		result.Body, err = cc.DecryptContent(result.Body)
+		if err != nil {
+			return nil, fmt.Errorf("DecryptContent: %w", err)
+		}
 	}
 
 	if discardCount > 0 && err == nil {
