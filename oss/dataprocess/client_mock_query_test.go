@@ -393,7 +393,10 @@ var testMockSemanticQuerySuccessCases = []struct {
           <OSSObjectType>Normal</OSSObjectType>
           <OSSStorageClass>Standard</OSSStorageClass>
           <OSSTagging>
-              <routing-dataset>test-dataset-sem-vid-1776774492</routing-dataset>
+			  <Tagging>
+				  <Key>routing-dataset</Key>
+				  <Value>test-dataset-sem-vid-1776774492</Value>
+			  </Tagging>
           </OSSTagging>
           <OSSTaggingCount>1</OSSTaggingCount>
           <ObjectACL>default</ObjectACL>
@@ -472,6 +475,8 @@ var testMockSemanticQuerySuccessCases = []struct {
 			assert.Equal(t, *o.Files[0].OSSObjectType, "Normal")
 			assert.Equal(t, *o.Files[0].OSSStorageClass, "Standard")
 			assert.Equal(t, *o.Files[0].OSSTaggingCount, int64(1))
+			assert.Equal(t, *o.Files[0].OSSTagging[0].Key, "routing-dataset")
+			assert.Equal(t, *o.Files[0].OSSTagging[0].Value, "test-dataset-sem-vid-1776774492")
 			assert.Equal(t, *o.Files[0].ObjectACL, "default")
 			assert.Equal(t, *o.Files[0].SequenceNumber, int64(2))
 			assert.Equal(t, *o.Files[0].SemanticSimilarity, float64(0.5583347777557373))
@@ -583,13 +588,32 @@ var testMockSemanticQuerySuccessCases = []struct {
             <OSSObjectType>Normal</OSSObjectType>
             <OSSStorageClass>Standard</OSSStorageClass>
             <OSSTagging>
-                <alarmId>AE09411YAG0008117767395421908241</alarmId>
-                <test-routing-dataset>dataset-aianalysis-walk</test-routing-dataset>
+				<Tagging>
+					<Key>routing-dataset</Key>
+					<Value>photos-2026</Value>
+				</Tagging>
+				<Tagging>
+					<Key>env</Key>
+					<Value>production</Value>
+				</Tagging>
             </OSSTagging>
             <OSSTaggingCount>2</OSSTaggingCount>
             <OSSUserMeta>
-                <X-Oss-Meta-Author>oss</X-Oss-Meta-Author>
+				<UserMeta>
+					<Key>category</Key>
+					<Value>photo</Value>
+				</UserMeta>
+				<UserMeta>
+					<Key>album</Key>
+					<Value>vacation</Value>
+				</UserMeta>
             </OSSUserMeta>
+ 			<CustomLabels>
+				<Item>
+					<Key>label-ley</Key>
+					<Value>label-val</Value>
+				</Item>
+			</CustomLabels>
             <ObjectACL>default</ObjectACL>
             <ProduceTime>2026-04-21T10:46:10+08:00</ProduceTime>
             <SceneElements>
@@ -675,12 +699,25 @@ var testMockSemanticQuerySuccessCases = []struct {
 			assert.Equal(t, *o.Files[0].OSSObjectType, "Normal")
 			assert.Equal(t, *o.Files[0].OSSStorageClass, "Standard")
 			assert.Equal(t, len(o.Files[0].OSSTagging), 2)
-			assert.Equal(t, o.Files[0].OSSTagging["alarmId"], "AE09411YAG0008117767395421908241")
-			assert.Equal(t, o.Files[0].OSSTagging["test-routing-dataset"], "dataset-aianalysis-walk")
+			assert.Equal(t, *o.Files[0].OSSTagging[0].Key, "routing-dataset")
+			assert.Equal(t, *o.Files[0].OSSTagging[1].Key, "env")
+			assert.Equal(t, *o.Files[0].OSSTagging[0].Value, "photos-2026")
+			assert.Equal(t, *o.Files[0].OSSTagging[1].Value, "production")
+			assert.Equal(t, len(o.Files[0].OSSUserMeta), 2)
+			assert.Equal(t, *o.Files[0].OSSUserMeta[0].Key, "category")
+			assert.Equal(t, *o.Files[0].OSSUserMeta[0].Value, "photo")
+			assert.Equal(t, *o.Files[0].OSSUserMeta[1].Key, "album")
+			assert.Equal(t, *o.Files[0].OSSUserMeta[1].Value, "vacation")
 			assert.Equal(t, *o.Files[0].OSSTaggingCount, int64(2))
 			assert.Equal(t, *o.Files[0].ObjectACL, "default")
-			assert.Equal(t, len(o.Files[0].OSSUserMeta), 1)
-			assert.Equal(t, o.Files[0].OSSUserMeta["X-Oss-Meta-Author"], "oss")
+			assert.Equal(t, len(o.Files[0].OSSUserMeta), 2)
+			assert.Equal(t, *o.Files[0].OSSUserMeta[0].Key, "category")
+			assert.Equal(t, *o.Files[0].OSSUserMeta[0].Value, "photo")
+			assert.Equal(t, *o.Files[0].OSSUserMeta[1].Key, "album")
+			assert.Equal(t, *o.Files[0].OSSUserMeta[1].Value, "vacation")
+			assert.Equal(t, len(o.Files[0].CustomLabels), 1)
+			assert.Equal(t, *o.Files[0].CustomLabels[0].Key, "label-ley")
+			assert.Equal(t, *o.Files[0].CustomLabels[0].Value, "label-val")
 			assert.Equal(t, *o.Files[0].ProduceTime, "2026-04-21T10:46:10+08:00")
 			assert.Equal(t, *o.Files[0].SequenceNumber, int64(5))
 			assert.Equal(t, *o.Files[0].SemanticSimilarity, float64(0.2536))

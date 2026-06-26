@@ -420,15 +420,15 @@ type File struct {
 	ContentMd5                            *string              `xml:"ContentMd5,omitempty"`
 	SequenceNumber                        *int64               `xml:"SequenceNumber,omitempty"`
 	SemanticSimilarity                    *float64             `xml:"SemanticSimilarity,omitempty"`
-	OSSUserMeta                           MapEntry             `xml:"OSSUserMeta,omitempty"`
+	OSSUserMeta                           []UserMeta           `xml:"OSSUserMeta>UserMeta,omitempty"`
 	OSSTaggingCount                       *int64               `xml:"OSSTaggingCount,omitempty"`
-	OSSTagging                            MapEntry             `xml:"OSSTagging,omitempty"`
+	OSSTagging                            []Tagging            `xml:"OSSTagging>Tagging,omitempty"`
 	OSSExpiration                         *string              `xml:"OSSExpiration,omitempty"`
 	OSSVersionId                          *string              `xml:"OSSVersionId,omitempty"`
 	OSSDeleteMarker                       *string              `xml:"OSSDeleteMarker,omitempty"`
 	OSSObjectType                         *string              `xml:"OSSObjectType,omitempty"`
 	CustomId                              *string              `xml:"CustomId,omitempty"`
-	CustomLabels                          MapEntry             `xml:"CustomLabels,omitempty"`
+	CustomLabels                          []CustomLabel        `xml:"CustomLabels>Item,omitempty"`
 	StreamCount                           *int64               `xml:"StreamCount,omitempty"`
 	ProgramCount                          *int64               `xml:"ProgramCount,omitempty"`
 	FormatName                            *string              `xml:"FormatName,omitempty"`
@@ -443,6 +443,21 @@ type File struct {
 	Reason                                *string              `xml:"Reason,omitempty"`
 	ObjectStatus                          *string              `xml:"ObjectStatus,omitempty"`
 	Insights                              *Insights            `xml:"Insights,omitempty"`
+}
+
+type Tagging struct {
+	Key   *string `xml:"Key,omitempty"`
+	Value *string `xml:"Value,omitempty"`
+}
+
+type UserMeta struct {
+	Key   *string `xml:"Key,omitempty"`
+	Value *string `xml:"Value,omitempty"`
+}
+
+type CustomLabel struct {
+	Key   *string `xml:"Key,omitempty"`
+	Value *string `xml:"Value,omitempty"`
 }
 
 // SemanticQueryResult defines the result for SemanticQuery operation
