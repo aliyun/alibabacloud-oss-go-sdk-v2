@@ -1,5 +1,10 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.5.2 日期：2026-06-30
+### 变更内容
+- Update：Dataprocess client supports more apis
+- Update: Inventtory api supports IncrementalInventory filed
+
 ## 版本号：v1.5.1 日期：2026-05-08
 ### 变更内容
 - Update：Adjust endpoint construction in table EndpointProvider
