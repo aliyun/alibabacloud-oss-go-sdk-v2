@@ -55,7 +55,7 @@ func TestDataPipeLine(t *testing.T) {
 	errors.As(err, &serr)
 	assert.Equal(t, int(400), serr.StatusCode)
 	assert.Equal(t, "InvalidArgument", serr.Code)
-	assert.Equal(t, "The ServiceRole (not-exist-role) you provided does not exist.", serr.Message)
+	assert.Equal(t, "The role parameter is not a valid RAM role ARN (expect acs:ram::<account>:role/<name>).", serr.Message)
 	assert.NotEmpty(t, serr.RequestID)
 
 	_, err = client.ListDataPipelineConfigurations(context.TODO(), &ListDataPipelineConfigurationsRequest{})
