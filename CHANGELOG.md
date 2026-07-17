@@ -1,5 +1,9 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.5.3 日期：2026-07-17
+### 变更内容
+- Update：Add helper functions for dataprocess api parameters
+
 ## 版本号：v1.5.2 日期：2026-06-30
 ### 变更内容
 - Update：Dataprocess client supports more apis
