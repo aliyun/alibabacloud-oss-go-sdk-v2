@@ -294,6 +294,61 @@ func TestMockAgenticBucketClient_ListBucketSpaces(t *testing.T) {
 	assertURL(t, transport.RequestURL, "https://my-agentic-123456-cn-hangzhou-ab-apsr.oss-cn-hangzhou.aliyuncs.com/", []string{"agenticBucket", "bucketSpace"})
 }
 
+func newMockAgenticBucketClientPathStyle(region, accountId string) (*AgenticBucketClient, *urlCaptureTransport) {
+	transport := &urlCaptureTransport{}
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion(region).
+		WithAccountId(accountId).
+		WithUsePathStyle(true).
+		WithHttpClient(&http.Client{Transport: transport})
+
+	client := NewAgenticBucketClient(cfg)
+	return client, transport
+}
+
+func TestMockAgenticBucketClient_GetAgenticBucket_PathStyle(t *testing.T) {
+	client, transport := newMockAgenticBucketClientPathStyle("cn-hangzhou", "123456")
+
+	_, err := client.GetAgenticBucket(context.TODO(), &GetAgenticBucketRequest{
+		Bucket: oss.Ptr("my-agentic"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", transport.RequestMethod)
+	assertURL(t, transport.RequestURL, "https://oss-cn-hangzhou.aliyuncs.com/my-agentic-123456-cn-hangzhou-ab-apsr/", []string{"agenticBucket"})
+}
+
+func TestMockAgenticBucketClient_ListAgenticBuckets_PathStyle(t *testing.T) {
+	client, transport := newMockAgenticBucketClientPathStyle("cn-hangzhou", "123456")
+
+	_, err := client.ListAgenticBuckets(context.TODO(), &ListAgenticBucketsRequest{})
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", transport.RequestMethod)
+	assertURL(t, transport.RequestURL, "https://oss-cn-hangzhou.aliyuncs.com/", []string{"agenticBucket"})
+}
+
+func TestMockBucketSpaceClient_PutObject_PathStyle(t *testing.T) {
+	transport := &urlCaptureTransport{}
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithAccountId("123456").
+		WithEndpoint("user-cname.test.com").
+		WithUsePathStyle(true).
+		WithHttpClient(&http.Client{Transport: transport})
+
+	client := NewBucketSpaceClient(cfg)
+
+	_, err := client.PutObject(context.TODO(), &oss.PutObjectRequest{
+		Bucket: oss.Ptr("my-space"),
+		Key:    oss.Ptr("test.txt"),
+		Body:   strings.NewReader("hello"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "PUT", transport.RequestMethod)
+	assert.Equal(t, "https://user-cname.test.com/my-space-123456-cn-hangzhou-bs-apsr/test.txt", transport.RequestURL)
+}
+
 func TestMockAgenticBucketClient_RegionInURL(t *testing.T) {
 	client, transport := newMockAgenticBucketClient("cn-shanghai", "999888")
 

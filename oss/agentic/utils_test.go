@@ -85,6 +85,37 @@ func TestAgenticEndpointProvider(t *testing.T) {
 	assert.Equal(t, "https://my-sandbox-1234567890123456-cn-hangzhou-bs-apsr.oss-cn-hangzhou-internal.aliyuncs.com/test.txt", url2)
 }
 
+func TestAgenticEndpointProviderPathStyle(t *testing.T) {
+	endpoint, _ := url.Parse("https://oss-cn-hangzhou.aliyuncs.com")
+	p := &agenticProvider{
+		endpoint:  endpoint,
+		accountId: "1234567890123456",
+		region:    "cn-hangzhou",
+		suffix:    "ab-apsr",
+		urlStyle:  oss.UrlStylePath,
+	}
+
+	// With bucket (full name in path, endpoint host as-is)
+	input := &oss.OperationInput{
+		Bucket: oss.Ptr("my-agentic"),
+	}
+	got := p.BuildURL(input)
+	assert.Equal(t, "https://oss-cn-hangzhou.aliyuncs.com/my-agentic-1234567890123456-cn-hangzhou-ab-apsr/", got)
+
+	// With bucket and key
+	input = &oss.OperationInput{
+		Bucket: oss.Ptr("my-agentic"),
+		Key:    oss.Ptr("test.txt"),
+	}
+	got = p.BuildURL(input)
+	assert.Equal(t, "https://oss-cn-hangzhou.aliyuncs.com/my-agentic-1234567890123456-cn-hangzhou-ab-apsr/test.txt", got)
+
+	// Without bucket (endpoint host as-is)
+	input = &oss.OperationInput{}
+	got = p.BuildURL(input)
+	assert.Equal(t, "https://oss-cn-hangzhou.aliyuncs.com/", got)
+}
+
 func TestBucketSpaceHelper(t *testing.T) {
 	cfg := &oss.Config{}
 	cfg.WithAccountId("1234567890123456")

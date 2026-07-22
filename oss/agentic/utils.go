@@ -13,6 +13,7 @@ type agenticProvider struct {
 	accountId string
 	region    string
 	suffix    string // "ab-apsr" or "bs-apsr"
+	urlStyle  oss.UrlStyleType
 }
 
 func (p *agenticProvider) BuildBucketName(input *oss.OperationInput) (string, error) {
@@ -34,7 +35,16 @@ func (p *agenticProvider) BuildURL(input *oss.OperationInput) string {
 		host = p.endpoint.Host
 	} else {
 		fullName := fmt.Sprintf("%s-%s-%s-%s", *input.Bucket, p.accountId, p.region, p.suffix)
-		host = fmt.Sprintf("%s.%s", fullName, p.endpoint.Host)
+		switch p.urlStyle {
+		default: // UrlStyleVirtualHosted
+			host = fmt.Sprintf("%s.%s", fullName, p.endpoint.Host)
+		case oss.UrlStylePath:
+			host = p.endpoint.Host
+			paths = append(paths, fullName)
+			if input.Key == nil {
+				paths = append(paths, "")
+			}
+		}
 	}
 
 	if input.Key != nil {

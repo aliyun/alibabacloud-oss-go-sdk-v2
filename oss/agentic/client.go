@@ -33,6 +33,7 @@ func NewAgenticBucketClient(cfg *oss.Config, optFns ...func(*oss.Options)) *Agen
 			accountId: accountId,
 			region:    region,
 			suffix:    "ab-apsr",
+			urlStyle:  options.UrlStyle,
 		}
 		options.BucketNameResolver = p
 		options.EndpointProvider = p
@@ -68,6 +69,7 @@ func NewBucketSpaceClient(cfg *oss.Config, optFns ...func(*oss.Options)) *oss.Cl
 			accountId: accountId,
 			region:    region,
 			suffix:    "bs-apsr",
+			urlStyle:  options.UrlStyle,
 		}
 		options.BucketNameResolver = p
 		options.EndpointProvider = p
