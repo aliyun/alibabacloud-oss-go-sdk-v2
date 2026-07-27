@@ -64,7 +64,7 @@ func (p *ListAgenticBucketsPaginator) NextPage(ctx context.Context, optFns ...fu
 	}
 
 	p.firstPage = false
-	p.isTruncated = oss.ToString(result.NextContinuationToken) != ""
+	p.isTruncated = oss.ToBool(result.IsTruncated)
 	p.nextToken = result.NextContinuationToken
 
 	return result, nil
