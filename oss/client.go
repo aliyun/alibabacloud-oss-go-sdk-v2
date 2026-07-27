@@ -55,6 +55,8 @@ type Options struct {
 
 	EndpointProvider EndpointProvider
 
+	EndpointProviderE EndpointProviderE
+
 	BucketNameResolver BucketNameResolver
 
 	AccountId *string
@@ -392,7 +394,12 @@ func (c *Client) sendRequest(ctx context.Context, input *OperationInput, opts *O
 	}
 	// host & path
 	var strUrl string
-	if opts.EndpointProvider != nil {
+	if opts.EndpointProviderE != nil {
+		strUrl, err = opts.EndpointProviderE.BuildURL(input)
+		if err != nil {
+			return output, err
+		}
+	} else if opts.EndpointProvider != nil {
 		strUrl = opts.EndpointProvider.BuildURL(input)
 	} else {
 		host, path := buildURL(input, opts)

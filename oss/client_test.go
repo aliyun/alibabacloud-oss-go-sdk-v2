@@ -1398,6 +1398,12 @@ func (r *errorBucketNameResolver) BuildBucketName(input *OperationInput) (string
 	return "", fmt.Errorf("resolve bucket name fail")
 }
 
+type errorEndpointProviderE struct{}
+
+func (p *errorEndpointProviderE) BuildURL(input *OperationInput) (string, error) {
+	return "", fmt.Errorf("build url fail")
+}
+
 func TestInvokeOperationWithAccountId(t *testing.T) {
 	// invalid AccountId should cause invokeOperation to return InitError
 	cfg := NewConfig()
@@ -1467,4 +1473,21 @@ func TestInvokeOperationLogBucketNameResolverError(t *testing.T) {
 	assert.Contains(t, logOutput, "sendRequest Start")
 	assert.Contains(t, logOutput, "sendRequest End")
 	assert.Contains(t, logOutput, "resolve bucket name fail")
+}
+
+func TestInvokeOperationEndpointProviderEError(t *testing.T) {
+	cfg := NewConfig()
+	cfg.Region = Ptr("cn-hangzhou")
+	cfg.Endpoint = Ptr("oss-cn-hangzhou.aliyuncs.com")
+	cfg.CredentialsProvider = credentials.NewAnonymousCredentialsProvider()
+	// EndpointProviderE is wired at client construction, like the agentic client.
+	c := NewClient(cfg, func(o *Options) {
+		o.EndpointProviderE = &errorEndpointProviderE{}
+	})
+
+	_, err := c.PutBucket(context.TODO(), &PutBucketRequest{
+		Bucket: Ptr("my-bucket"),
+	})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "build url fail")
 }

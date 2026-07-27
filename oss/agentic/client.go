@@ -36,7 +36,7 @@ func NewAgenticBucketClient(cfg *oss.Config, optFns ...func(*oss.Options)) *Agen
 			urlStyle:  options.UrlStyle,
 		}
 		options.BucketNameResolver = p
-		options.EndpointProvider = p
+		options.EndpointProviderE = p
 	}
 
 	allOptFns := append(optFns, agenticOptFn)
@@ -72,7 +72,7 @@ func NewBucketSpaceClient(cfg *oss.Config, optFns ...func(*oss.Options)) *oss.Cl
 			urlStyle:  options.UrlStyle,
 		}
 		options.BucketNameResolver = p
-		options.EndpointProvider = p
+		options.EndpointProviderE = p
 	}
 
 	allOptFns := append(optFns, bsOptFn)

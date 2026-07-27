@@ -103,6 +103,22 @@ func TestMockAgenticBucketClient_GetAgenticBucket(t *testing.T) {
 	assert.Equal(t, "https://my-agentic-123456-cn-hangzhou-ab-apsr.oss-cn-hangzhou.aliyuncs.com/?agenticBucket", transport.RequestURL)
 }
 
+func TestMockAgenticBucketClient_HostLabelTooLong(t *testing.T) {
+	client, transport := newMockAgenticBucketClient("cn-hangzhou", "123456")
+
+	// fullName = "{bucket}-123456-cn-hangzhou-ab-apsr" -> len(bucket)+27; a 37-char bucket
+	// yields a 64-char label, exceeding the 63-character limit in virtual-hosted style.
+	longBucket := strings.Repeat("a", 37)
+	_, err := client.GetAgenticBucket(context.TODO(), &GetAgenticBucketRequest{
+		Bucket: oss.Ptr(longBucket),
+	})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "exceeds the maximum length of 63 characters")
+	// The request must not have been sent.
+	assert.Equal(t, "", transport.RequestMethod)
+	assert.Equal(t, "", transport.RequestURL)
+}
+
 func TestMockAgenticBucketClient_ListAgenticBuckets(t *testing.T) {
 	client, transport := newMockAgenticBucketClient("cn-hangzhou", "123456")
 
