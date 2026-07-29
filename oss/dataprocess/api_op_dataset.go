@@ -80,7 +80,16 @@ type InsightsConfig struct {
 
 type InsightsImage struct {
 	Caption *InsightsImageCaption `xml:"Caption,omitempty" json:"Caption,omitempty"`
+	Label   *InsightsImageLabel   `xml:"Label,omitempty" json:"Label,omitempty"`
 }
+
+type InsightsImageLabel struct {
+	System      *InsightsImageSystem      `xml:"System,omitempty" json:"System,omitempty"`
+	UserDefined *InsightsImageUserDefined `xml:"UserDefined,omitempty" json:"UserDefined,omitempty"`
+}
+
+type InsightsImageSystem = InsightsVideoSystem
+type InsightsImageUserDefined = InsightsVideoUserDefined
 
 type InsightsVideo struct {
 	Caption     *InsightsVideoCaption     `xml:"Caption,omitempty" json:"Caption,omitempty"`

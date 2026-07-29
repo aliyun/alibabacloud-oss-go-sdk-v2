@@ -123,6 +123,23 @@ func TestMarshalInput_CreateDataset(t *testing.T) {
 		DatasetConfig: oss.Ptr((&DatasetConfig{
 			Insights: &InsightsConfig{
 				Language: oss.Ptr("zh"),
+				Image: &InsightsImage{
+					Label: &InsightsImageLabel{
+						System: &InsightsImageSystem{
+							Enable: oss.Ptr(true),
+						},
+						UserDefined: &InsightsImageUserDefined{
+							Enable: oss.Ptr(true),
+							Mode:   oss.Ptr("Enhanced"),
+							Labels: []LabelItem{
+								{
+									Name:        oss.Ptr("未佩戴安全帽"),
+									Description: oss.Ptr("画面中存在人员，且人员头部未佩戴安全帽"),
+								},
+							},
+						},
+					},
+				},
 			},
 		}).ToParameterValue()),
 	}
@@ -143,7 +160,7 @@ func TestMarshalInput_CreateDataset(t *testing.T) {
 	assert.Equal(t, *input.Bucket, "bucket")
 	assert.Equal(t, input.Parameters["datasetName"], "your_dataset")
 	assert.Equal(t, input.Parameters["description"], "this is a demo")
-	assert.Equal(t, input.Parameters["datasetConfig"], "{\"Insights\":{\"Language\":\"zh\"}}")
+	assert.Equal(t, input.Parameters["datasetConfig"], "{\"Insights\":{\"Language\":\"zh\",\"Image\":{\"Label\":{\"System\":{\"Enable\":true},\"UserDefined\":{\"Enable\":true,\"Mode\":\"Enhanced\",\"Labels\":[{\"Name\":\"未佩戴安全帽\",\"Description\":\"画面中存在人员，且人员头部未佩戴安全帽\"}]}}}}}")
 	assert.Equal(t, input.Parameters["workflowParameters"], "[{\"Name\":\"VideoInsightEnable\",\"Value\":\"True\"},{\"Name\":\"ImageInsightEnable\",\"Value\":\"True\"}]")
 }
 
@@ -163,7 +180,27 @@ func TestUnmarshalOutput_CreateDataset(t *testing.T) {
 <DatasetMaxEntityCount>10000000000</DatasetMaxEntityCount>
 <DatasetMaxRelationCount>100000000000</DatasetMaxRelationCount>
 <DatasetMaxTotalFileSize>90000000000000000</DatasetMaxTotalFileSize>
-<DatasetConfig><Insights><Language>zh</Language></Insights></DatasetConfig>
+<DatasetConfig>
+<Insights>
+<Language>zh</Language>
+<Image>
+  <Label>
+    <System>
+      <Enable>true</Enable>
+    </System>
+    <UserDefined>
+      <Enable>true</Enable>
+      <Mode>Enhanced</Mode>
+      <Labels>
+        <Label>
+          <Name>未佩戴安全帽</Name>
+          <Description>画面中存在人员，且人员头部未佩戴安全帽</Description>
+        </Label>
+      </Labels>
+    </UserDefined>
+  </Label>
+</Image>
+</Insights></DatasetConfig>
 </Dataset>
 </CreateDatasetResponse>`
 	output = &oss.OperationOutput{
@@ -196,6 +233,11 @@ func TestUnmarshalOutput_CreateDataset(t *testing.T) {
 	assert.Equal(t, *result.Dataset.DatasetMaxRelationCount, int64(100000000000))
 	assert.Equal(t, *result.Dataset.DatasetMaxTotalFileSize, int64(90000000000000000))
 	assert.Equal(t, *result.Dataset.DatasetConfig.Insights.Language, "zh")
+	assert.Equal(t, *result.Dataset.DatasetConfig.Insights.Image.Label.System.Enable, true)
+	assert.Equal(t, *result.Dataset.DatasetConfig.Insights.Image.Label.UserDefined.Enable, true)
+	assert.Equal(t, *result.Dataset.DatasetConfig.Insights.Image.Label.UserDefined.Mode, "Enhanced")
+	assert.Equal(t, *result.Dataset.DatasetConfig.Insights.Image.Label.UserDefined.Labels[0].Name, "未佩戴安全帽")
+	assert.Equal(t, *result.Dataset.DatasetConfig.Insights.Image.Label.UserDefined.Labels[0].Description, "画面中存在人员，且人员头部未佩戴安全帽")
 
 	output = &oss.OperationOutput{
 		StatusCode: 400,
