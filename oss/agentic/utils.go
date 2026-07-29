@@ -16,13 +16,25 @@ type agenticProvider struct {
 	urlStyle  oss.UrlStyleType
 }
 
+// aliasToken is the literal segment that replaces "{accountId}-{region}" in the
+// short alias host label.
+const aliasToken = "alias"
+
 // buildFullName joins the parts of a full bucket name "{bucket}-{accountId}-{region}-{suffix}".
 func buildFullName(bucket, accountId, region, suffix string) string {
 	return fmt.Sprintf("%s-%s-%s-%s", bucket, accountId, region, suffix)
 }
 
+// buildAliasLabel joins the parts of a short host label "{bucket}-alias-{suffix}",
+// where the literal "alias" segment stands in for the accountId and region. It is
+// used only as the leftmost DNS label; the signing name stays the full name.
+func buildAliasLabel(bucket, suffix string) string {
+	return fmt.Sprintf("%s-%s-%s", bucket, aliasToken, suffix)
+}
+
 // resolveBucketName expands a short bucket name into its full name, validating
-// that the required accountId and region are present.
+// that the required accountId and region are present. This is the name used for
+// signing, regardless of the addressing style.
 func (p *agenticProvider) resolveBucketName(bucket string) (string, error) {
 	if p.accountId == "" {
 		return "", oss.NewErrParamRequired("AccountId")
@@ -63,6 +75,14 @@ func (p *agenticProvider) BuildURL(input *oss.OperationInput) (string, error) {
 				return "", fmt.Errorf("the host label %q exceeds the maximum length of 63 characters", fullName)
 			}
 			host = fmt.Sprintf("%s.%s", fullName, p.endpoint.Host)
+		case oss.UrlStyleVirtualHostedAlias:
+			// The short "{bucket}-alias-{suffix}" label routes the request on a
+			// wildcard domain; signing still uses the full name resolved above.
+			label := buildAliasLabel(*input.Bucket, p.suffix)
+			if len(label) > 63 {
+				return "", fmt.Errorf("the host label %q exceeds the maximum length of 63 characters", label)
+			}
+			host = fmt.Sprintf("%s.%s", label, p.endpoint.Host)
 		case oss.UrlStylePath:
 			host = p.endpoint.Host
 			paths = append(paths, fullName)

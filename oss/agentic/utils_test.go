@@ -195,6 +195,87 @@ func TestAgenticEndpointProviderHostLabelTooLong(t *testing.T) {
 	assert.Equal(t, "https://oss-cn-hangzhou.aliyuncs.com/"+longName+suffixPart+"/", got)
 }
 
+func TestUrlStyleVirtualHostedAliasString(t *testing.T) {
+	assert.Equal(t, "virtual-hosted-alias-style", oss.UrlStyleVirtualHostedAlias.String())
+}
+
+func TestAgenticAliasStyleSigningNameIsFull(t *testing.T) {
+	// In alias style the signing name (BuildBucketName) is still the full name,
+	// so accountId and region remain required.
+	p := &agenticProvider{
+		accountId: "1234567890123456",
+		region:    "cn-hangzhou",
+		suffix:    "ab-apsr",
+		urlStyle:  oss.UrlStyleVirtualHostedAlias,
+	}
+	name, err := p.BuildBucketName(&oss.OperationInput{Bucket: oss.Ptr("my-agentic")})
+	assert.Nil(t, err)
+	assert.Equal(t, "my-agentic-1234567890123456-cn-hangzhou-ab-apsr", name)
+
+	// Missing accountId still fails, even in alias style.
+	bad := &agenticProvider{region: "cn-hangzhou", suffix: "ab-apsr", urlStyle: oss.UrlStyleVirtualHostedAlias}
+	_, err = bad.BuildBucketName(&oss.OperationInput{Bucket: oss.Ptr("my-agentic")})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "AccountId")
+}
+
+func TestAgenticEndpointProviderAliasStyle(t *testing.T) {
+	endpoint, _ := url.Parse("https://abc.com")
+	p := &agenticProvider{
+		endpoint:  endpoint,
+		accountId: "1234567890123456",
+		region:    "cn-hangzhou",
+		suffix:    "bs-apsr",
+		urlStyle:  oss.UrlStyleVirtualHostedAlias,
+	}
+
+	// Host uses the short alias label; the full name (used for signing) is not on the host.
+	input := &oss.OperationInput{Bucket: oss.Ptr("my-sandbox"), Key: oss.Ptr("test.txt")}
+	got, err := p.BuildURL(input)
+	assert.Nil(t, err)
+	assert.Equal(t, "https://my-sandbox-alias-bs-apsr.abc.com/test.txt", got)
+
+	// Without bucket, endpoint host as-is.
+	got, err = p.BuildURL(&oss.OperationInput{})
+	assert.Nil(t, err)
+	assert.Equal(t, "https://abc.com/", got)
+
+	// Missing accountId fails: the signing name cannot be resolved.
+	bad := &agenticProvider{endpoint: endpoint, region: "cn-hangzhou", suffix: "bs-apsr", urlStyle: oss.UrlStyleVirtualHostedAlias}
+	_, err = bad.BuildURL(input)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "AccountId")
+}
+
+func TestAgenticEndpointProviderAliasHostLabelTooLong(t *testing.T) {
+	endpoint, _ := url.Parse("https://abc.com")
+	// alias label = "{bucket}-alias-ab-apsr" -> len(bucket) + 14
+	suffixPart := "-alias-ab-apsr"
+	assert.Equal(t, 14, len(suffixPart))
+	p := &agenticProvider{
+		endpoint:  endpoint,
+		accountId: "1234567890123456",
+		region:    "cn-hangzhou",
+		suffix:    "ab-apsr",
+		urlStyle:  oss.UrlStyleVirtualHostedAlias,
+	}
+
+	// Boundary: alias label == 63 (bucket 49) is allowed, even though the full
+	// signing name for the same bucket far exceeds 63.
+	okName := strings.Repeat("a", 49)
+	assert.Equal(t, 63, len(okName+suffixPart))
+	got, err := p.BuildURL(&oss.OperationInput{Bucket: oss.Ptr(okName)})
+	assert.Nil(t, err)
+	assert.Equal(t, "https://"+okName+suffixPart+".abc.com/", got)
+
+	// Over limit: alias label == 64 (bucket 50) is rejected.
+	longName := strings.Repeat("a", 50)
+	assert.Equal(t, 64, len(longName+suffixPart))
+	_, err = p.BuildURL(&oss.OperationInput{Bucket: oss.Ptr(longName)})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "exceeds the maximum length of 63 characters")
+}
+
 func TestBucketSpaceHelper(t *testing.T) {
 	cfg := &oss.Config{}
 	cfg.WithAccountId("1234567890123456")

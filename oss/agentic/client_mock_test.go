@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
@@ -484,4 +485,152 @@ func TestMockClientWithHelper_ListObjects(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "GET", transport.RequestMethod)
 	assertURL(t, transport.RequestURL, "https://my-space-123456-cn-hangzhou-bs-apsr.user-cname.test.com/", []string{"list-type", "encoding-type"})
+}
+
+// withAliasStyle enables the short-alias host form by setting the addressing
+// style before the agentic provider optFn reads it.
+func withAliasStyle(o *oss.Options) {
+	o.UrlStyle = oss.UrlStyleVirtualHostedAlias
+}
+
+func newMockAgenticBucketClientAliasStyle(region, accountId, endpoint string) (*AgenticBucketClient, *urlCaptureTransport) {
+	transport := &urlCaptureTransport{}
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion(region).
+		WithAccountId(accountId).
+		WithEndpoint(endpoint).
+		WithHttpClient(&http.Client{Transport: transport})
+
+	client := NewAgenticBucketClient(cfg, withAliasStyle)
+	return client, transport
+}
+
+func TestMockAgenticBucketClient_AliasStyle(t *testing.T) {
+	client, transport := newMockAgenticBucketClientAliasStyle("cn-hangzhou", "123456", "abc.com")
+
+	_, err := client.GetAgenticBucket(context.TODO(), &GetAgenticBucketRequest{
+		Bucket: oss.Ptr("my-agentic"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", transport.RequestMethod)
+	// Host uses the short literal "alias" label; accountId/region stay off the host.
+	assert.Equal(t, "https://my-agentic-alias-ab-apsr.abc.com/?agenticBucket", transport.RequestURL)
+}
+
+func TestMockAgenticBucketClient_AliasStyle_MissingAccountId(t *testing.T) {
+	// accountId empty: the signing name (full name) cannot be resolved, so the
+	// request fails even though the alias host label needs no accountId.
+	client, transport := newMockAgenticBucketClientAliasStyle("cn-hangzhou", "", "abc.com")
+
+	_, err := client.GetAgenticBucket(context.TODO(), &GetAgenticBucketRequest{
+		Bucket: oss.Ptr("my-agentic"),
+	})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "AccountId")
+	// The request must not have been sent.
+	assert.Equal(t, "", transport.RequestMethod)
+	assert.Equal(t, "", transport.RequestURL)
+}
+
+func TestMockAgenticBucketClient_AliasStyle_HostLabelWithinLongName(t *testing.T) {
+	// The full signing name far exceeds 63 chars, but the short alias label fits,
+	// which is exactly the reason the alias form exists.
+	client, transport := newMockAgenticBucketClientAliasStyle("cn-hangzhou", "123456", "abc.com")
+
+	// aliasLabel = "{bucket}-alias-ab-apsr" -> len(bucket)+14; a 49-char bucket
+	// yields a 63-char label (the boundary), while the full name would be far longer.
+	bucket := strings.Repeat("a", 49)
+	_, err := client.GetAgenticBucket(context.TODO(), &GetAgenticBucketRequest{
+		Bucket: oss.Ptr(bucket),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", transport.RequestMethod)
+	assert.Equal(t, "https://"+bucket+"-alias-ab-apsr.abc.com/?agenticBucket", transport.RequestURL)
+}
+
+func TestMockBucketSpaceClient_AliasStyle(t *testing.T) {
+	transport := &urlCaptureTransport{}
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithAccountId("123456").
+		WithEndpoint("abc.com").
+		WithHttpClient(&http.Client{Transport: transport})
+
+	client := NewBucketSpaceClient(cfg, withAliasStyle)
+
+	_, err := client.PutObject(context.TODO(), &oss.PutObjectRequest{
+		Bucket: oss.Ptr("my-space"),
+		Key:    oss.Ptr("test.txt"),
+		Body:   strings.NewReader("hello"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "PUT", transport.RequestMethod)
+	assert.Equal(t, "https://my-space-alias-bs-apsr.abc.com/test.txt", transport.RequestURL)
+}
+
+func TestMockBucketSpaceClient_Presign(t *testing.T) {
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider("ak", "sk")).
+		WithRegion("cn-hangzhou").
+		WithAccountId("123456").
+		WithEndpoint("user-cname.test.com").
+		WithSignatureVersion(oss.SignatureVersionV4)
+
+	client := NewBucketSpaceClient(cfg)
+
+	expiration := time.Now().Add(1 * time.Hour)
+	result, err := client.Presign(context.TODO(), &oss.GetObjectRequest{
+		Bucket: oss.Ptr("my-space"),
+		Key:    oss.Ptr("test.txt"),
+	}, oss.PresignExpiration(expiration))
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", result.Method)
+	u, perr := url.Parse(result.URL)
+	assert.Nil(t, perr)
+	assert.Equal(t, "https://my-space-123456-cn-hangzhou-bs-apsr.user-cname.test.com/test.txt", u.Scheme+"://"+u.Host+u.Path)
+	assert.Contains(t, result.URL, "x-oss-signature=")
+	assert.Contains(t, result.URL, "x-oss-credential=")
+}
+
+func TestMockBucketSpaceClient_Presign_AliasStyle(t *testing.T) {
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider("ak", "sk")).
+		WithRegion("cn-hangzhou").
+		WithAccountId("123456").
+		WithEndpoint("abc.com").
+		WithSignatureVersion(oss.SignatureVersionV4)
+
+	client := NewBucketSpaceClient(cfg, withAliasStyle)
+
+	expiration := time.Now().Add(1 * time.Hour)
+	result, err := client.Presign(context.TODO(), &oss.GetObjectRequest{
+		Bucket: oss.Ptr("my-space"),
+		Key:    oss.Ptr("test.txt"),
+	}, oss.PresignExpiration(expiration))
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", result.Method)
+	u, perr := url.Parse(result.URL)
+	assert.Nil(t, perr)
+	assert.Equal(t, "https://my-space-alias-bs-apsr.abc.com/test.txt", u.Scheme+"://"+u.Host+u.Path)
+	assert.Contains(t, result.URL, "x-oss-signature=")
+	assert.Contains(t, result.URL, "x-oss-credential=")
+}
+
+func TestMockBucketSpaceClient_Presign_MissingAccountId(t *testing.T) {
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewStaticCredentialsProvider("ak", "sk")).
+		WithRegion("cn-hangzhou").
+		WithEndpoint("abc.com").
+		WithSignatureVersion(oss.SignatureVersionV4)
+
+	client := NewBucketSpaceClient(cfg, withAliasStyle)
+
+	_, err := client.Presign(context.TODO(), &oss.GetObjectRequest{
+		Bucket: oss.Ptr("my-space"),
+		Key:    oss.Ptr("test.txt"),
+	}, oss.PresignExpiration(time.Now().Add(1*time.Hour)))
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "AccountId")
 }

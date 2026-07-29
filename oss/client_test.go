@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -1490,4 +1491,33 @@ func TestInvokeOperationEndpointProviderEError(t *testing.T) {
 	})
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "build url fail")
+}
+
+func TestBuildURL_UrlStyles(t *testing.T) {
+	endpoint, _ := url.Parse("https://oss-cn-hangzhou.aliyuncs.com")
+	input := &OperationInput{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("dir/key.txt"),
+	}
+
+	cases := []struct {
+		name     string
+		style    UrlStyleType
+		wantHost string
+		wantPath string
+	}{
+		{"virtual-hosted", UrlStyleVirtualHosted, "bucket.oss-cn-hangzhou.aliyuncs.com", "/dir/key.txt"},
+		{"path", UrlStylePath, "oss-cn-hangzhou.aliyuncs.com", "/bucket/dir/key.txt"},
+		{"cname", UrlStyleCName, "oss-cn-hangzhou.aliyuncs.com", "/dir/key.txt"},
+		{"virtual-hosted-alias", UrlStyleVirtualHostedAlias, "bucket.oss-cn-hangzhou.aliyuncs.com", "/dir/key.txt"},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			opts := &Options{Endpoint: endpoint, UrlStyle: c.style}
+			host, path := buildURL(input, opts)
+			assert.Equal(t, c.wantHost, host)
+			assert.Equal(t, c.wantPath, path)
+		})
+	}
 }

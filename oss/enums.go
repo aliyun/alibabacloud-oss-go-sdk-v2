@@ -323,6 +323,7 @@ const (
 	UrlStyleVirtualHosted UrlStyleType = iota
 	UrlStylePath
 	UrlStyleCName
+	UrlStyleVirtualHostedAlias
 )
 
 func (f UrlStyleType) String() string {
@@ -333,6 +334,8 @@ func (f UrlStyleType) String() string {
 		return "path-style"
 	case UrlStyleCName:
 		return "cname-style"
+	case UrlStyleVirtualHostedAlias:
+		return "virtual-hosted-alias-style"
 	}
 }
 
