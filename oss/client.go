@@ -250,6 +250,8 @@ func resolveUrlStyle(cfg *Config, o *Options) {
 		o.UrlStyle = UrlStyleCName
 	} else if cfg.UsePathStyle != nil && *cfg.UsePathStyle {
 		o.UrlStyle = UrlStylePath
+	} else if cfg.UseVirtualHostedAlias != nil && *cfg.UseVirtualHostedAlias {
+		o.UrlStyle = UrlStyleVirtualHostedAlias
 	} else {
 		o.UrlStyle = UrlStyleVirtualHosted
 	}
