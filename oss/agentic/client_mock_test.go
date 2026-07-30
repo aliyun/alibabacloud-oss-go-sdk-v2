@@ -516,6 +516,23 @@ func TestMockAgenticBucketClient_AliasStyle(t *testing.T) {
 	assert.Equal(t, "GET", transport.RequestMethod)
 	// Host uses the short literal "alias" label; accountId/region stay off the host.
 	assert.Equal(t, "https://my-agentic-alias-ab-apsr.abc.com/?agenticBucket", transport.RequestURL)
+
+	transport = &urlCaptureTransport{}
+	cfg := oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithAccountId("123456").
+		WithEndpoint("abc.com").
+		WithHttpClient(&http.Client{Transport: transport}).WithUseVirtualHostedAlias(true)
+
+	client = NewAgenticBucketClient(cfg)
+	_, err = client.GetAgenticBucket(context.TODO(), &GetAgenticBucketRequest{
+		Bucket: oss.Ptr("my-agentic"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", transport.RequestMethod)
+	// Host uses the short literal "alias" label; accountId/region stay off the host.
+	assert.Equal(t, "https://my-agentic-alias-ab-apsr.abc.com/?agenticBucket", transport.RequestURL)
 }
 
 func TestMockAgenticBucketClient_AliasStyle_MissingAccountId(t *testing.T) {
@@ -561,6 +578,24 @@ func TestMockBucketSpaceClient_AliasStyle(t *testing.T) {
 	client := NewBucketSpaceClient(cfg, withAliasStyle)
 
 	_, err := client.PutObject(context.TODO(), &oss.PutObjectRequest{
+		Bucket: oss.Ptr("my-space"),
+		Key:    oss.Ptr("test.txt"),
+		Body:   strings.NewReader("hello"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "PUT", transport.RequestMethod)
+	assert.Equal(t, "https://my-space-alias-bs-apsr.abc.com/test.txt", transport.RequestURL)
+
+	cfg = oss.LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithAccountId("123456").
+		WithEndpoint("abc.com").
+		WithHttpClient(&http.Client{Transport: transport}).WithUseVirtualHostedAlias(true)
+
+	client = NewBucketSpaceClient(cfg)
+
+	_, err = client.PutObject(context.TODO(), &oss.PutObjectRequest{
 		Bucket: oss.Ptr("my-space"),
 		Key:    oss.Ptr("test.txt"),
 		Body:   strings.NewReader("hello"),
