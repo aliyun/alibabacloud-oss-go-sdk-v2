@@ -93,30 +93,6 @@ func TestAgenticBucketAttribute(t *testing.T) {
 		assert.Equal(t, oss.VersionEnabled, getResult.VersioningConfiguration.Status)
 	})
 
-	t.Run("Policy", func(t *testing.T) {
-		policy := fmt.Sprintf(`{"Version":"1","Statement":[{"Effect":"Allow","Action":["oss:GetObject"],"Principal":["*"],"Resource":["acs:oss:*:%s:*"]}]}`, accountId_)
-
-		putResult, err := client.PutAgenticBucketPolicy(context.TODO(), &PutAgenticBucketPolicyRequest{
-			Bucket: oss.Ptr(bucket),
-			Body:   strings.NewReader(policy),
-		})
-		assert.Nil(t, err)
-		assert.Equal(t, 200, putResult.StatusCode)
-
-		getResult, err := client.GetAgenticBucketPolicy(context.TODO(), &GetAgenticBucketPolicyRequest{
-			Bucket: oss.Ptr(bucket),
-		})
-		assert.Nil(t, err)
-		assert.Equal(t, 200, getResult.StatusCode)
-		assert.Contains(t, getResult.Body, "oss:GetObject")
-
-		deleteResult, err := client.DeleteAgenticBucketPolicy(context.TODO(), &DeleteAgenticBucketPolicyRequest{
-			Bucket: oss.Ptr(bucket),
-		})
-		assert.Nil(t, err)
-		assert.True(t, deleteResult.StatusCode == 200 || deleteResult.StatusCode == 204)
-	})
-
 	t.Run("PublicAccessBlock", func(t *testing.T) {
 		putResult, err := client.PutAgenticBucketPublicAccessBlock(context.TODO(), &PutAgenticBucketPublicAccessBlockRequest{
 			Bucket: oss.Ptr(bucket),
@@ -135,6 +111,38 @@ func TestAgenticBucketAttribute(t *testing.T) {
 		assert.NotNil(t, getResult.PublicAccessBlockConfiguration)
 
 		deleteResult, err := client.DeleteAgenticBucketPublicAccessBlock(context.TODO(), &DeleteAgenticBucketPublicAccessBlockRequest{
+			Bucket: oss.Ptr(bucket),
+		})
+		assert.Nil(t, err)
+		assert.True(t, deleteResult.StatusCode == 200 || deleteResult.StatusCode == 204)
+	})
+
+	t.Run("Policy", func(t *testing.T) {
+		_, _ = client.PutAgenticBucketPublicAccessBlock(context.TODO(), &PutAgenticBucketPublicAccessBlockRequest{
+			Bucket: oss.Ptr(bucket),
+			PublicAccessBlockConfiguration: &PublicAccessBlockConfiguration{
+				BlockPublicAccess: oss.Ptr(false),
+			},
+		})
+
+		policy := fmt.Sprintf(`{"Version":"1","Statement":[{"Effect":"Allow","Action":["oss:GetObject"],"Principal":["*"],"Resource":["acs:oss:*:%s:*"]}]}`, accountId_)
+
+		putResult, err := client.PutAgenticBucketPolicy(context.TODO(), &PutAgenticBucketPolicyRequest{
+			Bucket: oss.Ptr(bucket),
+			Body:   strings.NewReader(policy),
+		})
+
+		assert.Nil(t, err)
+		assert.Equal(t, 200, putResult.StatusCode)
+
+		getResult, err := client.GetAgenticBucketPolicy(context.TODO(), &GetAgenticBucketPolicyRequest{
+			Bucket: oss.Ptr(bucket),
+		})
+		assert.Nil(t, err)
+		assert.Equal(t, 200, getResult.StatusCode)
+		assert.Contains(t, getResult.Body, "oss:GetObject")
+
+		deleteResult, err := client.DeleteAgenticBucketPolicy(context.TODO(), &DeleteAgenticBucketPolicyRequest{
 			Bucket: oss.Ptr(bucket),
 		})
 		assert.Nil(t, err)

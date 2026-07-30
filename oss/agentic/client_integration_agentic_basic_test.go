@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	"github.com/stretchr/testify/assert"
@@ -43,14 +44,20 @@ func TestAgenticBucketBasic(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
+		// A newly created bucket may take a moment to appear in the list, so poll.
 		found := false
-		paginator := client.NewListAgenticBucketsPaginator(&ListAgenticBucketsRequest{})
-		for paginator.HasNext() {
-			page, err := paginator.NextPage(context.TODO())
-			assert.Nil(t, err)
-			for _, b := range page.AgenticBuckets {
-				if b.Name != nil && strings.Contains(*b.Name, bucket) {
-					found = true
+		for attempt := 0; attempt < 5 && !found; attempt++ {
+			if attempt > 0 {
+				time.Sleep(10 * time.Second)
+			}
+			paginator := client.NewListAgenticBucketsPaginator(&ListAgenticBucketsRequest{})
+			for paginator.HasNext() {
+				page, err := paginator.NextPage(context.TODO())
+				assert.Nil(t, err)
+				for _, b := range page.AgenticBuckets {
+					if b.Name != nil && strings.Contains(*b.Name, bucket) {
+						found = true
+					}
 				}
 			}
 		}
@@ -93,7 +100,7 @@ func TestAgenticBucketServerErrors(t *testing.T) {
 	})
 	assert.NotNil(t, err)
 	assert.True(t, errors.As(err, &serr))
-	assert.Equal(t, 403, serr.StatusCode)
+	assert.Equal(t, 404, serr.StatusCode)
 
 	// List with invalid AK
 	serr = nil

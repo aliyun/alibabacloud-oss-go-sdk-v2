@@ -39,7 +39,8 @@ func TestAgenticBucketSpace(t *testing.T) {
 	t.Run("ObjectLifecycle", func(t *testing.T) {
 		// Create a bucket space using the short name.
 		putBucketResult, err := bsClient.PutBucket(context.TODO(), &oss.PutBucketRequest{
-			Bucket: oss.Ptr(bucket),
+			Bucket:        oss.Ptr(bucket),
+			AgenticBucket: oss.Ptr(buildFullName(bucket, accountId_, region_, "ab-apsr")),
 		})
 		dumpErrIfNotNil(err)
 		assert.Nil(t, err)
