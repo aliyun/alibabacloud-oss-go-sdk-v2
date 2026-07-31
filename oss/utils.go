@@ -195,6 +195,14 @@ func isContextError(ctx context.Context, perr *error) bool {
 	return false
 }
 
+func isEntityTooLargeError(err error) bool {
+	var serviceErr interface{ ErrorCode() string }
+	if errors.As(err, &serviceErr) {
+		return serviceErr.ErrorCode() == "EntityTooLarge"
+	}
+	return false
+}
+
 func copySeekableBody(dst io.Writer, src io.ReadSeeker) (int64, error) {
 	curPos, err := src.Seek(0, io.SeekCurrent)
 	if err != nil {

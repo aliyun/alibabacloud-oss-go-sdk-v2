@@ -325,13 +325,13 @@ func (d *copierDelegate) singleCopy() (*CopyResult, error) {
 }
 
 func (d *copierDelegate) shallowCopy() (*CopyResult, error) {
-	// use signle copy first, if meets timeout, use multiCopy
+	// use signle copy first, if meets timeout or EntityTooLarge, use multiCopy
 	ctx, cancel := context.WithTimeout(d.context, 30*time.Second)
 	defer cancel()
 	result, err := d.base.client.CopyObject(ctx, d.request, d.options.ClientOptions...)
 
 	if err != nil {
-		if isContextError(ctx, &err) {
+		if isContextError(ctx, &err) || isEntityTooLargeError(err) {
 			return d.multiCopy()
 		}
 		return nil, d.wrapErr("", err)
