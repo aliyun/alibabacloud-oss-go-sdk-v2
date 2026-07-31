@@ -1685,7 +1685,7 @@ var testMockGetVectorIndexSuccessCases = []struct {
          "nonFilterableMetadataKeys": ["foo", "bar"]
       },
       "status": "running",
-      "vectorBucketName": "bucket"
+	  "bucketArn": "acs:oss:::test-bucket"
    }
 }`),
 		func(t *testing.T, r *http.Request) {
@@ -1708,11 +1708,8 @@ var testMockGetVectorIndexSuccessCases = []struct {
 			assert.Equal(t, *o.Index.Dimension, 128)
 			assert.Equal(t, *o.Index.DistanceMetric, "cosine")
 			assert.Equal(t, *o.Index.IndexName, "exampleIndex")
-			//assert.Equal(t, len(o.Index.Metadata.NonFilterableMetadataKeys), 2)
-			//assert.Equal(t, o.Index.Metadata.NonFilterableMetadataKeys[0], "foo")
-			//assert.Equal(t, o.Index.Metadata.NonFilterableMetadataKeys[1], "bar")
 			assert.Equal(t, *o.Index.Status, "running")
-			assert.Equal(t, *o.Index.VectorBucketName, "bucket")
+			assert.Equal(t, *o.Index.BucketArn, "acs:oss:::test-bucket")
 		},
 	},
 }
@@ -1872,7 +1869,7 @@ var testMockListVectorIndexesSuccessCases = []struct {
         "nonFilterableMetadataKeys": ["foo", "bar"]
       },
       "status": "running",
-      "vectorBucketName": "bucket"
+      "bucketArn": "acs:oss:::test-bucket"
     },
     { 
       "createTime": "2025-08-20T10:49:17.289372919Z",
@@ -1884,7 +1881,7 @@ var testMockListVectorIndexesSuccessCases = []struct {
         "nonFilterableMetadataKeys": ["foo2", "bar2"]
       },
       "status": "deleting",
-      "vectorBucketName": "bucket"
+      "bucketArn": "acs:oss:::test-bucket"
     }
   ],
   "nextToken": "123"
@@ -1915,7 +1912,7 @@ var testMockListVectorIndexesSuccessCases = []struct {
 				}
 			}
 			assert.Equal(t, *o.Indexes[0].Status, "running")
-			assert.Equal(t, *o.Indexes[0].VectorBucketName, "bucket")
+			assert.Equal(t, *o.Indexes[0].BucketArn, "acs:oss:::test-bucket")
 
 			assert.Equal(t, *o.Indexes[1].CreateTime, time.Date(2025, time.August, 20, 10, 49, 17, 289372919, time.UTC))
 			assert.Equal(t, *o.Indexes[1].DataType, "string")
@@ -1929,8 +1926,8 @@ var testMockListVectorIndexesSuccessCases = []struct {
 					assert.Equal(t, keys[1].(string), "bar2")
 				}
 			}
-			assert.Equal(t, *o.Indexes[1].VectorBucketName, "bucket")
 			assert.Equal(t, *o.Indexes[1].Status, "deleting")
+			assert.Equal(t, *o.Indexes[1].BucketArn, "acs:oss:::test-bucket")
 		},
 	},
 }

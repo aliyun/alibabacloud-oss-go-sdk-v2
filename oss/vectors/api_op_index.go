@@ -74,14 +74,17 @@ type GetVectorIndexResult struct {
 }
 
 type VectorIndex struct {
-	CreateTime       *time.Time     `json:"createTime"`
-	DataType         *string        `json:"dataType"`
-	Dimension        *int           `json:"dimension"`
-	DistanceMetric   *string        `json:"distanceMetric"`
-	IndexName        *string        `json:"indexName"`
-	Metadata         map[string]any `json:"metadata"`
-	Status           *string        `json:"status"`
-	VectorBucketName *string        `json:"vectorBucketName"`
+	CreateTime     *time.Time     `json:"createTime"`
+	DataType       *string        `json:"dataType"`
+	Dimension      *int           `json:"dimension"`
+	DistanceMetric *string        `json:"distanceMetric"`
+	IndexName      *string        `json:"indexName"`
+	Metadata       map[string]any `json:"metadata"`
+	Status         *string        `json:"status"`
+	BucketArn      *string        `json:"bucketArn"`
+
+	// deprecated
+	VectorBucketName *string `json:"vectorBucketName"`
 }
 
 // GetVectorIndex Get a vector Index.

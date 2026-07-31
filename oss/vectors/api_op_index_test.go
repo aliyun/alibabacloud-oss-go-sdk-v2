@@ -327,7 +327,7 @@ func TestUnmarshalOutput_GetVectorIndex(t *testing.T) {
          "nonFilterableMetadataKeys": ["foo", "bar"]
       },
       "status": "running",
-      "vectorBucketName": "bucket"
+      "bucketArn": "acs:oss:::test-bucket"
    }
 }`
 	output = &oss.OperationOutput{
@@ -360,7 +360,7 @@ func TestUnmarshalOutput_GetVectorIndex(t *testing.T) {
 		}
 	}
 	assert.Equal(t, *result.Index.Status, "running")
-	assert.Equal(t, *result.Index.VectorBucketName, "bucket")
+	assert.Equal(t, *result.Index.BucketArn, "acs:oss:::test-bucket")
 
 	output = &oss.OperationOutput{
 		StatusCode: 404,
@@ -535,7 +535,7 @@ func TestUnmarshalOutput_ListVectorIndexes(t *testing.T) {
         "nonFilterableMetadataKeys": ["foo", "bar"]
       },
       "status": "running",
-      "vectorBucketName": "bucket"
+      "bucketArn": "acs:oss:::test-bucket"
     },
     { 
       "createTime": "2025-08-20T10:49:17.289372919Z",
@@ -547,7 +547,7 @@ func TestUnmarshalOutput_ListVectorIndexes(t *testing.T) {
         "nonFilterableMetadataKeys": ["foo2", "bar2"]
       },
       "status": "deleting",
-      "vectorBucketName": "bucket2"
+      "bucketArn": "acs:oss:::test-bucket"
     }
   ],
   "nextToken": "123"
@@ -582,7 +582,7 @@ func TestUnmarshalOutput_ListVectorIndexes(t *testing.T) {
 		}
 	}
 	assert.Equal(t, *result.Indexes[0].Status, "running")
-	assert.Equal(t, *result.Indexes[0].VectorBucketName, "bucket")
+	assert.Equal(t, *result.Indexes[0].BucketArn, "acs:oss:::test-bucket")
 
 	assert.Equal(t, *result.Indexes[1].CreateTime, time.Date(2025, time.August, 20, 10, 49, 17, 289372919, time.UTC))
 	assert.Equal(t, *result.Indexes[1].DataType, "string")
@@ -595,8 +595,8 @@ func TestUnmarshalOutput_ListVectorIndexes(t *testing.T) {
 			assert.Equal(t, keys[1].(string), "bar2")
 		}
 	}
-	assert.Equal(t, *result.Indexes[1].VectorBucketName, "bucket2")
 	assert.Equal(t, *result.Indexes[1].Status, "deleting")
+	assert.Equal(t, *result.Indexes[1].BucketArn, "acs:oss:::test-bucket")
 
 	assert.Equal(t, *result.NextToken, "123")
 
