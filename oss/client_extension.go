@@ -35,6 +35,19 @@ func (c *Client) AppendFile(ctx context.Context, bucket string, key string, optF
 	return NewAppendFile(ctx, c, bucket, key, optFns...)
 }
 
+// NewWriteOnlyFile creates a sequential, buffered, background-concurrent write
+// handle producing a Normal object. No network call is made until the first
+// full part is flushed.
+func (c *Client) NewWriteOnlyFile(ctx context.Context, bucket string, key string, optFns ...func(*WriteOnlyOptions)) (*WriteOnlyFile, error) {
+	return NewWriteOnlyFile(ctx, c, bucket, key, optFns...)
+}
+
+// OpenWriteOnlyFile resumes a WriteOnlyFile from a checkpoint snapshot
+// (obtained from a prior StatCheckpoint call).
+func (c *Client) OpenWriteOnlyFile(ctx context.Context, bucket string, key string, checkpoint WriteCheckpoint, optFns ...func(*WriteOnlyOptions)) (*WriteOnlyFile, error) {
+	return OpenWriteOnlyFile(ctx, c, bucket, key, checkpoint, optFns...)
+}
+
 type IsObjectExistOptions struct {
 	VersionId    *string
 	RequestPayer *string
