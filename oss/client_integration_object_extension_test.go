@@ -1476,3 +1476,235 @@ func TestCopierWithNoCheckCrossBucketFlags(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "Normal", ToString(headResult1.ObjectType))
 }
+
+func TestIntegrationWriteOnlyFileMultiPart(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	objectName := objectNamePrefix + randLowStr(6)
+
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), &PutBucketRequest{Bucket: Ptr(bucketName)})
+	assert.Nil(t, err)
+
+	partSize := int64(200 * 1024)
+	length := int(partSize)*3 + 12345 // 3 full parts + a short last part
+	data := []byte(randStr(length))
+	wantCRC := NewCRC64(0)
+	wantCRC.Write(data)
+
+	f, err := client.NewWriteOnlyFile(context.TODO(), bucketName, objectName, func(o *WriteOnlyOptions) {
+		o.PartSize = partSize
+		o.ParallelNum = 3
+		// Acl has no Initiate equivalent and is applied at Complete; Metadata
+		// flows through Initiate. Verify both survive the multipart path.
+		// (public ACLs are blocked by the test account's Block Public Access.)
+		o.CreateParameter = &PutObjectRequest{
+			Acl:      ObjectACLPrivate,
+			Metadata: map[string]string{"author": "test"},
+		}
+	})
+	assert.Nil(t, err)
+
+	// write in 64KB chunks to exercise buffering across Write calls
+	for off := 0; off < length; off += 64 * 1024 {
+		end := off + 64*1024
+		if end > length {
+			end = length
+		}
+		_, err = f.Write(data[off:end])
+		assert.Nil(t, err)
+	}
+	assert.Nil(t, f.Close())
+
+	// download and verify content + CRC
+	gr, err := client.GetObject(context.TODO(), &GetObjectRequest{Bucket: Ptr(bucketName), Key: Ptr(objectName)})
+	assert.Nil(t, err)
+	got, err := io.ReadAll(gr.Body)
+	gr.Body.Close()
+	assert.Nil(t, err)
+	assert.Equal(t, length, len(got))
+	gotCRC := NewCRC64(0)
+	gotCRC.Write(got)
+	assert.Equal(t, wantCRC.Sum64(), gotCRC.Sum64())
+	assert.Equal(t, "test", gr.Metadata["author"])
+
+	// Acl applied at Complete
+	aclResult, err := client.GetObjectAcl(context.TODO(), &GetObjectAclRequest{Bucket: Ptr(bucketName), Key: Ptr(objectName)})
+	assert.Nil(t, err)
+	assert.Equal(t, string(ObjectACLPrivate), ToString(aclResult.ACL))
+}
+
+func TestIntegrationWriteOnlyFileResume(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	objectName := objectNamePrefix + randLowStr(6)
+
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), &PutBucketRequest{Bucket: Ptr(bucketName)})
+	assert.Nil(t, err)
+
+	partSize := int64(200 * 1024)
+	length := int(partSize) * 4
+	data := []byte(randStr(length))
+	wantCRC := NewCRC64(0)
+	wantCRC.Write(data)
+
+	// session 1: write 2 full parts, then "crash" (no Close)
+	f1, err := client.NewWriteOnlyFile(context.TODO(), bucketName, objectName, func(o *WriteOnlyOptions) {
+		o.PartSize = partSize
+		o.ParallelNum = 1 // serial so committedOffset advances deterministically
+	})
+	assert.Nil(t, err)
+	_, err = f1.Write(data[:partSize*2])
+	assert.Nil(t, err)
+	// ensure the two parts are durably uploaded before snapshotting
+	assert.Nil(t, f1.Flush())
+	cp := f1.StatCheckpoint()
+	assert.Equal(t, int64(partSize*2), cp.Offset)
+	assert.NotEqual(t, "", cp.UploadId)
+
+	// session 2: resume from checkpoint, replay from offset, finish
+	f2, err := client.OpenWriteOnlyFile(context.TODO(), bucketName, objectName, cp)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(partSize*2), f2.StatCheckpoint().Offset)
+	_, err = f2.Write(data[cp.Offset:])
+	assert.Nil(t, err)
+	assert.Nil(t, f2.Close())
+
+	gr, err := client.GetObject(context.TODO(), &GetObjectRequest{Bucket: Ptr(bucketName), Key: Ptr(objectName)})
+	assert.Nil(t, err)
+	got, err := io.ReadAll(gr.Body)
+	gr.Body.Close()
+	assert.Nil(t, err)
+	assert.Equal(t, length, len(got))
+	gotCRC := NewCRC64(0)
+	gotCRC.Write(got)
+	assert.Equal(t, wantCRC.Sum64(), gotCRC.Sum64())
+}
+
+func TestIntegrationWriteOnlyFileResumeNoSuchUpload(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	objectName := objectNamePrefix + randLowStr(6)
+
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), &PutBucketRequest{Bucket: Ptr(bucketName)})
+	assert.Nil(t, err)
+
+	// non-existent uploadId -> resume is refused with ErrCheckpointInvalid
+	cp := WriteCheckpoint{UploadId: "non-existent-upload-id", Offset: 400 * 1024, PartSize: 200 * 1024}
+	f, err := client.OpenWriteOnlyFile(context.TODO(), bucketName, objectName, cp)
+	assert.Nil(t, f)
+	assert.ErrorIs(t, err, ErrCheckpointInvalid)
+
+	// recommended recovery: discard the stale checkpoint and start fresh
+	f, err = client.NewWriteOnlyFile(context.TODO(), bucketName, objectName)
+	assert.Nil(t, err)
+	_, err = f.Write([]byte("recovered"))
+	assert.Nil(t, err)
+	assert.Nil(t, f.Close())
+
+	res, err := client.GetObject(context.TODO(), &GetObjectRequest{Bucket: Ptr(bucketName), Key: Ptr(objectName)})
+	assert.Nil(t, err)
+	got2, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	assert.Equal(t, []byte("recovered"), got2)
+}
+
+func TestIntegrationWriteOnlyFileResumeInvalidCheckpoint(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	objectName := objectNamePrefix + randLowStr(6)
+
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), &PutBucketRequest{Bucket: Ptr(bucketName)})
+	assert.Nil(t, err)
+
+	partSize := int64(200 * 1024)
+	data := []byte(randStr(int(partSize) * 2))
+
+	// establish a real upload with two durable parts, snapshot a valid checkpoint
+	f1, err := client.NewWriteOnlyFile(context.TODO(), bucketName, objectName, func(o *WriteOnlyOptions) {
+		o.PartSize = partSize
+		o.ParallelNum = 1
+	})
+	assert.Nil(t, err)
+	_, err = f1.Write(data)
+	assert.Nil(t, err)
+	assert.Nil(t, f1.Flush())
+	cp := f1.StatCheckpoint()
+	assert.Equal(t, int64(partSize*2), cp.Offset)
+	assert.NotEqual(t, "", cp.UploadId)
+
+	// invalid input: Offset disagrees with server truth -> refused
+	badOffset := cp
+	badOffset.Offset = partSize // server actually holds two parts (partSize*2)
+	f, err := client.OpenWriteOnlyFile(context.TODO(), bucketName, objectName, badOffset)
+	assert.Nil(t, f)
+	assert.ErrorIs(t, err, ErrCheckpointInvalid)
+
+	// invalid input: resume token present but PartSize missing -> refused
+	badPartSize := WriteCheckpoint{UploadId: cp.UploadId, Offset: cp.Offset, PartSize: 0}
+	f, err = client.OpenWriteOnlyFile(context.TODO(), bucketName, objectName, badPartSize)
+	assert.Nil(t, f)
+	assert.ErrorIs(t, err, ErrCheckpointInvalid)
+
+	// the untampered checkpoint still resumes cleanly, proving only the bad ones were rejected
+	f2, err := client.OpenWriteOnlyFile(context.TODO(), bucketName, objectName, cp)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(partSize*2), f2.StatCheckpoint().Offset)
+	assert.Nil(t, f2.AbortClose()) // discard the multipart upload
+}
+
+func TestIntegrationWriteOnlyFileInvalidCredentials(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	objectName := objectNamePrefix + randLowStr(6)
+
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), &PutBucketRequest{Bucket: Ptr(bucketName)})
+	assert.Nil(t, err)
+
+	noPermClient := getClientWithCredentialsProvider(region_, endpoint_,
+		credentials.NewStaticCredentialsProvider("ak", "sk"))
+	assert.NotNil(t, noPermClient)
+
+	var serr *ServiceError
+
+	// multipart path: sealing a full part triggers InitiateMultipartUpload, whose
+	// auth failure surfaces directly from Write.
+	fm, err := noPermClient.NewWriteOnlyFile(context.TODO(), bucketName, objectName, func(o *WriteOnlyOptions) {
+		o.PartSize = 8
+		o.ParallelNum = 2
+	})
+	assert.Nil(t, err)
+	_, err = fm.Write([]byte("AAAAAAAABBBB")) // seals part 1 -> Initiate -> auth failure
+	assert.NotNil(t, err)
+	assert.True(t, errors.As(err, &serr))
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+	assert.Nil(t, fm.AbortClose()) // never initiated: no upload to abort
+
+	// small-object path: no full part sealed, so Close falls back to PutObject,
+	// which fails auth.
+	serr = nil
+	fs, err := noPermClient.NewWriteOnlyFile(context.TODO(), bucketName, objectName, func(o *WriteOnlyOptions) {
+		o.PartSize = 1024 * 1024
+	})
+	assert.Nil(t, err)
+	_, err = fs.Write([]byte("small"))
+	assert.Nil(t, err)
+	err = fs.Close()
+	assert.NotNil(t, err)
+	assert.True(t, errors.As(err, &serr))
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
+}
