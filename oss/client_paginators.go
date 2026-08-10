@@ -405,3 +405,60 @@ func (p *ListMultipartUploadsPaginator) NextPage(ctx context.Context, optFns ...
 	p.uploadIdMarker = result.NextUploadIdMarker
 	return result, nil
 }
+
+// ListJobsPaginator is a paginator for ListJobs
+type ListJobsPaginator struct {
+	options           PaginatorOptions
+	client            *Client
+	request           *ListJobsRequest
+	continuationToken *string
+	firstPage         bool
+	isTruncated       bool
+}
+
+func (c *Client) NewListJobsPaginator(request *ListJobsRequest, optFns ...func(*PaginatorOptions)) *ListJobsPaginator {
+	if request == nil {
+		request = &ListJobsRequest{}
+	}
+	options := PaginatorOptions{}
+	options.Limit = request.MaxKeys
+	for _, fn := range optFns {
+		fn(&options)
+	}
+	return &ListJobsPaginator{
+		options:           options,
+		client:            c,
+		request:           request,
+		continuationToken: request.ContinuationToken,
+		firstPage:         true,
+		isTruncated:       false,
+	}
+}
+
+// HasNext Returns true if there’s a next page.
+func (p *ListJobsPaginator) HasNext() bool {
+	return p.firstPage || p.isTruncated
+}
+
+// NextPage retrieves the next ListMultipartUploads page.
+func (p *ListJobsPaginator) NextPage(ctx context.Context, optFns ...func(*Options)) (*ListJobsResult, error) {
+	if !p.HasNext() {
+		return nil, fmt.Errorf("no more pages available")
+	}
+	request := *p.request
+	request.ContinuationToken = p.continuationToken
+	var limit int32
+	if p.options.Limit > 0 {
+		limit = p.options.Limit
+	}
+	request.MaxKeys = limit
+	result, err := p.client.ListJobs(ctx, &request, optFns...)
+	if err != nil {
+		return nil, err
+	}
+
+	p.firstPage = false
+	p.isTruncated = ToString(result.NextToken) != ""
+	p.continuationToken = result.NextToken
+	return result, nil
+}
