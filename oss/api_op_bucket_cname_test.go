@@ -121,6 +121,7 @@ func TestMarshalInput_PutCname(t *testing.T) {
 				CertificateConfiguration: &CertificateConfiguration{
 					DeleteCertificate: Ptr(true),
 				},
+				IsWildCard: Ptr(true),
 			},
 		},
 	}
@@ -140,7 +141,7 @@ func TestMarshalInput_PutCname(t *testing.T) {
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	body, _ = io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><CertificateConfiguration><DeleteCertificate>true</DeleteCertificate></CertificateConfiguration></Cname></BucketCnameConfiguration>")
+	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><CertificateConfiguration><DeleteCertificate>true</DeleteCertificate></CertificateConfiguration><IsWildCard>true</IsWildCard></Cname></BucketCnameConfiguration>")
 }
 
 func TestUnmarshalOutput_PutCname(t *testing.T) {
@@ -270,6 +271,7 @@ func TestMarshalInput_CreateCnameToken(t *testing.T) {
 			},
 		},
 	}
+	request.AddParameter("wildcard", "true")
 	input = &OperationInput{
 		OpName: "PutCname",
 		Method: "POST",
@@ -285,6 +287,7 @@ func TestMarshalInput_CreateCnameToken(t *testing.T) {
 	input.OpMetadata.Set(signer.SubResource, []string{"comp", "cname"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["wildcard"], "true")
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
 }
@@ -415,8 +418,9 @@ func TestMarshalInput_GetCnameToken(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing required field, Cname.")
 
 	request = &GetCnameTokenRequest{
-		Bucket: Ptr("oss-demo"),
-		Cname:  Ptr("example.com"),
+		Bucket:   Ptr("oss-demo"),
+		Cname:    Ptr("example.com"),
+		Wildcard: Ptr(false),
 	}
 	input = &OperationInput{
 		OpName: "GetCnameToken",
@@ -430,7 +434,7 @@ func TestMarshalInput_GetCnameToken(t *testing.T) {
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
 	assert.Equal(t, input.Parameters["cname"], "example.com")
-
+	assert.Equal(t, input.Parameters["wildcard"], "false")
 }
 
 func TestUnmarshalOutput_GetCnameToken(t *testing.T) {
@@ -598,6 +602,12 @@ func TestUnmarshalOutput_ListCname(t *testing.T) {
     <LastModified>2021-09-15T02:50:34.000Z</LastModified>
     <Status>Enabled</Status>
   </Cname>
+  <Cname>
+	<Domain>example.net</Domain>
+	<LastModified>2021-09-15T02:50:34.000Z</LastModified>
+	<Status>Enabled</Status>
+	<IsWildCard>true</IsWildCard>
+  </Cname>
 </ListCnameResult>`
 	output = &OperationOutput{
 		StatusCode: 200,
@@ -617,7 +627,7 @@ func TestUnmarshalOutput_ListCname(t *testing.T) {
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/xml")
 	assert.Equal(t, *result.Bucket, "bucket")
 	assert.Equal(t, *result.Owner, "owner")
-	assert.Equal(t, len(result.Cnames), 3)
+	assert.Equal(t, len(result.Cnames), 4)
 	assert.Equal(t, *result.Cnames[0].Domain, "example.com")
 	assert.Equal(t, *result.Cnames[0].LastModified, "2021-09-15T02:35:07.000Z")
 	assert.Equal(t, *result.Cnames[0].Status, "Enabled")
@@ -634,6 +644,10 @@ func TestUnmarshalOutput_ListCname(t *testing.T) {
 	assert.Equal(t, *result.Cnames[2].Domain, "example.edu")
 	assert.Equal(t, *result.Cnames[2].LastModified, "2021-09-15T02:50:34.000Z")
 	assert.Equal(t, *result.Cnames[2].Status, "Enabled")
+	assert.Equal(t, *result.Cnames[3].IsWildCard, true)
+	assert.Equal(t, *result.Cnames[3].Domain, "example.net")
+	assert.Equal(t, *result.Cnames[3].LastModified, "2021-09-15T02:50:34.000Z")
+	assert.Equal(t, *result.Cnames[3].Status, "Enabled")
 	output = &OperationOutput{
 		StatusCode: 404,
 		Status:     "NoSuchCname",
@@ -744,6 +758,7 @@ func TestMarshalInput_DeleteCname(t *testing.T) {
 			},
 		},
 	}
+	request.AddParameter("wildcard", "true")
 	input = &OperationInput{
 		OpName: "DeleteCname",
 		Method: "POST",
@@ -759,6 +774,7 @@ func TestMarshalInput_DeleteCname(t *testing.T) {
 	input.OpMetadata.Set(signer.SubResource, []string{"cname", "comp"})
 	err = c.marshalInput(request, input, updateContentMd5)
 	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["wildcard"], "true")
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
 }
