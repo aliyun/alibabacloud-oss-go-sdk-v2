@@ -1,4 +1,4 @@
-//go:build integrationignore
+//go:build integration
 
 package agentic
 

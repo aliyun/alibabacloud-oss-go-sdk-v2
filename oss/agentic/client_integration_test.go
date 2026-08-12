@@ -1,4 +1,4 @@
-//go:build integrationignore
+//go:build integration
 
 package agentic
 
@@ -33,11 +33,14 @@ var (
 )
 
 // getBucketNamePrefix returns the test bucket prefix; the "ab" marker is what the reaper filters on.
+// Prefix plus the random part must stay within 23 characters: the resolved name
+// {bucket}-{accountId}-{region}-ab-apsr becomes a DNS host label capped at 63, and the account id
+// (16) plus the longest region (14) plus the separators and the tail take the other 40.
 func getBucketNamePrefix() string {
 	if val := os.Getenv("OSS_TEST_BUCKET_PREFIX"); val != "" {
-		return val + "go-ab-"
+		return val + "go-ab"
 	}
-	return "sdk-oss-test-go-ab-"
+	return "sdk-oss-test-go-ab"
 }
 
 func getTestConfig() *oss.Config {
@@ -79,7 +82,7 @@ func randStr(n int) string {
 }
 
 func genBucketName() string {
-	return bucketNamePrefix + randStr(6)
+	return bucketNamePrefix + randStr(5)
 }
 
 // disableAndReap is the shared scenario teardown: disable this run's bucket, then
