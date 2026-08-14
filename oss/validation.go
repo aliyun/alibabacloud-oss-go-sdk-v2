@@ -18,6 +18,15 @@ func isValidRegion(region string) bool {
 	return region != ""
 }
 
+func isValidAccountId(accountId string) bool {
+	for _, v := range accountId {
+		if v < '0' || v > '9' {
+			return false
+		}
+	}
+	return accountId != ""
+}
+
 func isValidEndpoint(endpoint *url.URL) bool {
 	return (endpoint != nil)
 }
@@ -100,6 +109,10 @@ func IsValidMethod(method string) bool {
 	return isValidMethod(method)
 }
 
+func IsValidAccountId(accountId string) bool {
+	return isValidAccountId(accountId)
+}
+
 func AssertValidateArnBucket(bucket string) error {
 	parsedArn, err := arn.ParseArn(bucket)
 	if err != nil {
@@ -109,6 +122,10 @@ func AssertValidateArnBucket(bucket string) error {
 	// must have account id
 	if parsedArn.AccountId() == nil || *parsedArn.AccountId() == "" {
 		return errors.New("OperationInput.bucket does not contain account id")
+	}
+
+	if !isValidAccountId(*parsedArn.AccountId()) {
+		return fmt.Errorf("OperationInput.bucket contains invalid account id: %s", *parsedArn.AccountId())
 	}
 
 	// must have bucket resource

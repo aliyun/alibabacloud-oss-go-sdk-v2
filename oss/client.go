@@ -54,6 +54,12 @@ type Options struct {
 	AdditionalHeaders []string
 
 	EndpointProvider EndpointProvider
+
+	EndpointProviderE EndpointProviderE
+
+	BucketNameResolver BucketNameResolver
+
+	AccountId *string
 }
 
 func (c Options) Copy() Options {
@@ -80,6 +86,8 @@ type innerOptions struct {
 
 	// UserAgent
 	UserAgent string
+
+	InitError error
 }
 
 type Client struct {
@@ -110,6 +118,7 @@ func NewClient(cfg *Config, optFns ...func(*Options)) *Client {
 	resolveUrlStyle(cfg, &options)
 	resolveFeatureFlags(cfg, &options)
 	resolveCloudBox(cfg, &options)
+	resolveAccountId(cfg, &options, &inner)
 
 	for _, fn := range optFns {
 		fn(&options)
@@ -241,6 +250,8 @@ func resolveUrlStyle(cfg *Config, o *Options) {
 		o.UrlStyle = UrlStyleCName
 	} else if cfg.UsePathStyle != nil && *cfg.UsePathStyle {
 		o.UrlStyle = UrlStylePath
+	} else if cfg.UseVirtualHostedAlias != nil && *cfg.UseVirtualHostedAlias {
+		o.UrlStyle = UrlStyleVirtualHostedAlias
 	} else {
 		o.UrlStyle = UrlStyleVirtualHosted
 	}
@@ -296,6 +307,22 @@ func resolveCloudBox(cfg *Config, o *Options) {
 	o.Product = CloudBoxProduct
 }
 
+func resolveAccountId(cfg *Config, o *Options, inner *innerOptions) {
+	if cfg.AccountId == nil {
+		return
+	}
+
+	o.AccountId = cfg.AccountId
+
+	accountId := ToString(cfg.AccountId)
+	if accountId == "" {
+		return
+	}
+	if !isValidAccountId(accountId) {
+		inner.InitError = fmt.Errorf("invalid account id: %s, must be pure digits", accountId)
+	}
+}
+
 func buildUserAgent(cfg *Config) string {
 	if cfg.UserAgent == nil {
 		return defaultUserAgent
@@ -314,6 +341,11 @@ func (c *Client) invokeOperation(ctx context.Context, input *OperationInput, opt
 				input, input.OpName,
 				c.dumpOperationOutput(output), err)
 		}()
+	}
+
+	if c.inner.InitError != nil {
+		err = c.inner.InitError
+		return
 	}
 
 	options := c.options.Copy()
@@ -364,7 +396,12 @@ func (c *Client) sendRequest(ctx context.Context, input *OperationInput, opts *O
 	}
 	// host & path
 	var strUrl string
-	if opts.EndpointProvider != nil {
+	if opts.EndpointProviderE != nil {
+		strUrl, err = opts.EndpointProviderE.BuildURL(input)
+		if err != nil {
+			return output, err
+		}
+	} else if opts.EndpointProvider != nil {
 		strUrl = opts.EndpointProvider.BuildURL(input)
 	} else {
 		host, path := buildURL(input, opts)
@@ -418,12 +455,22 @@ func (c *Client) sendRequest(ctx context.Context, input *OperationInput, opts *O
 	request.Body = TeeReadNopCloser(body, writers...)
 
 	//signing context
+	signingBucket := input.Bucket
+	if opts.BucketNameResolver != nil && input.Bucket != nil {
+		var resolved string
+		resolved, err = opts.BucketNameResolver.BuildBucketName(input)
+		if err != nil {
+			return
+		}
+		signingBucket = &resolved
+	}
+
 	subResource, _ := input.OpMetadata.Get(signer.SubResource).([]string)
 	clockOffset := c.inner.ClockOffset
 	signingCtx := &signer.SigningContext{
 		Product:           Ptr(opts.Product),
 		Region:            Ptr(opts.Region),
-		Bucket:            input.Bucket,
+		Bucket:            signingBucket,
 		Key:               input.Key,
 		Request:           request,
 		SubResource:       subResource,
@@ -747,6 +794,10 @@ func applyOperationOpt(c *Options, op *Options) {
 
 	if op.AuthMethod != nil {
 		c.AuthMethod = op.AuthMethod
+	}
+
+	if op.BucketNameResolver != nil {
+		c.BucketNameResolver = op.BucketNameResolver
 	}
 
 	//response handler

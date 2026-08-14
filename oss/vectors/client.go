@@ -455,7 +455,6 @@ func unmarshalBodyLikeXmlJson(result any, output *oss.OperationOutput) error {
 			case "body":
 				idx = k
 				filedName = tokens[1]
-				break
 			}
 		}
 	}

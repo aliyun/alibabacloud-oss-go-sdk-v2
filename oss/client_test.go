@@ -2,12 +2,16 @@ package oss
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/retry"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/transport"
@@ -1337,4 +1341,183 @@ func TestCloudBoxId(t *testing.T) {
 	assert.Equal(t, "test-region", c.options.Region)
 	assert.NotNil(t, c.options.Endpoint)
 	assert.Equal(t, "cb-123.oss-cloudbox.aliyuncs.com", c.options.Endpoint.Host)
+}
+
+func TestResolveAccountId(t *testing.T) {
+	// nil AccountId
+	cfg := NewConfig()
+	opt := &Options{}
+	inner := &innerOptions{}
+	resolveAccountId(cfg, opt, inner)
+	assert.Nil(t, opt.AccountId)
+	assert.Nil(t, inner.InitError)
+
+	// empty AccountId
+	cfg = NewConfig()
+	opt = &Options{}
+	inner = &innerOptions{}
+	cfg.AccountId = Ptr("")
+	resolveAccountId(cfg, opt, inner)
+	assert.NotNil(t, opt.AccountId)
+	assert.Equal(t, "", *opt.AccountId)
+	assert.Nil(t, inner.InitError)
+
+	// valid numeric AccountId
+	cfg = NewConfig()
+	opt = &Options{}
+	inner = &innerOptions{}
+	cfg.AccountId = Ptr("1234567890")
+	resolveAccountId(cfg, opt, inner)
+	assert.NotNil(t, opt.AccountId)
+	assert.Equal(t, "1234567890", *opt.AccountId)
+	assert.Nil(t, inner.InitError)
+
+	// invalid AccountId with letters
+	cfg = NewConfig()
+	opt = &Options{}
+	inner = &innerOptions{}
+	cfg.AccountId = Ptr("abc123")
+	resolveAccountId(cfg, opt, inner)
+	assert.NotNil(t, opt.AccountId)
+	assert.NotNil(t, inner.InitError)
+	assert.Contains(t, inner.InitError.Error(), "invalid account id")
+
+	// invalid AccountId with special characters
+	cfg = NewConfig()
+	opt = &Options{}
+	inner = &innerOptions{}
+	cfg.AccountId = Ptr("123-456")
+	resolveAccountId(cfg, opt, inner)
+	assert.NotNil(t, opt.AccountId)
+	assert.NotNil(t, inner.InitError)
+	assert.Contains(t, inner.InitError.Error(), "invalid account id")
+}
+
+type errorBucketNameResolver struct{}
+
+func (r *errorBucketNameResolver) BuildBucketName(input *OperationInput) (string, error) {
+	return "", fmt.Errorf("resolve bucket name fail")
+}
+
+type errorEndpointProviderE struct{}
+
+func (p *errorEndpointProviderE) BuildURL(input *OperationInput) (string, error) {
+	return "", fmt.Errorf("build url fail")
+}
+
+func TestInvokeOperationWithAccountId(t *testing.T) {
+	// invalid AccountId should cause invokeOperation to return InitError
+	cfg := NewConfig()
+	cfg.Region = Ptr("cn-hangzhou")
+	cfg.AccountId = Ptr("abc123")
+	cfg.CredentialsProvider = credentials.NewAnonymousCredentialsProvider()
+	c := NewClient(cfg)
+	assert.NotNil(t, c.inner.InitError)
+
+	_, err := c.ListBuckets(context.TODO(), &ListBucketsRequest{})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "invalid account id")
+
+	// valid AccountId should not set InitError
+	cfg = NewConfig()
+	cfg.Region = Ptr("cn-hangzhou")
+	cfg.AccountId = Ptr("1234567890")
+	cfg.CredentialsProvider = credentials.NewAnonymousCredentialsProvider()
+	c = NewClient(cfg)
+	assert.Nil(t, c.inner.InitError)
+}
+
+func TestInvokeOperationLogInitError(t *testing.T) {
+	logBuf := bytes.NewBuffer(nil)
+	cfg := NewConfig()
+	cfg.Region = Ptr("cn-hangzhou")
+	cfg.AccountId = Ptr("abc123")
+	cfg.CredentialsProvider = credentials.NewAnonymousCredentialsProvider()
+	cfg.LogLevel = Ptr(LogInfo)
+	cfg.LogPrinter = LogPrinterFunc(func(a ...any) {
+		fmt.Fprint(logBuf, a...)
+	})
+	c := NewClient(cfg)
+	assert.NotNil(t, c.inner.InitError)
+
+	_, err := c.ListBuckets(context.TODO(), &ListBucketsRequest{})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "invalid account id")
+
+	logOutput := logBuf.String()
+	assert.Contains(t, logOutput, "InvokeOperation Start")
+	assert.Contains(t, logOutput, "InvokeOperation End")
+	assert.Contains(t, logOutput, "invalid account id")
+}
+
+func TestInvokeOperationLogBucketNameResolverError(t *testing.T) {
+	logBuf := bytes.NewBuffer(nil)
+	cfg := NewConfig()
+	cfg.Region = Ptr("cn-hangzhou")
+	cfg.Endpoint = Ptr("oss-cn-hangzhou.aliyuncs.com")
+	cfg.CredentialsProvider = credentials.NewAnonymousCredentialsProvider()
+	cfg.LogLevel = Ptr(LogInfo)
+	cfg.LogPrinter = LogPrinterFunc(func(a ...any) {
+		fmt.Fprint(logBuf, a...)
+	})
+	c := NewClient(cfg)
+
+	_, err := c.PutBucket(context.TODO(), &PutBucketRequest{
+		Bucket: Ptr("my-bucket"),
+	}, func(o *Options) {
+		o.BucketNameResolver = &errorBucketNameResolver{}
+	})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "resolve bucket name fail")
+
+	logOutput := logBuf.String()
+	assert.Contains(t, logOutput, "sendRequest Start")
+	assert.Contains(t, logOutput, "sendRequest End")
+	assert.Contains(t, logOutput, "resolve bucket name fail")
+}
+
+func TestInvokeOperationEndpointProviderEError(t *testing.T) {
+	cfg := NewConfig()
+	cfg.Region = Ptr("cn-hangzhou")
+	cfg.Endpoint = Ptr("oss-cn-hangzhou.aliyuncs.com")
+	cfg.CredentialsProvider = credentials.NewAnonymousCredentialsProvider()
+	// EndpointProviderE is wired at client construction, like the agentic client.
+	c := NewClient(cfg, func(o *Options) {
+		o.EndpointProviderE = &errorEndpointProviderE{}
+	})
+
+	_, err := c.PutBucket(context.TODO(), &PutBucketRequest{
+		Bucket: Ptr("my-bucket"),
+	})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "build url fail")
+}
+
+func TestBuildURL_UrlStyles(t *testing.T) {
+	endpoint, _ := url.Parse("https://oss-cn-hangzhou.aliyuncs.com")
+	input := &OperationInput{
+		Bucket: Ptr("bucket"),
+		Key:    Ptr("dir/key.txt"),
+	}
+
+	cases := []struct {
+		name     string
+		style    UrlStyleType
+		wantHost string
+		wantPath string
+	}{
+		{"virtual-hosted", UrlStyleVirtualHosted, "bucket.oss-cn-hangzhou.aliyuncs.com", "/dir/key.txt"},
+		{"path", UrlStylePath, "oss-cn-hangzhou.aliyuncs.com", "/bucket/dir/key.txt"},
+		{"cname", UrlStyleCName, "oss-cn-hangzhou.aliyuncs.com", "/dir/key.txt"},
+		{"virtual-hosted-alias", UrlStyleVirtualHostedAlias, "bucket.oss-cn-hangzhou.aliyuncs.com", "/dir/key.txt"},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			opts := &Options{Endpoint: endpoint, UrlStyle: c.style}
+			host, path := buildURL(input, opts)
+			assert.Equal(t, c.wantHost, host)
+			assert.Equal(t, c.wantPath, path)
+		})
+	}
 }

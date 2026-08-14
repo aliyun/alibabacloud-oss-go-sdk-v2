@@ -60,3 +60,59 @@ func TestIsValidRegion(t *testing.T) {
 	assert.False(t, isValidRegion(""))
 	assert.False(t, isValidRegion("_"))
 }
+
+func TestIsValidAccountId(t *testing.T) {
+	assert.True(t, isValidAccountId("1234567890123456"))
+	assert.True(t, isValidAccountId("0"))
+	assert.True(t, isValidAccountId("9999"))
+
+	assert.False(t, isValidAccountId(""))
+	assert.False(t, isValidAccountId("abc"))
+	assert.False(t, isValidAccountId("1234abc"))
+	assert.False(t, isValidAccountId("123-456"))
+	assert.False(t, isValidAccountId(" 123"))
+}
+
+func TestAssertValidateArnBucket(t *testing.T) {
+	// valid ARN
+	err := AssertValidateArnBucket("acs:oss:cn-hangzhou:123456789012:bucket:my-bucket")
+	assert.Nil(t, err)
+
+	// not an ARN
+	err = AssertValidateArnBucket("my-bucket")
+	assert.NotNil(t, err)
+
+	// missing account id
+	err = AssertValidateArnBucket("acs:oss:cn-hangzhou::bucket:my-bucket")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "does not contain account id")
+
+	// non-numeric account id
+	err = AssertValidateArnBucket("acs:oss:cn-hangzhou:abc123:bucket:my-bucket")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "invalid account id")
+
+	// account id with special characters
+	err = AssertValidateArnBucket("acs:oss:cn-hangzhou:123-456:bucket:my-bucket")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "invalid account id")
+
+	// resource type is not bucket
+	err = AssertValidateArnBucket("acs:oss:cn-hangzhou:123456789012:object:my-object")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "not bucket arn")
+
+	// empty bucket resource
+	err = AssertValidateArnBucket("acs:oss:cn-hangzhou:123456789012:bucket: ")
+	assert.NotNil(t, err)
+
+	// invalid bucket name
+	err = AssertValidateArnBucket("acs:oss:cn-hangzhou:123456789012:bucket:AB")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "bucket resource is invalid")
+
+	// has qualifier (should fail)
+	err = AssertValidateArnBucket("acs:oss:cn-hangzhou:123456789012:bucket:my-bucket:extra")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "not bucket arn")
+}

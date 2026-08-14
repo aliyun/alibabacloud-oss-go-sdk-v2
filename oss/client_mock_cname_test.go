@@ -1,11 +1,11 @@
 package oss
 
 import (
-	"testing"
 	"context"
 	"errors"
 	"io"
 	"net/http"
+	"testing"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
 	"github.com/stretchr/testify/assert"
@@ -151,13 +151,14 @@ var testMockPutCnameSuccessCases = []struct {
 			urlStr := sortQuery(r)
 			assert.Equal(t, "/bucket/?cname&comp=add", urlStr)
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
+			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain><IsWildCard>true</IsWildCard></Cname></BucketCnameConfiguration>")
 		},
 		&PutCnameRequest{
 			Bucket: Ptr("bucket"),
 			BucketCnameConfiguration: &BucketCnameConfiguration{
 				Cname: &Cname{
-					Domain: Ptr("example.com"),
+					Domain:     Ptr("example.com"),
+					IsWildCard: Ptr(true),
 				},
 			},
 		},
@@ -435,6 +436,19 @@ func TestMockCreateCnameTokenLegacy_Success(t *testing.T) {
 	}
 }
 
+var createRequest = func() *CreateCnameTokenRequest {
+	req := &CreateCnameTokenRequest{
+		Bucket: Ptr("bucket"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
+		},
+	}
+	req.AddParameter("wildcard", "false")
+	return req
+}()
+
 var testMockCreateCnameTokenSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
@@ -458,18 +472,11 @@ var testMockCreateCnameTokenSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket/?cname&comp=token", urlStr)
+			assert.Equal(t, "/bucket/?cname&comp=token&wildcard=false", urlStr)
 			data, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(data), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
 		},
-		&CreateCnameTokenRequest{
-			Bucket: Ptr("bucket"),
-			BucketCnameConfiguration: &BucketCnameConfiguration{
-				Cname: &Cname{
-					Domain: Ptr("example.com"),
-				},
-			},
-		},
+		createRequest,
 		func(t *testing.T, o *CreateCnameTokenResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
@@ -704,11 +711,12 @@ var testMockGetCnameTokenSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket/?cname=example.com&comp=token", urlStr)
+			assert.Equal(t, "/bucket/?cname=example.com&comp=token&wildcard=false", urlStr)
 		},
 		&GetCnameTokenRequest{
-			Bucket: Ptr("bucket"),
-			Cname:  Ptr("example.com"),
+			Bucket:   Ptr("bucket"),
+			Cname:    Ptr("example.com"),
+			Wildcard: Ptr(false),
 		},
 		func(t *testing.T, o *GetCnameTokenResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
@@ -910,6 +918,12 @@ var testMockListCnameSuccessCases = []struct {
     <LastModified>2021-09-15T02:50:34.000Z</LastModified>
     <Status>Enabled</Status>
   </Cname>
+  <Cname>
+	<Domain>example.net</Domain>
+	<LastModified>2021-09-15T02:50:34.000Z</LastModified>
+	<Status>Enabled</Status>
+	<IsWildCard>true</IsWildCard>
+  </Cname>
 </ListCnameResult>`),
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
@@ -926,7 +940,7 @@ var testMockListCnameSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 			assert.Equal(t, *o.Bucket, "bucket")
 			assert.Equal(t, *o.Owner, "owner")
-			assert.Equal(t, len(o.Cnames), 3)
+			assert.Equal(t, len(o.Cnames), 4)
 			assert.Equal(t, *o.Cnames[0].Domain, "example.com")
 			assert.Equal(t, *o.Cnames[0].LastModified, "2021-09-15T02:35:07.000Z")
 			assert.Equal(t, *o.Cnames[0].Status, "Enabled")
@@ -943,6 +957,10 @@ var testMockListCnameSuccessCases = []struct {
 			assert.Equal(t, *o.Cnames[2].Domain, "example.edu")
 			assert.Equal(t, *o.Cnames[2].LastModified, "2021-09-15T02:50:34.000Z")
 			assert.Equal(t, *o.Cnames[2].Status, "Enabled")
+			assert.Equal(t, *o.Cnames[3].Domain, "example.net")
+			assert.Equal(t, *o.Cnames[3].LastModified, "2021-09-15T02:50:34.000Z")
+			assert.Equal(t, *o.Cnames[3].Status, "Enabled")
+			assert.Equal(t, *o.Cnames[3].IsWildCard, true)
 		},
 	},
 }
@@ -1146,6 +1164,19 @@ func TestMockDeleteCnameLegacy_Success(t *testing.T) {
 	}
 }
 
+var deleteRequest = func() *DeleteCnameRequest {
+	req := &DeleteCnameRequest{
+		Bucket: Ptr("bucket"),
+		BucketCnameConfiguration: &BucketCnameConfiguration{
+			Cname: &Cname{
+				Domain: Ptr("example.com"),
+			},
+		},
+	}
+	req.AddParameter("wildcard", "false")
+	return req
+}()
+
 var testMockDeleteCnameSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
@@ -1165,18 +1196,11 @@ var testMockDeleteCnameSuccessCases = []struct {
 		func(t *testing.T, r *http.Request) {
 			assert.Equal(t, "POST", r.Method)
 			urlStr := sortQuery(r)
-			assert.Equal(t, "/bucket/?cname&comp=delete", urlStr)
+			assert.Equal(t, "/bucket/?cname&comp=delete&wildcard=false", urlStr)
 			body, _ := io.ReadAll(r.Body)
 			assert.Equal(t, string(body), "<BucketCnameConfiguration><Cname><Domain>example.com</Domain></Cname></BucketCnameConfiguration>")
 		},
-		&DeleteCnameRequest{
-			Bucket: Ptr("bucket"),
-			BucketCnameConfiguration: &BucketCnameConfiguration{
-				Cname: &Cname{
-					Domain: Ptr("example.com"),
-				},
-			},
-		},
+		deleteRequest,
 		func(t *testing.T, o *DeleteCnameResult, err error) {
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
@@ -1316,5 +1340,3 @@ func TestMockDeleteCname_Error(t *testing.T) {
 		c.CheckOutputFn(t, output, err)
 	}
 }
-
-

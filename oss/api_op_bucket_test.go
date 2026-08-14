@@ -215,6 +215,23 @@ func TestMarshalInput_PutBucket(t *testing.T) {
 	assert.Nil(t, err)
 	data, err = io.ReadAll(input.Body)
 	assert.Equal(t, string(data), "<CreateBucketConfiguration><StorageClass>123</StorageClass><DataRedundancyType>DRII</DataRedundancyType></CreateBucketConfiguration>")
+
+	// with AgenticBucket header
+	request = &PutBucketRequest{
+		Bucket:        Ptr("oss-demo"),
+		AgenticBucket: Ptr("my-agentic-bucket"),
+	}
+	input = &OperationInput{
+		OpName: "PutBucket",
+		Method: "PUT",
+		Headers: map[string]string{
+			HTTPHeaderContentType: contentTypeXML,
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInput(request, input, updateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, "my-agentic-bucket", input.Headers["x-oss-agentic-bucket"])
 }
 
 func TestUnmarshalOutput_PutBucket(t *testing.T) {
@@ -1144,6 +1161,8 @@ func TestUnmarshalOutput_GetBucketInfo(t *testing.T) {
       <LogBucket>examplebucket</LogBucket>
       <LogPrefix>log/</LogPrefix>
     </BucketPolicy>
+    <BucketResourceType>AgenticBucketSpace</BucketResourceType>
+    <AgenticBucketName>my-agentic-1234567890-cn-hangzhou-ab-apsr</AgenticBucketName>
   </Bucket>
 </BucketInfo>`
 	output = &OperationOutput{
@@ -1178,6 +1197,8 @@ func TestUnmarshalOutput_GetBucketInfo(t *testing.T) {
 	assert.Equal(t, *result.BucketInfo.BucketPolicy.LogBucket, "examplebucket")
 	assert.Equal(t, *result.BucketInfo.BucketPolicy.LogPrefix, "log/")
 	assert.Equal(t, *result.BucketInfo.DataRedundancyType, "LRS")
+	assert.Equal(t, *result.BucketInfo.BucketResourceType, "AgenticBucketSpace")
+	assert.Equal(t, *result.BucketInfo.AgenticBucketName, "my-agentic-1234567890-cn-hangzhou-ab-apsr")
 
 	assert.Empty(t, result.BucketInfo.SseRule.KMSMasterKeyID)
 	assert.Nil(t, result.BucketInfo.SseRule.SSEAlgorithm)
