@@ -114,6 +114,10 @@ type Config struct {
 	// Additional signable headers.
 	AdditionalHeaders []string
 
+	// Default http headers, automatically added to every request sent by the client.
+	// A header set by the request itself takes precedence over the default one.
+	DefaultRequestHeaders map[string]string
+
 	// The optional user specific identifier appended to the User-Agent header.
 	UserAgent *string
 
@@ -290,6 +294,11 @@ func (c *Config) WithDisableDownloadCRC64Check(value bool) *Config {
 
 func (c *Config) WithAdditionalHeaders(value []string) *Config {
 	c.AdditionalHeaders = value
+	return c
+}
+
+func (c *Config) WithDefaultRequestHeaders(value map[string]string) *Config {
+	c.DefaultRequestHeaders = value
 	return c
 }
 

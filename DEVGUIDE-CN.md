@@ -729,6 +729,7 @@ cfg := oss.LoadDefaultConfig().
 |DisableDownloadCRC64Check|下载时关闭CRC64校验，默认开启CRC64校验|WithDisableDownloadCRC64Check(true)
 |AdditionalHeaders|指定额外的签名请求头，V4签名下有效|WithAdditionalHeaders([]string{"content-length"})
 |UserAgent|指定额外的User-Agent信息|WithUserAgent("user identifier")
+|DefaultRequestHeaders|指定缺省请求头，会自动添加到该客户端发出的每个请求中。若请求自身已设置同名请求头，则以请求自身的为准。User-Agent 不能通过该方式修改，请使用 UserAgent 配置|WithDefaultRequestHeaders(map[string]string{"x-oss-request-payer": "requester"})
 
 # 接口说明
 

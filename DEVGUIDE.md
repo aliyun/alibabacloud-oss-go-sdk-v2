@@ -729,6 +729,7 @@ Supported configuration parameters
 | DisableDownloadCRC64Check | Specifies that CRC-64 is disabled during object download. By default, CRC-64 is enabled. | WithDisableDownloadCRC64Check(true) |
 |AdditionalHeaders| Specifies that additional headers to be signed. It's valid in V4 signature.|WithAdditionalHeaders([]string{"content-length"})
 |UserAgent|Specifies user identifier appended to the User-Agent header.|WithUserAgent("user identifier")
+|DefaultRequestHeaders|Specifies the default http headers, which are automatically added to every request sent by the client. A header set by the request itself takes precedence over the default one. The User-Agent header can not be changed this way, use UserAgent instead.|WithDefaultRequestHeaders(map[string]string{"x-oss-request-payer": "requester"})
 
 
 # API operations

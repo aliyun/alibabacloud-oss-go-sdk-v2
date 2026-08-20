@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -530,5 +531,119 @@ func TestRegions(t *testing.T) {
 	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
 	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
 	assert.Equal(t, "0002-00000902", serr.EC)
+	assert.NotEmpty(t, serr.RequestID)
+}
+
+func TestDefaultRequestHeaders(t *testing.T) {
+	after := before(t)
+	defer after(t)
+	bucketName := bucketNamePrefix + randLowStr(6)
+	objectName := objectNamePrefix + randLowStr(6)
+
+	newClient := func(headers map[string]string, ak, sk string) *Client {
+		cfg := LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewStaticCredentialsProvider(ak, sk)).
+			WithRegion(region_).
+			WithEndpoint(endpoint_).
+			WithSignatureVersion(getSignatrueVersion()).
+			WithDefaultRequestHeaders(headers)
+		return NewClient(cfg)
+	}
+
+	// normal case, a signable x-oss-* default header must take part in the
+	// signature and reach the server
+	client := newClient(map[string]string{
+		"x-oss-meta-app": "sdk-default-headers",
+		"x-my-trace-id":  "trace-" + randLowStr(6),
+	}, accessID_, accessKey_)
+
+	_, err := client.PutBucket(context.TODO(), &PutBucketRequest{Bucket: Ptr(bucketName)})
+	assert.Nil(t, err)
+
+	_, err = client.PutObject(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Body:   strings.NewReader("hello default headers"),
+	})
+	assert.Nil(t, err)
+
+	hResult, err := client.HeadObject(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "sdk-default-headers", hResult.Metadata["app"])
+
+	gResult, err := client.GetObject(context.TODO(), &GetObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	data, err := io.ReadAll(gResult.Body)
+	gResult.Body.Close()
+	assert.Nil(t, err)
+	assert.Equal(t, "hello default headers", string(data))
+	assert.Equal(t, "sdk-default-headers", gResult.Metadata["app"])
+
+	// the request wins over the default on conflict
+	objectNameOverride := objectName + "-override"
+	_, err = client.PutObject(context.TODO(), &PutObjectRequest{
+		Bucket:   Ptr(bucketName),
+		Key:      Ptr(objectNameOverride),
+		Metadata: map[string]string{"app": "from-request"},
+		Body:     strings.NewReader("hi"),
+	})
+	assert.Nil(t, err)
+
+	hResult, err = client.HeadObject(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectNameOverride),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "from-request", hResult.Metadata["app"])
+
+	// a default header rejected by the server surfaces as a service error
+	forbidClient := newClient(map[string]string{
+		"x-oss-forbid-overwrite": "true",
+	}, accessID_, accessKey_)
+
+	_, err = forbidClient.PutObject(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Body:   strings.NewReader("overwrite me"),
+	})
+	assert.NotNil(t, err)
+	var serr *ServiceError
+	errors.As(err, &serr)
+	assert.Equal(t, int(409), serr.StatusCode)
+	assert.Equal(t, "FileAlreadyExists", serr.Code)
+	assert.NotEmpty(t, serr.RequestID)
+
+	// default headers do not disturb the not-found path
+	_, err = client.GetObject(context.TODO(), &GetObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName + "-not-exist"),
+	})
+	assert.NotNil(t, err)
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(404), serr.StatusCode)
+	assert.Equal(t, "NoSuchKey", serr.Code)
+	assert.Equal(t, "The specified key does not exist.", serr.Message)
+
+	// nor the invalid credentials path
+	noPermClient := newClient(map[string]string{
+		"x-oss-meta-app": "sdk-default-headers",
+	}, "invalid-ak", "invalid-sk")
+
+	_, err = noPermClient.GetObject(context.TODO(), &GetObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.NotNil(t, err)
+	serr = &ServiceError{}
+	errors.As(err, &serr)
+	assert.Equal(t, int(403), serr.StatusCode)
+	assert.Equal(t, "InvalidAccessKeyId", serr.Code)
 	assert.NotEmpty(t, serr.RequestID)
 }

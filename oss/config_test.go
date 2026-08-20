@@ -44,6 +44,7 @@ func TestConfigDefault(t *testing.T) {
 	assert.Nil(t, config.DisableDownloadCRC64Check)
 
 	assert.Nil(t, config.AdditionalHeaders)
+	assert.Nil(t, config.DefaultRequestHeaders)
 	assert.Nil(t, config.UserAgent)
 
 	assert.Nil(t, config.CloudBoxId)
@@ -135,6 +136,11 @@ func TestConfigDefault(t *testing.T) {
 	assert.NotNil(t, config.AdditionalHeaders)
 	assert.Len(t, config.AdditionalHeaders, 1)
 	assert.Equal(t, "content-length", config.AdditionalHeaders[0])
+
+	config.WithDefaultRequestHeaders(map[string]string{"x-my-trace-id": "abc123"})
+	assert.NotNil(t, config.DefaultRequestHeaders)
+	assert.Len(t, config.DefaultRequestHeaders, 1)
+	assert.Equal(t, "abc123", config.DefaultRequestHeaders["x-my-trace-id"])
 
 	config.WithUserAgent("custom-ua")
 	assert.NotNil(t, config.UserAgent)

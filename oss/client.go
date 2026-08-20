@@ -53,6 +53,8 @@ type Options struct {
 
 	AdditionalHeaders []string
 
+	DefaultRequestHeaders map[string]string
+
 	EndpointProvider EndpointProvider
 
 	EndpointProviderE EndpointProviderE
@@ -119,6 +121,7 @@ func NewClient(cfg *Config, optFns ...func(*Options)) *Client {
 	resolveFeatureFlags(cfg, &options)
 	resolveCloudBox(cfg, &options)
 	resolveAccountId(cfg, &options, &inner)
+	resolveDefaultRequestHeaders(cfg, &options)
 
 	for _, fn := range optFns {
 		fn(&options)
@@ -323,6 +326,22 @@ func resolveAccountId(cfg *Config, o *Options, inner *innerOptions) {
 	}
 }
 
+func resolveDefaultRequestHeaders(cfg *Config, o *Options) {
+	if len(cfg.DefaultRequestHeaders) == 0 {
+		return
+	}
+
+	// Copy it, so that mutating the config's map after NewClient can not race
+	// with the requests reading it.
+	headers := make(map[string]string, len(cfg.DefaultRequestHeaders))
+	for k, v := range cfg.DefaultRequestHeaders {
+		if len(k) > 0 && len(v) > 0 {
+			headers[k] = v
+		}
+	}
+	o.DefaultRequestHeaders = headers
+}
+
 func buildUserAgent(cfg *Config) string {
 	if cfg.UserAgent == nil {
 		return defaultUserAgent
@@ -453,6 +472,13 @@ func (c *Client) sendRequest(ctx context.Context, input *OperationInput, opts *O
 		request.ContentLength = length
 	}
 	request.Body = TeeReadNopCloser(body, writers...)
+
+	// default headers, only fill in what the operation and the SDK left unset.
+	for k, v := range opts.DefaultRequestHeaders {
+		if request.Header.Get(k) == "" {
+			request.Header.Set(k, v)
+		}
+	}
 
 	//signing context
 	signingBucket := input.Bucket
