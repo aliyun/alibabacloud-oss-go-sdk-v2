@@ -1,5 +1,16 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.6.0 日期：2026-08-25
+### 变更内容
+- Feature：Add agentic bucket
+- Feature：Add WriteOnlyFile api
+- Feature：Config supports DefaultRequestHeaders option
+- Update：Bucket cname api supports wildcard parameters
+- Update：GetBucketInfo supports BucketResourceType and AgenticBucketName
+- Update：Vector index supports BucketArn field, VectorBucketName is deprecated
+- Update：Dataset insights configuration supports image label
+- Update：Copier falls back to multipart copy when meets EntityTooLarge error
+
 ## 版本号：v1.5.3 日期：2026-07-17
 ### 变更内容
 - Update：Add helper functions for dataprocess api parameters
