@@ -221,18 +221,28 @@ type HeadPose struct {
 	Roll    *float64 `xml:"Roll,omitempty"`
 }
 
-// ImageInsight represents image insight information
-type ImageInsight struct {
-	XMLName     xml.Name `xml:"Image"`
+// MultilingualContent represents localized insight content.
+type MultilingualContent struct {
+	XMLName     xml.Name `xml:"Content"`
+	Language    *string  `xml:"Language,omitempty"`
 	Caption     *string  `xml:"Caption,omitempty"`
 	Description *string  `xml:"Description,omitempty"`
 }
 
+// ImageInsight represents image insight information
+type ImageInsight struct {
+	XMLName             xml.Name              `xml:"Image"`
+	Caption             *string               `xml:"Caption,omitempty"`
+	Description         *string               `xml:"Description,omitempty"`
+	MultilingualContent []MultilingualContent `xml:"MultilingualContent>Content,omitempty"`
+}
+
 // VideoInsight represents video insight information
 type VideoInsight struct {
-	XMLName     xml.Name `xml:"Video"`
-	Caption     *string  `xml:"Caption,omitempty"`
-	Description *string  `xml:"Description,omitempty"`
+	XMLName             xml.Name              `xml:"Video"`
+	Caption             *string               `xml:"Caption,omitempty"`
+	Description         *string               `xml:"Description,omitempty"`
+	MultilingualContent []MultilingualContent `xml:"MultilingualContent>Content,omitempty"`
 }
 
 // Insights represents comprehensive media insights
