@@ -11,6 +11,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestInsightsPreservesMultilingualContent(t *testing.T) {
+	body := `<Insights><Video><Caption>English video caption</Caption><Description>English video description</Description><MultilingualContent><Content><Language>en</Language><Caption>English video caption</Caption><Description>English video description</Description></Content><Content><Language>zh-Hans</Language><Caption>中文视频标题</Caption><Description>中文视频描述</Description></Content></MultilingualContent></Video><Image><Caption>English image caption</Caption><Description>English image description</Description><MultilingualContent><Content><Language>en</Language><Caption>English image caption</Caption><Description>English image description</Description></Content><Content><Language>ja</Language><Caption>日本語の画像タイトル</Caption><Description>日本語の画像説明</Description></Content></MultilingualContent></Image></Insights>`
+
+	var insights Insights
+	err := xml.Unmarshal([]byte(body), &insights)
+	assert.NoError(t, err)
+
+	got, err := xml.Marshal(insights)
+	assert.NoError(t, err)
+	assert.Equal(t, body, string(got))
+}
+
 func TestMarshalInput_SimpleQuery(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
