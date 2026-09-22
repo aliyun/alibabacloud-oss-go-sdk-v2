@@ -85,6 +85,52 @@ func TestMarshalInput_PutVectors(t *testing.T) {
 	assert.Equal(t, input.Parameters["PutVectors"], "")
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), `{"indexName":"exampleIndex","vectors":[{"data":{"float32":[1.2,2.5,3]},"key":"vector1","metadata":{"Key1":"value2","Key2":["1","2","3"]}}]}`)
+
+	request = &PutVectorsRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("exampleIndex"),
+		Vectors: []map[string]any{
+			{
+				"key": "doc-001",
+				"data": map[string]any{
+					"vector_field_name_1": []float32{0.1, 0.2, 0.3, 0.4, 0.5},
+				},
+				"metadata": map[string]any{
+					"title":    "Introduction to Vector Search",
+					"category": []string{"technology", "ai"},
+				},
+			},
+			{
+				"key": "doc-002",
+				"data": map[string]any{
+					"vector_field_name_1": []float32{0.1, 0.2, 0.3, 0.4, 0.5},
+					"vector_field_name_2": []float32{0.1, 0.2, 0.3, 0.4, 0.5},
+				},
+				"metadata": map[string]any{
+					"title":    "Introduction to Vector Search",
+					"category": []string{"technology", "ai"},
+				},
+			},
+		},
+	}
+	input = &oss.OperationInput{
+		OpName: "PutVectors",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"putVectors": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Method, "POST")
+	assert.Equal(t, *input.Bucket, "oss-demo")
+	assert.Equal(t, input.Parameters["PutVectors"], "")
+	body, _ = io.ReadAll(input.Body)
+	assert.Equal(t, string(body), `{"indexName":"exampleIndex","vectors":[{"data":{"vector_field_name_1":[0.1,0.2,0.3,0.4,0.5]},"key":"doc-001","metadata":{"category":["technology","ai"],"title":"Introduction to Vector Search"}},{"data":{"vector_field_name_1":[0.1,0.2,0.3,0.4,0.5],"vector_field_name_2":[0.1,0.2,0.3,0.4,0.5]},"key":"doc-002","metadata":{"category":["technology","ai"],"title":"Introduction to Vector Search"}}]}`)
 }
 
 func TestUnmarshalOutput_PutVectors(t *testing.T) {
@@ -945,6 +991,245 @@ func TestUnmarshalOutput_QueryVectors(t *testing.T) {
 		},
 	}
 	result = &QueryVectorsResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 403)
+	assert.Equal(t, result.Status, "AccessDenied")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
+}
+
+func TestMarshalInput_QueryVectorsFusion(t *testing.T) {
+	c := VectorsClient{}
+	assert.NotNil(t, c)
+	var request *QueryVectorsFusionRequest
+	var input *oss.OperationInput
+	var err error
+
+	request = &QueryVectorsFusionRequest{}
+	input = &oss.OperationInput{
+		OpName: "QueryVectors",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"QueryVectors": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, Bucket")
+
+	request = &QueryVectorsFusionRequest{
+		Bucket: oss.Ptr("oss-demo"),
+	}
+	input = &oss.OperationInput{
+		OpName: "QueryVectors",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"QueryVectors": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "missing required field, IndexName")
+
+	request = &QueryVectorsFusionRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("index"),
+	}
+	input = &oss.OperationInput{
+		OpName: "QueryVectors",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"QueryVectors": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+
+	request = &QueryVectorsFusionRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("index"),
+		Knn: &KnnQuery{
+			Field:         oss.Ptr("demo"),
+			QueryVector:   map[string]any{"float32": []float32{float32(32)}},
+			TopK:          oss.Ptr(10),
+			NumCandidates: oss.Ptr(9),
+			Filter: map[string]any{
+				"meta_field_1": map[string]any{
+					"$eq": "abc",
+				},
+			},
+			Boost: oss.Ptr(float32(1)),
+		},
+	}
+	input = &oss.OperationInput{
+		OpName: "QueryVectors",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"QueryVectors": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+
+	request = &QueryVectorsFusionRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("index"),
+		Knn: &KnnQuery{
+			Field:         oss.Ptr("demo"),
+			QueryVector:   map[string]any{"float32": []float32{float32(32)}},
+			TopK:          oss.Ptr(10),
+			NumCandidates: oss.Ptr(9),
+			Filter: map[string]any{
+				"meta_field_1": map[string]any{
+					"$eq": "abc",
+				},
+			},
+			Boost: oss.Ptr(float32(1)),
+		},
+		Retriever: &Retriever{
+			Simple: &SimpleRetriever{
+				Query: map[string]any{
+					"$and": []map[string]any{
+						{"type": map[string]any{"$in": []string{"a", "b"}}},
+						{"year": map[string]any{"$gte": 2020}},
+					},
+				},
+			},
+		},
+		ReturnMetadata:       oss.Ptr(true),
+		ReturnMetadataFields: []string{"key1", "key2"},
+		PartitionKeys:        []string{"key1", "key2"},
+		Limit:                oss.Ptr(10),
+		NextToken:            oss.Ptr("nextToken"),
+		Sort: []Sort{
+			{"field_a": SortOptions{Order: oss.Ptr(SortOrderTypeAsc)}},
+			{"_score": SortOptions{Order: oss.Ptr(SortOrderTypeDesc)}},
+			{"_primaryKey": SortOptions{Order: oss.Ptr(SortOrderTypeAsc)}},
+		},
+	}
+	input = &oss.OperationInput{
+		OpName: "QueryVectors",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"QueryVectors": "",
+		},
+		Bucket: request.Bucket,
+	}
+	err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+	assert.Equal(t, input.Parameters["queryVectorsFusion"], "")
+	assert.Equal(t, input.Method, "POST")
+	assert.Equal(t, *input.Bucket, "oss-demo")
+	body, _ := io.ReadAll(input.Body)
+	assert.Equal(t, string(body), "{\"indexName\":\"index\",\"knn\":{\"field\":\"demo\",\"queryVector\":{\"float32\":[32]},\"topK\":10,\"filter\":{\"meta_field_1\":{\"$eq\":\"abc\"}},\"numCandidates\":9,\"boost\":1},\"limit\":10,\"nextToken\":\"nextToken\",\"partitionKeys\":[\"key1\",\"key2\"],\"retriever\":{\"simple\":{\"query\":{\"$and\":[{\"type\":{\"$in\":[\"a\",\"b\"]}},{\"year\":{\"$gte\":2020}}]}}},\"returnMetadata\":true,\"returnMetadataFields\":[\"key1\",\"key2\"],\"sort\":[{\"field_a\":{\"order\":\"asc\"}},{\"_score\":{\"order\":\"desc\"}},{\"_primaryKey\":{\"order\":\"asc\"}}]}")
+}
+
+func TestUnmarshalOutput_QueryVectorsFusion(t *testing.T) {
+	c := VectorsClient{}
+	assert.NotNil(t, c)
+	var output *oss.OperationOutput
+	var err error
+	body := `{
+   "vectors": [ 
+      { 
+         "data": {
+            "float32":[32]
+         },
+         "key": "key",
+         "metadata": {
+             "key1": "value1",
+             "key2": "value2"
+         }
+      }
+   ]
+}`
+	output = &oss.OperationOutput{
+		StatusCode: 200,
+		Status:     "OK",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/json"},
+		},
+	}
+	result := &QueryVectorsFusionResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 200)
+	assert.Equal(t, result.Status, "OK")
+	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	assert.Equal(t, len(result.Vectors), 1)
+	v := result.Vectors[0]
+	assert.Equal(t, *v.Key, "key")
+	assert.Equal(t, v.Metadata["key1"], "value1")
+	assert.Equal(t, v.Metadata["key2"], "value2")
+
+	output = &oss.OperationOutput{
+		StatusCode: 404,
+		Status:     "NoSuchBucket",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+		},
+	}
+	result = &QueryVectorsFusionResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 404)
+	assert.Equal(t, result.Status, "NoSuchBucket")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+	output = &oss.OperationOutput{
+		StatusCode: 400,
+		Status:     "InvalidArgument",
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+		},
+	}
+	result = &QueryVectorsFusionResult{}
+	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
+	assert.Nil(t, err)
+	assert.Equal(t, result.StatusCode, 400)
+	assert.Equal(t, result.Status, "InvalidArgument")
+	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
+
+	body = `{
+ "Error": {
+   "Code": "AccessDenied",
+   "Message": "AccessDenied",
+   "RequestId": "568D5566F2D0F89F5C0E****",
+   "HostId": "test.oss.aliyuncs.com"
+ }
+}`
+	output = &oss.OperationOutput{
+		StatusCode: 403,
+		Status:     "AccessDenied",
+		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+		Headers: http.Header{
+			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
+			"Content-Type":     {"application/json"},
+		},
+	}
+	result = &QueryVectorsFusionResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle)
 	assert.Nil(t, err)
 	assert.Equal(t, result.StatusCode, 403)

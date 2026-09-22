@@ -1685,7 +1685,7 @@ var testMockGetVectorIndexSuccessCases = []struct {
          "nonFilterableMetadataKeys": ["foo", "bar"]
       },
       "status": "running",
-	  "bucketArn": "acs:oss:::test-bucket"
+       "bucketArn": "acs:oss:::test-bucket"
    }
 }`),
 		func(t *testing.T, r *http.Request) {
@@ -1926,8 +1926,8 @@ var testMockListVectorIndexesSuccessCases = []struct {
 					assert.Equal(t, keys[1].(string), "bar2")
 				}
 			}
-			assert.Equal(t, *o.Indexes[1].Status, "deleting")
 			assert.Equal(t, *o.Indexes[1].BucketArn, "acs:oss:::test-bucket")
+			assert.Equal(t, *o.Indexes[1].Status, "deleting")
 		},
 	},
 }
@@ -3012,7 +3012,7 @@ var testMockQueryVectorsSuccessCases = []struct {
 	CheckOutputFn  func(t *testing.T, o *QueryVectorsResult, err error)
 }{
 	{
-		204,
+		200,
 		map[string]string{
 			"x-oss-request-id": "534B371674E88A4D8906****",
 			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
@@ -3044,8 +3044,8 @@ var testMockQueryVectorsSuccessCases = []struct {
 			TopK:           oss.Ptr(10),
 		},
 		func(t *testing.T, o *QueryVectorsResult, err error) {
-			assert.Equal(t, 204, o.StatusCode)
-			assert.Equal(t, "204 No Content", o.Status)
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 		},
@@ -3803,6 +3803,550 @@ func TestMockDeleteBucketLogging_Error(t *testing.T) {
 		assert.NotNil(t, c)
 
 		output, err := client.DeleteBucketLogging(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutVectorIndexFusionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutVectorIndexFusionRequest
+	CheckOutputFn  func(t *testing.T, o *PutVectorIndexFusionResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		nil,
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?putVectorIndexFusion", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"name\":\"vector_1\",\"type\":\"vector\",\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\"},{\"name\":\"vector_2\",\"type\":\"vector\",\"dataType\":\"float32\",\"dimension\":512,\"distanceMetric\":\"cosine\"},{\"name\":\"timestamps\",\"type\":\"long\",\"isArray\":true},{\"name\":\"price\",\"type\":\"double\"},{\"name\":\"ip\",\"type\":\"ip\"},{\"name\":\"location\",\"type\":\"geoPoint\"},{\"name\":\"tag\",\"type\":\"string\"},{\"name\":\"user_id\",\"type\":\"string\",\"isPartitionKey\":true},{\"name\":\"tags\",\"type\":\"string\",\"isArray\":true},{\"name\":\"title_1\",\"type\":\"string\",\"exactMatch\":true,\"text\":{\"enabled\":true,\"analyzer\":\"standard\",\"analyzerParameters\":{\"caseSensitive\":true,\"delimitWord\":false}}},{\"name\":\"title_2\",\"type\":\"string\",\"exactMatch\":false,\"text\":{\"enabled\":true,\"analyzer\":\"split\",\"analyzerParameters\":{\"caseSensitive\":true,\"delimiter\":\" \"}}}]}}")
+		},
+		&PutVectorIndexFusionRequest{
+			Bucket:    oss.Ptr("bucket"),
+			Mode:      oss.Ptr("fusion"),
+			IndexName: oss.Ptr("exampleIndex"),
+			SchemaConfiguration: &SchemaConfiguration{
+				Fields: []SchemaField{
+					{
+						Name:           oss.Ptr("vector_1"),
+						Type:           FieldTypeVector,
+						DataType:       VectorDataTypeFloat32,
+						Dimension:      oss.Ptr(1024),
+						DistanceMetric: DistanceMetricTypeEuclidean,
+					},
+					{
+						Name:           oss.Ptr("vector_2"),
+						Type:           FieldTypeVector,
+						DataType:       VectorDataTypeFloat32,
+						Dimension:      oss.Ptr(512),
+						DistanceMetric: DistanceMetricTypeCosine,
+					},
+					{
+						Name:    oss.Ptr("timestamps"),
+						Type:    FieldTypeLong,
+						IsArray: oss.Ptr(true),
+					},
+					{
+						Name: oss.Ptr("price"),
+						Type: FieldTypeDouble,
+					},
+					{
+						Name: oss.Ptr("ip"),
+						Type: FieldTypeIp,
+					},
+					{
+						Name: oss.Ptr("location"),
+						Type: FieldTypeGeoPoint,
+					},
+					{
+						Name: oss.Ptr("tag"),
+						Type: FieldTypeString,
+					},
+					{
+						Name:           oss.Ptr("user_id"),
+						Type:           FieldTypeString,
+						IsPartitionKey: oss.Ptr(true),
+					},
+					{
+						Name:    oss.Ptr("tags"),
+						Type:    FieldTypeString,
+						IsArray: oss.Ptr(true),
+					},
+					{
+						Name:       oss.Ptr("title_1"),
+						Type:       FieldTypeString,
+						ExactMatch: oss.Ptr(true),
+						Text: &TextConfiguration{
+							Enabled:  oss.Ptr(true),
+							Analyzer: oss.Ptr("standard"),
+							AnalyzerParameters: &AnalyzerParameters{
+								CaseSensitive: oss.Ptr(true),
+								DelimitWord:   oss.Ptr(false),
+							},
+						},
+					},
+					{
+						Name:       oss.Ptr("title_2"),
+						Type:       FieldTypeString,
+						ExactMatch: oss.Ptr(false),
+						Text: &TextConfiguration{
+							Enabled:  oss.Ptr(true),
+							Analyzer: oss.Ptr("split"),
+							AnalyzerParameters: &AnalyzerParameters{
+								CaseSensitive: oss.Ptr(true),
+								Delimiter:     oss.Ptr(" "),
+							},
+						},
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *PutVectorIndexFusionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+		},
+	},
+}
+
+func TestMockPutVectorIndexFusion_Success(t *testing.T) {
+	for _, c := range testMockPutVectorIndexFusionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := oss.LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutVectorIndexFusion(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockPutVectorIndexFusionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *PutVectorIndexFusionRequest
+	CheckOutputFn  func(t *testing.T, o *PutVectorIndexFusionResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?putVectorIndexFusion", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"name\":\"vector_1\",\"type\":\"vector\",\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\"}]}}")
+		},
+		&PutVectorIndexFusionRequest{
+			Bucket:    oss.Ptr("bucket"),
+			Mode:      oss.Ptr("fusion"),
+			IndexName: oss.Ptr("exampleIndex"),
+			SchemaConfiguration: &SchemaConfiguration{
+				Fields: []SchemaField{
+					{
+						Name:           oss.Ptr("vector_1"),
+						Type:           FieldTypeVector,
+						DataType:       VectorDataTypeFloat32,
+						Dimension:      oss.Ptr(1024),
+						DistanceMetric: DistanceMetricTypeEuclidean,
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *PutVectorIndexFusionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *oss.ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "UserDisable",
+    "Message": "UserDisable",
+    "RequestId": "5C3D8D2A0ACA54D87B43****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0003-00000801"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?putVectorIndexFusion", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"name\":\"vector_1\",\"type\":\"vector\",\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\"}]}}")
+		},
+		&PutVectorIndexFusionRequest{
+			Bucket:    oss.Ptr("bucket"),
+			Mode:      oss.Ptr("fusion"),
+			IndexName: oss.Ptr("exampleIndex"),
+			SchemaConfiguration: &SchemaConfiguration{
+				Fields: []SchemaField{
+					{
+						Name:           oss.Ptr("vector_1"),
+						Type:           FieldTypeVector,
+						DataType:       VectorDataTypeFloat32,
+						Dimension:      oss.Ptr(1024),
+						DistanceMetric: DistanceMetricTypeEuclidean,
+					},
+				},
+			},
+		},
+		func(t *testing.T, o *PutVectorIndexFusionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *oss.ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockPutVectorIndexFusion_Error(t *testing.T) {
+	for _, c := range testMockPutVectorIndexFusionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := oss.LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.PutVectorIndexFusion(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockQueryVectorsFusionSuccessCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *QueryVectorsFusionRequest
+	CheckOutputFn  func(t *testing.T, o *QueryVectorsFusionResult, err error)
+}{
+	{
+		200,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+   "vectors": [
+      {
+         "score":512,
+         "key": "key",
+         "metadata": {
+             "key1": "value1",
+             "key2": "value2"
+         }
+      }
+   ]
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?queryVectorsFusion", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"knn\":{\"field\":\"demo\",\"queryVector\":{\"float32\":[32]},\"topK\":10,\"filter\":{\"meta_field_1\":{\"$eq\":\"abc\"}},\"numCandidates\":9,\"boost\":1},\"limit\":10,\"nextToken\":\"nextToken\",\"partitionKeys\":[\"key1\",\"key2\"],\"retriever\":{\"simple\":{\"query\":{\"$and\":[{\"type\":{\"$in\":[\"a\",\"b\"]}},{\"year\":{\"$gte\":2020}}]}}},\"returnMetadata\":true,\"returnMetadataFields\":[\"key1\",\"key2\"],\"sort\":[{\"_primaryKey\":{\"order\":\"asc\"},\"_score\":{\"order\":\"desc\"},\"field_a\":{\"order\":\"asc\"}}]}")
+		},
+		&QueryVectorsFusionRequest{
+			Bucket:    oss.Ptr("bucket"),
+			IndexName: oss.Ptr("index"),
+			Knn: &KnnQuery{
+				Field:         oss.Ptr("demo"),
+				QueryVector:   map[string]any{"float32": []float32{float32(32)}},
+				TopK:          oss.Ptr(10),
+				NumCandidates: oss.Ptr(9),
+				Filter: map[string]any{
+					"meta_field_1": map[string]any{
+						"$eq": "abc",
+					},
+				},
+				Boost: oss.Ptr(float32(1)),
+			},
+			Retriever: &Retriever{
+				Simple: &SimpleRetriever{
+					Query: map[string]any{
+						"$and": []map[string]any{
+							{"type": map[string]any{"$in": []string{"a", "b"}}},
+							{"year": map[string]any{"$gte": 2020}},
+						},
+					},
+				},
+			},
+			ReturnMetadata:       oss.Ptr(true),
+			ReturnMetadataFields: []string{"key1", "key2"},
+			PartitionKeys:        []string{"key1", "key2"},
+			Limit:                oss.Ptr(10),
+			NextToken:            oss.Ptr("nextToken"),
+			Sort: []Sort{
+				{
+					"field_a":     SortOptions{Order: oss.Ptr(SortOrderTypeAsc)},
+					"_score":      SortOptions{Order: oss.Ptr(SortOrderTypeDesc)},
+					"_primaryKey": SortOptions{Order: oss.Ptr(SortOrderTypeAsc)},
+				},
+			},
+		},
+		func(t *testing.T, o *QueryVectorsFusionResult, err error) {
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, len(o.Vectors), 1)
+			v := o.Vectors[0]
+			assert.Equal(t, *v.Score, float32(512))
+			assert.Equal(t, *v.Key, "key")
+			assert.Equal(t, v.Metadata["key1"], "value1")
+			assert.Equal(t, v.Metadata["key2"], "value2")
+		},
+	},
+}
+
+func TestMockQueryVectorsFusion_Success(t *testing.T) {
+	for _, c := range testMockQueryVectorsFusionSuccessCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := oss.LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.QueryVectorsFusion(context.TODO(), c.Request)
+		c.CheckOutputFn(t, output, err)
+	}
+}
+
+var testMockQueryVectorsFusionErrorCases = []struct {
+	StatusCode     int
+	Headers        map[string]string
+	Body           []byte
+	CheckRequestFn func(t *testing.T, r *http.Request)
+	Request        *QueryVectorsFusionRequest
+	CheckOutputFn  func(t *testing.T, o *QueryVectorsFusionResult, err error)
+}{
+	{
+		404,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D9175B6FC201293AD****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "NoSuchBucket",
+    "Message": "The specified bucket does not exist.",
+    "RequestId": "5C3D9175B6FC201293AD****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0015-00000101"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?queryVectorsFusion", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"knn\":{\"field\":\"demo\",\"queryVector\":{\"float32\":[32]},\"topK\":10,\"filter\":{\"meta_field_1\":{\"$eq\":\"abc\"}},\"numCandidates\":9,\"boost\":1},\"limit\":10,\"nextToken\":\"nextToken\",\"partitionKeys\":[\"key1\",\"key2\"],\"retriever\":{\"simple\":{\"query\":{\"$and\":[{\"type\":{\"$in\":[\"a\",\"b\"]}},{\"year\":{\"$gte\":2020}}]}}},\"returnMetadata\":true,\"returnMetadataFields\":[\"key1\",\"key2\"],\"sort\":[{\"_primaryKey\":{\"order\":\"asc\"},\"_score\":{\"order\":\"desc\"},\"field_a\":{\"order\":\"asc\"}}]}")
+		},
+		&QueryVectorsFusionRequest{
+			Bucket:    oss.Ptr("bucket"),
+			IndexName: oss.Ptr("index"),
+			Knn: &KnnQuery{
+				Field:         oss.Ptr("demo"),
+				QueryVector:   map[string]any{"float32": []float32{float32(32)}},
+				TopK:          oss.Ptr(10),
+				NumCandidates: oss.Ptr(9),
+				Filter: map[string]any{
+					"meta_field_1": map[string]any{
+						"$eq": "abc",
+					},
+				},
+				Boost: oss.Ptr(float32(1)),
+			},
+			Retriever: &Retriever{
+				Simple: &SimpleRetriever{
+					Query: map[string]any{
+						"$and": []map[string]any{
+							{"type": map[string]any{"$in": []string{"a", "b"}}},
+							{"year": map[string]any{"$gte": 2020}},
+						},
+					},
+				},
+			},
+			ReturnMetadata:       oss.Ptr(true),
+			ReturnMetadataFields: []string{"key1", "key2"},
+			PartitionKeys:        []string{"key1", "key2"},
+			Limit:                oss.Ptr(10),
+			NextToken:            oss.Ptr("nextToken"),
+			Sort: []Sort{
+				{
+					"field_a":     SortOptions{Order: oss.Ptr(SortOrderTypeAsc)},
+					"_score":      SortOptions{Order: oss.Ptr(SortOrderTypeDesc)},
+					"_primaryKey": SortOptions{Order: oss.Ptr(SortOrderTypeAsc)},
+				},
+			},
+		},
+		func(t *testing.T, o *QueryVectorsFusionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *oss.ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(404), serr.StatusCode)
+			assert.Equal(t, "NoSuchBucket", serr.Code)
+			assert.Equal(t, "The specified bucket does not exist.", serr.Message)
+			assert.Equal(t, "0015-00000101", serr.EC)
+			assert.Equal(t, "5C3D9175B6FC201293AD****", serr.RequestID)
+		},
+	},
+	{
+		403,
+		map[string]string{
+			"Content-Type":     "application/json",
+			"x-oss-request-id": "5C3D8D2A0ACA54D87B43****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`{
+  "Error": {
+    "Code": "UserDisable",
+    "Message": "UserDisable",
+    "RequestId": "5C3D8D2A0ACA54D87B43****",
+    "HostId": "test.oss-cn-hangzhou.aliyuncs.com",
+    "BucketName": "test",
+    "EC": "0003-00000801"
+  }
+}`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/bucket/?queryVectorsFusion", r.URL.String())
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"knn\":{\"field\":\"demo\",\"queryVector\":{\"float32\":[32]},\"topK\":10,\"filter\":{\"meta_field_1\":{\"$eq\":\"abc\"}},\"numCandidates\":9,\"boost\":1},\"limit\":10,\"nextToken\":\"nextToken\",\"partitionKeys\":[\"key1\",\"key2\"],\"retriever\":{\"simple\":{\"query\":{\"$and\":[{\"type\":{\"$in\":[\"a\",\"b\"]}},{\"year\":{\"$gte\":2020}}]}}},\"returnMetadata\":true,\"returnMetadataFields\":[\"key1\",\"key2\"],\"sort\":[{\"_primaryKey\":{\"order\":\"asc\"},\"_score\":{\"order\":\"desc\"},\"field_a\":{\"order\":\"asc\"}}]}")
+		},
+		&QueryVectorsFusionRequest{
+			Bucket:    oss.Ptr("bucket"),
+			IndexName: oss.Ptr("index"),
+			Knn: &KnnQuery{
+				Field:         oss.Ptr("demo"),
+				QueryVector:   map[string]any{"float32": []float32{float32(32)}},
+				TopK:          oss.Ptr(10),
+				NumCandidates: oss.Ptr(9),
+				Filter: map[string]any{
+					"meta_field_1": map[string]any{
+						"$eq": "abc",
+					},
+				},
+				Boost: oss.Ptr(float32(1)),
+			},
+			Retriever: &Retriever{
+				Simple: &SimpleRetriever{
+					Query: map[string]any{
+						"$and": []map[string]any{
+							{"type": map[string]any{"$in": []string{"a", "b"}}},
+							{"year": map[string]any{"$gte": 2020}},
+						},
+					},
+				},
+			},
+			ReturnMetadata:       oss.Ptr(true),
+			ReturnMetadataFields: []string{"key1", "key2"},
+			PartitionKeys:        []string{"key1", "key2"},
+			Limit:                oss.Ptr(10),
+			NextToken:            oss.Ptr("nextToken"),
+			Sort: []Sort{
+				{
+					"field_a":     SortOptions{Order: oss.Ptr(SortOrderTypeAsc)},
+					"_score":      SortOptions{Order: oss.Ptr(SortOrderTypeDesc)},
+					"_primaryKey": SortOptions{Order: oss.Ptr(SortOrderTypeAsc)},
+				},
+			},
+		},
+		func(t *testing.T, o *QueryVectorsFusionResult, err error) {
+			assert.Nil(t, o)
+			assert.NotNil(t, err)
+			var serr *oss.ServiceError
+			errors.As(err, &serr)
+			assert.NotNil(t, serr)
+			assert.Equal(t, int(403), serr.StatusCode)
+			assert.Equal(t, "UserDisable", serr.Code)
+			assert.Equal(t, "UserDisable", serr.Message)
+			assert.Equal(t, "0003-00000801", serr.EC)
+			assert.Equal(t, "5C3D8D2A0ACA54D87B43****", serr.RequestID)
+		},
+	},
+}
+
+func TestMockQueryVectorsFusion_Error(t *testing.T) {
+	for _, c := range testMockQueryVectorsFusionErrorCases {
+		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
+		defer server.Close()
+		assert.NotNil(t, server)
+
+		cfg := oss.LoadDefaultConfig().
+			WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+			WithRegion("cn-hangzhou").
+			WithEndpoint(server.URL)
+
+		client := NewVectorsClient(cfg)
+		assert.NotNil(t, c)
+
+		output, err := client.QueryVectorsFusion(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
