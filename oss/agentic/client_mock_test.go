@@ -669,3 +669,41 @@ func TestMockBucketSpaceClient_Presign_MissingAccountId(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "AccountId")
 }
+
+func TestMockAgenticBucketClient_PutAgenticBucketStorageQuota(t *testing.T) {
+	client, transport := newMockAgenticBucketClient("cn-hangzhou", "123456")
+	quota := int64(10737418240)
+
+	_, err := client.PutAgenticBucketStorageQuota(context.TODO(), &PutAgenticBucketStorageQuotaRequest{
+		Bucket: oss.Ptr("my-agentic"),
+		QuotaConfiguration: &oss.QuotaConfiguration{
+			StorageQuota: &quota,
+			Mode:         oss.StorageQuotaModeStrict,
+		},
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "PUT", transport.RequestMethod)
+	assertURL(t, transport.RequestURL, "https://my-agentic-123456-cn-hangzhou-ab-apsr.oss-cn-hangzhou.aliyuncs.com/", []string{"agenticBucket", "quota"})
+}
+
+func TestMockAgenticBucketClient_GetAgenticBucketStorageQuota(t *testing.T) {
+	client, transport := newMockAgenticBucketClient("cn-hangzhou", "123456")
+
+	_, err := client.GetAgenticBucketStorageQuota(context.TODO(), &GetAgenticBucketStorageQuotaRequest{
+		Bucket: oss.Ptr("my-agentic"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "GET", transport.RequestMethod)
+	assertURL(t, transport.RequestURL, "https://my-agentic-123456-cn-hangzhou-ab-apsr.oss-cn-hangzhou.aliyuncs.com/", []string{"agenticBucket", "quota"})
+}
+
+func TestMockAgenticBucketClient_DeleteAgenticBucketStorageQuota(t *testing.T) {
+	client, transport := newMockAgenticBucketClient("cn-hangzhou", "123456")
+
+	_, err := client.DeleteAgenticBucketStorageQuota(context.TODO(), &DeleteAgenticBucketStorageQuotaRequest{
+		Bucket: oss.Ptr("my-agentic"),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "DELETE", transport.RequestMethod)
+	assertURL(t, transport.RequestURL, "https://my-agentic-123456-cn-hangzhou-ab-apsr.oss-cn-hangzhou.aliyuncs.com/", []string{"agenticBucket", "quota"})
+}
