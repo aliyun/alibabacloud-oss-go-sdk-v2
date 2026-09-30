@@ -269,3 +269,111 @@ func (c *VectorsClient) QueryVectors(ctx context.Context, request *QueryVectorsR
 
 	return result, err
 }
+
+type QueryVectorsFusionRequest struct {
+	Bucket               *string        `input:"host,bucket,required"`
+	IndexName            *string        `input:"body,indexName,json,required"`
+	Knn                  Knn            `input:"body,knn,json"`
+	Query                map[string]any `input:"body,query,json"`
+	Retriever            *Retriever     `input:"body,retriever,json"`
+	ReturnMetadata       *bool          `input:"body,returnMetadata,json"`
+	ReturnMetadataFields []string       `input:"body,returnMetadataFields,json"`
+	PartitionKeys        []string       `input:"body,partitionKeys,json"`
+	Limit                *int           `input:"body,limit,json"`
+	NextToken            *string        `input:"body,nextToken,json"`
+	Sort                 []Sort         `input:"body,sort,json"`
+	oss.RequestCommon
+}
+
+type Knn interface{ isKnn() }
+
+type KnnQuery struct {
+	Field         *string  `json:"field,omitempty"`
+	QueryVector   any      `json:"queryVector,omitempty"`
+	TopK          *int     `json:"topK,omitempty"`
+	Filter        any      `json:"filter,omitempty"`
+	NumCandidates *int     `json:"numCandidates,omitempty"`
+	Boost         *float32 `json:"boost,omitempty"`
+}
+
+func (KnnQuery) isKnn() {}
+
+type KnnQueries []KnnQuery
+
+func (KnnQueries) isKnn() {}
+
+type SimpleRetriever struct {
+	Query map[string]any `json:"query,omitempty"`
+}
+
+type Retriever struct {
+	Simple *SimpleRetriever `json:"simple,omitempty"`
+	Knn    *KnnQuery        `json:"knn,omitempty"`
+	RRF    *RRFRetriever    `json:"rrf,omitempty"`
+	Weight *WeightRetriever `json:"weight,omitempty"`
+}
+
+type RRFRetriever struct {
+	K          *float32          `json:"k,omitempty"`
+	WindowSize *int32            `json:"windowSize,omitempty"`
+	Retrievers []WeightRetriever `json:"retrievers,omitempty"`
+}
+
+type WeightRetriever struct {
+	Retriever  *Retriever `json:"retriever,omitempty"`
+	Normalizer *string    `json:"normalizer,omitempty"`
+	Weight     *int32     `json:"weight,omitempty"`
+}
+
+type SortOptions struct {
+	Order *SortOrderType `json:"order,omitempty"`
+}
+
+type Sort map[string]SortOptions
+
+type QueryVectorsFusionResult struct {
+	Vectors   []QueryVectorsFusionResultItem `json:"vectors"`
+	NextToken *string                        `json:"nextToken"`
+
+	oss.ResultCommon
+}
+
+type QueryVectorsFusionResultItem struct {
+	Key      *string        `json:"key"`
+	Metadata map[string]any `json:"metadata"`
+	Score    *float32       `json:"score"`
+}
+
+// QueryVectorsFusion Query a vector by fusion mode.
+func (c *VectorsClient) QueryVectorsFusion(ctx context.Context, request *QueryVectorsFusionRequest, optFns ...func(*oss.Options)) (*QueryVectorsFusionResult, error) {
+	var err error
+	if request == nil {
+		request = &QueryVectorsFusionRequest{}
+	}
+	input := &oss.OperationInput{
+		OpName: "QueryVectorsFusion",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"queryVectorsFusion": "",
+		},
+		Bucket: request.Bucket,
+	}
+	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
+		return nil, err
+	}
+
+	output, err := c.clientImpl.InvokeOperation(ctx, input, optFns...)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &QueryVectorsFusionResult{}
+	if err = c.unmarshalOutput(result, output, unmarshalBodyJsonStyle); err != nil {
+		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
+	}
+
+	return result, err
+}
