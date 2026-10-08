@@ -1123,9 +1123,9 @@ func TestMarshalInput_QueryVectorsFusion(t *testing.T) {
 		Limit:                oss.Ptr(10),
 		NextToken:            oss.Ptr("nextToken"),
 		Sort: []Sort{
-			{"field_a": SortOptions{Order: oss.Ptr(SortOrderTypeAsc)}},
-			{"_score": SortOptions{Order: oss.Ptr(SortOrderTypeDesc)}},
-			{"_primaryKey": SortOptions{Order: oss.Ptr(SortOrderTypeAsc)}},
+			{"field_a": SortOptions{Order: oss.Ptr("asc")}},
+			{"_score": SortOptions{Order: oss.Ptr("desc")}},
+			{"_primaryKey": SortOptions{Order: oss.Ptr("asc")}},
 		},
 	}
 	input = &oss.OperationInput{

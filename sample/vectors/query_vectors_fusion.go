@@ -85,9 +85,9 @@ func main() {
 		Limit:                oss.Ptr(10),
 		NextToken:            oss.Ptr("nextToken"),
 		Sort: []vectors.Sort{
-			{"field_a": vectors.SortOptions{Order: oss.Ptr(vectors.SortOrderTypeAsc)}},
-			{"_score": vectors.SortOptions{Order: oss.Ptr(vectors.SortOrderTypeDesc)}},
-			{"_primaryKey": vectors.SortOptions{Order: oss.Ptr(vectors.SortOrderTypeAsc)}},
+			{"field_a": vectors.SortOptions{Order: oss.Ptr("asc")}},
+			{"_score": vectors.SortOptions{Order: oss.Ptr("desc")}},
+			{"_primaryKey": vectors.SortOptions{Order: oss.Ptr("asc")}},
 		},
 	}
 	result, err := client.QueryVectorsFusion(context.TODO(), request)

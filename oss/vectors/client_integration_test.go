@@ -1197,7 +1197,7 @@ func TestFusionMode(t *testing.T) {
 		Sort: []Sort{
 			{
 				"price": SortOptions{
-					Order: oss.Ptr(SortOrderTypeAsc),
+					Order: oss.Ptr("asc"),
 				},
 			},
 		},

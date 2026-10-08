@@ -450,7 +450,9 @@ func (s RetrieverComponent) ToMap() map[string]any {
 }
 
 type SortOptions struct {
-	Order *SortOrderType `json:"order,omitempty"`
+	// The sort order of the field. Valid values: asc, desc.
+	// The values are also declared as the SortOrderType constants, e.g. oss.Ptr(string(SortOrderTypeAsc)).
+	Order *string `json:"order,omitempty"`
 }
 
 type Sort map[string]SortOptions
