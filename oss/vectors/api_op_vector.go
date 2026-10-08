@@ -458,13 +458,13 @@ type SortOptions struct {
 type Sort map[string]SortOptions
 
 type QueryVectorsFusionResult struct {
-	Vectors   []QueryVectorsFusionResultItem `json:"vectors"`
-	NextToken *string                        `json:"nextToken"`
+	Vectors   []QueryVectorsFusionSummary `json:"vectors"`
+	NextToken *string                     `json:"nextToken"`
 
 	oss.ResultCommon
 }
 
-type QueryVectorsFusionResultItem struct {
+type QueryVectorsFusionSummary struct {
 	Key      *string        `json:"key"`
 	Metadata map[string]any `json:"metadata"`
 	Score    *float32       `json:"score"`
