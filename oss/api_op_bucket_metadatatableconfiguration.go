@@ -7,7 +7,7 @@ import (
 
 // MetadataTableEncryptionConfiguration specifies the encryption configuration for a metadata table.
 type MetadataTableEncryptionConfiguration struct {
-	// The server-side encryption algorithm. Valid values: AES256.
+	// The server-side encryption algorithm. Valid values: AES256, oss:kms.
 	SseAlgorithm *string `xml:"SseAlgorithm"`
 
 	// The ARN of the KMS key. This parameter is required only when SseAlgorithm is set to oss:kms.
@@ -73,7 +73,7 @@ type MetadataTableError struct {
 
 // JournalTableConfigurationResult specifies the configuration result of the journal table.
 type JournalTableConfigurationResult struct {
-	// The status of the journal table. Valid values: CREATING, ACTIVE, FAILED.
+	// The status of the journal table. Valid values: CREATING, BACKFILLING, ACTIVE, FAILED.
 	TableStatus *string `xml:"TableStatus"`
 
 	// The name of the journal table. The value is fixed to journal.
