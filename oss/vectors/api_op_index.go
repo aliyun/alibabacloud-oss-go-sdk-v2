@@ -96,8 +96,9 @@ type SchemaConfiguration struct {
 	// The container that stores the field configurations.
 	//
 	// Each element is the raw JSON object of a field, so an attribute the service adds later is
-	// passed through without an SDK change. Build an element with FieldSchema.ToMap, or write the
-	// map directly to set an attribute that the SDK does not model yet.
+	// passed through without an SDK change. Build an element with FieldSchema.ToMap, convert a whole
+	// list with FieldSchemas(...).ToMaps, or write the map directly to set an attribute that the SDK
+	// does not model yet.
 	Fields []map[string]any `json:"fields,omitempty"`
 }
 
@@ -189,6 +190,22 @@ func (s FieldSchema) ToMap() map[string]any {
 		m["text"] = s.Text.toMap()
 	}
 	return m
+}
+
+// FieldSchemas is a list of field configurations. It converts the strongly-typed FieldSchema model
+// to the raw JSON objects that the service expects.
+type FieldSchemas []FieldSchema
+
+// ToMaps returns the field configurations as the raw JSON objects that the service expects, so that
+// the result can be assigned to SchemaConfiguration.Fields. It is the batch counterpart of
+// FieldSchema.ToMap: attributes that the SDK does not model can be added to each returned map
+// directly.
+func (s FieldSchemas) ToMaps() []map[string]any {
+	maps := make([]map[string]any, 0, len(s))
+	for _, schema := range s {
+		maps = append(maps, schema.ToMap())
+	}
+	return maps
 }
 
 // TextSchema defines the text search configuration for a string field.

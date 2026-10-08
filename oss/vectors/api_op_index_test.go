@@ -645,6 +645,42 @@ func TestSchemaConfiguration_FieldSchemas(t *testing.T) {
 	assert.Nil(t, invalid)
 }
 
+func TestFieldSchemas_ToMaps(t *testing.T) {
+	schemas := FieldSchemas{
+		{
+			Name:           oss.Ptr("vector_1"),
+			Type:           oss.Ptr("vector"),
+			DataType:       oss.Ptr("float32"),
+			Dimension:      oss.Ptr(1024),
+			DistanceMetric: oss.Ptr("euclidean"),
+			Text: &TextSchema{
+				Analyzer: oss.Ptr("standard"),
+			},
+		},
+		{
+			Name: oss.Ptr("tag"),
+			Type: oss.Ptr("string"),
+		},
+	}
+
+	assert.Equal(t, []map[string]any{
+		{
+			"name":           "vector_1",
+			"type":           "vector",
+			"dataType":       "float32",
+			"dimension":      1024,
+			"distanceMetric": "euclidean",
+			"text":           map[string]any{"analyzer": "standard"},
+		},
+		{
+			"name": "tag",
+			"type": "string",
+		},
+	}, schemas.ToMaps())
+
+	assert.Empty(t, FieldSchemas(nil).ToMaps())
+}
+
 func TestMarshalInput_ListVectorIndexes(t *testing.T) {
 	c := VectorsClient{}
 	assert.NotNil(t, c)
