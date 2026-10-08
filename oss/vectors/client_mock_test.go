@@ -4100,22 +4100,24 @@ var testMockQueryVectorsFusionSuccessCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?queryVectorsFusion", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"knn\":{\"field\":\"demo\",\"queryVector\":{\"float32\":[32]},\"topK\":10,\"filter\":{\"meta_field_1\":{\"$eq\":\"abc\"}},\"numCandidates\":9,\"boost\":1},\"limit\":10,\"nextToken\":\"nextToken\",\"partitionKeys\":[\"key1\",\"key2\"],\"retriever\":{\"simple\":{\"query\":{\"$and\":[{\"type\":{\"$in\":[\"a\",\"b\"]}},{\"year\":{\"$gte\":2020}}]}}},\"returnMetadata\":true,\"returnMetadataFields\":[\"key1\",\"key2\"],\"sort\":[{\"_primaryKey\":{\"order\":\"asc\"},\"_score\":{\"order\":\"desc\"},\"field_a\":{\"order\":\"asc\"}}]}")
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"knn\":[{\"boost\":1,\"field\":\"demo\",\"filter\":{\"meta_field_1\":{\"$eq\":\"abc\"}},\"numCandidates\":9,\"queryVector\":{\"float32\":[32]},\"topK\":10}],\"limit\":10,\"nextToken\":\"nextToken\",\"partitionKeys\":[\"key1\",\"key2\"],\"retriever\":{\"simple\":{\"query\":{\"$and\":[{\"type\":{\"$in\":[\"a\",\"b\"]}},{\"year\":{\"$gte\":2020}}]}}},\"returnMetadata\":true,\"returnMetadataFields\":[\"key1\",\"key2\"],\"sort\":[{\"_primaryKey\":{\"order\":\"asc\"},\"_score\":{\"order\":\"desc\"},\"field_a\":{\"order\":\"asc\"}}]}")
 		},
 		&QueryVectorsFusionRequest{
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("index"),
-			Knn: &KnnQuery{
-				Field:         oss.Ptr("demo"),
-				QueryVector:   map[string]any{"float32": []float32{float32(32)}},
-				TopK:          oss.Ptr(10),
-				NumCandidates: oss.Ptr(9),
-				Filter: map[string]any{
-					"meta_field_1": map[string]any{
-						"$eq": "abc",
+			Knn: []map[string]any{
+				Knn{
+					Field:         oss.Ptr("demo"),
+					QueryVector:   map[string]any{"float32": []float32{float32(32)}},
+					TopK:          oss.Ptr(10),
+					NumCandidates: oss.Ptr(9),
+					Filter: map[string]any{
+						"meta_field_1": map[string]any{
+							"$eq": "abc",
+						},
 					},
-				},
-				Boost: oss.Ptr(float32(1)),
+					Boost: oss.Ptr(float32(1)),
+				}.ToMap(),
 			},
 			Retriever: &Retriever{
 				Simple: &SimpleRetriever{
@@ -4203,22 +4205,24 @@ var testMockQueryVectorsFusionErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?queryVectorsFusion", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"knn\":{\"field\":\"demo\",\"queryVector\":{\"float32\":[32]},\"topK\":10,\"filter\":{\"meta_field_1\":{\"$eq\":\"abc\"}},\"numCandidates\":9,\"boost\":1},\"limit\":10,\"nextToken\":\"nextToken\",\"partitionKeys\":[\"key1\",\"key2\"],\"retriever\":{\"simple\":{\"query\":{\"$and\":[{\"type\":{\"$in\":[\"a\",\"b\"]}},{\"year\":{\"$gte\":2020}}]}}},\"returnMetadata\":true,\"returnMetadataFields\":[\"key1\",\"key2\"],\"sort\":[{\"_primaryKey\":{\"order\":\"asc\"},\"_score\":{\"order\":\"desc\"},\"field_a\":{\"order\":\"asc\"}}]}")
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"knn\":[{\"boost\":1,\"field\":\"demo\",\"filter\":{\"meta_field_1\":{\"$eq\":\"abc\"}},\"numCandidates\":9,\"queryVector\":{\"float32\":[32]},\"topK\":10}],\"limit\":10,\"nextToken\":\"nextToken\",\"partitionKeys\":[\"key1\",\"key2\"],\"retriever\":{\"simple\":{\"query\":{\"$and\":[{\"type\":{\"$in\":[\"a\",\"b\"]}},{\"year\":{\"$gte\":2020}}]}}},\"returnMetadata\":true,\"returnMetadataFields\":[\"key1\",\"key2\"],\"sort\":[{\"_primaryKey\":{\"order\":\"asc\"},\"_score\":{\"order\":\"desc\"},\"field_a\":{\"order\":\"asc\"}}]}")
 		},
 		&QueryVectorsFusionRequest{
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("index"),
-			Knn: &KnnQuery{
-				Field:         oss.Ptr("demo"),
-				QueryVector:   map[string]any{"float32": []float32{float32(32)}},
-				TopK:          oss.Ptr(10),
-				NumCandidates: oss.Ptr(9),
-				Filter: map[string]any{
-					"meta_field_1": map[string]any{
-						"$eq": "abc",
+			Knn: []map[string]any{
+				Knn{
+					Field:         oss.Ptr("demo"),
+					QueryVector:   map[string]any{"float32": []float32{float32(32)}},
+					TopK:          oss.Ptr(10),
+					NumCandidates: oss.Ptr(9),
+					Filter: map[string]any{
+						"meta_field_1": map[string]any{
+							"$eq": "abc",
+						},
 					},
-				},
-				Boost: oss.Ptr(float32(1)),
+					Boost: oss.Ptr(float32(1)),
+				}.ToMap(),
 			},
 			Retriever: &Retriever{
 				Simple: &SimpleRetriever{
@@ -4277,22 +4281,24 @@ var testMockQueryVectorsFusionErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?queryVectorsFusion", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"knn\":{\"field\":\"demo\",\"queryVector\":{\"float32\":[32]},\"topK\":10,\"filter\":{\"meta_field_1\":{\"$eq\":\"abc\"}},\"numCandidates\":9,\"boost\":1},\"limit\":10,\"nextToken\":\"nextToken\",\"partitionKeys\":[\"key1\",\"key2\"],\"retriever\":{\"simple\":{\"query\":{\"$and\":[{\"type\":{\"$in\":[\"a\",\"b\"]}},{\"year\":{\"$gte\":2020}}]}}},\"returnMetadata\":true,\"returnMetadataFields\":[\"key1\",\"key2\"],\"sort\":[{\"_primaryKey\":{\"order\":\"asc\"},\"_score\":{\"order\":\"desc\"},\"field_a\":{\"order\":\"asc\"}}]}")
+			assert.Equal(t, string(data), "{\"indexName\":\"index\",\"knn\":[{\"boost\":1,\"field\":\"demo\",\"filter\":{\"meta_field_1\":{\"$eq\":\"abc\"}},\"numCandidates\":9,\"queryVector\":{\"float32\":[32]},\"topK\":10}],\"limit\":10,\"nextToken\":\"nextToken\",\"partitionKeys\":[\"key1\",\"key2\"],\"retriever\":{\"simple\":{\"query\":{\"$and\":[{\"type\":{\"$in\":[\"a\",\"b\"]}},{\"year\":{\"$gte\":2020}}]}}},\"returnMetadata\":true,\"returnMetadataFields\":[\"key1\",\"key2\"],\"sort\":[{\"_primaryKey\":{\"order\":\"asc\"},\"_score\":{\"order\":\"desc\"},\"field_a\":{\"order\":\"asc\"}}]}")
 		},
 		&QueryVectorsFusionRequest{
 			Bucket:    oss.Ptr("bucket"),
 			IndexName: oss.Ptr("index"),
-			Knn: &KnnQuery{
-				Field:         oss.Ptr("demo"),
-				QueryVector:   map[string]any{"float32": []float32{float32(32)}},
-				TopK:          oss.Ptr(10),
-				NumCandidates: oss.Ptr(9),
-				Filter: map[string]any{
-					"meta_field_1": map[string]any{
-						"$eq": "abc",
+			Knn: []map[string]any{
+				Knn{
+					Field:         oss.Ptr("demo"),
+					QueryVector:   map[string]any{"float32": []float32{float32(32)}},
+					TopK:          oss.Ptr(10),
+					NumCandidates: oss.Ptr(9),
+					Filter: map[string]any{
+						"meta_field_1": map[string]any{
+							"$eq": "abc",
+						},
 					},
-				},
-				Boost: oss.Ptr(float32(1)),
+					Boost: oss.Ptr(float32(1)),
+				}.ToMap(),
 			},
 			Retriever: &Retriever{
 				Simple: &SimpleRetriever{

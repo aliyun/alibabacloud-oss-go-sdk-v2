@@ -271,23 +271,28 @@ func (c *VectorsClient) QueryVectors(ctx context.Context, request *QueryVectorsR
 }
 
 type QueryVectorsFusionRequest struct {
-	Bucket               *string        `input:"host,bucket,required"`
-	IndexName            *string        `input:"body,indexName,json,required"`
-	Knn                  Knn            `input:"body,knn,json"`
-	Query                map[string]any `input:"body,query,json"`
-	Retriever            *Retriever     `input:"body,retriever,json"`
-	ReturnMetadata       *bool          `input:"body,returnMetadata,json"`
-	ReturnMetadataFields []string       `input:"body,returnMetadataFields,json"`
-	PartitionKeys        []string       `input:"body,partitionKeys,json"`
-	Limit                *int           `input:"body,limit,json"`
-	NextToken            *string        `input:"body,nextToken,json"`
-	Sort                 []Sort         `input:"body,sort,json"`
+	Bucket    *string `input:"host,bucket,required"`
+	IndexName *string `input:"body,indexName,json,required"`
+	// The knn vector queries, exactly as they are sent to the service. A single vector query is
+	// also represented as a one-element list.
+	//
+	// Each element is the raw JSON object of a query, so an attribute that the service adds later
+	// is passed through without an SDK change. Build an element with Knn.ToMap, or write the
+	// map directly to set an attribute that the SDK does not model yet.
+	Knn                  []map[string]any `input:"body,knn,json"`
+	Query                map[string]any   `input:"body,query,json"`
+	Retriever            *Retriever       `input:"body,retriever,json"`
+	ReturnMetadata       *bool            `input:"body,returnMetadata,json"`
+	ReturnMetadataFields []string         `input:"body,returnMetadataFields,json"`
+	PartitionKeys        []string         `input:"body,partitionKeys,json"`
+	Limit                *int             `input:"body,limit,json"`
+	NextToken            *string          `input:"body,nextToken,json"`
+	Sort                 []Sort           `input:"body,sort,json"`
 	oss.RequestCommon
 }
 
-type Knn interface{ isKnn() }
-
-type KnnQuery struct {
+// Knn defines a single knn vector query of the QueryVectorsFusion operation.
+type Knn struct {
 	Field         *string  `json:"field,omitempty"`
 	QueryVector   any      `json:"queryVector,omitempty"`
 	TopK          *int     `json:"topK,omitempty"`
@@ -296,11 +301,31 @@ type KnnQuery struct {
 	Boost         *float32 `json:"boost,omitempty"`
 }
 
-func (KnnQuery) isKnn() {}
-
-type KnnQueries []KnnQuery
-
-func (KnnQueries) isKnn() {}
+// ToMap returns the knn query as the raw JSON object that the service expects, so that it can be
+// used as an element of QueryVectorsFusionRequest.Knn. Attributes that the SDK does not model can
+// be added to the returned map directly.
+func (s Knn) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.Field != nil {
+		m["field"] = *s.Field
+	}
+	if s.QueryVector != nil {
+		m["queryVector"] = s.QueryVector
+	}
+	if s.TopK != nil {
+		m["topK"] = *s.TopK
+	}
+	if s.Filter != nil {
+		m["filter"] = s.Filter
+	}
+	if s.NumCandidates != nil {
+		m["numCandidates"] = *s.NumCandidates
+	}
+	if s.Boost != nil {
+		m["boost"] = *s.Boost
+	}
+	return m
+}
 
 type SimpleRetriever struct {
 	Query map[string]any `json:"query,omitempty"`
@@ -308,7 +333,7 @@ type SimpleRetriever struct {
 
 type Retriever struct {
 	Simple *SimpleRetriever `json:"simple,omitempty"`
-	Knn    *KnnQuery        `json:"knn,omitempty"`
+	Knn    *Knn             `json:"knn,omitempty"`
 	RRF    *RRFRetriever    `json:"rrf,omitempty"`
 	Weight *WeightRetriever `json:"weight,omitempty"`
 }

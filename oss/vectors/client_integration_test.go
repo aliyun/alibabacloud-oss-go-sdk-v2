@@ -1181,12 +1181,14 @@ func TestFusionMode(t *testing.T) {
 	queryRequest := &QueryVectorsFusionRequest{
 		Bucket:    oss.Ptr(bucketName),
 		IndexName: oss.Ptr(indexName),
-		Knn: &KnnQuery{
-			Field:         oss.Ptr("vector_2"),
-			QueryVector:   queryVector,
-			TopK:          oss.Ptr(10),
-			NumCandidates: oss.Ptr(15),
-			Boost:         oss.Ptr(float32(1)),
+		Knn: []map[string]any{
+			Knn{
+				Field:         oss.Ptr("vector_2"),
+				QueryVector:   queryVector,
+				TopK:          oss.Ptr(10),
+				NumCandidates: oss.Ptr(15),
+				Boost:         oss.Ptr(float32(1)),
+			}.ToMap(),
 		},
 		ReturnMetadata:       oss.Ptr(true),
 		ReturnMetadataFields: []string{"key1", "key2"},

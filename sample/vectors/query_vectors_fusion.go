@@ -55,17 +55,19 @@ func main() {
 	request := &vectors.QueryVectorsFusionRequest{
 		Bucket:    oss.Ptr(bucketName),
 		IndexName: oss.Ptr(indexName),
-		Knn: &vectors.KnnQuery{
-			Field:         oss.Ptr("demo"),
-			QueryVector:   map[string]any{"float32": []float32{float32(32)}},
-			TopK:          oss.Ptr(10),
-			NumCandidates: oss.Ptr(9),
-			Filter: map[string]any{
-				"meta_field_1": map[string]any{
-					"$eq": "abc",
+		Knn: []map[string]any{
+			vectors.Knn{
+				Field:         oss.Ptr("demo"),
+				QueryVector:   map[string]any{"float32": []float32{float32(32)}},
+				TopK:          oss.Ptr(10),
+				NumCandidates: oss.Ptr(9),
+				Filter: map[string]any{
+					"meta_field_1": map[string]any{
+						"$eq": "abc",
+					},
 				},
-			},
-			Boost: oss.Ptr(float32(1)),
+				Boost: oss.Ptr(float32(1)),
+			}.ToMap(),
 		},
 		Retriever: &vectors.Retriever{
 			Simple: &vectors.SimpleRetriever{
