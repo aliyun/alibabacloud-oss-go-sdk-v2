@@ -3826,64 +3826,64 @@ var testMockPutVectorIndexFusionSuccessCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?putVectorIndexFusion", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"name\":\"vector_1\",\"type\":\"vector\",\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\"},{\"name\":\"vector_2\",\"type\":\"vector\",\"dataType\":\"float32\",\"dimension\":512,\"distanceMetric\":\"cosine\"},{\"name\":\"timestamps\",\"type\":\"long\",\"isArray\":true},{\"name\":\"price\",\"type\":\"double\"},{\"name\":\"ip\",\"type\":\"ip\"},{\"name\":\"location\",\"type\":\"geoPoint\"},{\"name\":\"tag\",\"type\":\"string\"},{\"name\":\"user_id\",\"type\":\"string\",\"isPartitionKey\":true},{\"name\":\"tags\",\"type\":\"string\",\"isArray\":true},{\"name\":\"title_1\",\"type\":\"string\",\"exactMatch\":true,\"text\":{\"enabled\":true,\"analyzer\":\"standard\",\"analyzerParameters\":{\"caseSensitive\":true,\"delimitWord\":false}}},{\"name\":\"title_2\",\"type\":\"string\",\"exactMatch\":false,\"text\":{\"enabled\":true,\"analyzer\":\"split\",\"analyzerParameters\":{\"caseSensitive\":true,\"delimiter\":\" \"}}}]}}")
+			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\",\"name\":\"vector_1\",\"type\":\"vector\"},{\"dataType\":\"float32\",\"dimension\":512,\"distanceMetric\":\"cosine\",\"name\":\"vector_2\",\"type\":\"vector\"},{\"isArray\":true,\"name\":\"timestamps\",\"type\":\"long\"},{\"name\":\"price\",\"type\":\"double\"},{\"name\":\"ip\",\"type\":\"ip\"},{\"name\":\"location\",\"type\":\"geoPoint\"},{\"name\":\"tag\",\"type\":\"string\"},{\"isPartitionKey\":true,\"name\":\"user_id\",\"type\":\"string\"},{\"isArray\":true,\"name\":\"tags\",\"type\":\"string\"},{\"exactMatch\":true,\"name\":\"title_1\",\"text\":{\"analyzer\":\"standard\",\"analyzerParameters\":{\"caseSensitive\":true,\"delimitWord\":false},\"enabled\":true},\"type\":\"string\"},{\"exactMatch\":false,\"name\":\"title_2\",\"text\":{\"analyzer\":\"split\",\"analyzerParameters\":{\"caseSensitive\":true,\"delimiter\":\" \"},\"enabled\":true},\"type\":\"string\"}]}}")
 		},
 		&PutVectorIndexFusionRequest{
 			Bucket:    oss.Ptr("bucket"),
 			Mode:      oss.Ptr("fusion"),
 			IndexName: oss.Ptr("exampleIndex"),
 			SchemaConfiguration: &SchemaConfiguration{
-				Fields: []SchemaField{
-					{
+				Fields: []map[string]any{
+					FieldSchema{
 						Name:           oss.Ptr("vector_1"),
-						Type:           FieldTypeVector,
-						DataType:       VectorDataTypeFloat32,
+						Type:           oss.Ptr("vector"),
+						DataType:       oss.Ptr("float32"),
 						Dimension:      oss.Ptr(1024),
-						DistanceMetric: DistanceMetricTypeEuclidean,
-					},
-					{
+						DistanceMetric: oss.Ptr("euclidean"),
+					}.ToMap(),
+					FieldSchema{
 						Name:           oss.Ptr("vector_2"),
-						Type:           FieldTypeVector,
-						DataType:       VectorDataTypeFloat32,
+						Type:           oss.Ptr("vector"),
+						DataType:       oss.Ptr("float32"),
 						Dimension:      oss.Ptr(512),
-						DistanceMetric: DistanceMetricTypeCosine,
-					},
-					{
+						DistanceMetric: oss.Ptr("cosine"),
+					}.ToMap(),
+					FieldSchema{
 						Name:    oss.Ptr("timestamps"),
-						Type:    FieldTypeLong,
+						Type:    oss.Ptr("long"),
 						IsArray: oss.Ptr(true),
-					},
-					{
+					}.ToMap(),
+					FieldSchema{
 						Name: oss.Ptr("price"),
-						Type: FieldTypeDouble,
-					},
-					{
+						Type: oss.Ptr("double"),
+					}.ToMap(),
+					FieldSchema{
 						Name: oss.Ptr("ip"),
-						Type: FieldTypeIp,
-					},
-					{
+						Type: oss.Ptr("ip"),
+					}.ToMap(),
+					FieldSchema{
 						Name: oss.Ptr("location"),
-						Type: FieldTypeGeoPoint,
-					},
-					{
+						Type: oss.Ptr("geoPoint"),
+					}.ToMap(),
+					FieldSchema{
 						Name: oss.Ptr("tag"),
-						Type: FieldTypeString,
-					},
-					{
+						Type: oss.Ptr("string"),
+					}.ToMap(),
+					FieldSchema{
 						Name:           oss.Ptr("user_id"),
-						Type:           FieldTypeString,
+						Type:           oss.Ptr("string"),
 						IsPartitionKey: oss.Ptr(true),
-					},
-					{
+					}.ToMap(),
+					FieldSchema{
 						Name:    oss.Ptr("tags"),
-						Type:    FieldTypeString,
+						Type:    oss.Ptr("string"),
 						IsArray: oss.Ptr(true),
-					},
-					{
+					}.ToMap(),
+					FieldSchema{
 						Name:       oss.Ptr("title_1"),
-						Type:       FieldTypeString,
+						Type:       oss.Ptr("string"),
 						ExactMatch: oss.Ptr(true),
-						Text: &TextConfiguration{
+						Text: &TextSchema{
 							Enabled:  oss.Ptr(true),
 							Analyzer: oss.Ptr("standard"),
 							AnalyzerParameters: &AnalyzerParameters{
@@ -3891,12 +3891,12 @@ var testMockPutVectorIndexFusionSuccessCases = []struct {
 								DelimitWord:   oss.Ptr(false),
 							},
 						},
-					},
-					{
+					}.ToMap(),
+					FieldSchema{
 						Name:       oss.Ptr("title_2"),
-						Type:       FieldTypeString,
+						Type:       oss.Ptr("string"),
 						ExactMatch: oss.Ptr(false),
-						Text: &TextConfiguration{
+						Text: &TextSchema{
 							Enabled:  oss.Ptr(true),
 							Analyzer: oss.Ptr("split"),
 							AnalyzerParameters: &AnalyzerParameters{
@@ -3904,7 +3904,7 @@ var testMockPutVectorIndexFusionSuccessCases = []struct {
 								Delimiter:     oss.Ptr(" "),
 							},
 						},
-					},
+					}.ToMap(),
 				},
 			},
 		},
@@ -3965,21 +3965,21 @@ var testMockPutVectorIndexFusionErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?putVectorIndexFusion", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"name\":\"vector_1\",\"type\":\"vector\",\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\"}]}}")
+			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\",\"name\":\"vector_1\",\"type\":\"vector\"}]}}")
 		},
 		&PutVectorIndexFusionRequest{
 			Bucket:    oss.Ptr("bucket"),
 			Mode:      oss.Ptr("fusion"),
 			IndexName: oss.Ptr("exampleIndex"),
 			SchemaConfiguration: &SchemaConfiguration{
-				Fields: []SchemaField{
-					{
+				Fields: []map[string]any{
+					FieldSchema{
 						Name:           oss.Ptr("vector_1"),
-						Type:           FieldTypeVector,
-						DataType:       VectorDataTypeFloat32,
+						Type:           oss.Ptr("vector"),
+						DataType:       oss.Ptr("float32"),
 						Dimension:      oss.Ptr(1024),
-						DistanceMetric: DistanceMetricTypeEuclidean,
-					},
+						DistanceMetric: oss.Ptr("euclidean"),
+					}.ToMap(),
 				},
 			},
 		},
@@ -4017,21 +4017,21 @@ var testMockPutVectorIndexFusionErrorCases = []struct {
 			assert.Equal(t, "POST", r.Method)
 			assert.Equal(t, "/bucket/?putVectorIndexFusion", r.URL.String())
 			data, _ := io.ReadAll(r.Body)
-			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"name\":\"vector_1\",\"type\":\"vector\",\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\"}]}}")
+			assert.Equal(t, string(data), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\",\"name\":\"vector_1\",\"type\":\"vector\"}]}}")
 		},
 		&PutVectorIndexFusionRequest{
 			Bucket:    oss.Ptr("bucket"),
 			Mode:      oss.Ptr("fusion"),
 			IndexName: oss.Ptr("exampleIndex"),
 			SchemaConfiguration: &SchemaConfiguration{
-				Fields: []SchemaField{
-					{
+				Fields: []map[string]any{
+					FieldSchema{
 						Name:           oss.Ptr("vector_1"),
-						Type:           FieldTypeVector,
-						DataType:       VectorDataTypeFloat32,
+						Type:           oss.Ptr("vector"),
+						DataType:       oss.Ptr("float32"),
 						Dimension:      oss.Ptr(1024),
-						DistanceMetric: DistanceMetricTypeEuclidean,
-					},
+						DistanceMetric: oss.Ptr("euclidean"),
+					}.ToMap(),
 				},
 			},
 		},

@@ -57,57 +57,57 @@ func main() {
 		IndexName: oss.Ptr(indexName),
 		Mode:      oss.Ptr("fusion"),
 		SchemaConfiguration: &vectors.SchemaConfiguration{
-			Fields: []vectors.SchemaField{
-				{
+			Fields: []map[string]any{
+				vectors.FieldSchema{
 					Name:           oss.Ptr("vector_1"),
-					Type:           vectors.FieldTypeVector,
-					DataType:       vectors.VectorDataTypeFloat32,
+					Type:           oss.Ptr("vector"),
+					DataType:       oss.Ptr("float32"),
 					Dimension:      oss.Ptr(1024),
-					DistanceMetric: vectors.DistanceMetricTypeCosine,
-				},
-				{
+					DistanceMetric: oss.Ptr("cosine"),
+				}.ToMap(),
+				vectors.FieldSchema{
 					Name:           oss.Ptr("vector_2"),
-					Type:           vectors.FieldTypeVector,
-					DataType:       vectors.VectorDataTypeFloat32,
+					Type:           oss.Ptr("vector"),
+					DataType:       oss.Ptr("float32"),
 					Dimension:      oss.Ptr(512),
-					DistanceMetric: vectors.DistanceMetricTypeCosine,
-				},
-				{
+					DistanceMetric: oss.Ptr("cosine"),
+				}.ToMap(),
+				vectors.FieldSchema{
 					Name:    oss.Ptr("timestamps"),
-					Type:    vectors.FieldTypeLong,
+					Type:    oss.Ptr("long"),
 					IsArray: oss.Ptr(true),
-				},
-				{
+				}.ToMap(),
+				vectors.FieldSchema{
 					Name: oss.Ptr("price"),
-					Type: vectors.FieldTypeDouble,
-				},
-				{
+					Type: oss.Ptr("double"),
+				}.ToMap(),
+				vectors.FieldSchema{
 					Name: oss.Ptr("ip"),
-					Type: vectors.FieldTypeIp,
-				},
-				{
+					Type: oss.Ptr("ip"),
+				}.ToMap(),
+				vectors.FieldSchema{
 					Name: oss.Ptr("location"),
-					Type: vectors.FieldTypeGeoPoint,
-				},
-				{
+					Type: oss.Ptr("geoPoint"),
+				}.ToMap(),
+				vectors.FieldSchema{
 					Name: oss.Ptr("tag"),
-					Type: vectors.FieldTypeString,
-				},
-				{
+					Type: oss.Ptr("string"),
+				}.ToMap(),
+				vectors.FieldSchema{
 					Name:           oss.Ptr("user_id"),
-					Type:           vectors.FieldTypeString,
+					Type:           oss.Ptr("string"),
 					IsPartitionKey: oss.Ptr(true),
-				},
-				{
+				}.ToMap(),
+				vectors.FieldSchema{
 					Name:    oss.Ptr("tags"),
-					Type:    vectors.FieldTypeString,
+					Type:    oss.Ptr("string"),
 					IsArray: oss.Ptr(true),
-				},
-				{
+				}.ToMap(),
+				vectors.FieldSchema{
 					Name:       oss.Ptr("title_1"),
-					Type:       vectors.FieldTypeString,
+					Type:       oss.Ptr("string"),
 					ExactMatch: oss.Ptr(true),
-					Text: &vectors.TextConfiguration{
+					Text: &vectors.TextSchema{
 						Enabled:  oss.Ptr(true),
 						Analyzer: oss.Ptr("standard"),
 						AnalyzerParameters: &vectors.AnalyzerParameters{
@@ -115,12 +115,12 @@ func main() {
 							DelimitWord:   oss.Ptr(false),
 						},
 					},
-				},
-				{
+				}.ToMap(),
+				vectors.FieldSchema{
 					Name:       oss.Ptr("title_2"),
-					Type:       vectors.FieldTypeString,
+					Type:       oss.Ptr("string"),
 					ExactMatch: oss.Ptr(false),
-					Text: &vectors.TextConfiguration{
+					Text: &vectors.TextSchema{
 						Enabled:  oss.Ptr(true),
 						Analyzer: oss.Ptr("split"),
 						AnalyzerParameters: &vectors.AnalyzerParameters{
@@ -128,7 +128,7 @@ func main() {
 							Delimiter:     oss.Ptr(" "),
 						},
 					},
-				},
+				}.ToMap(),
 			},
 		},
 	}

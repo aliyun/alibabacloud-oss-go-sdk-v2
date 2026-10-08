@@ -2,6 +2,7 @@ package vectors
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
@@ -93,28 +94,54 @@ type VectorIndex struct {
 // SchemaConfiguration defines the schema configuration of a vector index.
 type SchemaConfiguration struct {
 	// The container that stores the field configurations.
-	Fields []SchemaField `json:"fields,omitempty"`
+	//
+	// Each element is the raw JSON object of a field, so an attribute the service adds later is
+	// passed through without an SDK change. Build an element with FieldSchema.ToMap, or write the
+	// map directly to set an attribute that the SDK does not model yet.
+	Fields []map[string]any `json:"fields,omitempty"`
 }
 
-// SchemaField defines the configuration of a single field in the vector index schema.
-type SchemaField struct {
+// FieldSchemas returns the field configurations as the strongly-typed FieldSchema model.
+//
+// This is a convenience view over Fields: an attribute that the SDK does not model is not visible
+// here, and a value that does not fit the typed model makes the conversion fail. Use Fields to
+// access the complete definition.
+//
+// It returns nil when no field is set.
+func (s SchemaConfiguration) FieldSchemas() ([]FieldSchema, error) {
+	data, err := json.Marshal(s.Fields)
+	if err != nil {
+		return nil, err
+	}
+	var schemas []FieldSchema
+	if err = json.Unmarshal(data, &schemas); err != nil {
+		return nil, err
+	}
+	return schemas, nil
+}
+
+// FieldSchema defines the configuration of a single field in the vector index schema.
+type FieldSchema struct {
 	// The name of the field.
 	Name *string `json:"name,omitempty"`
 
-	// The type of the field. Valid values: vector, string, long, double, ip, geoPoint.
-	Type FieldType   `json:"type,omitempty"`
+	// The type of the field. Valid values: vector, string, long, double, bool, ip, geoPoint.
+	// The values are also declared as the FieldType constants, e.g. oss.Ptr(string(FieldTypeVector)).
+	Type *string `json:"type,omitempty"`
 
 	// The data type of the vector field. Valid values: float32.
 	// This parameter is required only when Type is set to vector.
-	DataType VectorDataType `json:"dataType,omitempty"`
+	// The value is also declared as the VectorDataTypeFloat32 constant.
+	DataType *string `json:"dataType,omitempty"`
 
 	// The dimension of the vector field.
 	// This parameter is required only when Type is set to vector.
 	Dimension *int `json:"dimension,omitempty"`
 
-	// The distance metric of the vector field. Valid values: euclidean, cosine, inner_product.
+	// The distance metric of the vector field. Valid values: euclidean, cosine, ip.
 	// This parameter is required only when Type is set to vector.
-	DistanceMetric DistanceMetricType `json:"distanceMetric,omitempty"`
+	// The values are also declared as the DistanceMetricType constants, e.g. oss.Ptr(string(DistanceMetricTypeCosine)).
+	DistanceMetric *string `json:"distanceMetric,omitempty"`
 
 	// Specifies whether the field is an array.
 	IsArray *bool `json:"isArray,omitempty"`
@@ -126,11 +153,46 @@ type SchemaField struct {
 	ExactMatch *bool `json:"exactMatch,omitempty"`
 
 	// The text search configuration of the string field.
-	Text *TextConfiguration `json:"text,omitempty"`
+	Text *TextSchema `json:"text,omitempty"`
 }
 
-// TextConfiguration defines the text search configuration for a string field.
-type TextConfiguration struct {
+// ToMap returns the field definition as the raw JSON object that the service expects, so that it
+// can be used as an element of SchemaConfiguration.Fields. Attributes that the SDK does not model
+// can be added to the returned map directly.
+func (s FieldSchema) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.Name != nil {
+		m["name"] = *s.Name
+	}
+	if s.Type != nil {
+		m["type"] = *s.Type
+	}
+	if s.DataType != nil {
+		m["dataType"] = *s.DataType
+	}
+	if s.Dimension != nil {
+		m["dimension"] = *s.Dimension
+	}
+	if s.DistanceMetric != nil {
+		m["distanceMetric"] = *s.DistanceMetric
+	}
+	if s.IsArray != nil {
+		m["isArray"] = *s.IsArray
+	}
+	if s.IsPartitionKey != nil {
+		m["isPartitionKey"] = *s.IsPartitionKey
+	}
+	if s.ExactMatch != nil {
+		m["exactMatch"] = *s.ExactMatch
+	}
+	if s.Text != nil {
+		m["text"] = s.Text.toMap()
+	}
+	return m
+}
+
+// TextSchema defines the text search configuration for a string field.
+type TextSchema struct {
 	// Specifies whether text search is enabled for the field.
 	Enabled *bool `json:"enabled,omitempty"`
 
@@ -139,6 +201,31 @@ type TextConfiguration struct {
 
 	// The parameters of the analyzer.
 	AnalyzerParameters *AnalyzerParameters `json:"analyzerParameters,omitempty"`
+}
+
+// toMap returns the text configuration as the raw JSON object of the "text" attribute.
+func (s TextSchema) toMap() map[string]any {
+	m := make(map[string]any)
+	if s.Enabled != nil {
+		m["enabled"] = *s.Enabled
+	}
+	if s.Analyzer != nil {
+		m["analyzer"] = *s.Analyzer
+	}
+	if s.AnalyzerParameters != nil {
+		p := make(map[string]any)
+		if s.AnalyzerParameters.CaseSensitive != nil {
+			p["caseSensitive"] = *s.AnalyzerParameters.CaseSensitive
+		}
+		if s.AnalyzerParameters.DelimitWord != nil {
+			p["delimitWord"] = *s.AnalyzerParameters.DelimitWord
+		}
+		if s.AnalyzerParameters.Delimiter != nil {
+			p["delimiter"] = *s.AnalyzerParameters.Delimiter
+		}
+		m["analyzerParameters"] = p
+	}
+	return m
 }
 
 // AnalyzerParameters defines the parameters of the analyzer used for text search.

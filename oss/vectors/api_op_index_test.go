@@ -470,49 +470,81 @@ func TestUnmarshalOutput_GetVectorIndex(t *testing.T) {
 	assert.Equal(t, *result.Index.Dimension, 128)
 	assert.Equal(t, *result.Index.Status, "running")
 	assert.Equal(t, *result.Index.BucketArn, "acs:oss:::test-bucket")
-	assert.Len(t, result.Index.SchemaConfiguration.Fields, 11)
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[0].DataType, VectorDataTypeFloat32)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[0].Dimension, int(1024))
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[0].DistanceMetric, DistanceMetricTypeEuclidean)
+	fields := result.Index.SchemaConfiguration.Fields
+	assert.Len(t, fields, 11)
 
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[1].Name, "vector_2")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[1].Type, FieldTypeVector)
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[1].DataType, VectorDataTypeFloat32)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[1].Dimension, int(512))
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[1].DistanceMetric, DistanceMetricTypeCosine)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[2].Name, "timestamps")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[2].Type, FieldTypeLong)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[2].IsArray, true)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[2].Name, "timestamps")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[2].Type, FieldTypeLong)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[3].Name, "price")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[3].Type, FieldTypeDouble)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[4].Name, "ip")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[4].Type, FieldTypeIp)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[5].Name, "location")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[5].Type, FieldTypeGeoPoint)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[6].Name, "tag")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[6].Type, FieldTypeString)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[7].IsPartitionKey, true)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[7].Name, "user_id")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[7].Type, FieldTypeString)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[8].IsArray, true)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[8].Name, "tags")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[8].Type, FieldTypeString)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[9].Name, "title_1")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[9].Type, FieldTypeString)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[9].ExactMatch, true)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[9].Text.Enabled, true)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[9].Text.Analyzer, "standard")
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[9].Text.AnalyzerParameters.CaseSensitive, true)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[9].Text.AnalyzerParameters.DelimitWord, false)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[10].Name, "title_2")
-	assert.Equal(t, result.Index.SchemaConfiguration.Fields[10].Type, FieldTypeString)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[10].ExactMatch, false)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[10].Text.Enabled, true)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[10].Text.Analyzer, "split")
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[10].Text.AnalyzerParameters.CaseSensitive, true)
-	assert.Equal(t, *result.Index.SchemaConfiguration.Fields[10].Text.AnalyzerParameters.Delimiter, " ")
+	assert.Equal(t, fields[0]["name"], "vector_1")
+	assert.Equal(t, fields[0]["type"], "vector")
+	assert.Equal(t, fields[0]["dataType"], "float32")
+	assert.Equal(t, fields[0]["dimension"], float64(1024))
+	assert.Equal(t, fields[0]["distanceMetric"], "euclidean")
+
+	assert.Equal(t, fields[1]["name"], "vector_2")
+	assert.Equal(t, fields[1]["type"], "vector")
+	assert.Equal(t, fields[1]["dataType"], "float32")
+	assert.Equal(t, fields[1]["dimension"], float64(512))
+	assert.Equal(t, fields[1]["distanceMetric"], "cosine")
+
+	assert.Equal(t, fields[2]["name"], "timestamps")
+	assert.Equal(t, fields[2]["type"], "long")
+	assert.Equal(t, fields[2]["isArray"], true)
+
+	assert.Equal(t, fields[3]["name"], "price")
+	assert.Equal(t, fields[3]["type"], "double")
+
+	assert.Equal(t, fields[4]["name"], "ip")
+	assert.Equal(t, fields[4]["type"], "ip")
+
+	assert.Equal(t, fields[5]["name"], "location")
+	assert.Equal(t, fields[5]["type"], "geoPoint")
+
+	assert.Equal(t, fields[6]["name"], "tag")
+	assert.Equal(t, fields[6]["type"], "string")
+
+	assert.Equal(t, fields[7]["name"], "user_id")
+	assert.Equal(t, fields[7]["type"], "string")
+	assert.Equal(t, fields[7]["isPartitionKey"], true)
+
+	assert.Equal(t, fields[8]["name"], "tags")
+	assert.Equal(t, fields[8]["type"], "string")
+	assert.Equal(t, fields[8]["isArray"], true)
+
+	assert.Equal(t, fields[9]["name"], "title_1")
+	assert.Equal(t, fields[9]["type"], "string")
+	assert.Equal(t, fields[9]["exactMatch"], true)
+	text1, ok := fields[9]["text"].(map[string]any)
+	assert.True(t, ok)
+	assert.Equal(t, text1["enabled"], true)
+	assert.Equal(t, text1["analyzer"], "standard")
+	parameters1, ok := text1["analyzerParameters"].(map[string]any)
+	assert.True(t, ok)
+	assert.Equal(t, parameters1["caseSensitive"], true)
+	assert.Equal(t, parameters1["delimitWord"], false)
+
+	assert.Equal(t, fields[10]["name"], "title_2")
+	assert.Equal(t, fields[10]["type"], "string")
+	assert.Equal(t, fields[10]["exactMatch"], false)
+	text2, ok := fields[10]["text"].(map[string]any)
+	assert.True(t, ok)
+	assert.Equal(t, text2["enabled"], true)
+	assert.Equal(t, text2["analyzer"], "split")
+	parameters2, ok := text2["analyzerParameters"].(map[string]any)
+	assert.True(t, ok)
+	assert.Equal(t, parameters2["caseSensitive"], true)
+	assert.Equal(t, parameters2["delimiter"], " ")
+
+	schemas, err := result.Index.SchemaConfiguration.FieldSchemas()
+	assert.Nil(t, err)
+	assert.Len(t, schemas, 11)
+	assert.Equal(t, *schemas[0].Name, "vector_1")
+	assert.Equal(t, *schemas[0].Type, "vector")
+	assert.Equal(t, *schemas[0].DataType, "float32")
+	assert.Equal(t, *schemas[0].Dimension, 1024)
+	assert.Equal(t, *schemas[0].DistanceMetric, "euclidean")
+	assert.Equal(t, *schemas[9].Text.Enabled, true)
+	assert.Equal(t, *schemas[9].Text.Analyzer, "standard")
+	assert.Equal(t, *schemas[9].Text.AnalyzerParameters.DelimitWord, false)
+	assert.Equal(t, *schemas[10].Text.AnalyzerParameters.Delimiter, " ")
 
 	output = &oss.OperationOutput{
 		StatusCode: 404,
@@ -569,6 +601,48 @@ func TestUnmarshalOutput_GetVectorIndex(t *testing.T) {
 	assert.Equal(t, result.Status, "AccessDenied")
 	assert.Equal(t, result.Headers.Get("X-Oss-Request-Id"), "534B371674E88A4D8906****")
 	assert.Equal(t, result.Headers.Get("Content-Type"), "application/json")
+}
+
+func TestSchemaConfiguration_FieldSchemas(t *testing.T) {
+	configuration := &SchemaConfiguration{
+		Fields: []map[string]any{
+			FieldSchema{
+				Name:           oss.Ptr("vector_1"),
+				Type:           oss.Ptr("vector"),
+				DataType:       oss.Ptr("float32"),
+				Dimension:      oss.Ptr(1024),
+				DistanceMetric: oss.Ptr("euclidean"),
+				Text: &TextSchema{
+					Analyzer: oss.Ptr("standard"),
+				},
+			}.ToMap(),
+			{
+				"name": "tag",
+				"type": "string",
+			},
+		},
+	}
+	schemas, err := configuration.FieldSchemas()
+	assert.Nil(t, err)
+	assert.Len(t, schemas, 2)
+	assert.Equal(t, *schemas[0].Name, "vector_1")
+	assert.Equal(t, *schemas[0].Type, "vector")
+	assert.Equal(t, *schemas[0].DataType, "float32")
+	assert.Equal(t, *schemas[0].Dimension, 1024)
+	assert.Equal(t, *schemas[0].DistanceMetric, "euclidean")
+	assert.Equal(t, *schemas[0].Text.Analyzer, "standard")
+	assert.Equal(t, *schemas[1].Name, "tag")
+	assert.Equal(t, *schemas[1].Type, "string")
+
+	empty, err := (&SchemaConfiguration{}).FieldSchemas()
+	assert.Nil(t, err)
+	assert.Nil(t, empty)
+
+	invalid, err := (&SchemaConfiguration{
+		Fields: []map[string]any{{"dimension": "not-a-number"}},
+	}).FieldSchemas()
+	assert.NotNil(t, err)
+	assert.Nil(t, invalid)
 }
 
 func TestMarshalInput_ListVectorIndexes(t *testing.T) {
@@ -1089,57 +1163,57 @@ func TestMarshalInput_PutVectorIndexFusion(t *testing.T) {
 		Mode:      oss.Ptr("fusion"),
 		IndexName: oss.Ptr("exampleIndex"),
 		SchemaConfiguration: &SchemaConfiguration{
-			Fields: []SchemaField{
-				{
+			Fields: []map[string]any{
+				FieldSchema{
 					Name:           oss.Ptr("vector_1"),
-					Type:           FieldTypeVector,
-					DataType:       VectorDataTypeFloat32,
+					Type:           oss.Ptr("vector"),
+					DataType:       oss.Ptr("float32"),
 					Dimension:      oss.Ptr(1024),
-					DistanceMetric: DistanceMetricTypeEuclidean,
-				},
-				{
+					DistanceMetric: oss.Ptr("euclidean"),
+				}.ToMap(),
+				FieldSchema{
 					Name:           oss.Ptr("vector_2"),
-					Type:           FieldTypeVector,
-					DataType:       VectorDataTypeFloat32,
+					Type:           oss.Ptr("vector"),
+					DataType:       oss.Ptr("float32"),
 					Dimension:      oss.Ptr(512),
-					DistanceMetric: DistanceMetricTypeCosine,
-				},
-				{
+					DistanceMetric: oss.Ptr("cosine"),
+				}.ToMap(),
+				FieldSchema{
 					Name:    oss.Ptr("timestamps"),
-					Type:    FieldTypeLong,
+					Type:    oss.Ptr("long"),
 					IsArray: oss.Ptr(true),
-				},
-				{
+				}.ToMap(),
+				FieldSchema{
 					Name: oss.Ptr("price"),
-					Type: FieldTypeDouble,
-				},
-				{
+					Type: oss.Ptr("double"),
+				}.ToMap(),
+				FieldSchema{
 					Name: oss.Ptr("ip"),
-					Type: FieldTypeIp,
-				},
-				{
+					Type: oss.Ptr("ip"),
+				}.ToMap(),
+				FieldSchema{
 					Name: oss.Ptr("location"),
-					Type: FieldTypeGeoPoint,
-				},
-				{
+					Type: oss.Ptr("geoPoint"),
+				}.ToMap(),
+				FieldSchema{
 					Name: oss.Ptr("tag"),
-					Type: FieldTypeString,
-				},
-				{
+					Type: oss.Ptr("string"),
+				}.ToMap(),
+				FieldSchema{
 					Name:           oss.Ptr("user_id"),
-					Type:           FieldTypeString,
+					Type:           oss.Ptr("string"),
 					IsPartitionKey: oss.Ptr(true),
-				},
-				{
+				}.ToMap(),
+				FieldSchema{
 					Name:    oss.Ptr("tags"),
-					Type:    FieldTypeString,
+					Type:    oss.Ptr("string"),
 					IsArray: oss.Ptr(true),
-				},
-				{
+				}.ToMap(),
+				FieldSchema{
 					Name:       oss.Ptr("title_1"),
-					Type:       FieldTypeString,
+					Type:       oss.Ptr("string"),
 					ExactMatch: oss.Ptr(true),
-					Text: &TextConfiguration{
+					Text: &TextSchema{
 						Enabled:  oss.Ptr(true),
 						Analyzer: oss.Ptr("standard"),
 						AnalyzerParameters: &AnalyzerParameters{
@@ -1147,12 +1221,12 @@ func TestMarshalInput_PutVectorIndexFusion(t *testing.T) {
 							DelimitWord:   oss.Ptr(false),
 						},
 					},
-				},
-				{
+				}.ToMap(),
+				FieldSchema{
 					Name:       oss.Ptr("title_2"),
-					Type:       FieldTypeString,
+					Type:       oss.Ptr("string"),
 					ExactMatch: oss.Ptr(false),
-					Text: &TextConfiguration{
+					Text: &TextSchema{
 						Enabled:  oss.Ptr(true),
 						Analyzer: oss.Ptr("split"),
 						AnalyzerParameters: &AnalyzerParameters{
@@ -1160,7 +1234,7 @@ func TestMarshalInput_PutVectorIndexFusion(t *testing.T) {
 							Delimiter:     oss.Ptr(" "),
 						},
 					},
-				},
+				}.ToMap(),
 			},
 		},
 	}
@@ -1170,7 +1244,7 @@ func TestMarshalInput_PutVectorIndexFusion(t *testing.T) {
 	assert.Equal(t, *input.Bucket, "oss-demo")
 	assert.Equal(t, input.Parameters["putVectorIndex"], "")
 	body, _ := io.ReadAll(input.Body)
-	assert.Equal(t, string(body), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"name\":\"vector_1\",\"type\":\"vector\",\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\"},{\"name\":\"vector_2\",\"type\":\"vector\",\"dataType\":\"float32\",\"dimension\":512,\"distanceMetric\":\"cosine\"},{\"name\":\"timestamps\",\"type\":\"long\",\"isArray\":true},{\"name\":\"price\",\"type\":\"double\"},{\"name\":\"ip\",\"type\":\"ip\"},{\"name\":\"location\",\"type\":\"geoPoint\"},{\"name\":\"tag\",\"type\":\"string\"},{\"name\":\"user_id\",\"type\":\"string\",\"isPartitionKey\":true},{\"name\":\"tags\",\"type\":\"string\",\"isArray\":true},{\"name\":\"title_1\",\"type\":\"string\",\"exactMatch\":true,\"text\":{\"enabled\":true,\"analyzer\":\"standard\",\"analyzerParameters\":{\"caseSensitive\":true,\"delimitWord\":false}}},{\"name\":\"title_2\",\"type\":\"string\",\"exactMatch\":false,\"text\":{\"enabled\":true,\"analyzer\":\"split\",\"analyzerParameters\":{\"caseSensitive\":true,\"delimiter\":\" \"}}}]}}")
+	assert.Equal(t, string(body), "{\"indexName\":\"exampleIndex\",\"mode\":\"fusion\",\"schemaConfiguration\":{\"fields\":[{\"dataType\":\"float32\",\"dimension\":1024,\"distanceMetric\":\"euclidean\",\"name\":\"vector_1\",\"type\":\"vector\"},{\"dataType\":\"float32\",\"dimension\":512,\"distanceMetric\":\"cosine\",\"name\":\"vector_2\",\"type\":\"vector\"},{\"isArray\":true,\"name\":\"timestamps\",\"type\":\"long\"},{\"name\":\"price\",\"type\":\"double\"},{\"name\":\"ip\",\"type\":\"ip\"},{\"name\":\"location\",\"type\":\"geoPoint\"},{\"name\":\"tag\",\"type\":\"string\"},{\"isPartitionKey\":true,\"name\":\"user_id\",\"type\":\"string\"},{\"isArray\":true,\"name\":\"tags\",\"type\":\"string\"},{\"exactMatch\":true,\"name\":\"title_1\",\"text\":{\"analyzer\":\"standard\",\"analyzerParameters\":{\"caseSensitive\":true,\"delimitWord\":false},\"enabled\":true},\"type\":\"string\"},{\"exactMatch\":false,\"name\":\"title_2\",\"text\":{\"analyzer\":\"split\",\"analyzerParameters\":{\"caseSensitive\":true,\"delimiter\":\" \"},\"enabled\":true},\"type\":\"string\"}]}}")
 }
 
 func TestUnmarshalOutput_PutVectorIndexFusion(t *testing.T) {

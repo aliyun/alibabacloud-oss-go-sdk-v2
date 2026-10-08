@@ -1,6 +1,6 @@
 package vectors
 
-// FieldType The field type for vector SchemaField
+// FieldType The field type for vector FieldSchema
 type FieldType string
 
 // Enum values for FieldType

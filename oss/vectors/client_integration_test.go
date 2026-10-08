@@ -1093,57 +1093,57 @@ func TestFusionMode(t *testing.T) {
 		IndexName: oss.Ptr(indexName),
 		Mode:      oss.Ptr("fusion"),
 		SchemaConfiguration: &SchemaConfiguration{
-			Fields: []SchemaField{
-				{
+			Fields: []map[string]any{
+				FieldSchema{
 					Name:           oss.Ptr("vector_1"),
-					Type:           FieldTypeVector,
-					DataType:       VectorDataTypeFloat32,
+					Type:           oss.Ptr("vector"),
+					DataType:       oss.Ptr("float32"),
 					Dimension:      oss.Ptr(1024),
-					DistanceMetric: DistanceMetricTypeEuclidean,
-				},
-				{
+					DistanceMetric: oss.Ptr("euclidean"),
+				}.ToMap(),
+				FieldSchema{
 					Name:           oss.Ptr("vector_2"),
-					Type:           FieldTypeVector,
-					DataType:       VectorDataTypeFloat32,
+					Type:           oss.Ptr("vector"),
+					DataType:       oss.Ptr("float32"),
 					Dimension:      oss.Ptr(2),
-					DistanceMetric: DistanceMetricTypeCosine,
-				},
-				{
+					DistanceMetric: oss.Ptr("cosine"),
+				}.ToMap(),
+				FieldSchema{
 					Name:    oss.Ptr("timestamps"),
-					Type:    FieldTypeLong,
+					Type:    oss.Ptr("long"),
 					IsArray: oss.Ptr(true),
-				},
-				{
+				}.ToMap(),
+				FieldSchema{
 					Name: oss.Ptr("price"),
-					Type: FieldTypeDouble,
-				},
-				{
+					Type: oss.Ptr("double"),
+				}.ToMap(),
+				FieldSchema{
 					Name: oss.Ptr("ip"),
-					Type: FieldTypeIp,
-				},
-				{
+					Type: oss.Ptr("ip"),
+				}.ToMap(),
+				FieldSchema{
 					Name: oss.Ptr("location"),
-					Type: FieldTypeGeoPoint,
-				},
-				{
+					Type: oss.Ptr("geoPoint"),
+				}.ToMap(),
+				FieldSchema{
 					Name: oss.Ptr("tag"),
-					Type: FieldTypeString,
-				},
-				{
+					Type: oss.Ptr("string"),
+				}.ToMap(),
+				FieldSchema{
 					Name:           oss.Ptr("user_id"),
-					Type:           FieldTypeString,
+					Type:           oss.Ptr("string"),
 					IsPartitionKey: oss.Ptr(true),
-				},
-				{
+				}.ToMap(),
+				FieldSchema{
 					Name:    oss.Ptr("tags"),
-					Type:    FieldTypeString,
+					Type:    oss.Ptr("string"),
 					IsArray: oss.Ptr(true),
-				},
-				{
+				}.ToMap(),
+				FieldSchema{
 					Name:       oss.Ptr("title_1"),
-					Type:       FieldTypeString,
+					Type:       oss.Ptr("string"),
 					ExactMatch: oss.Ptr(true),
-					Text: &TextConfiguration{
+					Text: &TextSchema{
 						Enabled:  oss.Ptr(true),
 						Analyzer: oss.Ptr("standard"),
 						AnalyzerParameters: &AnalyzerParameters{
@@ -1151,12 +1151,12 @@ func TestFusionMode(t *testing.T) {
 							DelimitWord:   oss.Ptr(false),
 						},
 					},
-				},
-				{
+				}.ToMap(),
+				FieldSchema{
 					Name:       oss.Ptr("title_2"),
-					Type:       FieldTypeString,
+					Type:       oss.Ptr("string"),
 					ExactMatch: oss.Ptr(false),
-					Text: &TextConfiguration{
+					Text: &TextSchema{
 						Enabled:  oss.Ptr(true),
 						Analyzer: oss.Ptr("split"),
 						AnalyzerParameters: &AnalyzerParameters{
@@ -1164,7 +1164,7 @@ func TestFusionMode(t *testing.T) {
 							Delimiter:     oss.Ptr(" "),
 						},
 					},
-				},
+				}.ToMap(),
 			},
 		},
 	}
