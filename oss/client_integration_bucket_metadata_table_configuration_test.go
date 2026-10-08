@@ -66,7 +66,7 @@ func TestBucketMetadataTableConfiguration(t *testing.T) {
 	assert.NotNil(t, metaResult.JournalTableConfigurationResult)
 	assert.Equal(t, "journal", *metaResult.JournalTableConfigurationResult.TableName)
 	assert.Equal(t, "ENABLED", *metaResult.JournalTableConfigurationResult.RecordExpiration.Expiration)
-	assert.Equal(t, int32(7), *metaResult.JournalTableConfigurationResult.RecordExpiration.Days)
+	assert.Equal(t, int(7), *metaResult.JournalTableConfigurationResult.RecordExpiration.Days)
 	assert.NotNil(t, metaResult.InventoryTableConfigurationResult)
 	assert.Equal(t, "ENABLED", *metaResult.InventoryTableConfigurationResult.ConfigurationState)
 	assert.Equal(t, "inventory", *metaResult.InventoryTableConfigurationResult.TableName)
