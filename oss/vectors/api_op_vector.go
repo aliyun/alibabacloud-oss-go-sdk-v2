@@ -279,15 +279,22 @@ type QueryVectorsFusionRequest struct {
 	// Each element is the raw JSON object of a query, so an attribute that the service adds later
 	// is passed through without an SDK change. Build an element with Knn.ToMap, or write the
 	// map directly to set an attribute that the SDK does not model yet.
-	Knn                  []map[string]any `input:"body,knn,json"`
-	Query                map[string]any   `input:"body,query,json"`
-	Retriever            *Retriever       `input:"body,retriever,json"`
-	ReturnMetadata       *bool            `input:"body,returnMetadata,json"`
-	ReturnMetadataFields []string         `input:"body,returnMetadataFields,json"`
-	PartitionKeys        []string         `input:"body,partitionKeys,json"`
-	Limit                *int             `input:"body,limit,json"`
-	NextToken            *string          `input:"body,nextToken,json"`
-	Sort                 []Sort           `input:"body,sort,json"`
+	Knn   []map[string]any `input:"body,knn,json"`
+	Query map[string]any   `input:"body,query,json"`
+	// The multi-way hybrid retriever, exactly as it is sent to the service. It carries the raw
+	// JSON object, so an attribute that the service adds later is passed through without an SDK
+	// change.
+	//
+	// The object has a single type key: simple, knn, rrf or weight. Build the value with the
+	// corresponding ToMap, e.g. map[string]any{"rrf": RrfRetriever{...}.ToMap()}, or write the map
+	// directly to set an attribute that the SDK does not model yet.
+	Retriever            map[string]any `input:"body,retriever,json"`
+	ReturnMetadata       *bool          `input:"body,returnMetadata,json"`
+	ReturnMetadataFields []string       `input:"body,returnMetadataFields,json"`
+	PartitionKeys        []string       `input:"body,partitionKeys,json"`
+	Limit                *int           `input:"body,limit,json"`
+	NextToken            *string        `input:"body,nextToken,json"`
+	Sort                 []Sort         `input:"body,sort,json"`
 	oss.RequestCommon
 }
 
@@ -327,27 +334,119 @@ func (s Knn) ToMap() map[string]any {
 	return m
 }
 
+// SimpleRetriever defines the simple retriever that queries documents by the specified conditions.
 type SimpleRetriever struct {
+	// The query conditions. The syntax is the same as the query parameter of the
+	// QueryVectorsFusion operation.
 	Query map[string]any `json:"query,omitempty"`
 }
 
-type Retriever struct {
-	Simple *SimpleRetriever `json:"simple,omitempty"`
-	Knn    *Knn             `json:"knn,omitempty"`
-	RRF    *RRFRetriever    `json:"rrf,omitempty"`
-	Weight *WeightRetriever `json:"weight,omitempty"`
+// ToMap returns the simple retriever as the raw JSON object of the "simple" attribute. Use it as
+// the value of the "simple" key of QueryVectorsFusionRequest.Retriever.
+func (s SimpleRetriever) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.Query != nil {
+		m["query"] = s.Query
+	}
+	return m
 }
 
-type RRFRetriever struct {
-	K          *float32          `json:"k,omitempty"`
-	WindowSize *int32            `json:"windowSize,omitempty"`
-	Retrievers []WeightRetriever `json:"retrievers,omitempty"`
+// RrfRetriever defines the rrf compound retriever that merges the results of the sub retrievers by
+// the Reciprocal Rank Fusion algorithm.
+type RrfRetriever struct {
+	// The constant k in the RRF formula: score = sum of 1/(k + rank). Valid values: 1 to 65536.
+	// Default value: 50.
+	K *int32 `json:"k,omitempty"`
+
+	// The number of the top results taken from each sub retriever. Default value: 100.
+	WindowSize *int32 `json:"windowSize,omitempty"`
+
+	// The sub retrievers. It contains 1 to 3 elements.
+	//
+	// Each element is the raw JSON object of a retriever component, so an attribute that the SDK
+	// does not model is passed through without an SDK change. Build an element with
+	// RetrieverComponent.ToMap, or write the map directly.
+	Retrievers []map[string]any `json:"retrievers,omitempty"`
 }
 
+// ToMap returns the rrf retriever as the raw JSON object of the "rrf" attribute. Use it as the
+// value of the "rrf" key of QueryVectorsFusionRequest.Retriever.
+func (s RrfRetriever) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.K != nil {
+		m["k"] = *s.K
+	}
+	if s.WindowSize != nil {
+		m["windowSize"] = *s.WindowSize
+	}
+	if s.Retrievers != nil {
+		m["retrievers"] = s.Retrievers
+	}
+	return m
+}
+
+// WeightRetriever defines the weight compound retriever that merges the results of the sub
+// retrievers by weight.
 type WeightRetriever struct {
-	Retriever  *Retriever `json:"retriever,omitempty"`
-	Normalizer *string    `json:"normalizer,omitempty"`
-	Weight     *int32     `json:"weight,omitempty"`
+	// The number of the top results taken from each sub retriever. Default value: 100.
+	WindowSize *int32 `json:"windowSize,omitempty"`
+
+	// The sub retrievers. It contains 1 to 3 elements.
+	//
+	// Each element is the raw JSON object of a retriever component, so an attribute that the SDK
+	// does not model is passed through without an SDK change. Build an element with
+	// RetrieverComponent.ToMap, or write the map directly.
+	Retrievers []map[string]any `json:"retrievers,omitempty"`
+}
+
+// ToMap returns the weight retriever as the raw JSON object of the "weight" attribute. Use it as
+// the value of the "weight" key of QueryVectorsFusionRequest.Retriever.
+func (s WeightRetriever) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.WindowSize != nil {
+		m["windowSize"] = *s.WindowSize
+	}
+	if s.Retrievers != nil {
+		m["retrievers"] = s.Retrievers
+	}
+	return m
+}
+
+// RetrieverComponent defines the component of a compound retriever (RrfRetriever or
+// WeightRetriever). It wraps a sub retriever with the fusion weight, and optionally the score
+// normalizer.
+type RetrieverComponent struct {
+	// The nested retriever as the raw JSON object. It can be a leaf retriever (knn/simple) or a
+	// nested compound retriever (rrf/weight).
+	//
+	// Build it with the leaf ToMap wrapped by its type key, e.g.
+	// map[string]any{"knn": Knn{...}.ToMap()}, or write the map directly.
+	Retriever map[string]any `json:"retriever,omitempty"`
+
+	// The weight of this component. It is a non-negative float32 number. Default value: 1.0.
+	Weight *float32 `json:"weight,omitempty"`
+
+	// The normalizer of the score. Valid values: none, minMax, l2. The values are also declared as
+	// the NormalizerType constants, e.g. oss.Ptr(string(NormalizerTypeMinMax)).
+	// It applies to the weight compound retriever only.
+	Normalizer *string `json:"normalizer,omitempty"`
+}
+
+// ToMap returns the component as the raw JSON object of an element of RrfRetriever.Retrievers or
+// WeightRetriever.Retrievers. Attributes that the SDK does not model can be added to the returned
+// map directly.
+func (s RetrieverComponent) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.Retriever != nil {
+		m["retriever"] = s.Retriever
+	}
+	if s.Weight != nil {
+		m["weight"] = *s.Weight
+	}
+	if s.Normalizer != nil {
+		m["normalizer"] = *s.Normalizer
+	}
+	return m
 }
 
 type SortOptions struct {

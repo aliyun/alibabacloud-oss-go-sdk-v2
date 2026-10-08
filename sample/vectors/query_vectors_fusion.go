@@ -69,15 +69,15 @@ func main() {
 				Boost: oss.Ptr(float32(1)),
 			}.ToMap(),
 		},
-		Retriever: &vectors.Retriever{
-			Simple: &vectors.SimpleRetriever{
+		Retriever: map[string]any{
+			"simple": vectors.SimpleRetriever{
 				Query: map[string]any{
 					"$and": []map[string]any{
 						{"type": map[string]any{"$in": []string{"a", "b"}}},
 						{"year": map[string]any{"$gte": 2020}},
 					},
 				},
-			},
+			}.ToMap(),
 		},
 		ReturnMetadata:       oss.Ptr(true),
 		ReturnMetadataFields: []string{"key1", "key2"},

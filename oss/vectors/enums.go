@@ -39,3 +39,13 @@ const (
 	SortOrderTypeAsc  SortOrderType = "asc"
 	SortOrderTypeDesc SortOrderType = "desc"
 )
+
+// NormalizerType The score normalizer of a weight compound retriever component.
+type NormalizerType string
+
+// Enum values for NormalizerType
+const (
+	NormalizerTypeNone   NormalizerType = "none"
+	NormalizerTypeMinMax NormalizerType = "minMax"
+	NormalizerTypeL2     NormalizerType = "l2"
+)

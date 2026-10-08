@@ -4119,15 +4119,15 @@ var testMockQueryVectorsFusionSuccessCases = []struct {
 					Boost: oss.Ptr(float32(1)),
 				}.ToMap(),
 			},
-			Retriever: &Retriever{
-				Simple: &SimpleRetriever{
+			Retriever: map[string]any{
+				"simple": SimpleRetriever{
 					Query: map[string]any{
 						"$and": []map[string]any{
 							{"type": map[string]any{"$in": []string{"a", "b"}}},
 							{"year": map[string]any{"$gte": 2020}},
 						},
 					},
-				},
+				}.ToMap(),
 			},
 			ReturnMetadata:       oss.Ptr(true),
 			ReturnMetadataFields: []string{"key1", "key2"},
@@ -4224,15 +4224,15 @@ var testMockQueryVectorsFusionErrorCases = []struct {
 					Boost: oss.Ptr(float32(1)),
 				}.ToMap(),
 			},
-			Retriever: &Retriever{
-				Simple: &SimpleRetriever{
+			Retriever: map[string]any{
+				"simple": SimpleRetriever{
 					Query: map[string]any{
 						"$and": []map[string]any{
 							{"type": map[string]any{"$in": []string{"a", "b"}}},
 							{"year": map[string]any{"$gte": 2020}},
 						},
 					},
-				},
+				}.ToMap(),
 			},
 			ReturnMetadata:       oss.Ptr(true),
 			ReturnMetadataFields: []string{"key1", "key2"},
@@ -4300,15 +4300,15 @@ var testMockQueryVectorsFusionErrorCases = []struct {
 					Boost: oss.Ptr(float32(1)),
 				}.ToMap(),
 			},
-			Retriever: &Retriever{
-				Simple: &SimpleRetriever{
+			Retriever: map[string]any{
+				"simple": SimpleRetriever{
 					Query: map[string]any{
 						"$and": []map[string]any{
 							{"type": map[string]any{"$in": []string{"a", "b"}}},
 							{"year": map[string]any{"$gte": 2020}},
 						},
 					},
-				},
+				}.ToMap(),
 			},
 			ReturnMetadata:       oss.Ptr(true),
 			ReturnMetadataFields: []string{"key1", "key2"},
