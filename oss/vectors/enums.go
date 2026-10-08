@@ -32,6 +32,7 @@ const (
 	DistanceMetricTypeInnerProduct DistanceMetricType = "ip"
 )
 
+// SortOrderType The sort order of a sort field
 type SortOrderType string
 
 // Enum values for SortOrderType
@@ -48,4 +49,22 @@ const (
 	NormalizerTypeNone   NormalizerType = "none"
 	NormalizerTypeMinMax NormalizerType = "minMax"
 	NormalizerTypeL2     NormalizerType = "l2"
+)
+
+// IndexModeType The mode of a vector index.
+type IndexModeType string
+
+// Enum values for IndexModeType
+const (
+	IndexModeTypeStandard IndexModeType = "standard"
+	IndexModeTypeFusion   IndexModeType = "fusion"
+)
+
+// AnalyzerType The analyzer type used for the full text search of a string field.
+type AnalyzerType string
+
+// Enum values for AnalyzerType
+const (
+	AnalyzerTypeStandard AnalyzerType = "standard"
+	AnalyzerTypeSplit    AnalyzerType = "split"
 )

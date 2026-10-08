@@ -74,20 +74,43 @@ type GetVectorIndexResult struct {
 	oss.ResultCommon
 }
 
+// VectorIndex is the summary of a vector index.
 type VectorIndex struct {
-	CreateTime     *time.Time     `json:"createTime"`
-	DataType       *string        `json:"dataType"`
-	Dimension      *int           `json:"dimension"`
-	DistanceMetric *string        `json:"distanceMetric"`
-	IndexName      *string        `json:"indexName"`
-	Metadata       map[string]any `json:"metadata"`
-	Status         *string        `json:"status"`
-	BucketArn      *string        `json:"bucketArn"`
+	// The time when the index is created.
+	CreateTime *time.Time `json:"createTime"`
+
+	// The data type of the vector field. Valid value: float32.
+	// The value is also declared as the VectorDataTypeFloat32 constant.
+	DataType *string `json:"dataType"`
+
+	// The dimension of the vector field.
+	Dimension *int `json:"dimension"`
+
+	// The distance metric of the vector field. Valid values: euclidean, cosine, ip.
+	// The values are also declared as the DistanceMetricType constants, e.g. oss.Ptr(string(DistanceMetricTypeCosine)).
+	DistanceMetric *string `json:"distanceMetric"`
+
+	// The name of the index.
+	IndexName *string `json:"indexName"`
+
+	// The metadata of the index.
+	Metadata map[string]any `json:"metadata"`
+
+	// The status of the index.
+	Status *string `json:"status"`
+
+	// The ARN of the vector bucket that contains the index.
+	BucketArn *string `json:"bucketArn"`
 
 	// deprecated
+	// The name of the vector bucket that contains the index.
 	VectorBucketName *string `json:"vectorBucketName"`
 
-	Mode                *string              `json:"mode"`
+	// The mode of the index. Valid values: standard and fusion.
+	// The values are also declared as the IndexModeType constants, e.g. oss.Ptr(string(IndexModeTypeFusion)).
+	Mode *string `json:"mode"`
+
+	// The schema configuration of the index. It is returned for the fusion index only.
 	SchemaConfiguration *SchemaConfiguration `json:"schemaConfiguration"`
 }
 
@@ -95,18 +118,15 @@ type VectorIndex struct {
 type SchemaConfiguration struct {
 	// The container that stores the field configurations.
 	//
-	// Each element is the raw JSON object of a field, so an attribute the service adds later is
-	// passed through without an SDK change. Build an element with FieldSchema.ToMap, convert a whole
-	// list with FieldSchemas(...).ToMaps, or write the map directly to set an attribute that the SDK
-	// does not model yet.
+	// Build an element with FieldSchema.ToMap, convert a whole list with FieldSchemas(...).ToMaps, or
+	// write the map directly.
 	Fields []map[string]any `json:"fields,omitempty"`
 }
 
 // FieldSchemas returns the field configurations as the strongly-typed FieldSchema model.
 //
-// This is a convenience view over Fields: an attribute that the SDK does not model is not visible
-// here, and a value that does not fit the typed model makes the conversion fail. Use Fields to
-// access the complete definition.
+// This is a convenience view over Fields: a value that does not fit the typed model makes the
+// conversion fail. Use Fields to access the complete definition.
 //
 // It returns nil when no field is set.
 func (s SchemaConfiguration) FieldSchemas() ([]FieldSchema, error) {
@@ -158,8 +178,7 @@ type FieldSchema struct {
 }
 
 // ToMap returns the field definition as the raw JSON object that the service expects, so that it
-// can be used as an element of SchemaConfiguration.Fields. Attributes that the SDK does not model
-// can be added to the returned map directly.
+// can be used as an element of SchemaConfiguration.Fields.
 func (s FieldSchema) ToMap() map[string]any {
 	m := make(map[string]any)
 	if s.Name != nil {
@@ -198,8 +217,7 @@ type FieldSchemas []FieldSchema
 
 // ToMaps returns the field configurations as the raw JSON objects that the service expects, so that
 // the result can be assigned to SchemaConfiguration.Fields. It is the batch counterpart of
-// FieldSchema.ToMap: attributes that the SDK does not model can be added to each returned map
-// directly.
+// FieldSchema.ToMap.
 func (s FieldSchemas) ToMaps() []map[string]any {
 	maps := make([]map[string]any, 0, len(s))
 	for _, schema := range s {
@@ -214,6 +232,7 @@ type TextSchema struct {
 	Enabled *bool `json:"enabled,omitempty"`
 
 	// The analyzer used for text search. Valid values: standard, split.
+	// The values are also declared as the AnalyzerType constants, e.g. oss.Ptr(string(AnalyzerTypeSplit)).
 	Analyzer *string `json:"analyzer,omitempty"`
 
 	// The parameters of the analyzer.
@@ -397,9 +416,16 @@ func (c *VectorsClient) DeleteVectorIndex(ctx context.Context, request *DeleteVe
 
 type PutVectorIndexFusionRequest struct {
 	// The name of the vector bucket.
-	Bucket              *string              `input:"host,bucket,required"`
-	IndexName           *string              `input:"body,indexName,json,required"`
-	Mode                *string              `input:"body,mode,json,required"`
+	Bucket *string `input:"host,bucket,required"`
+
+	// The name of the index. It is unique in a vector bucket and 1 to 63 characters in length.
+	IndexName *string `input:"body,indexName,json,required"`
+
+	// The mode of the index. Valid value: fusion.
+	// The value is also declared as the IndexModeTypeFusion constant, e.g. oss.Ptr(string(IndexModeTypeFusion)).
+	Mode *string `input:"body,mode,json,required"`
+
+	// The schema configuration of the index.
 	SchemaConfiguration *SchemaConfiguration `input:"body,schemaConfiguration,json,required"`
 
 	oss.RequestCommon

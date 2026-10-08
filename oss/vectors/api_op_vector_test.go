@@ -1456,3 +1456,126 @@ func TestMarshalInput_QueryVectorsFusion_RetrieverRawMapPassthrough(t *testing.T
 	}
 	assert.Equal(t, `{"indexName":"fusion-index","retriever":{"rrf":{"futureParam":"x","k":50,"retrievers":[{"futureWeightParam":42,"retriever":{"knn":{"field":"vector","queryVector":[10,22,77]}},"weight":1}]}}}`, marshalQueryVectorsFusionBody(t, request))
 }
+
+func TestRetriever_ToRetriever(t *testing.T) {
+	// Each ToRetriever wraps the retriever under its type key, which is what the service expects as
+	// the value of the retriever field.
+	assert.Equal(t, map[string]any{"knn": map[string]any{"field": "vector", "queryVector": []int{10, 22, 77}}}, Knn{Field: oss.Ptr("vector"), QueryVector: []int{10, 22, 77}}.ToRetriever())
+
+	assert.Equal(t, map[string]any{"simple": map[string]any{"query": textMatchQuery("title", "hello world", nil)}}, SimpleRetriever{Query: textMatchQuery("title", "hello world", nil)}.ToRetriever())
+
+	assert.Equal(t, map[string]any{"rrf": map[string]any{"k": int32(50)}}, RrfRetriever{K: oss.Ptr(int32(50))}.ToRetriever())
+
+	assert.Equal(t, map[string]any{"weight": map[string]any{"windowSize": int32(100)}}, WeightRetriever{WindowSize: oss.Ptr(int32(100))}.ToRetriever())
+
+	// An empty retriever still carries its type key, so the service sees the retriever kind.
+	assert.Equal(t, map[string]any{"knn": map[string]any{}}, Knn{}.ToRetriever())
+}
+
+func TestMarshalInput_QueryVectorsFusion_RetrieverTypedEqualsRawMap(t *testing.T) {
+	// The typed builders and the raw maps describe the same request.
+	typed := &QueryVectorsFusionRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("fusion-index"),
+		Retriever: RrfRetriever{
+			K:          oss.Ptr(int32(50)),
+			WindowSize: oss.Ptr(int32(100)),
+			Retrievers: []map[string]any{
+				RetrieverComponent{
+					Retriever: Knn{Field: oss.Ptr("vector"), QueryVector: []int{10, 22, 77}}.ToRetriever(),
+					Weight:    oss.Ptr(float32(1)),
+				}.ToMap(),
+			},
+		}.ToRetriever(),
+	}
+	raw := &QueryVectorsFusionRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("fusion-index"),
+		Retriever: map[string]any{
+			"rrf": map[string]any{
+				"k":          50,
+				"windowSize": 100,
+				"retrievers": []map[string]any{
+					{
+						"retriever": map[string]any{"knn": map[string]any{"field": "vector", "queryVector": []int{10, 22, 77}}},
+						"weight":    1.0,
+					},
+				},
+			},
+		},
+	}
+	assert.Equal(t, marshalQueryVectorsFusionBody(t, raw), marshalQueryVectorsFusionBody(t, typed))
+}
+
+func TestMarshalInput_QueryVectorsFusion_RetrieverWeightThreeWay(t *testing.T) {
+	request := &QueryVectorsFusionRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("fusion-index"),
+		Retriever: WeightRetriever{
+			WindowSize: oss.Ptr(int32(100)),
+			Retrievers: []map[string]any{
+				RetrieverComponent{
+					Retriever:  Knn{Field: oss.Ptr("text_vector"), QueryVector: []int{10, 22, 77}}.ToRetriever(),
+					Weight:     oss.Ptr(float32(0.6)),
+					Normalizer: oss.Ptr(string(NormalizerTypeMinMax)),
+				}.ToMap(),
+				RetrieverComponent{
+					Retriever:  Knn{Field: oss.Ptr("image_vector"), QueryVector: []int{21, 35, 66}}.ToRetriever(),
+					Weight:     oss.Ptr(float32(0.3)),
+					Normalizer: oss.Ptr(string(NormalizerTypeMinMax)),
+				}.ToMap(),
+				RetrieverComponent{
+					Retriever:  SimpleRetriever{Query: textMatchQuery("title", "hello world", nil)}.ToRetriever(),
+					Weight:     oss.Ptr(float32(0.1)),
+					Normalizer: oss.Ptr(string(NormalizerTypeNone)),
+				}.ToMap(),
+			},
+		}.ToRetriever(),
+	}
+	assert.Equal(t, `{"indexName":"fusion-index","retriever":{"weight":{"retrievers":[{"normalizer":"minMax","retriever":{"knn":{"field":"text_vector","queryVector":[10,22,77]}},"weight":0.6},{"normalizer":"minMax","retriever":{"knn":{"field":"image_vector","queryVector":[21,35,66]}},"weight":0.3},{"normalizer":"none","retriever":{"simple":{"query":{"title":{"$textMatch":{"value":"hello world"}}}}},"weight":0.1}],"windowSize":100}}}`, marshalQueryVectorsFusionBody(t, request))
+}
+
+func TestMarshalInput_QueryVectorsFusion_RetrieverComponentRawMap(t *testing.T) {
+	request := &QueryVectorsFusionRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("fusion-index"),
+		Retriever: WeightRetriever{
+			WindowSize: oss.Ptr(int32(100)),
+			Retrievers: []map[string]any{
+				// A component written directly as a map, carrying an extra attribute.
+				{
+					"retriever":       map[string]any{"knn": map[string]any{"field": "vector", "queryVector": []int{10, 22, 77}}},
+					"weight":          1.0,
+					"futureCompParam": true,
+				},
+			},
+		}.ToRetriever(),
+	}
+	assert.Equal(t, `{"indexName":"fusion-index","retriever":{"weight":{"retrievers":[{"futureCompParam":true,"retriever":{"knn":{"field":"vector","queryVector":[10,22,77]}},"weight":1}],"windowSize":100}}}`, marshalQueryVectorsFusionBody(t, request))
+}
+
+func TestMarshalInput_QueryVectorsFusion_KnnPreFilterAndScalarQuery(t *testing.T) {
+	request := &QueryVectorsFusionRequest{
+		Bucket:    oss.Ptr("oss-demo"),
+		IndexName: oss.Ptr("fusion-index"),
+		Knn: []map[string]any{
+			Knn{
+				Field:         oss.Ptr("demo"),
+				QueryVector:   []float32{32},
+				TopK:          oss.Ptr(10),
+				NumCandidates: oss.Ptr(9),
+				Filter: map[string]any{
+					"meta_field_1": map[string]any{"$eq": "abc"},
+				},
+				Boost: oss.Ptr(float32(1)),
+			}.ToMap(),
+		},
+		Query: map[string]any{
+			"$and": []map[string]any{
+				{"type": map[string]any{"$in": []string{"a", "b"}}},
+				{"year": map[string]any{"$gte": 2020}},
+			},
+		},
+	}
+	assert.Equal(t, `{"indexName":"fusion-index","knn":[{"boost":1,"field":"demo","filter":{"meta_field_1":{"$eq":"abc"}},"numCandidates":9,"queryVector":[32],"topK":10}],"query":{"$and":[{"type":{"$in":["a","b"]}},{"year":{"$gte":2020}}]}}`, marshalQueryVectorsFusionBody(t, request))
+}
