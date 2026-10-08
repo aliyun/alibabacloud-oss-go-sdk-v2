@@ -2,6 +2,7 @@ package vectors
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
@@ -73,18 +74,208 @@ type GetVectorIndexResult struct {
 	oss.ResultCommon
 }
 
+// VectorIndex is the summary of a vector index.
 type VectorIndex struct {
-	CreateTime     *time.Time     `json:"createTime"`
-	DataType       *string        `json:"dataType"`
-	Dimension      *int           `json:"dimension"`
-	DistanceMetric *string        `json:"distanceMetric"`
-	IndexName      *string        `json:"indexName"`
-	Metadata       map[string]any `json:"metadata"`
-	Status         *string        `json:"status"`
-	BucketArn      *string        `json:"bucketArn"`
+	// The time when the index is created.
+	CreateTime *time.Time `json:"createTime"`
+
+	// The data type of the vector field. Valid value: float32.
+	// The value is also declared as the VectorDataTypeFloat32 constant.
+	DataType *string `json:"dataType"`
+
+	// The dimension of the vector field.
+	Dimension *int `json:"dimension"`
+
+	// The distance metric of the vector field. Valid values: euclidean, cosine, ip.
+	// The values are also declared as the DistanceMetricType constants, e.g. oss.Ptr(string(DistanceMetricTypeCosine)).
+	DistanceMetric *string `json:"distanceMetric"`
+
+	// The name of the index.
+	IndexName *string `json:"indexName"`
+
+	// The metadata of the index.
+	Metadata map[string]any `json:"metadata"`
+
+	// The status of the index.
+	Status *string `json:"status"`
+
+	// The ARN of the vector bucket that contains the index.
+	BucketArn *string `json:"bucketArn"`
 
 	// deprecated
+	// The name of the vector bucket that contains the index.
 	VectorBucketName *string `json:"vectorBucketName"`
+
+	// The mode of the index. Valid values: standard and fusion.
+	// The values are also declared as the IndexModeType constants, e.g. oss.Ptr(string(IndexModeTypeFusion)).
+	Mode *string `json:"mode"`
+
+	// The schema configuration of the index. It is returned for the fusion index only.
+	SchemaConfiguration *SchemaConfiguration `json:"schemaConfiguration"`
+}
+
+// SchemaConfiguration defines the schema configuration of a vector index.
+type SchemaConfiguration struct {
+	// The container that stores the field configurations.
+	//
+	// Build an element with FieldSchema.ToMap, convert a whole list with FieldSchemas(...).ToMaps, or
+	// write the map directly.
+	Fields []map[string]any `json:"fields,omitempty"`
+}
+
+// FieldSchemas returns the field configurations as the strongly-typed FieldSchema model.
+//
+// This is a convenience view over Fields: a value that does not fit the typed model makes the
+// conversion fail. Use Fields to access the complete definition.
+//
+// It returns nil when no field is set.
+func (s SchemaConfiguration) FieldSchemas() ([]FieldSchema, error) {
+	data, err := json.Marshal(s.Fields)
+	if err != nil {
+		return nil, err
+	}
+	var schemas []FieldSchema
+	if err = json.Unmarshal(data, &schemas); err != nil {
+		return nil, err
+	}
+	return schemas, nil
+}
+
+// FieldSchema defines the configuration of a single field in the vector index schema.
+type FieldSchema struct {
+	// The name of the field.
+	Name *string `json:"name,omitempty"`
+
+	// The type of the field. Valid values: vector, string, long, double, bool, ip, geoPoint.
+	// The values are also declared as the FieldType constants, e.g. oss.Ptr(string(FieldTypeVector)).
+	Type *string `json:"type,omitempty"`
+
+	// The data type of the vector field. Valid values: float32.
+	// This parameter is required only when Type is set to vector.
+	// The value is also declared as the VectorDataTypeFloat32 constant.
+	DataType *string `json:"dataType,omitempty"`
+
+	// The dimension of the vector field.
+	// This parameter is required only when Type is set to vector.
+	Dimension *int `json:"dimension,omitempty"`
+
+	// The distance metric of the vector field. Valid values: euclidean, cosine, ip.
+	// This parameter is required only when Type is set to vector.
+	// The values are also declared as the DistanceMetricType constants, e.g. oss.Ptr(string(DistanceMetricTypeCosine)).
+	DistanceMetric *string `json:"distanceMetric,omitempty"`
+
+	// Specifies whether the field is an array.
+	IsArray *bool `json:"isArray,omitempty"`
+
+	// Specifies whether the field is a partition key.
+	IsPartitionKey *bool `json:"isPartitionKey,omitempty"`
+
+	// Specifies whether exact match is enabled for the string field.
+	ExactMatch *bool `json:"exactMatch,omitempty"`
+
+	// The text search configuration of the string field.
+	Text *TextSchema `json:"text,omitempty"`
+}
+
+// ToMap returns the field definition as the raw JSON object that the service expects, so that it
+// can be used as an element of SchemaConfiguration.Fields.
+func (s FieldSchema) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.Name != nil {
+		m["name"] = *s.Name
+	}
+	if s.Type != nil {
+		m["type"] = *s.Type
+	}
+	if s.DataType != nil {
+		m["dataType"] = *s.DataType
+	}
+	if s.Dimension != nil {
+		m["dimension"] = *s.Dimension
+	}
+	if s.DistanceMetric != nil {
+		m["distanceMetric"] = *s.DistanceMetric
+	}
+	if s.IsArray != nil {
+		m["isArray"] = *s.IsArray
+	}
+	if s.IsPartitionKey != nil {
+		m["isPartitionKey"] = *s.IsPartitionKey
+	}
+	if s.ExactMatch != nil {
+		m["exactMatch"] = *s.ExactMatch
+	}
+	if s.Text != nil {
+		m["text"] = s.Text.toMap()
+	}
+	return m
+}
+
+// FieldSchemas is a list of field configurations. It converts the strongly-typed FieldSchema model
+// to the raw JSON objects that the service expects.
+type FieldSchemas []FieldSchema
+
+// ToMaps returns the field configurations as the raw JSON objects that the service expects, so that
+// the result can be assigned to SchemaConfiguration.Fields. It is the batch counterpart of
+// FieldSchema.ToMap.
+func (s FieldSchemas) ToMaps() []map[string]any {
+	maps := make([]map[string]any, 0, len(s))
+	for _, schema := range s {
+		maps = append(maps, schema.ToMap())
+	}
+	return maps
+}
+
+// TextSchema defines the text search configuration for a string field.
+type TextSchema struct {
+	// Specifies whether text search is enabled for the field.
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// The analyzer used for text search. Valid values: standard, split.
+	// The values are also declared as the AnalyzerType constants, e.g. oss.Ptr(string(AnalyzerTypeSplit)).
+	Analyzer *string `json:"analyzer,omitempty"`
+
+	// The parameters of the analyzer.
+	AnalyzerParameters *AnalyzerParameters `json:"analyzerParameters,omitempty"`
+}
+
+// toMap returns the text configuration as the raw JSON object of the "text" attribute.
+func (s TextSchema) toMap() map[string]any {
+	m := make(map[string]any)
+	if s.Enabled != nil {
+		m["enabled"] = *s.Enabled
+	}
+	if s.Analyzer != nil {
+		m["analyzer"] = *s.Analyzer
+	}
+	if s.AnalyzerParameters != nil {
+		p := make(map[string]any)
+		if s.AnalyzerParameters.CaseSensitive != nil {
+			p["caseSensitive"] = *s.AnalyzerParameters.CaseSensitive
+		}
+		if s.AnalyzerParameters.DelimitWord != nil {
+			p["delimitWord"] = *s.AnalyzerParameters.DelimitWord
+		}
+		if s.AnalyzerParameters.Delimiter != nil {
+			p["delimiter"] = *s.AnalyzerParameters.Delimiter
+		}
+		m["analyzerParameters"] = p
+	}
+	return m
+}
+
+// AnalyzerParameters defines the parameters of the analyzer used for text search.
+type AnalyzerParameters struct {
+	// Specifies whether the analyzer is case-sensitive.
+	CaseSensitive *bool `json:"caseSensitive,omitempty"`
+
+	// Specifies whether words are delimited. This parameter is valid only when
+	// Analyzer is set to standard.
+	DelimitWord *bool `json:"delimitWord,omitempty"`
+
+	// The delimiter used to split words. This parameter is valid only when
+	// Analyzer is set to split.
+	Delimiter *string `json:"delimiter,omitempty"`
 }
 
 // GetVectorIndex Get a vector Index.
@@ -216,6 +407,62 @@ func (c *VectorsClient) DeleteVectorIndex(ctx context.Context, request *DeleteVe
 	}
 
 	result := &DeleteVectorIndexResult{}
+	if err = c.unmarshalOutput(result, output, oss.UnmarshalDiscardBody); err != nil {
+		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
+	}
+
+	return result, err
+}
+
+type PutVectorIndexFusionRequest struct {
+	// The name of the vector bucket.
+	Bucket *string `input:"host,bucket,required"`
+
+	// The name of the index. It is unique in a vector bucket and 1 to 63 characters in length.
+	IndexName *string `input:"body,indexName,json,required"`
+
+	// The mode of the index. Valid value: fusion.
+	// The value is also declared as the IndexModeTypeFusion constant, e.g. oss.Ptr(string(IndexModeTypeFusion)).
+	Mode *string `input:"body,mode,json,required"`
+
+	// The schema configuration of the index.
+	SchemaConfiguration *SchemaConfiguration `input:"body,schemaConfiguration,json,required"`
+
+	oss.RequestCommon
+}
+
+type PutVectorIndexFusionResult struct {
+	oss.ResultCommon
+}
+
+// PutVectorIndexFusion Creates a vector Index by fusion mode.
+func (c *VectorsClient) PutVectorIndexFusion(ctx context.Context, request *PutVectorIndexFusionRequest, optFns ...func(*oss.Options)) (*PutVectorIndexFusionResult, error) {
+	var err error
+	if request == nil {
+		request = &PutVectorIndexFusionRequest{}
+	}
+	input := &oss.OperationInput{
+		OpName: "PutVectorIndexFusion",
+		Method: "POST",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Parameters: map[string]string{
+			"putVectorIndexFusion": "",
+		},
+		Bucket: request.Bucket,
+	}
+	if err = c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5); err != nil {
+		return nil, err
+	}
+
+	output, err := c.clientImpl.InvokeOperation(ctx, input, optFns...)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &PutVectorIndexFusionResult{}
+
 	if err = c.unmarshalOutput(result, output, oss.UnmarshalDiscardBody); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
