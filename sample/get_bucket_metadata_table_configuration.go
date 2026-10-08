@@ -37,10 +37,10 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.GetBucketMetadataTableConfigurationRequest{
+	request := &oss.GetBucketMetadataConfigurationRequest{
 		Bucket: oss.Ptr(bucketName),
 	}
-	result, err := client.GetBucketMetadataTableConfiguration(context.TODO(), request)
+	result, err := client.GetBucketMetadataConfiguration(context.TODO(), request)
 	if err != nil {
 		log.Fatalf("failed to get bucket metadata table configuration %v", err)
 	}

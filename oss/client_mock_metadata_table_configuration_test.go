@@ -10,13 +10,13 @@ import (
 	"testing"
 )
 
-var testMockCreateBucketMetadataTableConfigurationSuccessCases = []struct {
+var testMockCreateBucketMetadataConfigurationSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
 	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *CreateBucketMetadataTableConfigurationRequest
-	CheckOutputFn  func(t *testing.T, o *CreateBucketMetadataTableConfigurationResult, err error)
+	Request        *CreateBucketMetadataConfigurationRequest
+	CheckOutputFn  func(t *testing.T, o *CreateBucketMetadataConfigurationResult, err error)
 }{
 	{
 		200,
@@ -34,11 +34,11 @@ var testMockCreateBucketMetadataTableConfigurationSuccessCases = []struct {
 			assert.Nil(t, err)
 			assert.Equal(t, "<MetadataConfiguration><JournalTableConfiguration><RecordExpiration><Expiration>ENABLED</Expiration><Days>7</Days></RecordExpiration></JournalTableConfiguration><InventoryTableConfiguration><ConfigurationState>ENABLED</ConfigurationState><EncryptionConfiguration><SseAlgorithm>AES256</SseAlgorithm></EncryptionConfiguration></InventoryTableConfiguration></MetadataConfiguration>", string(requestBody))
 		},
-		&CreateBucketMetadataTableConfigurationRequest{
+		&CreateBucketMetadataConfigurationRequest{
 			Bucket: Ptr("oss-demo"),
 			MetadataConfiguration: &MetadataConfiguration{
 				JournalTableConfiguration: &JournalTableConfiguration{
-					RecordExpiration: &RecordExpiration{
+					RecordExpiration: &MetadataTableRecordExpiration{
 						Expiration: Ptr("ENABLED"),
 						Days:       Ptr(7),
 					},
@@ -51,7 +51,7 @@ var testMockCreateBucketMetadataTableConfigurationSuccessCases = []struct {
 				},
 			},
 		},
-		func(t *testing.T, o *CreateBucketMetadataTableConfigurationResult, err error) {
+		func(t *testing.T, o *CreateBucketMetadataConfigurationResult, err error) {
 			assert.Nil(t, err)
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
@@ -60,8 +60,8 @@ var testMockCreateBucketMetadataTableConfigurationSuccessCases = []struct {
 	},
 }
 
-func TestMockCreateBucketMetadataTableConfiguration_Success(t *testing.T) {
-	for _, c := range testMockCreateBucketMetadataTableConfigurationSuccessCases {
+func TestMockCreateBucketMetadataConfiguration_Success(t *testing.T) {
+	for _, c := range testMockCreateBucketMetadataConfigurationSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -74,18 +74,18 @@ func TestMockCreateBucketMetadataTableConfiguration_Success(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 
-		output, err := client.CreateBucketMetadataTableConfiguration(context.TODO(), c.Request)
+		output, err := client.CreateBucketMetadataConfiguration(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
 
-var testMockCreateBucketMetadataTableConfigurationErrorCases = []struct {
+var testMockCreateBucketMetadataConfigurationErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
 	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *CreateBucketMetadataTableConfigurationRequest
-	CheckOutputFn  func(t *testing.T, o *CreateBucketMetadataTableConfigurationResult, err error)
+	Request        *CreateBucketMetadataConfigurationRequest
+	CheckOutputFn  func(t *testing.T, o *CreateBucketMetadataConfigurationResult, err error)
 }{
 	{
 		404,
@@ -106,7 +106,7 @@ var testMockCreateBucketMetadataTableConfigurationErrorCases = []struct {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "/oss-demo/?metadataConfiguration", strUrl)
 		},
-		&CreateBucketMetadataTableConfigurationRequest{
+		&CreateBucketMetadataConfigurationRequest{
 			Bucket: Ptr("oss-demo"),
 			MetadataConfiguration: &MetadataConfiguration{
 				InventoryTableConfiguration: &InventoryTableConfiguration{
@@ -114,7 +114,7 @@ var testMockCreateBucketMetadataTableConfigurationErrorCases = []struct {
 				},
 			},
 		},
-		func(t *testing.T, o *CreateBucketMetadataTableConfigurationResult, err error) {
+		func(t *testing.T, o *CreateBucketMetadataConfigurationResult, err error) {
 			assert.Nil(t, o)
 			assert.NotNil(t, err)
 			var serr *ServiceError
@@ -128,8 +128,8 @@ var testMockCreateBucketMetadataTableConfigurationErrorCases = []struct {
 	},
 }
 
-func TestMockCreateBucketMetadataTableConfiguration_Error(t *testing.T) {
-	for _, c := range testMockCreateBucketMetadataTableConfigurationErrorCases {
+func TestMockCreateBucketMetadataConfiguration_Error(t *testing.T) {
+	for _, c := range testMockCreateBucketMetadataConfigurationErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -142,18 +142,18 @@ func TestMockCreateBucketMetadataTableConfiguration_Error(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 
-		output, err := client.CreateBucketMetadataTableConfiguration(context.TODO(), c.Request)
+		output, err := client.CreateBucketMetadataConfiguration(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
 
-var testMockGetBucketMetadataTableConfigurationSuccessCases = []struct {
+var testMockGetBucketMetadataConfigurationSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
 	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetBucketMetadataTableConfigurationRequest
-	CheckOutputFn  func(t *testing.T, o *GetBucketMetadataTableConfigurationResult, err error)
+	Request        *GetBucketMetadataConfigurationRequest
+	CheckOutputFn  func(t *testing.T, o *GetBucketMetadataConfigurationResult, err error)
 }{
 	{
 		200,
@@ -199,32 +199,32 @@ var testMockGetBucketMetadataTableConfigurationSuccessCases = []struct {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "/oss-demo/?metadataConfiguration", strUrl)
 		},
-		&GetBucketMetadataTableConfigurationRequest{
+		&GetBucketMetadataConfigurationRequest{
 			Bucket: Ptr("oss-demo"),
 		},
-		func(t *testing.T, o *GetBucketMetadataTableConfigurationResult, err error) {
+		func(t *testing.T, o *GetBucketMetadataConfigurationResult, err error) {
 			assert.Nil(t, err)
 			assert.Equal(t, 200, o.StatusCode)
 			assert.Equal(t, "200 OK", o.Status)
 			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
-			assert.NotNil(t, o.GetBucketMetadataConfigurationResult)
-			assert.NotNil(t, o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult)
-			assert.Equal(t, "oss", *o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.DestinationResult.TableBucketType)
-			assert.Equal(t, "b_examplebucket", *o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.DestinationResult.TableNamespace)
-			assert.Equal(t, "ACTIVE", *o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.TableStatus)
-			assert.Equal(t, "journal", *o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.TableName)
-			assert.Equal(t, "ENABLED", *o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.RecordExpiration.Expiration)
-			assert.Equal(t, int(7), *o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.RecordExpiration.Days)
-			assert.Equal(t, "AES256", *o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.EncryptionConfiguration.SseAlgorithm)
-			assert.Equal(t, "ENABLED", *o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.InventoryTableConfigurationResult.ConfigurationState)
-			assert.Equal(t, "ACTIVE", *o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.InventoryTableConfigurationResult.TableStatus)
-			assert.Equal(t, "inventory", *o.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.InventoryTableConfigurationResult.TableName)
+			assert.NotNil(t, o.GetBucketMetadataConfigurationResultXml)
+			assert.NotNil(t, o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult)
+			assert.Equal(t, "oss", *o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.DestinationResult.TableBucketType)
+			assert.Equal(t, "b_examplebucket", *o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.DestinationResult.TableNamespace)
+			assert.Equal(t, "ACTIVE", *o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.TableStatus)
+			assert.Equal(t, "journal", *o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.TableName)
+			assert.Equal(t, "ENABLED", *o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.RecordExpiration.Expiration)
+			assert.Equal(t, int(7), *o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.RecordExpiration.Days)
+			assert.Equal(t, "AES256", *o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.EncryptionConfiguration.SseAlgorithm)
+			assert.Equal(t, "ENABLED", *o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.InventoryTableConfigurationResult.ConfigurationState)
+			assert.Equal(t, "ACTIVE", *o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.InventoryTableConfigurationResult.TableStatus)
+			assert.Equal(t, "inventory", *o.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.InventoryTableConfigurationResult.TableName)
 		},
 	},
 }
 
-func TestMockGetBucketMetadataTableConfiguration_Success(t *testing.T) {
-	for _, c := range testMockGetBucketMetadataTableConfigurationSuccessCases {
+func TestMockGetBucketMetadataConfiguration_Success(t *testing.T) {
+	for _, c := range testMockGetBucketMetadataConfigurationSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -237,18 +237,18 @@ func TestMockGetBucketMetadataTableConfiguration_Success(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 
-		output, err := client.GetBucketMetadataTableConfiguration(context.TODO(), c.Request)
+		output, err := client.GetBucketMetadataConfiguration(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
 
-var testMockGetBucketMetadataTableConfigurationErrorCases = []struct {
+var testMockGetBucketMetadataConfigurationErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
 	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *GetBucketMetadataTableConfigurationRequest
-	CheckOutputFn  func(t *testing.T, o *GetBucketMetadataTableConfigurationResult, err error)
+	Request        *GetBucketMetadataConfigurationRequest
+	CheckOutputFn  func(t *testing.T, o *GetBucketMetadataConfigurationResult, err error)
 }{
 	{
 		404,
@@ -269,10 +269,10 @@ var testMockGetBucketMetadataTableConfigurationErrorCases = []struct {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "/oss-demo/?metadataConfiguration", strUrl)
 		},
-		&GetBucketMetadataTableConfigurationRequest{
+		&GetBucketMetadataConfigurationRequest{
 			Bucket: Ptr("oss-demo"),
 		},
-		func(t *testing.T, o *GetBucketMetadataTableConfigurationResult, err error) {
+		func(t *testing.T, o *GetBucketMetadataConfigurationResult, err error) {
 			assert.Nil(t, o)
 			assert.NotNil(t, err)
 			var serr *ServiceError
@@ -286,8 +286,8 @@ var testMockGetBucketMetadataTableConfigurationErrorCases = []struct {
 	},
 }
 
-func TestMockGetBucketMetadataTableConfiguration_Error(t *testing.T) {
-	for _, c := range testMockGetBucketMetadataTableConfigurationErrorCases {
+func TestMockGetBucketMetadataConfiguration_Error(t *testing.T) {
+	for _, c := range testMockGetBucketMetadataConfigurationErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -300,18 +300,18 @@ func TestMockGetBucketMetadataTableConfiguration_Error(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 
-		output, err := client.GetBucketMetadataTableConfiguration(context.TODO(), c.Request)
+		output, err := client.GetBucketMetadataConfiguration(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
 
-var testMockDeleteBucketMetadataTableConfigurationSuccessCases = []struct {
+var testMockDeleteBucketMetadataConfigurationSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
 	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *DeleteBucketMetadataTableConfigurationRequest
-	CheckOutputFn  func(t *testing.T, o *DeleteBucketMetadataTableConfigurationResult, err error)
+	Request        *DeleteBucketMetadataConfigurationRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteBucketMetadataConfigurationResult, err error)
 }{
 	{
 		204,
@@ -326,10 +326,10 @@ var testMockDeleteBucketMetadataTableConfigurationSuccessCases = []struct {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "/oss-demo/?metadataConfiguration", strUrl)
 		},
-		&DeleteBucketMetadataTableConfigurationRequest{
+		&DeleteBucketMetadataConfigurationRequest{
 			Bucket: Ptr("oss-demo"),
 		},
-		func(t *testing.T, o *DeleteBucketMetadataTableConfigurationResult, err error) {
+		func(t *testing.T, o *DeleteBucketMetadataConfigurationResult, err error) {
 			assert.Nil(t, err)
 			assert.Equal(t, 204, o.StatusCode)
 			assert.Equal(t, "204 No Content", o.Status)
@@ -338,8 +338,8 @@ var testMockDeleteBucketMetadataTableConfigurationSuccessCases = []struct {
 	},
 }
 
-func TestMockDeleteBucketMetadataTableConfiguration_Success(t *testing.T) {
-	for _, c := range testMockDeleteBucketMetadataTableConfigurationSuccessCases {
+func TestMockDeleteBucketMetadataConfiguration_Success(t *testing.T) {
+	for _, c := range testMockDeleteBucketMetadataConfigurationSuccessCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -352,18 +352,18 @@ func TestMockDeleteBucketMetadataTableConfiguration_Success(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 
-		output, err := client.DeleteBucketMetadataTableConfiguration(context.TODO(), c.Request)
+		output, err := client.DeleteBucketMetadataConfiguration(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
 
-var testMockDeleteBucketMetadataTableConfigurationErrorCases = []struct {
+var testMockDeleteBucketMetadataConfigurationErrorCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
 	Body           []byte
 	CheckRequestFn func(t *testing.T, r *http.Request)
-	Request        *DeleteBucketMetadataTableConfigurationRequest
-	CheckOutputFn  func(t *testing.T, o *DeleteBucketMetadataTableConfigurationResult, err error)
+	Request        *DeleteBucketMetadataConfigurationRequest
+	CheckOutputFn  func(t *testing.T, o *DeleteBucketMetadataConfigurationResult, err error)
 }{
 	{
 		404,
@@ -384,10 +384,10 @@ var testMockDeleteBucketMetadataTableConfigurationErrorCases = []struct {
 			strUrl := sortQuery(r)
 			assert.Equal(t, "/oss-demo/?metadataConfiguration", strUrl)
 		},
-		&DeleteBucketMetadataTableConfigurationRequest{
+		&DeleteBucketMetadataConfigurationRequest{
 			Bucket: Ptr("oss-demo"),
 		},
-		func(t *testing.T, o *DeleteBucketMetadataTableConfigurationResult, err error) {
+		func(t *testing.T, o *DeleteBucketMetadataConfigurationResult, err error) {
 			assert.Nil(t, o)
 			assert.NotNil(t, err)
 			var serr *ServiceError
@@ -401,8 +401,8 @@ var testMockDeleteBucketMetadataTableConfigurationErrorCases = []struct {
 	},
 }
 
-func TestMockDeleteBucketMetadataTableConfiguration_Error(t *testing.T) {
-	for _, c := range testMockDeleteBucketMetadataTableConfigurationErrorCases {
+func TestMockDeleteBucketMetadataConfiguration_Error(t *testing.T) {
+	for _, c := range testMockDeleteBucketMetadataConfigurationErrorCases {
 		server := testSetupMockServer(t, c.StatusCode, c.Headers, c.Body, c.CheckRequestFn)
 		defer server.Close()
 		assert.NotNil(t, server)
@@ -415,7 +415,7 @@ func TestMockDeleteBucketMetadataTableConfiguration_Error(t *testing.T) {
 		client := NewClient(cfg)
 		assert.NotNil(t, c)
 
-		output, err := client.DeleteBucketMetadataTableConfiguration(context.TODO(), c.Request)
+		output, err := client.DeleteBucketMetadataConfiguration(context.TODO(), c.Request)
 		c.CheckOutputFn(t, output, err)
 	}
 }
@@ -571,7 +571,7 @@ var testMockUpdateBucketMetadataJournalTableConfigurationSuccessCases = []struct
 		&UpdateBucketMetadataJournalTableConfigurationRequest{
 			Bucket: Ptr("oss-demo"),
 			JournalTableConfiguration: &JournalTableConfiguration{
-				RecordExpiration: &RecordExpiration{
+				RecordExpiration: &MetadataTableRecordExpiration{
 					Expiration: Ptr("DISABLED"),
 				},
 			},
@@ -634,7 +634,7 @@ var testMockUpdateBucketMetadataJournalTableConfigurationErrorCases = []struct {
 		&UpdateBucketMetadataJournalTableConfigurationRequest{
 			Bucket: Ptr("oss-demo"),
 			JournalTableConfiguration: &JournalTableConfiguration{
-				RecordExpiration: &RecordExpiration{
+				RecordExpiration: &MetadataTableRecordExpiration{
 					Expiration: Ptr("DISABLED"),
 				},
 			},

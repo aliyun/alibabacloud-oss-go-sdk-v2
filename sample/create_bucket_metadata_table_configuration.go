@@ -37,11 +37,11 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.CreateBucketMetadataTableConfigurationRequest{
+	request := &oss.CreateBucketMetadataConfigurationRequest{
 		Bucket: oss.Ptr(bucketName),
 		MetadataConfiguration: &oss.MetadataConfiguration{
 			JournalTableConfiguration: &oss.JournalTableConfiguration{
-				RecordExpiration: &oss.RecordExpiration{
+				RecordExpiration: &oss.MetadataTableRecordExpiration{
 					Expiration: oss.Ptr("ENABLED"),
 					Days:       oss.Ptr(7),
 				},
@@ -54,7 +54,7 @@ func main() {
 			},
 		},
 	}
-	result, err := client.CreateBucketMetadataTableConfiguration(context.TODO(), request)
+	result, err := client.CreateBucketMetadataConfiguration(context.TODO(), request)
 	if err != nil {
 		log.Fatalf("failed to create bucket metadata table configuration %v", err)
 	}

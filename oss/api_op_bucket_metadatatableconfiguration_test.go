@@ -9,16 +9,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMarshalInput_CreateBucketMetadataTableConfiguration(t *testing.T) {
+func TestMarshalInput_CreateBucketMetadataConfiguration(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
-	var request *CreateBucketMetadataTableConfigurationRequest
+	var request *CreateBucketMetadataConfigurationRequest
 	var input *OperationInput
 	var err error
 
-	request = &CreateBucketMetadataTableConfigurationRequest{}
+	request = &CreateBucketMetadataConfigurationRequest{}
 	input = &OperationInput{
-		OpName: "CreateBucketMetadataTableConfiguration",
+		OpName: "CreateBucketMetadataConfiguration",
 		Method: "POST",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
@@ -32,11 +32,11 @@ func TestMarshalInput_CreateBucketMetadataTableConfiguration(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
 
-	request = &CreateBucketMetadataTableConfigurationRequest{
+	request = &CreateBucketMetadataConfigurationRequest{
 		Bucket: Ptr("oss-demo"),
 	}
 	input = &OperationInput{
-		OpName: "CreateBucketMetadataTableConfiguration",
+		OpName: "CreateBucketMetadataConfiguration",
 		Method: "POST",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
@@ -50,11 +50,11 @@ func TestMarshalInput_CreateBucketMetadataTableConfiguration(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, MetadataConfiguration.")
 
-	request = &CreateBucketMetadataTableConfigurationRequest{
+	request = &CreateBucketMetadataConfigurationRequest{
 		Bucket: Ptr("oss-demo"),
 		MetadataConfiguration: &MetadataConfiguration{
 			JournalTableConfiguration: &JournalTableConfiguration{
-				RecordExpiration: &RecordExpiration{
+				RecordExpiration: &MetadataTableRecordExpiration{
 					Expiration: Ptr("ENABLED"),
 					Days:       Ptr(7),
 				},
@@ -68,7 +68,7 @@ func TestMarshalInput_CreateBucketMetadataTableConfiguration(t *testing.T) {
 		},
 	}
 	input = &OperationInput{
-		OpName: "CreateBucketMetadataTableConfiguration",
+		OpName: "CreateBucketMetadataConfiguration",
 		Method: "POST",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
@@ -86,7 +86,7 @@ func TestMarshalInput_CreateBucketMetadataTableConfiguration(t *testing.T) {
 		string(body))
 }
 
-func TestUnmarshalOutput_CreateBucketMetadataTableConfiguration(t *testing.T) {
+func TestUnmarshalOutput_CreateBucketMetadataConfiguration(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
 	var output *OperationOutput
@@ -99,7 +99,7 @@ func TestUnmarshalOutput_CreateBucketMetadataTableConfiguration(t *testing.T) {
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 		},
 	}
-	result := &CreateBucketMetadataTableConfigurationResult{}
+	result := &CreateBucketMetadataConfigurationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, 200, result.StatusCode)
@@ -123,23 +123,23 @@ func TestUnmarshalOutput_CreateBucketMetadataTableConfiguration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &CreateBucketMetadataTableConfigurationResult{}
+	result = &CreateBucketMetadataConfigurationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, 409, result.StatusCode)
 	assert.Equal(t, "Conflict", result.Status)
 }
 
-func TestMarshalInput_GetBucketMetadataTableConfiguration(t *testing.T) {
+func TestMarshalInput_GetBucketMetadataConfiguration(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
-	var request *GetBucketMetadataTableConfigurationRequest
+	var request *GetBucketMetadataConfigurationRequest
 	var input *OperationInput
 	var err error
 
-	request = &GetBucketMetadataTableConfigurationRequest{}
+	request = &GetBucketMetadataConfigurationRequest{}
 	input = &OperationInput{
-		OpName: "GetBucketMetadataTableConfiguration",
+		OpName: "GetBucketMetadataConfiguration",
 		Method: "GET",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
@@ -153,11 +153,11 @@ func TestMarshalInput_GetBucketMetadataTableConfiguration(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
 
-	request = &GetBucketMetadataTableConfigurationRequest{
+	request = &GetBucketMetadataConfigurationRequest{
 		Bucket: Ptr("oss-demo"),
 	}
 	input = &OperationInput{
-		OpName: "GetBucketMetadataTableConfiguration",
+		OpName: "GetBucketMetadataConfiguration",
 		Method: "GET",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
@@ -171,7 +171,7 @@ func TestMarshalInput_GetBucketMetadataTableConfiguration(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestUnmarshalOutput_GetBucketMetadataTableConfiguration(t *testing.T) {
+func TestUnmarshalOutput_GetBucketMetadataConfiguration(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
 	var output *OperationOutput
@@ -217,22 +217,22 @@ func TestUnmarshalOutput_GetBucketMetadataTableConfiguration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result := &GetBucketMetadataTableConfigurationResult{}
+	result := &GetBucketMetadataConfigurationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, 200, result.StatusCode)
 	assert.Equal(t, "OK", result.Status)
-	assert.NotNil(t, result.GetBucketMetadataConfigurationResult)
-	assert.Equal(t, "oss", *result.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.DestinationResult.TableBucketType)
-	assert.Equal(t, "b_examplebucket", *result.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.DestinationResult.TableNamespace)
-	assert.Equal(t, "ACTIVE", *result.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.TableStatus)
-	assert.Equal(t, "journal", *result.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.TableName)
-	assert.Equal(t, "ENABLED", *result.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.RecordExpiration.Expiration)
-	assert.Equal(t, int(7), *result.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.RecordExpiration.Days)
-	assert.Equal(t, "AES256", *result.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.EncryptionConfiguration.SseAlgorithm)
-	assert.Equal(t, "ENABLED", *result.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.InventoryTableConfigurationResult.ConfigurationState)
-	assert.Equal(t, "ACTIVE", *result.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.InventoryTableConfigurationResult.TableStatus)
-	assert.Equal(t, "inventory", *result.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.InventoryTableConfigurationResult.TableName)
+	assert.NotNil(t, result.GetBucketMetadataConfigurationResultXml)
+	assert.Equal(t, "oss", *result.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.DestinationResult.TableBucketType)
+	assert.Equal(t, "b_examplebucket", *result.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.DestinationResult.TableNamespace)
+	assert.Equal(t, "ACTIVE", *result.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.TableStatus)
+	assert.Equal(t, "journal", *result.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.TableName)
+	assert.Equal(t, "ENABLED", *result.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.RecordExpiration.Expiration)
+	assert.Equal(t, int(7), *result.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.RecordExpiration.Days)
+	assert.Equal(t, "AES256", *result.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.EncryptionConfiguration.SseAlgorithm)
+	assert.Equal(t, "ENABLED", *result.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.InventoryTableConfigurationResult.ConfigurationState)
+	assert.Equal(t, "ACTIVE", *result.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.InventoryTableConfigurationResult.TableStatus)
+	assert.Equal(t, "inventory", *result.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.InventoryTableConfigurationResult.TableName)
 
 	body = `<?xml version="1.0" encoding="UTF-8"?>
 <Error>
@@ -249,7 +249,7 @@ func TestUnmarshalOutput_GetBucketMetadataTableConfiguration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &GetBucketMetadataTableConfigurationResult{}
+	result = &GetBucketMetadataConfigurationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, 404, result.StatusCode)
@@ -382,7 +382,7 @@ func TestMarshalInput_UpdateBucketMetadataJournalTableConfiguration(t *testing.T
 	request = &UpdateBucketMetadataJournalTableConfigurationRequest{
 		Bucket: Ptr("oss-demo"),
 		JournalTableConfiguration: &JournalTableConfiguration{
-			RecordExpiration: &RecordExpiration{
+			RecordExpiration: &MetadataTableRecordExpiration{
 				Expiration: Ptr("DISABLED"),
 			},
 		},
@@ -423,16 +423,16 @@ func TestUnmarshalOutput_UpdateBucketMetadataJournalTableConfiguration(t *testin
 	assert.Equal(t, "OK", result.Status)
 }
 
-func TestMarshalInput_DeleteBucketMetadataTableConfiguration(t *testing.T) {
+func TestMarshalInput_DeleteBucketMetadataConfiguration(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
-	var request *DeleteBucketMetadataTableConfigurationRequest
+	var request *DeleteBucketMetadataConfigurationRequest
 	var input *OperationInput
 	var err error
 
-	request = &DeleteBucketMetadataTableConfigurationRequest{}
+	request = &DeleteBucketMetadataConfigurationRequest{}
 	input = &OperationInput{
-		OpName: "DeleteBucketMetadataTableConfiguration",
+		OpName: "DeleteBucketMetadataConfiguration",
 		Method: "DELETE",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
@@ -446,11 +446,11 @@ func TestMarshalInput_DeleteBucketMetadataTableConfiguration(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "missing required field, Bucket.")
 
-	request = &DeleteBucketMetadataTableConfigurationRequest{
+	request = &DeleteBucketMetadataConfigurationRequest{
 		Bucket: Ptr("oss-demo"),
 	}
 	input = &OperationInput{
-		OpName: "DeleteBucketMetadataTableConfiguration",
+		OpName: "DeleteBucketMetadataConfiguration",
 		Method: "DELETE",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
@@ -464,7 +464,7 @@ func TestMarshalInput_DeleteBucketMetadataTableConfiguration(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestUnmarshalOutput_DeleteBucketMetadataTableConfiguration(t *testing.T) {
+func TestUnmarshalOutput_DeleteBucketMetadataConfiguration(t *testing.T) {
 	c := Client{}
 	assert.NotNil(t, c)
 	var output *OperationOutput
@@ -477,7 +477,7 @@ func TestUnmarshalOutput_DeleteBucketMetadataTableConfiguration(t *testing.T) {
 			"X-Oss-Request-Id": {"534B371674E88A4D8906****"},
 		},
 	}
-	result := &DeleteBucketMetadataTableConfigurationResult{}
+	result := &DeleteBucketMetadataConfigurationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, 204, result.StatusCode)
@@ -498,7 +498,7 @@ func TestUnmarshalOutput_DeleteBucketMetadataTableConfiguration(t *testing.T) {
 			"Content-Type":     {"application/xml"},
 		},
 	}
-	result = &DeleteBucketMetadataTableConfigurationResult{}
+	result = &DeleteBucketMetadataConfigurationResult{}
 	err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix)
 	assert.Nil(t, err)
 	assert.Equal(t, 404, result.StatusCode)

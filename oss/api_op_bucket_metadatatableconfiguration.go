@@ -14,8 +14,8 @@ type MetadataTableEncryptionConfiguration struct {
 	KmsKeyArn *string `xml:"KmsKeyArn"`
 }
 
-// RecordExpiration specifies the record expiration configuration for the journal table.
-type RecordExpiration struct {
+// MetadataTableRecordExpiration specifies the record expiration configuration for the journal table.
+type MetadataTableRecordExpiration struct {
 	// Specifies whether to enable record expiration. Valid values: ENABLED, DISABLED.
 	Expiration *string `xml:"Expiration"`
 
@@ -26,7 +26,7 @@ type RecordExpiration struct {
 // JournalTableConfiguration specifies the configuration of the journal table.
 type JournalTableConfiguration struct {
 	// The record expiration configuration.
-	RecordExpiration *RecordExpiration `xml:"RecordExpiration"`
+	RecordExpiration *MetadataTableRecordExpiration `xml:"RecordExpiration"`
 
 	// The encryption configuration.
 	EncryptionConfiguration *MetadataTableEncryptionConfiguration `xml:"EncryptionConfiguration"`
@@ -50,8 +50,8 @@ type MetadataConfiguration struct {
 	InventoryTableConfiguration *InventoryTableConfiguration `xml:"InventoryTableConfiguration"`
 }
 
-// DestinationResult specifies the destination information of the metadata table.
-type DestinationResult struct {
+// MetadataTableDestinationResult specifies the destination information of the metadata table.
+type MetadataTableDestinationResult struct {
 	// The type of the table bucket. The value is fixed to oss.
 	TableBucketType *string `xml:"TableBucketType"`
 
@@ -62,8 +62,8 @@ type DestinationResult struct {
 	TableNamespace *string `xml:"TableNamespace"`
 }
 
-// MetadataTableConfigurationError specifies the error information of a metadata table.
-type MetadataTableConfigurationError struct {
+// MetadataTableError specifies the error information of a metadata table.
+type MetadataTableError struct {
 	// The error code.
 	ErrorCode *string `xml:"ErrorCode"`
 
@@ -83,13 +83,13 @@ type JournalTableConfigurationResult struct {
 	TableArn *string `xml:"TableArn"`
 
 	// The record expiration configuration.
-	RecordExpiration *RecordExpiration `xml:"RecordExpiration"`
+	RecordExpiration *MetadataTableRecordExpiration `xml:"RecordExpiration"`
 
 	// The encryption configuration.
 	EncryptionConfiguration *MetadataTableEncryptionConfiguration `xml:"EncryptionConfiguration"`
 
 	// The error information. This parameter is returned only when TableStatus is FAILED.
-	Error *MetadataTableConfigurationError `xml:"Error"`
+	Error *MetadataTableError `xml:"Error"`
 }
 
 // InventoryTableConfigurationResult specifies the configuration result of the inventory table.
@@ -110,13 +110,13 @@ type InventoryTableConfigurationResult struct {
 	EncryptionConfiguration *MetadataTableEncryptionConfiguration `xml:"EncryptionConfiguration"`
 
 	// The error information. This parameter is returned only when TableStatus is FAILED.
-	Error *MetadataTableConfigurationError `xml:"Error"`
+	Error *MetadataTableError `xml:"Error"`
 }
 
 // MetadataConfigurationResult specifies the metadata table configuration result of a bucket.
 type MetadataConfigurationResult struct {
 	// The destination information.
-	DestinationResult *DestinationResult `xml:"DestinationResult"`
+	DestinationResult *MetadataTableDestinationResult `xml:"DestinationResult"`
 
 	// The journal table configuration result.
 	JournalTableConfigurationResult *JournalTableConfigurationResult `xml:"JournalTableConfigurationResult"`
@@ -125,7 +125,7 @@ type MetadataConfigurationResult struct {
 	InventoryTableConfigurationResult *InventoryTableConfigurationResult `xml:"InventoryTableConfigurationResult"`
 }
 
-type CreateBucketMetadataTableConfigurationRequest struct {
+type CreateBucketMetadataConfigurationRequest struct {
 	// The name of the bucket.
 	Bucket *string `input:"host,bucket,required"`
 
@@ -135,18 +135,18 @@ type CreateBucketMetadataTableConfigurationRequest struct {
 	RequestCommon
 }
 
-type CreateBucketMetadataTableConfigurationResult struct {
+type CreateBucketMetadataConfigurationResult struct {
 	ResultCommon
 }
 
-// CreateBucketMetadataTableConfiguration Creates the metadata table configuration for a bucket.
-func (c *Client) CreateBucketMetadataTableConfiguration(ctx context.Context, request *CreateBucketMetadataTableConfigurationRequest, optFns ...func(*Options)) (*CreateBucketMetadataTableConfigurationResult, error) {
+// CreateBucketMetadataConfiguration Creates the metadata table configuration for a bucket.
+func (c *Client) CreateBucketMetadataConfiguration(ctx context.Context, request *CreateBucketMetadataConfigurationRequest, optFns ...func(*Options)) (*CreateBucketMetadataConfigurationResult, error) {
 	var err error
 	if request == nil {
-		request = &CreateBucketMetadataTableConfigurationRequest{}
+		request = &CreateBucketMetadataConfigurationRequest{}
 	}
 	input := &OperationInput{
-		OpName: "CreateBucketMetadataTableConfiguration",
+		OpName: "CreateBucketMetadataConfiguration",
 		Method: "POST",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
@@ -166,39 +166,39 @@ func (c *Client) CreateBucketMetadataTableConfiguration(ctx context.Context, req
 		return nil, err
 	}
 
-	result := &CreateBucketMetadataTableConfigurationResult{}
+	result := &CreateBucketMetadataConfigurationResult{}
 	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
 }
 
-type GetBucketMetadataTableConfigurationRequest struct {
+type GetBucketMetadataConfigurationRequest struct {
 	// The name of the bucket.
 	Bucket *string `input:"host,bucket,required"`
 
 	RequestCommon
 }
 
-type GetBucketMetadataTableConfigurationResult struct {
+type GetBucketMetadataConfigurationResult struct {
 	// The container that stores the metadata table configuration result.
-	GetBucketMetadataConfigurationResult *GetBucketMetadataConfigurationResult `output:"body,GetBucketMetadataConfigurationResult,xml"`
+	GetBucketMetadataConfigurationResultXml *GetBucketMetadataConfigurationResultXml `output:"body,GetBucketMetadataConfigurationResult,xml"`
 
 	ResultCommon
 }
 
-type GetBucketMetadataConfigurationResult struct {
+type GetBucketMetadataConfigurationResultXml struct {
 	MetadataConfigurationResult *MetadataConfigurationResult `xml:"MetadataConfigurationResult"`
 }
 
-// GetBucketMetadataTableConfiguration Queries the metadata table configuration of a bucket.
-func (c *Client) GetBucketMetadataTableConfiguration(ctx context.Context, request *GetBucketMetadataTableConfigurationRequest, optFns ...func(*Options)) (*GetBucketMetadataTableConfigurationResult, error) {
+// GetBucketMetadataConfiguration Queries the metadata table configuration of a bucket.
+func (c *Client) GetBucketMetadataConfiguration(ctx context.Context, request *GetBucketMetadataConfigurationRequest, optFns ...func(*Options)) (*GetBucketMetadataConfigurationResult, error) {
 	var err error
 	if request == nil {
-		request = &GetBucketMetadataTableConfigurationRequest{}
+		request = &GetBucketMetadataConfigurationRequest{}
 	}
 	input := &OperationInput{
-		OpName: "GetBucketMetadataTableConfiguration",
+		OpName: "GetBucketMetadataConfiguration",
 		Method: "GET",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
@@ -218,32 +218,32 @@ func (c *Client) GetBucketMetadataTableConfiguration(ctx context.Context, reques
 		return nil, err
 	}
 
-	result := &GetBucketMetadataTableConfigurationResult{}
+	result := &GetBucketMetadataConfigurationResult{}
 	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
 }
 
-type DeleteBucketMetadataTableConfigurationRequest struct {
+type DeleteBucketMetadataConfigurationRequest struct {
 	// The name of the bucket.
 	Bucket *string `input:"host,bucket,required"`
 
 	RequestCommon
 }
 
-type DeleteBucketMetadataTableConfigurationResult struct {
+type DeleteBucketMetadataConfigurationResult struct {
 	ResultCommon
 }
 
-// DeleteBucketMetadataTableConfiguration Deletes the metadata table configuration of a bucket.
-func (c *Client) DeleteBucketMetadataTableConfiguration(ctx context.Context, request *DeleteBucketMetadataTableConfigurationRequest, optFns ...func(*Options)) (*DeleteBucketMetadataTableConfigurationResult, error) {
+// DeleteBucketMetadataConfiguration Deletes the metadata table configuration of a bucket.
+func (c *Client) DeleteBucketMetadataConfiguration(ctx context.Context, request *DeleteBucketMetadataConfigurationRequest, optFns ...func(*Options)) (*DeleteBucketMetadataConfigurationResult, error) {
 	var err error
 	if request == nil {
-		request = &DeleteBucketMetadataTableConfigurationRequest{}
+		request = &DeleteBucketMetadataConfigurationRequest{}
 	}
 	input := &OperationInput{
-		OpName: "DeleteBucketMetadataTableConfiguration",
+		OpName: "DeleteBucketMetadataConfiguration",
 		Method: "DELETE",
 		Headers: map[string]string{
 			HTTPHeaderContentType: contentTypeXML,
@@ -263,7 +263,7 @@ func (c *Client) DeleteBucketMetadataTableConfiguration(ctx context.Context, req
 		return nil, err
 	}
 
-	result := &DeleteBucketMetadataTableConfigurationResult{}
+	result := &DeleteBucketMetadataConfigurationResult{}
 	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}

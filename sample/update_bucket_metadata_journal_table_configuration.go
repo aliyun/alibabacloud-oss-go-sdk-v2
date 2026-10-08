@@ -40,7 +40,7 @@ func main() {
 	request := &oss.UpdateBucketMetadataJournalTableConfigurationRequest{
 		Bucket: oss.Ptr(bucketName),
 		JournalTableConfiguration: &oss.JournalTableConfiguration{
-			RecordExpiration: &oss.RecordExpiration{
+			RecordExpiration: &oss.MetadataTableRecordExpiration{
 				Expiration: oss.Ptr("DISABLED"),
 			},
 		},

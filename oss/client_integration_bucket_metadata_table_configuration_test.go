@@ -27,11 +27,11 @@ func TestBucketMetadataTableConfiguration(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// Create
-	createResult, err := client.CreateBucketMetadataTableConfiguration(context.TODO(), &CreateBucketMetadataTableConfigurationRequest{
+	createResult, err := client.CreateBucketMetadataConfiguration(context.TODO(), &CreateBucketMetadataConfigurationRequest{
 		Bucket: Ptr(bucketName),
 		MetadataConfiguration: &MetadataConfiguration{
 			JournalTableConfiguration: &JournalTableConfiguration{
-				RecordExpiration: &RecordExpiration{
+				RecordExpiration: &MetadataTableRecordExpiration{
 					Expiration: Ptr("ENABLED"),
 					Days:       Ptr(7),
 				},
@@ -50,15 +50,15 @@ func TestBucketMetadataTableConfiguration(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// Get
-	getResult, err := client.GetBucketMetadataTableConfiguration(context.TODO(), &GetBucketMetadataTableConfigurationRequest{
+	getResult, err := client.GetBucketMetadataConfiguration(context.TODO(), &GetBucketMetadataConfigurationRequest{
 		Bucket: Ptr(bucketName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult.StatusCode)
 	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
-	assert.NotNil(t, getResult.GetBucketMetadataConfigurationResult)
-	assert.NotNil(t, getResult.GetBucketMetadataConfigurationResult.MetadataConfigurationResult)
-	metaResult := getResult.GetBucketMetadataConfigurationResult.MetadataConfigurationResult
+	assert.NotNil(t, getResult.GetBucketMetadataConfigurationResultXml)
+	assert.NotNil(t, getResult.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult)
+	metaResult := getResult.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult
 	assert.NotNil(t, metaResult.DestinationResult)
 	assert.Equal(t, "oss", *metaResult.DestinationResult.TableBucketType)
 	assert.NotEmpty(t, *metaResult.DestinationResult.TableBucketArn)
@@ -88,7 +88,7 @@ func TestBucketMetadataTableConfiguration(t *testing.T) {
 	updateJournalResult, err := client.UpdateBucketMetadataJournalTableConfiguration(context.TODO(), &UpdateBucketMetadataJournalTableConfigurationRequest{
 		Bucket: Ptr(bucketName),
 		JournalTableConfiguration: &JournalTableConfiguration{
-			RecordExpiration: &RecordExpiration{
+			RecordExpiration: &MetadataTableRecordExpiration{
 				Expiration: Ptr("DISABLED"),
 			},
 		},
@@ -99,17 +99,17 @@ func TestBucketMetadataTableConfiguration(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// Get after updates
-	getResult2, err := client.GetBucketMetadataTableConfiguration(context.TODO(), &GetBucketMetadataTableConfigurationRequest{
+	getResult2, err := client.GetBucketMetadataConfiguration(context.TODO(), &GetBucketMetadataConfigurationRequest{
 		Bucket: Ptr(bucketName),
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 200, getResult2.StatusCode)
-	assert.Equal(t, "DISABLED", *getResult2.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.InventoryTableConfigurationResult.ConfigurationState)
-	assert.Equal(t, "DISABLED", *getResult2.GetBucketMetadataConfigurationResult.MetadataConfigurationResult.JournalTableConfigurationResult.RecordExpiration.Expiration)
+	assert.Equal(t, "DISABLED", *getResult2.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.InventoryTableConfigurationResult.ConfigurationState)
+	assert.Equal(t, "DISABLED", *getResult2.GetBucketMetadataConfigurationResultXml.MetadataConfigurationResult.JournalTableConfigurationResult.RecordExpiration.Expiration)
 	time.Sleep(1 * time.Second)
 
 	// Delete
-	delResult, err := client.DeleteBucketMetadataTableConfiguration(context.TODO(), &DeleteBucketMetadataTableConfigurationRequest{
+	delResult, err := client.DeleteBucketMetadataConfiguration(context.TODO(), &DeleteBucketMetadataConfigurationRequest{
 		Bucket: Ptr(bucketName),
 	})
 	assert.Nil(t, err)
@@ -118,7 +118,7 @@ func TestBucketMetadataTableConfiguration(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// Get after delete
-	_, err = client.GetBucketMetadataTableConfiguration(context.TODO(), &GetBucketMetadataTableConfigurationRequest{
+	_, err = client.GetBucketMetadataConfiguration(context.TODO(), &GetBucketMetadataConfigurationRequest{
 		Bucket: Ptr(bucketName),
 	})
 	assert.NotNil(t, err)
@@ -134,11 +134,11 @@ func TestBucketMetadataTableConfiguration(t *testing.T) {
 	invalidAkClient := getClientWithCredentialsProvider(region_, endpoint_,
 		credentials.NewStaticCredentialsProvider("ak", "sk"))
 
-	_, err = invalidAkClient.CreateBucketMetadataTableConfiguration(context.TODO(), &CreateBucketMetadataTableConfigurationRequest{
+	_, err = invalidAkClient.CreateBucketMetadataConfiguration(context.TODO(), &CreateBucketMetadataConfigurationRequest{
 		Bucket: Ptr(bucketName),
 		MetadataConfiguration: &MetadataConfiguration{
 			JournalTableConfiguration: &JournalTableConfiguration{
-				RecordExpiration: &RecordExpiration{
+				RecordExpiration: &MetadataTableRecordExpiration{
 					Expiration: Ptr("ENABLED"),
 					Days:       Ptr(7),
 				},
@@ -154,7 +154,7 @@ func TestBucketMetadataTableConfiguration(t *testing.T) {
 	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
 	assert.NotEmpty(t, serr.RequestID)
 
-	_, err = invalidAkClient.GetBucketMetadataTableConfiguration(context.TODO(), &GetBucketMetadataTableConfigurationRequest{
+	_, err = invalidAkClient.GetBucketMetadataConfiguration(context.TODO(), &GetBucketMetadataConfigurationRequest{
 		Bucket: Ptr(bucketName),
 	})
 	assert.NotNil(t, err)
@@ -184,7 +184,7 @@ func TestBucketMetadataTableConfiguration(t *testing.T) {
 	_, err = invalidAkClient.UpdateBucketMetadataJournalTableConfiguration(context.TODO(), &UpdateBucketMetadataJournalTableConfigurationRequest{
 		Bucket: Ptr(bucketName),
 		JournalTableConfiguration: &JournalTableConfiguration{
-			RecordExpiration: &RecordExpiration{
+			RecordExpiration: &MetadataTableRecordExpiration{
 				Expiration: Ptr("DISABLED"),
 			},
 		},
@@ -198,7 +198,7 @@ func TestBucketMetadataTableConfiguration(t *testing.T) {
 	assert.Equal(t, "The OSS Access Key Id you provided does not exist in our records.", serr.Message)
 	assert.NotEmpty(t, serr.RequestID)
 
-	_, err = invalidAkClient.DeleteBucketMetadataTableConfiguration(context.TODO(), &DeleteBucketMetadataTableConfigurationRequest{
+	_, err = invalidAkClient.DeleteBucketMetadataConfiguration(context.TODO(), &DeleteBucketMetadataConfigurationRequest{
 		Bucket: Ptr(bucketName),
 	})
 	assert.NotNil(t, err)

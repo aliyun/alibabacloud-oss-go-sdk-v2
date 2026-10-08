@@ -37,10 +37,10 @@ func main() {
 
 	client := oss.NewClient(cfg)
 
-	request := &oss.DeleteBucketMetadataTableConfigurationRequest{
+	request := &oss.DeleteBucketMetadataConfigurationRequest{
 		Bucket: oss.Ptr(bucketName),
 	}
-	result, err := client.DeleteBucketMetadataTableConfiguration(context.TODO(), request)
+	result, err := client.DeleteBucketMetadataConfiguration(context.TODO(), request)
 	if err != nil {
 		log.Fatalf("failed to delete bucket metadata table configuration %v", err)
 	}
