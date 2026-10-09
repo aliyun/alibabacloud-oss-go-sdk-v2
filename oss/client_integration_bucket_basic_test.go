@@ -380,7 +380,7 @@ func TestGetBucketStat(t *testing.T) {
 	assert.Equal(t, int64(0), stat.ObjectCount)
 	assert.Equal(t, int64(0), stat.MultipartUploadCount)
 	assert.Equal(t, int64(0), stat.LiveChannelCount)
-	assert.Equal(t, int64(0), stat.LastModifiedTime)
+	assert.Greater(t, stat.LastModifiedTime, int64(0))
 	assert.Equal(t, int64(0), stat.StandardStorage)
 	assert.Equal(t, int64(0), stat.StandardObjectCount)
 	assert.Equal(t, int64(0), stat.InfrequentAccessStorage)
