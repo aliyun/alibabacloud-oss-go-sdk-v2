@@ -1754,3 +1754,149 @@ func TestMockDownloaderEnableWriteBufferSize(t *testing.T) {
 	io.Copy(hash, rfile)
 	assert.Equal(t, datasum, hash.Sum64())
 }
+
+// mustSymlink creates a symbolic link, skipping the test when the platform
+// or the current user cannot create one.
+func mustSymlink(t *testing.T, target, link string) {
+	t.Helper()
+	if err := os.Symlink(target, link); err != nil {
+		t.Skipf("symbolic links are not supported: %v", err)
+	}
+}
+
+func newDownloaderDelegateForTest(t *testing.T, optFns ...func(*DownloaderOptions)) *downloaderDelegate {
+	t.Helper()
+	d := NewDownloader(&Client{}, optFns...)
+	delegate, err := d.newDelegate(context.TODO(), &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")})
+	assert.Nil(t, err)
+	assert.NotNil(t, delegate)
+	return delegate
+}
+
+func TestDownloaderCheckDestinationTempSymlinkRemoved(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.bin")
+	assert.Nil(t, os.WriteFile(target, []byte("original"), FilePermMode))
+	localFile := filepath.Join(dir, "object.bin")
+	tempFile := localFile + TempFileSuffix
+	mustSymlink(t, target, tempFile)
+
+	delegate := newDownloaderDelegateForTest(t)
+	file, err := delegate.checkDestination(localFile)
+	assert.Nil(t, err)
+	assert.NotNil(t, file)
+	assert.Nil(t, file.Close())
+
+	// the link is removed and a fresh regular temporary file is created
+	tempInfo, terr := os.Lstat(tempFile)
+	assert.Nil(t, terr)
+	assert.Zero(t, tempInfo.Mode()&os.ModeSymlink)
+	// the link target is untouched
+	content, rerr := os.ReadFile(target)
+	assert.Nil(t, rerr)
+	assert.Equal(t, "original", string(content))
+}
+
+func TestDownloaderCheckDestinationCheckpointTempSymlinkRemoved(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.bin")
+	assert.Nil(t, os.WriteFile(target, []byte("original"), FilePermMode))
+	localFile := filepath.Join(dir, "object.bin")
+	tempFile := localFile + TempFileSuffix
+	mustSymlink(t, target, tempFile)
+
+	delegate := newDownloaderDelegateForTest(t, func(do *DownloaderOptions) {
+		do.EnableCheckpoint = true
+		do.CheckpointDir = dir
+	})
+	file, err := delegate.checkDestination(localFile)
+	assert.Nil(t, err)
+	assert.NotNil(t, file)
+	assert.Nil(t, file.Close())
+
+	tempInfo, terr := os.Lstat(tempFile)
+	assert.Nil(t, terr)
+	assert.Zero(t, tempInfo.Mode()&os.ModeSymlink)
+	content, rerr := os.ReadFile(target)
+	assert.Nil(t, rerr)
+	assert.Equal(t, "original", string(content))
+}
+
+func TestDownloaderCheckDestinationTempRegularFileKept(t *testing.T) {
+	dir := t.TempDir()
+	localFile := filepath.Join(dir, "object.bin")
+	tempFile := localFile + TempFileSuffix
+	assert.Nil(t, os.WriteFile(tempFile, []byte("partial"), FilePermMode))
+
+	delegate := newDownloaderDelegateForTest(t)
+	file, err := delegate.checkDestination(localFile)
+	assert.Nil(t, err)
+	assert.NotNil(t, file)
+	assert.Nil(t, file.Close())
+
+	// the existing regular file is reused for checkpoint resume
+	content, rerr := os.ReadFile(tempFile)
+	assert.Nil(t, rerr)
+	assert.Equal(t, "partial", string(content))
+}
+
+func TestDownloaderCloseWriterReplacesFinalSymlink(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.bin")
+	assert.Nil(t, os.WriteFile(target, []byte("original"), FilePermMode))
+	localFile := filepath.Join(dir, "object.bin")
+	mustSymlink(t, target, localFile)
+
+	delegate := newDownloaderDelegateForTest(t)
+	file, err := delegate.checkDestination(localFile)
+	assert.Nil(t, err)
+	assert.NotNil(t, file)
+	_, werr := file.Write([]byte("downloaded"))
+	assert.Nil(t, werr)
+
+	assert.Nil(t, delegate.closeWriter(file, nil))
+
+	// the final path becomes a regular file holding the download
+	finalInfo, ferr := os.Lstat(localFile)
+	assert.Nil(t, ferr)
+	assert.Zero(t, finalInfo.Mode()&os.ModeSymlink)
+	content, rerr := os.ReadFile(localFile)
+	assert.Nil(t, rerr)
+	assert.Equal(t, "downloaded", string(content))
+
+	// the link target is untouched
+	targetContent, terr := os.ReadFile(target)
+	assert.Nil(t, terr)
+	assert.Equal(t, "original", string(targetContent))
+}
+
+func TestDownloaderCheckDestinationParentDirSymlink(t *testing.T) {
+	dir := t.TempDir()
+	realDir := filepath.Join(dir, "real")
+	assert.Nil(t, os.Mkdir(realDir, 0755))
+	linkDir := filepath.Join(dir, "linkdir")
+	mustSymlink(t, realDir, linkDir)
+
+	localFile := filepath.Join(linkDir, "object.bin")
+	delegate := newDownloaderDelegateForTest(t)
+	file, err := delegate.checkDestination(localFile)
+	assert.Nil(t, err)
+	assert.NotNil(t, file)
+
+	// the temporary file created during the download is a regular file
+	tempInfo, terr := os.Lstat(localFile + TempFileSuffix)
+	assert.Nil(t, terr)
+	assert.Zero(t, tempInfo.Mode()&os.ModeSymlink)
+
+	_, werr := file.Write([]byte("downloaded"))
+	assert.Nil(t, werr)
+	assert.Nil(t, delegate.closeWriter(file, nil))
+
+	// the final file is a regular file under the real directory
+	finalInfo, ferr := os.Lstat(localFile)
+	assert.Nil(t, ferr)
+	assert.Zero(t, finalInfo.Mode()&os.ModeSymlink)
+	content, rerr := os.ReadFile(filepath.Join(realDir, "object.bin"))
+	assert.Nil(t, rerr)
+	assert.Equal(t, "downloaded", string(content))
+}
