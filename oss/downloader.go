@@ -290,6 +290,15 @@ func (d *downloaderDelegate) checkDestination(filePath string) (*os.File, error)
 	d.filePath = absFilePath
 	d.tempFilePath = tempFilePath
 
+	// Remove an existing symbolic link at the temporary path before opening it.
+	if d.options.UseTempFile {
+		if fileInfo, lerr := os.Lstat(tempFilePath); lerr == nil && fileInfo.Mode()&os.ModeSymlink != 0 {
+			if err = os.Remove(tempFilePath); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	// use openfile to check the filepath is valid
 	var file *os.File
 	if file, err = os.OpenFile(tempFilePath, os.O_WRONLY|os.O_CREATE, FilePermMode); err != nil {
