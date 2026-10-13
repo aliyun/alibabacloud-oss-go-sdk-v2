@@ -175,8 +175,13 @@ func TestDownloadCheckpointValid(t *testing.T) {
 
 	os.Remove(destFilePath)
 	assert.Equal(t, int64(0), cp.Info.Data.DownloadInfo.Offset)
+
+	// Create destination file large enough for the checkpoint offset used below.
+	err := os.WriteFile(destFilePath, make([]byte, 5242880), FilePermMode)
+	assert.Nil(t, err)
+
 	cpdata := `{"Magic":"92611BED-89E2-46B6-89E5-72F273D4B0A3","MD5":"3f132b5bf65640868a47cb52c57492c8","Data":{"ObjectInfo":{"Name":"oss://bucket/key","VersionId":"","Range":""},"ObjectMeta":{"Size":344606,"LastModified":"Fri, 24 Feb 2012 06:07:48 GMT","ETag":"\"D41D8CD98F00B204E9800998ECF8****\""},"FilePath":"gthnjXGQ-no-surfix","PartSize":5242880,"DownloadInfo":{"Offset":5242880,"CRC64":0}}}`
-	err := os.WriteFile(cp.CpFilePath, []byte(cpdata), FilePermMode)
+	err = os.WriteFile(cp.CpFilePath, []byte(cpdata), FilePermMode)
 	assert.Nil(t, err)
 
 	assert.True(t, cp.valid())
