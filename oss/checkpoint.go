@@ -176,6 +176,14 @@ func (cp *downloadCheckpoint) valid() bool {
 		return false
 	}
 
+	// valid destination path
+	downloadLen := dcp.Info.Data.DownloadInfo.Offset - rOffset
+	if downloadLen > 0 {
+		if fileInfo, err := os.Stat(cp.Info.Data.FilePath); err != nil || fileInfo.Size() < downloadLen {
+			return false
+		}
+	}
+
 	//valid data
 	if cp.VerifyData && dcp.Info.Data.DownloadInfo.CRC64 != 0 {
 		if file, err := os.Open(cp.Info.Data.FilePath); err == nil {

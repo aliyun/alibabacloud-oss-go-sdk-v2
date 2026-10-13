@@ -1900,3 +1900,66 @@ func TestDownloaderCheckDestinationParentDirSymlink(t *testing.T) {
 	assert.Nil(t, rerr)
 	assert.Equal(t, "downloaded", string(content))
 }
+
+func TestMockDownloaderCheckpointValidDestinationPath(t *testing.T) {
+	partSize := int64(128)
+	offset := int64(256)
+	length := 1234
+
+	localFile := "check-point-dest-path-no-surfix"
+	localFileTemp := localFile + TempFileSuffix
+	absPath, err := filepath.Abs(localFileTemp)
+	assert.Nil(t, err)
+
+	cpDir := t.TempDir()
+	baseDir := filepath.Join(cpDir, "cp")
+
+	headers := http.Header{}
+	headers.Set("Content-Length", fmt.Sprint(length))
+	headers.Set("Last-Modified", getNowGMT())
+	headers.Set("ETag", "\"source-etag\"")
+
+	request := &GetObjectRequest{Bucket: Ptr("bucket"), Key: Ptr("key")}
+
+	defer func() {
+		os.Remove(localFileTemp)
+		os.Remove(localFile)
+	}()
+
+	// missing temp file
+	cp := newDownloadCheckpoint(request, absPath, baseDir, headers, partSize)
+	cp.Info.Data.DownloadInfo.Offset = offset
+	cp.Info.Data.DownloadInfo.CRC64 = 0
+	err = cp.dump()
+	assert.Nil(t, err)
+	err = cp.load()
+	assert.Nil(t, err)
+	assert.False(t, cp.Loaded)
+
+	// temp file smaller than offset
+	err = os.WriteFile(localFileTemp, []byte("short"), FilePermMode)
+	assert.Nil(t, err)
+	cp = newDownloadCheckpoint(request, absPath, baseDir, headers, partSize)
+	cp.Info.Data.DownloadInfo.Offset = offset
+	cp.Info.Data.DownloadInfo.CRC64 = 0
+	err = cp.dump()
+	assert.Nil(t, err)
+	err = cp.load()
+	assert.Nil(t, err)
+	assert.False(t, cp.Loaded)
+	os.Remove(localFileTemp)
+
+	// temp file large enough
+	err = os.WriteFile(localFileTemp, make([]byte, offset), FilePermMode)
+	assert.Nil(t, err)
+	cp = newDownloadCheckpoint(request, absPath, baseDir, headers, partSize)
+	cp.Info.Data.DownloadInfo.Offset = offset
+	cp.Info.Data.DownloadInfo.CRC64 = 0
+	err = cp.dump()
+	assert.Nil(t, err)
+	err = cp.load()
+	assert.Nil(t, err)
+	assert.True(t, cp.Loaded)
+
+	os.Remove(localFileTemp)
+}
