@@ -343,6 +343,42 @@ func TestMockPutBucketLifecycle_Error(t *testing.T) {
 	}
 }
 
+const lifecycleRespWithUnknown = `<?xml version="1.0" encoding="UTF-8"?>
+<LifecycleConfiguration>
+  <Rule>
+    <ID>r0</ID>
+    <Prefix>a/</Prefix>
+    <Status>Enabled</Status>
+    <Expiration>
+      <Days>1</Days>
+    </Expiration>
+    <NewExtension>v1</NewExtension>
+  </Rule>
+  <Rule>
+    <ID>r1</ID>
+    <Prefix>b/</Prefix>
+    <Status>Enabled</Status>
+    <Filter>
+      <Not>
+        <Prefix>skip/</Prefix>
+        <NewFilterExt>x</NewFilterExt>
+      </Not>
+    </Filter>
+  </Rule>
+</LifecycleConfiguration>`
+
+const lifecycleRespClean = `<?xml version="1.0" encoding="UTF-8"?>
+<LifecycleConfiguration>
+  <Rule>
+    <ID>r0</ID>
+    <Prefix>a/</Prefix>
+    <Status>Enabled</Status>
+    <Expiration>
+      <Days>1</Days>
+    </Expiration>
+  </Rule>
+</LifecycleConfiguration>`
+
 var testMockGetBucketLifecycleSuccessCases = []struct {
 	StatusCode     int
 	Headers        map[string]string
@@ -489,6 +525,178 @@ var testMockGetBucketLifecycleSuccessCases = []struct {
 			assert.True(t, *config.Rules[1].NoncurrentVersionTransitions[0].IsAccessTime)
 			assert.False(t, *config.Rules[1].NoncurrentVersionTransitions[0].ReturnToStdWhenVisit)
 			assert.Equal(t, int64(1631698332), *config.Rules[1].AtimeBase)
+		},
+	},
+	// UnknownFieldsCheck=Fail (default via nil), clean body → no err, Body set, UnknownFields nil
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "mock-request-id",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(lifecycleRespClean),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
+		},
+		&GetBucketLifecycleRequest{Bucket: Ptr("bucket")},
+		func(t *testing.T, o *GetBucketLifecycleResult, err error) {
+			assert.NoError(t, err)
+			assert.NotNil(t, o)
+			assert.NotNil(t, o.LifecycleConfiguration)
+			assert.Equal(t, 1, len(o.LifecycleConfiguration.Rules))
+			assert.NotEmpty(t, o.Body)
+			assert.Nil(t, o.UnknownFields)
+		},
+	},
+	// UnknownFieldsCheck=Fail (default), body with unknown fields → *UnknownFieldsError, result preserved
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "mock-request-id",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(lifecycleRespWithUnknown),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
+		},
+		&GetBucketLifecycleRequest{Bucket: Ptr("bucket")},
+		func(t *testing.T, o *GetBucketLifecycleResult, err error) {
+			assert.Error(t, err)
+			var ufe *UnknownFieldsError
+			assert.True(t, errors.As(err, &ufe), "expected *UnknownFieldsError, got %T: %v", err, err)
+			assert.NotNil(t, ufe)
+			assert.ElementsMatch(t, []string{
+				"LifecycleConfiguration/Rule/NewExtension",
+				"LifecycleConfiguration/Rule/Filter/Not/NewFilterExt",
+			}, ufe.MissingPaths)
+			assert.NotNil(t, o, "result must be preserved when err is *UnknownFieldsError")
+			assert.NotNil(t, o.LifecycleConfiguration)
+			assert.Equal(t, 2, len(o.LifecycleConfiguration.Rules))
+			assert.NotEmpty(t, o.Body)
+			assert.ElementsMatch(t, ufe.MissingPaths, o.UnknownFields)
+		},
+	},
+	// UnknownFieldsCheck=Report → no err, UnknownFields populated
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "mock-request-id",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(lifecycleRespWithUnknown),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
+		},
+		&GetBucketLifecycleRequest{
+			Bucket:             Ptr("bucket"),
+			UnknownFieldsCheck: Ptr(UnknownFieldsCheckReport),
+		},
+		func(t *testing.T, o *GetBucketLifecycleResult, err error) {
+			assert.NoError(t, err)
+			assert.NotNil(t, o)
+			assert.NotEmpty(t, o.Body)
+			assert.ElementsMatch(t, []string{
+				"LifecycleConfiguration/Rule/NewExtension",
+				"LifecycleConfiguration/Rule/Filter/Not/NewFilterExt",
+			}, o.UnknownFields)
+			assert.Equal(t, 2, len(o.LifecycleConfiguration.Rules))
+		},
+	},
+	// UnknownFieldsCheck=Skip → no err, Body nil, UnknownFields nil, config parsed
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "mock-request-id",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(lifecycleRespWithUnknown),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
+		},
+		&GetBucketLifecycleRequest{
+			Bucket:             Ptr("bucket"),
+			UnknownFieldsCheck: Ptr(UnknownFieldsCheckSkip),
+		},
+		func(t *testing.T, o *GetBucketLifecycleResult, err error) {
+			assert.NoError(t, err)
+			assert.NotNil(t, o)
+			assert.Nil(t, o.Body)
+			assert.Nil(t, o.UnknownFields)
+			assert.Equal(t, 2, len(o.LifecycleConfiguration.Rules))
+		},
+	},
+	// UnknownFieldsCheck=Fail, empty LifecycleConfiguration → no err, zero rules
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "mock-request-id",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<LifecycleConfiguration></LifecycleConfiguration>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
+		},
+		&GetBucketLifecycleRequest{Bucket: Ptr("bucket")},
+		func(t *testing.T, o *GetBucketLifecycleResult, err error) {
+			assert.NoError(t, err)
+			assert.NotNil(t, o)
+			assert.NotNil(t, o.LifecycleConfiguration)
+			assert.Equal(t, 0, len(o.LifecycleConfiguration.Rules))
+			assert.NotEmpty(t, o.Body)
+			assert.Nil(t, o.UnknownFields)
+		},
+	},
+	// UnknownFieldsCheck=Fail, self-closing empty element → no err, zero rules
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "mock-request-id",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?><LifecycleConfiguration/>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
+		},
+		&GetBucketLifecycleRequest{Bucket: Ptr("bucket")},
+		func(t *testing.T, o *GetBucketLifecycleResult, err error) {
+			assert.NoError(t, err)
+			assert.NotNil(t, o)
+			assert.NotNil(t, o.LifecycleConfiguration)
+			assert.Equal(t, 0, len(o.LifecycleConfiguration.Rules))
+			assert.NotEmpty(t, o.Body)
+			assert.Nil(t, o.UnknownFields)
+		},
+	},
+	// UnknownFieldsCheck=Fail explicit (same effect as nil default)
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "mock-request-id",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+		},
+		[]byte(lifecycleRespWithUnknown),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/bucket/?lifecycle", r.URL.String())
+		},
+		&GetBucketLifecycleRequest{
+			Bucket:             Ptr("bucket"),
+			UnknownFieldsCheck: Ptr(UnknownFieldsCheckFail),
+		},
+		func(t *testing.T, o *GetBucketLifecycleResult, err error) {
+			assert.Error(t, err)
+			var ufe *UnknownFieldsError
+			assert.True(t, errors.As(err, &ufe))
+			assert.NotNil(t, o)
+			assert.NotEmpty(t, o.Body)
+			assert.Equal(t, 2, len(ufe.MissingPaths))
 		},
 	},
 }

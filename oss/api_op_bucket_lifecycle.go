@@ -1,7 +1,10 @@
 package oss
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"io"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/signer"
 )
@@ -190,12 +193,29 @@ type GetBucketLifecycleRequest struct {
 	// The name of the bucket.
 	Bucket *string `input:"host,bucket,required"`
 
+	// Controls the response unknown-fields check. nil (not set) means
+	// UnknownFieldsCheckFail — the default, which protects callers from
+	// silently dropping server-side extension fields on a subsequent
+	// full-update Put. Use oss.Ptr(UnknownFieldsCheckReport) or
+	// oss.Ptr(UnknownFieldsCheckSkip) to override.
+	UnknownFieldsCheck *UnknownFieldsCheckMode
+
 	RequestCommon
 }
 
 type GetBucketLifecycleResult struct {
 	// The container that stores the lifecycle rules configured for the bucket.
 	LifecycleConfiguration *LifecycleConfiguration `output:"body,LifecycleConfiguration,xml"`
+
+	// The raw XML response body returned by the server. Populated under
+	// UnknownFieldsCheckFail and UnknownFieldsCheckReport modes; nil under
+	// UnknownFieldsCheckSkip.
+	Body []byte
+
+	// Element paths present in the raw XML body but missing after
+	// unmarshal → marshal round-trip through LifecycleConfiguration.
+	// Populated under Fail and Report modes.
+	UnknownFields []string
 
 	ResultCommon
 }
@@ -228,7 +248,35 @@ func (c *Client) GetBucketLifecycle(ctx context.Context, request *GetBucketLifec
 	}
 
 	result := &GetBucketLifecycleResult{}
-	if err = c.unmarshalOutput(result, output, unmarshalBodyXmlMix); err != nil {
+
+	mode := UnknownFieldsCheckFail
+	if request.UnknownFieldsCheck != nil {
+		mode = *request.UnknownFieldsCheck
+	}
+
+	var handlers []func(any, *OperationOutput) error
+	switch mode {
+	case UnknownFieldsCheckSkip:
+		handlers = []func(any, *OperationOutput) error{unmarshalBodyXmlMix}
+	case UnknownFieldsCheckReport:
+		handlers = []func(any, *OperationOutput) error{
+			preReadLifecycleRawBody,
+			unmarshalBodyXmlMix,
+			makeCheckLifecycleUnknownFields(false),
+		}
+	default:
+		handlers = []func(any, *OperationOutput) error{
+			preReadLifecycleRawBody,
+			unmarshalBodyXmlMix,
+			makeCheckLifecycleUnknownFields(true),
+		}
+	}
+
+	if err = c.unmarshalOutput(result, output, handlers...); err != nil {
+		var ufe *UnknownFieldsError
+		if errors.As(err, &ufe) {
+			return result, c.toClientError(err, "UnmarshalOutputFail", output)
+		}
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
@@ -277,4 +325,42 @@ func (c *Client) DeleteBucketLifecycle(ctx context.Context, request *DeleteBucke
 		return nil, c.toClientError(err, "UnmarshalOutputFail", output)
 	}
 	return result, err
+}
+
+// preReadLifecycleRawBody drains output.Body into result.Body and refills
+// output.Body with a bytes-backed reader so downstream handlers can re-read it.
+func preReadLifecycleRawBody(result any, output *OperationOutput) error {
+	r, ok := result.(*GetBucketLifecycleResult)
+	if !ok || output == nil || output.Body == nil {
+		return nil
+	}
+	raw, err := io.ReadAll(output.Body)
+	output.Body.Close()
+	if err != nil {
+		return err
+	}
+	output.Body = io.NopCloser(bytes.NewReader(raw))
+	r.Body = raw
+	return nil
+}
+
+// makeCheckLifecycleUnknownFields diffs result.Body against the typed
+// LifecycleConfiguration and populates result.UnknownFields. When failOnFound
+// is true and missing paths exist, returns *UnknownFieldsError.
+func makeCheckLifecycleUnknownFields(failOnFound bool) func(any, *OperationOutput) error {
+	return func(result any, _ *OperationOutput) error {
+		r, ok := result.(*GetBucketLifecycleResult)
+		if !ok || len(r.Body) == 0 || r.LifecycleConfiguration == nil {
+			return nil
+		}
+		missing, err := XMLRoundTripDiff(r.Body, r.LifecycleConfiguration)
+		if err != nil {
+			return err
+		}
+		r.UnknownFields = missing
+		if failOnFound && len(missing) > 0 {
+			return &UnknownFieldsError{MissingPaths: missing}
+		}
+		return nil
+	}
 }

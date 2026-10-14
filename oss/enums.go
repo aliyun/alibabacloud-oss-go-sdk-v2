@@ -403,3 +403,26 @@ const (
 	OpMetaKeyRequestBodyTracker string = "opm-request-body-tracker"
 	OpMetaKeyIsBucketArn        string = "opm-is-bucket-arn"
 )
+
+// UnknownFieldsCheckMode controls how a typed Get* operation reacts when the
+// response XML contains elements unknown to the destination struct. Relevant
+// for Get* operations whose matching Put* is a full-update API (lifecycle,
+// etc.) — silently dropping unknown fields risks erasing server-side state on
+// write-back.
+type UnknownFieldsCheckMode int
+
+const (
+	// UnknownFieldsCheckFail (zero-value, default): detect unknown fields and
+	// return *UnknownFieldsError. The returned result is NOT nil — Body and
+	// UnknownFields are populated so the caller can use Client.InvokeOperation
+	// with result.Body to do a lossless Put.
+	UnknownFieldsCheckFail UnknownFieldsCheckMode = iota
+
+	// UnknownFieldsCheckReport: detect and populate result.UnknownFields and
+	// result.Body, but do not fail the call.
+	UnknownFieldsCheckReport
+
+	// UnknownFieldsCheckSkip: do not check. result.Body and result.UnknownFields
+	// remain nil; behavior matches the pre-change SDK (minimal overhead).
+	UnknownFieldsCheckSkip
+)

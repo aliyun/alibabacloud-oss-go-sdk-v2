@@ -1,6 +1,7 @@
 package oss
 
 import (
+	"encoding/xml"
 	"strings"
 	"testing"
 
@@ -88,4 +89,129 @@ func TestTrimNonGraphic(t *testing.T) {
 		got := trimNonGraphic(scenario.in)
 		assert.Equal(t, scenario.expected, got)
 	}
+}
+
+func TestXMLRoundTripDiff(t *testing.T) {
+	t.Run("full match", func(t *testing.T) {
+		raw := []byte(`<LifecycleConfiguration><Rule><ID>a</ID></Rule></LifecycleConfiguration>`)
+		var cfg LifecycleConfiguration
+		assert.NoError(t, xml.Unmarshal(raw, &cfg))
+		missing, err := XMLRoundTripDiff(raw, &cfg)
+		assert.NoError(t, err)
+		assert.Nil(t, missing)
+	})
+
+	t.Run("unknown child element in Rule", func(t *testing.T) {
+		raw := []byte(`<LifecycleConfiguration><Rule><ID>a</ID><NewExtension>foo</NewExtension></Rule></LifecycleConfiguration>`)
+		var cfg LifecycleConfiguration
+		assert.NoError(t, xml.Unmarshal(raw, &cfg))
+		missing, err := XMLRoundTripDiff(raw, &cfg)
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"LifecycleConfiguration/Rule/NewExtension"}, missing)
+	})
+
+	t.Run("attributes are ignored", func(t *testing.T) {
+		raw := []byte(`<LifecycleConfiguration version="2"><Rule><ID>a</ID></Rule></LifecycleConfiguration>`)
+		var cfg LifecycleConfiguration
+		assert.NoError(t, xml.Unmarshal(raw, &cfg))
+		missing, err := XMLRoundTripDiff(raw, &cfg)
+		assert.NoError(t, err)
+		assert.Nil(t, missing)
+	})
+
+	t.Run("deep nesting unknown field", func(t *testing.T) {
+		raw := []byte(`<LifecycleConfiguration><Rule><ID>a</ID><Filter><Not><Prefix>pre</Prefix><NewTagExt>v</NewTagExt></Not></Filter></Rule></LifecycleConfiguration>`)
+		var cfg LifecycleConfiguration
+		assert.NoError(t, xml.Unmarshal(raw, &cfg))
+		missing, err := XMLRoundTripDiff(raw, &cfg)
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"LifecycleConfiguration/Rule/Filter/Not/NewTagExt"}, missing)
+	})
+
+	t.Run("multi sibling only second has unknown field", func(t *testing.T) {
+		raw := []byte(`<LifecycleConfiguration><Rule><ID>a</ID></Rule><Rule><ID>b</ID><NewExtension>x</NewExtension></Rule></LifecycleConfiguration>`)
+		var cfg LifecycleConfiguration
+		assert.NoError(t, xml.Unmarshal(raw, &cfg))
+		missing, err := XMLRoundTripDiff(raw, &cfg)
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"LifecycleConfiguration/Rule/NewExtension"}, missing)
+	})
+
+	t.Run("whitespace and text nodes ignored", func(t *testing.T) {
+		raw := []byte("<LifecycleConfiguration>\n  <Rule>\n    <ID>a</ID>\n  </Rule>\n</LifecycleConfiguration>")
+		var cfg LifecycleConfiguration
+		assert.NoError(t, xml.Unmarshal(raw, &cfg))
+		missing, err := XMLRoundTripDiff(raw, &cfg)
+		assert.NoError(t, err)
+		assert.Nil(t, missing)
+	})
+
+	t.Run("empty input nil", func(t *testing.T) {
+		missing, err := XMLRoundTripDiff(nil, &LifecycleConfiguration{})
+		assert.NoError(t, err)
+		assert.Nil(t, missing)
+	})
+
+	t.Run("empty input bytes", func(t *testing.T) {
+		missing, err := XMLRoundTripDiff([]byte("   \n\t"), &LifecycleConfiguration{})
+		assert.NoError(t, err)
+		assert.Nil(t, missing)
+	})
+
+	t.Run("malformed XML returns error", func(t *testing.T) {
+		raw := []byte(`<a><b></a>`)
+		missing, err := XMLRoundTripDiff(raw, &LifecycleConfiguration{})
+		assert.Error(t, err)
+		assert.Nil(t, missing)
+	})
+
+	t.Run("round-trip element order differs", func(t *testing.T) {
+		// struct order emits ID before Prefix; raw has them reversed.
+		raw := []byte(`<LifecycleConfiguration><Rule><Prefix>p</Prefix><ID>a</ID></Rule></LifecycleConfiguration>`)
+		var cfg LifecycleConfiguration
+		assert.NoError(t, xml.Unmarshal(raw, &cfg))
+		missing, err := XMLRoundTripDiff(raw, &cfg)
+		assert.NoError(t, err)
+		assert.Nil(t, missing)
+	})
+
+	t.Run("unknown field under repeated sibling does not falsely drag Tag", func(t *testing.T) {
+		// Two <Not> siblings; the second one carries an unknown <NewExt>.
+		// Regression guard: an earlier sort-based pairing reported Tag as
+		// missing because the unknown field skewed sibling sort order.
+		raw := []byte(`<LifecycleConfiguration><Rule><ID>r</ID><Filter>` +
+			`<Not><Prefix>a</Prefix><Tag><Key>k</Key></Tag></Not>` +
+			`<Not><Prefix>b</Prefix><NewExt>v</NewExt></Not>` +
+			`</Filter></Rule></LifecycleConfiguration>`)
+		var cfg LifecycleConfiguration
+		assert.NoError(t, xml.Unmarshal(raw, &cfg))
+		missing, err := XMLRoundTripDiff(raw, &cfg)
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"LifecycleConfiguration/Rule/Filter/Not/NewExt"}, missing)
+	})
+
+	t.Run("multiple siblings mapped to single-pointer field", func(t *testing.T) {
+		// LifecycleRuleNot.Tag is *Tag (single pointer); two <Tag> siblings
+		// collapse into one on round-trip, so the diff must report Tag as
+		// losing one instance.
+		raw := []byte(`<LifecycleConfiguration><Rule><ID>r</ID><Filter>` +
+			`<Not><Prefix>p</Prefix><Tag><Key>k1</Key></Tag><Tag><Key>k2</Key></Tag></Not>` +
+			`</Filter></Rule></LifecycleConfiguration>`)
+		var cfg LifecycleConfiguration
+		assert.NoError(t, xml.Unmarshal(raw, &cfg))
+		missing, err := XMLRoundTripDiff(raw, &cfg)
+		assert.NoError(t, err)
+		assert.Contains(t, missing, "LifecycleConfiguration/Rule/Filter/Not/Tag")
+	})
+}
+
+func TestUnknownFieldsError_Error(t *testing.T) {
+	ufe := &UnknownFieldsError{MissingPaths: []string{
+		"LifecycleConfiguration/Rule/NewExtension",
+		"LifecycleConfiguration/Rule/Filter/Not/NewFilterExt",
+	}}
+	msg := ufe.Error()
+	assert.Contains(t, msg, "2")
+	assert.Contains(t, msg, "LifecycleConfiguration/Rule/NewExtension")
+	assert.Contains(t, msg, "LifecycleConfiguration/Rule/Filter/Not/NewFilterExt")
 }

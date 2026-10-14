@@ -1,10 +1,12 @@
 package oss
 
 import (
+	"bytes"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -243,4 +245,77 @@ func isInCharacterRange(r rune) (inrange bool) {
 		r >= 0x20 && r <= 0xD7FF ||
 		r >= 0xE000 && r <= 0xFFFD ||
 		r >= 0x10000 && r <= 0x10FFFF
+}
+
+// XMLRoundTripDiff reports element paths that are present in rawXML but missing
+// after marshaling v (the typed value produced by unmarshaling rawXML).
+// Returned paths are "/"-joined XML element names, e.g.
+// "LifecycleConfiguration/Rule/Filter/NewExtension".
+//
+// Comparison rules:
+//   - Whitespace-only text nodes are ignored.
+//   - Element order among siblings is ignored — the comparison uses a multiset
+//     of root-to-leaf element paths, so sibling reorderings between raw and
+//     round-trip XML cannot cause false positives.
+//   - Attributes are NOT compared — OSS response XML does not use attributes.
+//   - Namespaces are compared by local name only.
+//
+// Typical usage: after Get* operations, pass the raw body plus the typed
+// result; a non-empty return means a subsequent full-update Put would drop
+// those fields.
+func XMLRoundTripDiff(rawXML []byte, v any) ([]string, error) {
+	if len(bytes.TrimSpace(rawXML)) == 0 {
+		return nil, nil
+	}
+	rawCounts, err := collectXMLPathCounts(rawXML)
+	if err != nil {
+		return nil, err
+	}
+	rtXML, err := xml.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	rtCounts, err := collectXMLPathCounts(rtXML)
+	if err != nil {
+		return nil, err
+	}
+	var missing []string
+	for path, rawN := range rawCounts {
+		if rawN > rtCounts[path] {
+			missing = append(missing, path)
+		}
+	}
+	if len(missing) == 0 {
+		return nil, nil
+	}
+	sort.Strings(missing)
+	return missing, nil
+}
+
+// collectXMLPathCounts streams data as XML tokens and returns a map of each
+// root-to-element path to the number of times it occurs. Attributes,
+// whitespace-only text, and namespaces are ignored.
+func collectXMLPathCounts(data []byte) (map[string]int, error) {
+	dec := xml.NewDecoder(bytes.NewReader(data))
+	counts := map[string]int{}
+	var stack []string
+	for {
+		tok, err := dec.Token()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		switch t := tok.(type) {
+		case xml.StartElement:
+			stack = append(stack, t.Name.Local)
+			counts[strings.Join(stack, "/")]++
+		case xml.EndElement:
+			if len(stack) > 0 {
+				stack = stack[:len(stack)-1]
+			}
+		}
+	}
+	return counts, nil
 }

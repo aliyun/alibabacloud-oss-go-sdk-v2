@@ -168,3 +168,18 @@ func NewErrParamTypeNotSupport(field string) InvalidParamError {
 		reason: fmt.Sprintf("type not support"),
 	}
 }
+
+// UnknownFieldsError indicates that an XML response contains element paths
+// unknown to the typed destination value. It is produced by callers that run
+// XMLRoundTripDiff after unmarshaling (e.g. the typed Get* operations whose
+// matching Put* is a full-update API). Use errors.As to extract it from any
+// ClientError wrapper returned by the operation.
+type UnknownFieldsError struct {
+	MissingPaths []string
+}
+
+func (e *UnknownFieldsError) Error() string {
+	return fmt.Sprintf(
+		"response contains %d XML field(s) unknown to the SDK: %v",
+		len(e.MissingPaths), e.MissingPaths)
+}
