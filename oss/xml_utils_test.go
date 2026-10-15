@@ -203,6 +203,18 @@ func TestXMLRoundTripDiff(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Contains(t, missing, "LifecycleConfiguration/Rule/Filter/Not/Tag")
 	})
+
+	t.Run("rt emits non-omitempty element raw lacks is not reported", func(t *testing.T) {
+		// Non-pointer field without omitempty: rt may emit elements raw lacks;
+		// the one-directional diff must not flag these.
+		raw := []byte(`<LifecycleConfiguration><Rule><ID>r</ID>` +
+			`<Transition><Days>30</Days></Transition></Rule></LifecycleConfiguration>`)
+		var cfg LifecycleConfiguration
+		assert.NoError(t, xml.Unmarshal(raw, &cfg))
+		missing, err := XMLRoundTripDiff(raw, &cfg)
+		assert.NoError(t, err)
+		assert.Nil(t, missing)
+	})
 }
 
 func TestUnknownFieldsError_Error(t *testing.T) {
