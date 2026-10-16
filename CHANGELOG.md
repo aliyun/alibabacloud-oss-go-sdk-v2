@@ -1,5 +1,14 @@
 # ChangeLog - Alibaba Cloud OSS SDK for Go v2
 
+## 版本号：v1.6.1 日期：2026-10-16
+### 变更内容
+- Feature：Add vector fusion
+- Feature：Add bucket metadata table configuration api
+- Feature：Add bucket storage quota api
+- Update：Support multilingual insight content
+- Fix：Remove symbolic link at temporary download path
+- Fix：Validate destination file size in download checkpoint
+
 ## 版本号：v1.6.0 日期：2026-08-25
 ### 变更内容
 - Feature：Add agentic bucket
