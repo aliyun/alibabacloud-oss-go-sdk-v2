@@ -37,6 +37,7 @@ func TestInvokeOperation_BucketPolicy(t *testing.T) {
 		},
 	})
 	assert.Nil(t, err)
+	time.Sleep(5 * time.Second)
 
 	calcMd5 := func(input string) string {
 		if len(input) == 0 {
@@ -65,6 +66,7 @@ func TestInvokeOperation_BucketPolicy(t *testing.T) {
 	input.OpMetadata.Set(signer.SubResource, []string{"policy"})
 	output, err := client.InvokeOperation(context.TODO(), input)
 	assert.NoError(t, err)
+	time.Sleep(2 * time.Second)
 
 	// GetBucketPolicy
 	input = &OperationInput{

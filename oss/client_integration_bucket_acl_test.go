@@ -30,6 +30,8 @@ func TestPutBucketAcl(t *testing.T) {
 			BlockPublicAccess: Ptr(false),
 		},
 	})
+	time.Sleep(5 * time.Second)
+
 	request := &PutBucketAclRequest{
 		Bucket: Ptr(bucketName),
 		Acl:    BucketACLPublicRead,
