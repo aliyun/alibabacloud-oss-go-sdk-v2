@@ -3,6 +3,7 @@ package oss
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 	"sync"
@@ -590,7 +591,7 @@ func (d *copierDelegate) overwirteTagProp(imRequest *InitiateMultipartUploadRequ
 		if d.tagProp != nil {
 			var tags []string
 			for _, t := range d.tagProp.Tags {
-				tags = append(tags, fmt.Sprintf("%v=%v", ToString(t.Key), ToString(t.Value)))
+				tags = append(tags, fmt.Sprintf("%s=%s", encodeTagComponent(ToString(t.Key)), encodeTagComponent(ToString(t.Value))))
 			}
 			if len(tags) > 0 {
 				imRequest.Tagging = Ptr(strings.Join(tags, "&"))
@@ -603,6 +604,10 @@ func (d *copierDelegate) overwirteTagProp(imRequest *InitiateMultipartUploadRequ
 	}
 
 	return nil
+}
+
+func encodeTagComponent(s string) string {
+	return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
 }
 
 func (d *copierDelegate) wrapErr(uploadId string, err error) error {

@@ -471,3 +471,101 @@ func TestCopierShallowCopyNoFallbackOnOtherError(t *testing.T) {
 	// Only HEAD + CopyObject; no InitiateMultipartUpload means no fallback happened
 	assert.Equal(t, int32(2), atomic.LoadInt32(&requestCount))
 }
+
+func TestCopierMultipartCopyTaggingUrlEncoded(t *testing.T) {
+	var requestCount int32
+	var taggingHeader string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count := atomic.AddInt32(&requestCount, 1)
+		method := r.Method
+		path := r.URL.Path
+		query := r.URL.RawQuery
+
+		switch {
+		// Head source object
+		case method == "HEAD" && path == "/bucket/src-key":
+			w.Header().Set("Content-Length", fmt.Sprintf("%d", 2*1024*1024))
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Header().Set("ETag", "\"src-etag\"")
+			w.Header().Set("x-oss-tagging-count", "2")
+			w.WriteHeader(200)
+
+		// GetObjectTagging returns tags with special characters
+		case method == "GET" && path == "/bucket/src-key" && strings.Contains(query, "tagging"):
+			w.Header().Set("Content-Type", "application/xml")
+			w.Header().Set("x-oss-request-id", "req-tag")
+			w.WriteHeader(200)
+			w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Tagging>
+  <TagSet>
+    <Tag><Key>a=b</Key><Value>c+d</Value></Tag>
+    <Tag><Key>key with space</Key><Value>value+with=special</Value></Tag>
+  </TagSet>
+</Tagging>`))
+
+		// InitiateMultipartUpload
+		case method == "POST" && path == "/bucket/dst-key" && strings.Contains(query, "uploads"):
+			taggingHeader = r.Header.Get("x-oss-tagging")
+			w.Header().Set("Content-Type", "application/xml")
+			w.Header().Set("x-oss-request-id", "req-init")
+			w.WriteHeader(200)
+			w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<InitiateMultipartUploadResult>
+  <Bucket>bucket</Bucket>
+  <Key>dst-key</Key>
+  <UploadId>upload-id-123</UploadId>
+</InitiateMultipartUploadResult>`))
+
+		// UploadPartCopy
+		case method == "PUT" && path == "/bucket/dst-key" && strings.Contains(query, "partNumber="):
+			w.Header().Set("Content-Type", "application/xml")
+			w.Header().Set("x-oss-request-id", "req-part-copy")
+			w.WriteHeader(200)
+			w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<CopyPartResult>
+  <LastModified>2024-01-01T00:00:00.000Z</LastModified>
+  <ETag>"part-etag"</ETag>
+</CopyPartResult>`))
+
+		// CompleteMultipartUpload
+		case method == "POST" && path == "/bucket/dst-key":
+			w.Header().Set("Content-Type", "application/xml")
+			w.Header().Set("x-oss-request-id", "req-complete")
+			w.WriteHeader(200)
+			w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<CompleteMultipartUploadResult>
+  <Location>http://bucket.oss-cn-hangzhou.aliyuncs.com/dst-key</Location>
+  <Bucket>bucket</Bucket>
+  <Key>dst-key</Key>
+  <ETag>"final-etag"</ETag>
+</CompleteMultipartUploadResult>`))
+		default:
+			t.Fatalf("unexpected request #%d: %s %s?%s", count, method, path, query)
+		}
+		t.Logf("request #%d: %s %s?%s", count, method, path, query)
+	}))
+	defer server.Close()
+
+	cfg := LoadDefaultConfig().
+		WithCredentialsProvider(credentials.NewAnonymousCredentialsProvider()).
+		WithRegion("cn-hangzhou").
+		WithEndpoint(server.URL)
+
+	client := NewClient(cfg)
+	copier := NewCopier(client, func(co *CopierOptions) {
+		co.MultipartCopyThreshold = 1024 * 1024
+		co.PartSize = 1024 * 1024
+		co.ParallelNum = 1
+		co.DisableShallowCopy = true
+	})
+
+	result, err := copier.Copy(context.TODO(), &CopyObjectRequest{
+		Bucket:    Ptr("bucket"),
+		Key:       Ptr("dst-key"),
+		SourceKey: Ptr("src-key"),
+	})
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, "a%3Db=c%2Bd&key%20with%20space=value%2Bwith%3Dspecial", taggingHeader)
+}

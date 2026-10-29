@@ -1477,6 +1477,87 @@ func TestCopierWithNoCheckCrossBucketFlags(t *testing.T) {
 	assert.Equal(t, "Normal", ToString(headResult1.ObjectType))
 }
 
+func TestCopierMultipartCopySpecialCharacterTagging(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(6)
+	client := getDefaultClient()
+	_, err := client.PutBucket(context.TODO(), &PutBucketRequest{Bucket: Ptr(bucketName)})
+	assert.Nil(t, err)
+
+	objectName := objectNamePrefix + randStr(6)
+	length := 2*100*1024 + 1234
+	content := randStr(length)
+
+	_, err = client.PutObject(context.TODO(), &PutObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Body:   strings.NewReader(content),
+	})
+	assert.Nil(t, err)
+
+	// Source tags contain =, + and spaces. The Copier must URL-encode each
+	// key/value when it builds the x-oss-tagging header for multipart copy.
+	_, err = client.PutObjectTagging(context.TODO(), &PutObjectTaggingRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+		Tagging: &Tagging{
+			TagSet: &TagSet{
+				Tags: []Tag{
+					{Key: Ptr("a=b"), Value: Ptr("c+d")},
+					{Key: Ptr("key with space"), Value: Ptr("value+with=special")},
+				},
+			},
+		},
+	})
+	assert.Nil(t, err)
+
+	srcTags, err := client.GetObjectTagging(context.TODO(), &GetObjectTaggingRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(srcTags.Tags))
+	assert.Equal(t, "a=b", ToString(srcTags.Tags[0].Key))
+	assert.Equal(t, "c+d", ToString(srcTags.Tags[0].Value))
+	assert.Equal(t, "key with space", ToString(srcTags.Tags[1].Key))
+	assert.Equal(t, "value+with=special", ToString(srcTags.Tags[1].Value))
+
+	dstObjectName := objectName + "-copy"
+	copier := client.NewCopier(func(co *CopierOptions) {
+		co.ParallelNum = 1
+		co.PartSize = 100 * 1024
+		co.MultipartCopyThreshold = 100 * 1024
+		co.DisableShallowCopy = true
+	})
+	result, err := copier.Copy(context.TODO(), &CopyObjectRequest{
+		Bucket:    Ptr(bucketName),
+		Key:       Ptr(dstObjectName),
+		SourceKey: Ptr(objectName),
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	headResult, err := client.HeadObject(context.TODO(), &HeadObjectRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(dstObjectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "Multipart", ToString(headResult.ObjectType))
+
+	dstTags, err := client.GetObjectTagging(context.TODO(), &GetObjectTaggingRequest{
+		Bucket: Ptr(bucketName),
+		Key:    Ptr(dstObjectName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(dstTags.Tags))
+	assert.Equal(t, "a=b", ToString(dstTags.Tags[0].Key))
+	assert.Equal(t, "c+d", ToString(dstTags.Tags[0].Value))
+	assert.Equal(t, "key with space", ToString(dstTags.Tags[1].Key))
+	assert.Equal(t, "value+with=special", ToString(dstTags.Tags[1].Value))
+}
+
 func TestIntegrationWriteOnlyFileMultiPart(t *testing.T) {
 	after := before(t)
 	defer after(t)
