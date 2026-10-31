@@ -208,6 +208,7 @@ func TestObjectWorm(t *testing.T) {
 		},
 	})
 	assert.Nil(t, err)
+	time.Sleep(2 * time.Second)
 
 	input := &OperationInput{
 		Bucket: Ptr(bucketName),
@@ -232,6 +233,7 @@ func TestObjectWorm(t *testing.T) {
 	input.OpMetadata.Set(signer.SubResource, []string{"objectWorm"})
 	_, err = client.InvokeOperation(context.TODO(), input)
 	assert.Nil(t, err)
+	time.Sleep(2 * time.Second)
 
 	date := time.Now().UTC().Add(3 * time.Second).Format("2006-01-02T15:04:05.000Z")
 	putResult, err := client.PutObjectRetention(context.TODO(), &PutObjectRetentionRequest{
