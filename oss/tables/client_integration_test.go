@@ -1042,6 +1042,98 @@ func TestTable(t *testing.T) {
 	assert.NotEmpty(t, serr.RequestID)
 }
 
+func TestCreateTableWithSchemaV2(t *testing.T) {
+	after := before(t)
+	defer after(t)
+
+	bucketName := bucketNamePrefix + randLowStr(5)
+	client := getDefaultClient()
+
+	result, err := client.CreateTableBucket(context.TODO(), &CreateTableBucketRequest{
+		Name: oss.Ptr(bucketName),
+	})
+	assert.Nil(t, err)
+	bucketArn := result.Arn
+
+	spaceName := spaceNamePrefix + "_" + randLowStr(5)
+	_, err = client.CreateNamespace(context.TODO(), &CreateNamespaceRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      []string{spaceName},
+	})
+	assert.Nil(t, err)
+
+	tableName := tableNamePrefix + "_" + randLowStr(5)
+	putResult, err := client.CreateTable(context.TODO(), &CreateTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(tableName),
+		Format:         oss.Ptr("ICEBERG"),
+		Metadata: &TableMetadata{
+			Iceberg: &IcebergMetadata{
+				SchemaV2: map[string]any{
+					"type":                 "struct",
+					"identifier-field-ids": []int64{10},
+					"fields": []map[string]any{
+						{
+							"id": int64(10), "name": "order_id", "type": "long", "required": true,
+						},
+						{
+							"id": int64(20), "name": "customer", "required": false,
+							"type": map[string]any{
+								"type": "struct",
+								"fields": []map[string]any{
+									{"id": int64(21), "name": "name", "type": "string", "required": false},
+									{"id": int64(22), "name": "level", "type": "int", "required": false},
+								},
+							},
+						},
+						{
+							"id": int64(30), "name": "tags", "required": false,
+							"type": map[string]any{
+								"type": "list", "element-id": int64(31),
+								"element": "string", "element-required": false,
+							},
+						},
+						{
+							"id": int64(40), "name": "attributes", "required": false,
+							"type": map[string]any{
+								"type": "map", "key-id": int64(41), "key": "string",
+								"value-id": int64(42), "value": "string", "value-required": false,
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, putResult.StatusCode)
+	assert.NotEmpty(t, putResult.Headers.Get("X-Oss-Request-Id"))
+	assert.NotEmpty(t, oss.ToString(putResult.TableARN))
+	assert.NotEmpty(t, oss.ToString(putResult.VersionToken))
+	time.Sleep(1 * time.Second)
+
+	getResult, err := client.GetTable(context.TODO(), &GetTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(tableName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 200, getResult.StatusCode)
+	assert.Equal(t, tableName, oss.ToString(getResult.Name))
+	assert.NotEmpty(t, getResult.Headers.Get("X-Oss-Request-Id"))
+	time.Sleep(1 * time.Second)
+
+	delResult, err := client.DeleteTable(context.TODO(), &DeleteTableRequest{
+		TableBucketARN: bucketArn,
+		Namespace:      oss.Ptr(spaceName),
+		Name:           oss.Ptr(tableName),
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 204, delResult.StatusCode)
+	assert.NotEmpty(t, delResult.Headers.Get("X-Oss-Request-Id"))
+}
+
 func TestTableUsePathStyle(t *testing.T) {
 	after := before(t)
 	defer after(t)

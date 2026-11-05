@@ -154,6 +154,209 @@ func TestMarshalInput_CreateTable(t *testing.T) {
 	assert.Equal(t, string(jsonStr), "{\"encryptionConfiguration\":{\"kmsKeyArn\":\"\",\"sseAlgorithm\":\"AES256\"},\"format\":\"ICEBERG\",\"metadata\":{\"iceberg\":{\"schema\":{\"fields\":[{\"name\":\"id\",\"required\":true,\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}}},\"name\":\"table\"}")
 }
 
+const createTableWithSchemaV2RequestBody = "{\"format\":\"ICEBERG\",\"metadata\":{\"iceberg\":{\"schemaV2\":{\"fields\":[{\"id\":10,\"name\":\"order_id\",\"required\":true,\"type\":\"long\"},{\"id\":20,\"name\":\"customer\",\"required\":false,\"type\":{\"fields\":[{\"id\":21,\"name\":\"name\",\"required\":false,\"type\":\"string\"},{\"id\":22,\"name\":\"level\",\"required\":false,\"type\":\"int\"}],\"type\":\"struct\"}},{\"id\":30,\"name\":\"tags\",\"required\":false,\"type\":{\"element\":\"string\",\"element-id\":31,\"element-required\":false,\"type\":\"list\"}},{\"id\":40,\"name\":\"attributes\",\"required\":false,\"type\":{\"key\":\"string\",\"key-id\":41,\"type\":\"map\",\"value\":\"string\",\"value-id\":42,\"value-required\":false}}],\"identifier-field-ids\":[10],\"schema-id\":0,\"type\":\"struct\"}}},\"name\":\"orders_nested\"}"
+
+func TestMarshalInput_CreateTableWithSchemaV2(t *testing.T) {
+	c := TablesClient{}
+	assert.NotNil(t, c)
+
+	request := &CreateTableRequest{
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:      oss.Ptr("space"),
+		Name:           oss.Ptr("orders_nested"),
+		Format:         oss.Ptr("ICEBERG"),
+		Metadata: &TableMetadata{
+			Iceberg: &IcebergMetadata{
+				SchemaV2: map[string]any{
+					"type":                 "struct",
+					"schema-id":            int64(0),
+					"identifier-field-ids": []int64{10},
+					"fields": []map[string]any{
+						{
+							"id": int64(10), "name": "order_id", "type": "long", "required": true,
+						},
+						{
+							"id": int64(20), "name": "customer", "required": false,
+							"type": map[string]any{
+								"type": "struct",
+								"fields": []map[string]any{
+									{"id": int64(21), "name": "name", "type": "string", "required": false},
+									{"id": int64(22), "name": "level", "type": "int", "required": false},
+								},
+							},
+						},
+						{
+							"id": int64(30), "name": "tags", "required": false,
+							"type": map[string]any{
+								"type": "list", "element-id": int64(31),
+								"element": "string", "element-required": false,
+							},
+						},
+						{
+							"id": int64(40), "name": "attributes", "required": false,
+							"type": map[string]any{
+								"type": "map", "key-id": int64(41), "key": "string",
+								"value-id": int64(42), "value": "string", "value-required": false,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	input := &oss.OperationInput{
+		OpName: "CreateTable",
+		Method: "PUT",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
+	}
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
+	err := c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+	jsonStr, _ := io.ReadAll(input.Body)
+	assert.Equal(t, string(jsonStr), createTableWithSchemaV2RequestBody)
+}
+
+func TestIcebergSchemaV2_ToMap(t *testing.T) {
+	schema := IcebergSchemaV2{
+		Type:               oss.Ptr("struct"),
+		SchemaID:           oss.Ptr(int64(0)),
+		IdentifierFieldIDs: []int64{10},
+		Fields: IcebergFields{
+			{
+				ID: oss.Ptr(int64(10)), Name: oss.Ptr("order_id"), Type: "long", Required: oss.Ptr(true),
+			},
+			{
+				ID: oss.Ptr(int64(20)), Name: oss.Ptr("customer"), Required: oss.Ptr(false),
+				Type: IcebergStructType{
+					Type: oss.Ptr("struct"),
+					Fields: IcebergFields{
+						{ID: oss.Ptr(int64(21)), Name: oss.Ptr("name"), Type: "string", Required: oss.Ptr(false)},
+						{ID: oss.Ptr(int64(22)), Name: oss.Ptr("level"), Type: "int", Required: oss.Ptr(false)},
+					},
+				},
+			},
+			{
+				ID: oss.Ptr(int64(30)), Name: oss.Ptr("tags"), Required: oss.Ptr(false),
+				Type: IcebergListType{
+					Type: oss.Ptr("list"), ElementID: oss.Ptr(int64(31)),
+					Element: "string", ElementRequired: oss.Ptr(false),
+				},
+			},
+			{
+				ID: oss.Ptr(int64(40)), Name: oss.Ptr("attributes"), Required: oss.Ptr(false),
+				Type: IcebergMapType{
+					Type: oss.Ptr("map"), KeyID: oss.Ptr(int64(41)), Key: "string",
+					ValueID: oss.Ptr(int64(42)), Value: "string", ValueRequired: oss.Ptr(false),
+				},
+			},
+		},
+	}
+
+	expected := map[string]any{
+		"type":                 "struct",
+		"schema-id":            int64(0),
+		"identifier-field-ids": []int64{10},
+		"fields": []map[string]any{
+			{"id": int64(10), "name": "order_id", "type": "long", "required": true},
+			{
+				"id": int64(20), "name": "customer", "required": false,
+				"type": map[string]any{
+					"type": "struct",
+					"fields": []map[string]any{
+						{"id": int64(21), "name": "name", "type": "string", "required": false},
+						{"id": int64(22), "name": "level", "type": "int", "required": false},
+					},
+				},
+			},
+			{
+				"id": int64(30), "name": "tags", "required": false,
+				"type": map[string]any{
+					"type": "list", "element-id": int64(31),
+					"element": "string", "element-required": false,
+				},
+			},
+			{
+				"id": int64(40), "name": "attributes", "required": false,
+				"type": map[string]any{
+					"type": "map", "key-id": int64(41), "key": "string",
+					"value-id": int64(42), "value": "string", "value-required": false,
+				},
+			},
+		},
+	}
+	assert.Equal(t, expected, schema.ToMap())
+
+	// the converted map can be assigned to SchemaV2 directly
+	c := TablesClient{}
+	request := &CreateTableRequest{
+		TableBucketARN: oss.Ptr("acs:osstables:cn-beijing:1234567890:bucket/demo-bucket"),
+		Namespace:      oss.Ptr("space"),
+		Name:           oss.Ptr("orders_nested"),
+		Format:         oss.Ptr("ICEBERG"),
+		Metadata: &TableMetadata{
+			Iceberg: &IcebergMetadata{
+				SchemaV2: schema.ToMap(),
+			},
+		},
+	}
+	input := &oss.OperationInput{
+		OpName: "CreateTable",
+		Method: "PUT",
+		Headers: map[string]string{
+			oss.HTTPHeaderContentType: contentTypeJSON,
+		},
+		Bucket: request.TableBucketARN,
+		Key:    oss.Ptr(fmt.Sprintf("tables/%s/%s", url.QueryEscape(oss.ToString(request.TableBucketARN)), url.QueryEscape(oss.ToString(request.Namespace)))),
+	}
+	input.OpMetadata.Add(oss.OpMetaKeyIsBucketArn, true)
+	err := c.marshalInputJson(request, input, oss.MarshalUpdateContentMd5)
+	assert.Nil(t, err)
+	jsonStr, _ := io.ReadAll(input.Body)
+	assert.Equal(t, createTableWithSchemaV2RequestBody, string(jsonStr))
+}
+
+func TestCheckCreateTableRequest(t *testing.T) {
+	// neither schema nor schemaV2 is set
+	err := checkCreateTableRequest(&CreateTableRequest{})
+	assert.Nil(t, err)
+
+	// only schema is set
+	err = checkCreateTableRequest(&CreateTableRequest{
+		Metadata: &TableMetadata{
+			Iceberg: &IcebergMetadata{
+				Schema: map[string]any{"fields": []map[string]any{}},
+			},
+		},
+	})
+	assert.Nil(t, err)
+
+	// only schemaV2 is set
+	err = checkCreateTableRequest(&CreateTableRequest{
+		Metadata: &TableMetadata{
+			Iceberg: &IcebergMetadata{
+				SchemaV2: map[string]any{"fields": []map[string]any{}},
+			},
+		},
+	})
+	assert.Nil(t, err)
+
+	// schema and schemaV2 can not be set at the same time
+	err = checkCreateTableRequest(&CreateTableRequest{
+		Metadata: &TableMetadata{
+			Iceberg: &IcebergMetadata{
+				Schema:   map[string]any{"fields": []map[string]any{}},
+				SchemaV2: map[string]any{"fields": []map[string]any{}},
+			},
+		},
+	})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Schema and SchemaV2 are mutually exclusive")
+}
+
 func TestUnmarshalOutput_CreateTable(t *testing.T) {
 	c := TablesClient{}
 	assert.NotNil(t, c)
