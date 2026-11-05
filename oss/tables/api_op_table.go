@@ -33,6 +33,237 @@ type TableMetadata struct {
 
 type IcebergMetadata struct {
 	Schema map[string]any `json:"schema,omitempty"`
+
+	// The schema of the table in the v2 format. Compared with Schema, it also describes
+	// the struct, list and map field types and their nested combinations.
+	//
+	// Build an element with IcebergSchemaV2.ToMap, or write the map directly.
+	//
+	// Only one of Schema and SchemaV2 can be set in the same request.
+	SchemaV2 map[string]any `json:"schemaV2,omitempty"`
+}
+
+// IcebergSchemaV2 defines the schema of an iceberg table in the v2 format. Compared with the
+// schema in the v1 format, it also describes the struct, list and map field types and their
+// nested combinations.
+//
+// The request accepts the raw JSON object, see IcebergSchemaV2.ToMap.
+type IcebergSchemaV2 struct {
+	// The type of the schema. The value is struct.
+	Type *string `json:"type,omitempty"`
+
+	// The id of the schema.
+	SchemaID *int64 `json:"schema-id,omitempty"`
+
+	// The ids of the fields that identify a row.
+	IdentifierFieldIDs []int64 `json:"identifier-field-ids,omitempty"`
+
+	// The fields of the schema.
+	Fields IcebergFields `json:"fields,omitempty"`
+}
+
+// ToMap returns the schema as the raw JSON object that the service expects, so that the result
+// can be assigned to IcebergMetadata.SchemaV2.
+func (s IcebergSchemaV2) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.Type != nil {
+		m["type"] = *s.Type
+	}
+	if s.SchemaID != nil {
+		m["schema-id"] = *s.SchemaID
+	}
+	if len(s.IdentifierFieldIDs) > 0 {
+		m["identifier-field-ids"] = s.IdentifierFieldIDs
+	}
+	if len(s.Fields) > 0 {
+		m["fields"] = s.Fields.ToMaps()
+	}
+	return m
+}
+
+// IcebergField defines a field of the iceberg table schema.
+//
+// Type is either the name of a primitive type, such as "long" and "string", or one of
+// IcebergStructType, IcebergListType and IcebergMapType for the nested field types.
+type IcebergField struct {
+	// The id of the field.
+	ID *int64 `json:"id,omitempty"`
+
+	// The name of the field.
+	Name *string `json:"name,omitempty"`
+
+	// The type of the field.
+	Type any `json:"type,omitempty"`
+
+	// Specifies whether the field is required.
+	Required *bool `json:"required,omitempty"`
+
+	// The description of the field.
+	Doc *string `json:"doc,omitempty"`
+}
+
+// ToMap returns the field definition as the raw JSON object that the service expects, so that the
+// result can be used as an element of IcebergSchemaV2.Fields.
+func (s IcebergField) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.ID != nil {
+		m["id"] = *s.ID
+	}
+	if s.Name != nil {
+		m["name"] = *s.Name
+	}
+	if s.Type != nil {
+		m["type"] = icebergFieldTypeToAny(s.Type)
+	}
+	if s.Required != nil {
+		m["required"] = *s.Required
+	}
+	if s.Doc != nil {
+		m["doc"] = *s.Doc
+	}
+	return m
+}
+
+// IcebergFields is a list of fields of the iceberg table schema. It converts the strongly-typed
+// IcebergField model to the raw JSON objects that the service expects.
+type IcebergFields []IcebergField
+
+// ToMaps returns the fields as the raw JSON objects that the service expects, so that the result
+// can be assigned to IcebergSchemaV2.Fields. It is the batch counterpart of IcebergField.ToMap.
+func (s IcebergFields) ToMaps() []map[string]any {
+	maps := make([]map[string]any, 0, len(s))
+	for _, field := range s {
+		maps = append(maps, field.ToMap())
+	}
+	return maps
+}
+
+// IcebergStructType defines the struct field type of the iceberg table schema.
+type IcebergStructType struct {
+	// The type of the field. The value is struct.
+	Type *string `json:"type,omitempty"`
+
+	// The fields of the struct.
+	Fields IcebergFields `json:"fields,omitempty"`
+}
+
+// ToMap returns the struct type as the raw JSON object that the service expects, so that the result
+// can be used as the Type of an IcebergField.
+func (s IcebergStructType) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.Type != nil {
+		m["type"] = *s.Type
+	}
+	if len(s.Fields) > 0 {
+		m["fields"] = s.Fields.ToMaps()
+	}
+	return m
+}
+
+// IcebergListType defines the list field type of the iceberg table schema.
+type IcebergListType struct {
+	// The type of the field. The value is list.
+	Type *string `json:"type,omitempty"`
+
+	// The id of the element.
+	ElementID *int64 `json:"element-id,omitempty"`
+
+	// The type of the element, either the name of a primitive type or one of the nested field types.
+	Element any `json:"element,omitempty"`
+
+	// Specifies whether the element is required.
+	ElementRequired *bool `json:"element-required,omitempty"`
+}
+
+// ToMap returns the list type as the raw JSON object that the service expects, so that the result
+// can be used as the Type of an IcebergField.
+func (s IcebergListType) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.Type != nil {
+		m["type"] = *s.Type
+	}
+	if s.ElementID != nil {
+		m["element-id"] = *s.ElementID
+	}
+	if s.Element != nil {
+		m["element"] = icebergFieldTypeToAny(s.Element)
+	}
+	if s.ElementRequired != nil {
+		m["element-required"] = *s.ElementRequired
+	}
+	return m
+}
+
+// IcebergMapType defines the map field type of the iceberg table schema.
+type IcebergMapType struct {
+	// The type of the field. The value is map.
+	Type *string `json:"type,omitempty"`
+
+	// The id of the key.
+	KeyID *int64 `json:"key-id,omitempty"`
+
+	// The type of the key, either the name of a primitive type or one of the nested field types.
+	Key any `json:"key,omitempty"`
+
+	// The id of the value.
+	ValueID *int64 `json:"value-id,omitempty"`
+
+	// The type of the value, either the name of a primitive type or one of the nested field types.
+	Value any `json:"value,omitempty"`
+
+	// Specifies whether the value is required.
+	ValueRequired *bool `json:"value-required,omitempty"`
+}
+
+// ToMap returns the map type as the raw JSON object that the service expects, so that the result
+// can be used as the Type of an IcebergField.
+func (s IcebergMapType) ToMap() map[string]any {
+	m := make(map[string]any)
+	if s.Type != nil {
+		m["type"] = *s.Type
+	}
+	if s.KeyID != nil {
+		m["key-id"] = *s.KeyID
+	}
+	if s.Key != nil {
+		m["key"] = icebergFieldTypeToAny(s.Key)
+	}
+	if s.ValueID != nil {
+		m["value-id"] = *s.ValueID
+	}
+	if s.Value != nil {
+		m["value"] = icebergFieldTypeToAny(s.Value)
+	}
+	if s.ValueRequired != nil {
+		m["value-required"] = *s.ValueRequired
+	}
+	return m
+}
+
+// icebergFieldTypeToAny converts the nested field types to the raw JSON objects, the primitive
+// types are returned as they are.
+func icebergFieldTypeToAny(t any) any {
+	switch v := t.(type) {
+	case IcebergStructType:
+		return v.ToMap()
+	case *IcebergStructType:
+		if v != nil {
+			return v.ToMap()
+		}
+	case IcebergListType:
+		return v.ToMap()
+	case *IcebergListType:
+		if v != nil {
+			return v.ToMap()
+		}
+	case IcebergMapType:
+		return v.ToMap()
+	case *IcebergMapType:
+		if v != nil {
+			return v.ToMap()
+		}
+	}
+	return t
 }
 
 type CreateTableResult struct {
@@ -48,6 +279,9 @@ func (c *TablesClient) CreateTable(ctx context.Context, request *CreateTableRequ
 	var err error
 	if request == nil {
 		request = &CreateTableRequest{}
+	}
+	if err = checkCreateTableRequest(request); err != nil {
+		return nil, err
 	}
 	input := &oss.OperationInput{
 		OpName: "CreateTable",
@@ -319,6 +553,16 @@ func (c *TablesClient) RenameTable(ctx context.Context, request *RenameTableRequ
 	}
 
 	return result, err
+}
+
+func checkCreateTableRequest(request *CreateTableRequest) error {
+	if request.Metadata != nil && request.Metadata.Iceberg != nil {
+		iceberg := request.Metadata.Iceberg
+		if iceberg.Schema != nil && iceberg.SchemaV2 != nil {
+			return fmt.Errorf("Schema and SchemaV2 are mutually exclusive, only one of them can be provided")
+		}
+	}
+	return nil
 }
 
 func checkGetTableRequest(request *GetTableRequest) error {
