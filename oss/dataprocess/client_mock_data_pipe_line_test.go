@@ -76,6 +76,64 @@ var testMockPutDataPipelineConfigurationSuccessCases = []struct {
 			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
 		},
 	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(``),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?action=putDataPipelineConfiguration&dataPipeline&dataPipelineName=data-pipeline-v2&role=AliyunOSSDataPipelineRole", urlStr)
+			data, _ := io.ReadAll(r.Body)
+			assert.Equal(t, string(data), "<DataPipelineConfiguration><Sources><InputBucket>source-bucket</InputBucket><InputDataScope>All</InputDataScope><IgnoreDelete>false</IgnoreDelete></Sources><Destination><ObjectTagToMetadata>category</ObjectTagToMetadata><UsermetaToMetadata>x-oss-meta-source</UsermetaToMetadata><ImageEmbedding><Bucket>vector-bucket</Bucket><IndexName>image</IndexName><Prefix>v2</Prefix></ImageEmbedding><ImageTextEmbedding><Bucket>vector-bucket</Bucket><IndexName>image-text</IndexName><Prefix>v2</Prefix></ImageTextEmbedding><VideoFrameEmbedding><Bucket>vector-bucket</Bucket><IndexName>video-frame</IndexName><Prefix>v2</Prefix></VideoFrameEmbedding><VideoTextEmbedding><Bucket>vector-bucket</Bucket><IndexName>video-text</IndexName><Prefix>v2</Prefix></VideoTextEmbedding><DocumentChunkEmbedding><Bucket>vector-bucket</Bucket><IndexName>document</IndexName><Prefix>v2</Prefix></DocumentChunkEmbedding></Destination><ModelTier>standard</ModelTier><DataPipelineDataProcessConfiguration><SearchMode>balanced</SearchMode><Insights><Image><Caption><Prompt>Describe the image.</Prompt></Caption></Image><Video><Caption><Prompt>Describe each video scene.</Prompt></Caption><FrameEmbedding><Snapshot><Mode>interval</Mode><Interval>1</Interval></Snapshot></FrameEmbedding></Video></Insights></DataPipelineDataProcessConfiguration></DataPipelineConfiguration>")
+		},
+		&PutDataPipelineConfigurationRequest{
+			DataPipelineName: oss.Ptr("data-pipeline-v2"),
+			Role:             oss.Ptr("AliyunOSSDataPipelineRole"),
+			DataPipelineConfiguration: &DataPipelineConfiguration{
+				Sources: []DataPipelineSource{{
+					InputBucket:    oss.Ptr("source-bucket"),
+					InputDataScope: oss.Ptr("All"),
+					IgnoreDelete:   oss.Ptr(false),
+				}},
+				ModelTier: oss.Ptr("standard"),
+				DataPipelineDataProcessConfiguration: &DataPipelineDataProcessConfiguration{
+					SearchMode: oss.Ptr("balanced"),
+					Insights: &DataPipelineInsights{
+						Image: &DataPipelineInsightsImage{Caption: &DataPipelineInsightsCaption{Prompt: oss.Ptr("Describe the image.")}},
+						Video: &DataPipelineInsightsVideo{
+							Caption: &DataPipelineInsightsCaption{Prompt: oss.Ptr("Describe each video scene.")},
+							FrameEmbedding: &DataPipelineInsightsFrameEmbedding{Snapshot: &DataPipelineInsightsSnapshot{
+								Mode:     oss.Ptr("interval"),
+								Interval: oss.Ptr(1.0),
+							}},
+						},
+					},
+				},
+				Destination: &DataPipelineDestination{
+					ImageEmbedding:         &VectorDestination{Bucket: oss.Ptr("vector-bucket"), IndexName: oss.Ptr("image"), Prefix: oss.Ptr("v2")},
+					ImageTextEmbedding:     &VectorDestination{Bucket: oss.Ptr("vector-bucket"), IndexName: oss.Ptr("image-text"), Prefix: oss.Ptr("v2")},
+					VideoFrameEmbedding:    &VectorDestination{Bucket: oss.Ptr("vector-bucket"), IndexName: oss.Ptr("video-frame"), Prefix: oss.Ptr("v2")},
+					VideoTextEmbedding:     &VectorDestination{Bucket: oss.Ptr("vector-bucket"), IndexName: oss.Ptr("video-text"), Prefix: oss.Ptr("v2")},
+					DocumentChunkEmbedding: &VectorDestination{Bucket: oss.Ptr("vector-bucket"), IndexName: oss.Ptr("document"), Prefix: oss.Ptr("v2")},
+					ObjectTagToMetadata:    []string{"category"},
+					UsermetaToMetadata:     []string{"x-oss-meta-source"},
+				},
+			},
+		},
+		func(t *testing.T, o *PutDataPipelineConfigurationResult, err error) {
+			assert.NoError(t, err)
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "534B371674E88A4D8906****", o.Headers.Get("x-oss-request-id"))
+			assert.Equal(t, "Fri, 24 Feb 2017 03:15:40 GMT", o.Headers.Get("Date"))
+			assert.Equal(t, "application/xml", o.Headers.Get("Content-Type"))
+		},
+	},
 }
 
 func TestMockPutDataPipelineConfiguration_Success(t *testing.T) {
@@ -368,6 +426,59 @@ var testMockGetDataPipelineConfigurationSuccessCases = []struct {
 			assert.Equal(t, *o.DataPipelineConfiguration.DataPipelineError.ErrorPrefix, "error-output/")
 			assert.Equal(t, *o.DataPipelineConfiguration.DataPipelineError.ErrorMode, "ignoreAndRecord")
 			assert.Equal(t, *o.DataPipelineConfiguration.CreateTime, "2021-06-29T14:50:13.011643661+08:00")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(`<DataPipelineConfiguration>
+    <DataPipelineName>data-pipeline-v2</DataPipelineName>
+    <ModelTier>standard</ModelTier>
+    <DataPipelineDataProcessConfiguration>
+        <SearchMode>balanced</SearchMode>
+        <Insights>
+            <Image><Caption><Prompt>Describe the image.</Prompt></Caption></Image>
+            <Video><Caption><Prompt>Describe each video scene.</Prompt></Caption><FrameEmbedding><Snapshot><Mode>dhash</Mode><Number>10</Number></Snapshot></FrameEmbedding></Video>
+        </Insights>
+    </DataPipelineDataProcessConfiguration>
+    <Destination>
+        <ImageEmbedding><Bucket>vector-bucket</Bucket><IndexName>image</IndexName><Prefix>v2</Prefix></ImageEmbedding>
+        <ImageTextEmbedding><Bucket>vector-bucket</Bucket><IndexName>image-text</IndexName><Prefix>v2</Prefix></ImageTextEmbedding>
+        <VideoFrameEmbedding><Bucket>vector-bucket</Bucket><IndexName>video-frame</IndexName><Prefix>v2</Prefix></VideoFrameEmbedding>
+        <VideoTextEmbedding><Bucket>vector-bucket</Bucket><IndexName>video-text</IndexName><Prefix>v2</Prefix></VideoTextEmbedding>
+        <DocumentChunkEmbedding><Bucket>vector-bucket</Bucket><IndexName>document</IndexName><Prefix>v2</Prefix></DocumentChunkEmbedding>
+        <ObjectTagToMetadata>category</ObjectTagToMetadata>
+        <UsermetaToMetadata>x-oss-meta-source</UsermetaToMetadata>
+    </Destination>
+</DataPipelineConfiguration>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?action=getDataPipelineConfiguration&dataPipeline&dataPipelineName=data-pipeline-v2", urlStr)
+		},
+		&GetDataPipelineConfigurationRequest{
+			DataPipelineName: oss.Ptr("data-pipeline-v2"),
+		},
+		func(t *testing.T, o *GetDataPipelineConfigurationResult, err error) {
+			assert.NoError(t, err)
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "standard", oss.ToString(o.DataPipelineConfiguration.ModelTier))
+			assert.Equal(t, "balanced", oss.ToString(o.DataPipelineConfiguration.DataPipelineDataProcessConfiguration.SearchMode))
+			assert.Equal(t, "Describe the image.", oss.ToString(o.DataPipelineConfiguration.DataPipelineDataProcessConfiguration.Insights.Image.Caption.Prompt))
+			assert.Equal(t, "dhash", oss.ToString(o.DataPipelineConfiguration.DataPipelineDataProcessConfiguration.Insights.Video.FrameEmbedding.Snapshot.Mode))
+			assert.Equal(t, int64(10), oss.ToInt64(o.DataPipelineConfiguration.DataPipelineDataProcessConfiguration.Insights.Video.FrameEmbedding.Snapshot.Number))
+			assert.Equal(t, "image", oss.ToString(o.DataPipelineConfiguration.Destination.ImageEmbedding.IndexName))
+			assert.Equal(t, "image-text", oss.ToString(o.DataPipelineConfiguration.Destination.ImageTextEmbedding.IndexName))
+			assert.Equal(t, "video-frame", oss.ToString(o.DataPipelineConfiguration.Destination.VideoFrameEmbedding.IndexName))
+			assert.Equal(t, "video-text", oss.ToString(o.DataPipelineConfiguration.Destination.VideoTextEmbedding.IndexName))
+			assert.Equal(t, "document", oss.ToString(o.DataPipelineConfiguration.Destination.DocumentChunkEmbedding.IndexName))
+			assert.Equal(t, []string{"category"}, o.DataPipelineConfiguration.Destination.ObjectTagToMetadata)
+			assert.Equal(t, []string{"x-oss-meta-source"}, o.DataPipelineConfiguration.Destination.UsermetaToMetadata)
 		},
 	},
 }
@@ -784,6 +895,46 @@ var testMockListDataPipelineConfigurationsSuccessCases = []struct {
 			assert.Equal(t, *o.DataPipelineConfigurations[0].DataPipelineError.ErrorMode, "ignoreAndRecord")
 			assert.Equal(t, *o.DataPipelineConfigurations[0].CreateTime, "2021-06-29T14:50:13.011643661+08:00")
 			assert.Equal(t, *o.NextToken, "xxx")
+		},
+	},
+	{
+		200,
+		map[string]string{
+			"x-oss-request-id": "534B371674E88A4D8906****",
+			"Date":             "Fri, 24 Feb 2017 03:15:40 GMT",
+			"Content-Type":     "application/xml",
+		},
+		[]byte(`<ListDataPipelineConfigurationsResult>
+  <DataPipelineConfigurations>
+    <DataPipelineConfiguration>
+      <DataPipelineName>data-pipeline-v2</DataPipelineName>
+      <ModelTier>standard</ModelTier>
+      <DataPipelineDataProcessConfiguration><SearchMode>fast</SearchMode></DataPipelineDataProcessConfiguration>
+      <Destination><ImageEmbedding><Bucket>vector-bucket</Bucket><IndexName>image</IndexName></ImageEmbedding></Destination>
+    </DataPipelineConfiguration>
+  </DataPipelineConfigurations>
+  <NextToken>next-token</NextToken>
+</ListDataPipelineConfigurationsResult>`),
+		func(t *testing.T, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			urlStr := sortQuery(r)
+			assert.Equal(t, "/?action=listDataPipelineConfigurations&dataPipeline&inputBucket=source-bucket&maxResults=0&nextToken=previous-token&prefix=data-pipeline", urlStr)
+		},
+		&ListDataPipelineConfigurationsRequest{
+			InputBucket: oss.Ptr("source-bucket"),
+			MaxResults:  oss.Ptr(int64(0)),
+			NextToken:   oss.Ptr("previous-token"),
+			Prefix:      oss.Ptr("data-pipeline"),
+		},
+		func(t *testing.T, o *ListDataPipelineConfigurationsResult, err error) {
+			assert.NoError(t, err)
+			assert.Equal(t, 200, o.StatusCode)
+			assert.Equal(t, "200 OK", o.Status)
+			assert.Equal(t, "next-token", oss.ToString(o.NextToken))
+			assert.Len(t, o.DataPipelineConfigurations, 1)
+			assert.Equal(t, "standard", oss.ToString(o.DataPipelineConfigurations[0].ModelTier))
+			assert.Equal(t, "fast", oss.ToString(o.DataPipelineConfigurations[0].DataPipelineDataProcessConfiguration.SearchMode))
+			assert.Equal(t, "image", oss.ToString(o.DataPipelineConfigurations[0].Destination.ImageEmbedding.IndexName))
 		},
 	},
 }

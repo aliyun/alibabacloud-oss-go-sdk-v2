@@ -123,6 +123,59 @@ func TestMarshalInput_PutDataPipelineConfiguration(t *testing.T) {
 	assert.Equal(t, input.Parameters["dataPipelineName"], "data-pipeline")
 	body, _ := io.ReadAll(input.Body)
 	assert.Equal(t, string(body), "<DataPipelineConfiguration><DataPipelineDescription>使用百炼多模态模型为业务数据向量化</DataPipelineDescription><Sources><InputBucket>bucket</InputBucket><InputDataScope>All</InputDataScope><FilterConfiguration><PrefixSet>prefix1</PrefixSet><PrefixSet>prefix2/prefix3</PrefixSet><ObjectMediaTypes>text</ObjectMediaTypes><ObjectMediaTypes>image</ObjectMediaTypes><ObjectMediaTypes>video</ObjectMediaTypes></FilterConfiguration></Sources><DataPipelineEmbeddingConfiguration><EmbeddingProvider>bailian</EmbeddingProvider><ApiKey>your_api_key</ApiKey><Model>qwen2.5-vl-embedding</Model><FPS>1</FPS></DataPipelineEmbeddingConfiguration><Destination><VectorBucketName>my-vector-bucket</VectorBucketName><VectorKeyPrefix>prefix</VectorKeyPrefix><VectorIndexNames>my-index</VectorIndexNames><ObjectTagToMetadata>key1</ObjectTagToMetadata><ObjectTagToMetadata>key2</ObjectTagToMetadata><UsermetaToMetadata>x-oss-meta-key1</UsermetaToMetadata></Destination><DataPipelineError><ErrorMode>ignoreAndRecord</ErrorMode><ErrorBucket>my-error-bucket</ErrorBucket><ErrorPrefix>error-output/</ErrorPrefix></DataPipelineError></DataPipelineConfiguration>")
+
+	request = &PutDataPipelineConfigurationRequest{
+		DataPipelineName: oss.Ptr("data-pipeline-v2"),
+		Role:             oss.Ptr("AliyunOSSDataPipelineRole"),
+		DataPipelineConfiguration: &DataPipelineConfiguration{
+			Sources: []DataPipelineSource{{
+				InputBucket:    oss.Ptr("source-bucket"),
+				InputDataScope: oss.Ptr("All"),
+				IgnoreDelete:   oss.Ptr(false),
+			}},
+			ModelTier: oss.Ptr("standard"),
+			DataPipelineDataProcessConfiguration: &DataPipelineDataProcessConfiguration{
+				SearchMode: oss.Ptr("balanced"),
+				Insights: &DataPipelineInsights{
+					Image: &DataPipelineInsightsImage{Caption: &DataPipelineInsightsCaption{Prompt: oss.Ptr("Describe the image.")}},
+					Video: &DataPipelineInsightsVideo{
+						Caption: &DataPipelineInsightsCaption{Prompt: oss.Ptr("Describe each video scene.")},
+						FrameEmbedding: &DataPipelineInsightsFrameEmbedding{Snapshot: &DataPipelineInsightsSnapshot{
+							Mode:     oss.Ptr("interval"),
+							Interval: oss.Ptr(1.0),
+						}},
+					},
+				},
+			},
+			Destination: &DataPipelineDestination{
+				ImageEmbedding:         &VectorDestination{Bucket: oss.Ptr("vector-bucket"), IndexName: oss.Ptr("image"), Prefix: oss.Ptr("v2")},
+				ImageTextEmbedding:     &VectorDestination{Bucket: oss.Ptr("vector-bucket"), IndexName: oss.Ptr("image-text"), Prefix: oss.Ptr("v2")},
+				VideoFrameEmbedding:    &VectorDestination{Bucket: oss.Ptr("vector-bucket"), IndexName: oss.Ptr("video-frame"), Prefix: oss.Ptr("v2")},
+				VideoTextEmbedding:     &VectorDestination{Bucket: oss.Ptr("vector-bucket"), IndexName: oss.Ptr("video-text"), Prefix: oss.Ptr("v2")},
+				DocumentChunkEmbedding: &VectorDestination{Bucket: oss.Ptr("vector-bucket"), IndexName: oss.Ptr("document"), Prefix: oss.Ptr("v2")},
+				ObjectTagToMetadata:    []string{"category"},
+				UsermetaToMetadata:     []string{"x-oss-meta-source"},
+			},
+		},
+	}
+	input = &oss.OperationInput{
+		OpName: "PutDataPipelineConfiguration",
+		Method: "POST",
+		Headers: map[string]string{
+			"Content-Type": "application/xml",
+		},
+		Parameters: map[string]string{
+			"dataPipeline": "",
+			"action":       "putDataPipelineConfiguration",
+		},
+	}
+
+	err = c.client.MarshalInput(request, input, oss.MarshalUpdateContentMd5)
+	assert.NoError(t, err)
+	assert.Equal(t, "data-pipeline-v2", input.Parameters["dataPipelineName"])
+	body, err = io.ReadAll(input.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, `<DataPipelineConfiguration><Sources><InputBucket>source-bucket</InputBucket><InputDataScope>All</InputDataScope><IgnoreDelete>false</IgnoreDelete></Sources><Destination><ObjectTagToMetadata>category</ObjectTagToMetadata><UsermetaToMetadata>x-oss-meta-source</UsermetaToMetadata><ImageEmbedding><Bucket>vector-bucket</Bucket><IndexName>image</IndexName><Prefix>v2</Prefix></ImageEmbedding><ImageTextEmbedding><Bucket>vector-bucket</Bucket><IndexName>image-text</IndexName><Prefix>v2</Prefix></ImageTextEmbedding><VideoFrameEmbedding><Bucket>vector-bucket</Bucket><IndexName>video-frame</IndexName><Prefix>v2</Prefix></VideoFrameEmbedding><VideoTextEmbedding><Bucket>vector-bucket</Bucket><IndexName>video-text</IndexName><Prefix>v2</Prefix></VideoTextEmbedding><DocumentChunkEmbedding><Bucket>vector-bucket</Bucket><IndexName>document</IndexName><Prefix>v2</Prefix></DocumentChunkEmbedding></Destination><ModelTier>standard</ModelTier><DataPipelineDataProcessConfiguration><SearchMode>balanced</SearchMode><Insights><Image><Caption><Prompt>Describe the image.</Prompt></Caption></Image><Video><Caption><Prompt>Describe each video scene.</Prompt></Caption><FrameEmbedding><Snapshot><Mode>interval</Mode><Interval>1</Interval></Snapshot></FrameEmbedding></Video></Insights></DataPipelineDataProcessConfiguration></DataPipelineConfiguration>`, string(body))
 }
 
 func TestUnmarshalOutput_PutDataPipelineConfiguration(t *testing.T) {
@@ -301,6 +354,45 @@ func TestUnmarshalOutput_GetDataPipelineConfiguration(t *testing.T) {
 	assert.Equal(t, *result.DataPipelineConfiguration.DataPipelineError.ErrorMode, "ignoreAndRecord")
 	assert.Equal(t, *result.DataPipelineConfiguration.CreateTime, "2021-06-29T14:50:13.011643661+08:00")
 
+	body = `<DataPipelineConfiguration>
+	<ModelTier>standard</ModelTier>
+	<DataPipelineDataProcessConfiguration>
+		<SearchMode>balanced</SearchMode>
+		<Insights>
+			<Image><Caption><Prompt>Describe the image.</Prompt></Caption></Image>
+			<Video><Caption><Prompt>Describe each video scene.</Prompt></Caption><FrameEmbedding><Snapshot><Mode>dhash</Mode><Number>10</Number></Snapshot></FrameEmbedding></Video>
+		</Insights>
+	</DataPipelineDataProcessConfiguration>
+	<Destination>
+		<ImageEmbedding><Bucket>vector-bucket</Bucket><IndexName>image</IndexName><Prefix>v2</Prefix></ImageEmbedding>
+		<ImageTextEmbedding><Bucket>vector-bucket</Bucket><IndexName>image-text</IndexName><Prefix>v2</Prefix></ImageTextEmbedding>
+		<VideoFrameEmbedding><Bucket>vector-bucket</Bucket><IndexName>video-frame</IndexName><Prefix>v2</Prefix></VideoFrameEmbedding>
+		<VideoTextEmbedding><Bucket>vector-bucket</Bucket><IndexName>video-text</IndexName><Prefix>v2</Prefix></VideoTextEmbedding>
+		<DocumentChunkEmbedding><Bucket>vector-bucket</Bucket><IndexName>document</IndexName><Prefix>v2</Prefix></DocumentChunkEmbedding>
+		<ObjectTagToMetadata>category</ObjectTagToMetadata>
+		<UsermetaToMetadata>x-oss-meta-source</UsermetaToMetadata>
+	</Destination>
+</DataPipelineConfiguration>`
+	output = &oss.OperationOutput{Body: io.NopCloser(bytes.NewReader([]byte(body)))}
+	result = &GetDataPipelineConfigurationResult{}
+
+	err = (&Client{}).client.UnmarshalOutput(result, output, unmarshalBodyXmlMix)
+	assert.NoError(t, err)
+	configuration := result.DataPipelineConfiguration
+	assert.Equal(t, "standard", oss.ToString(configuration.ModelTier))
+	assert.Equal(t, "balanced", oss.ToString(configuration.DataPipelineDataProcessConfiguration.SearchMode))
+	assert.Equal(t, "Describe the image.", oss.ToString(configuration.DataPipelineDataProcessConfiguration.Insights.Image.Caption.Prompt))
+	assert.Equal(t, "Describe each video scene.", oss.ToString(configuration.DataPipelineDataProcessConfiguration.Insights.Video.Caption.Prompt))
+	assert.Equal(t, "dhash", oss.ToString(configuration.DataPipelineDataProcessConfiguration.Insights.Video.FrameEmbedding.Snapshot.Mode))
+	assert.Equal(t, int64(10), oss.ToInt64(configuration.DataPipelineDataProcessConfiguration.Insights.Video.FrameEmbedding.Snapshot.Number))
+	assert.Equal(t, "image", oss.ToString(configuration.Destination.ImageEmbedding.IndexName))
+	assert.Equal(t, "image-text", oss.ToString(configuration.Destination.ImageTextEmbedding.IndexName))
+	assert.Equal(t, "video-frame", oss.ToString(configuration.Destination.VideoFrameEmbedding.IndexName))
+	assert.Equal(t, "video-text", oss.ToString(configuration.Destination.VideoTextEmbedding.IndexName))
+	assert.Equal(t, "document", oss.ToString(configuration.Destination.DocumentChunkEmbedding.IndexName))
+	assert.Equal(t, []string{"category"}, configuration.Destination.ObjectTagToMetadata)
+	assert.Equal(t, []string{"x-oss-meta-source"}, configuration.Destination.UsermetaToMetadata)
+
 	output = &oss.OperationOutput{
 		StatusCode: 400,
 		Status:     "Bad Request",
@@ -428,9 +520,10 @@ func TestMarshalInput_ListDataPipelineConfigurations(t *testing.T) {
 	assert.Nil(t, err)
 
 	request = &ListDataPipelineConfigurationsRequest{
-		MaxResults: oss.Ptr(int64(100)),
-		NextToken:  oss.Ptr("next-token"),
-		Prefix:     oss.Ptr("prefix"),
+		MaxResults:  oss.Ptr(int64(100)),
+		NextToken:   oss.Ptr("next-token"),
+		Prefix:      oss.Ptr("prefix"),
+		InputBucket: oss.Ptr("source-bucket"),
 	}
 	input = &oss.OperationInput{
 		OpName: "ListDataPipelineConfigurations",
@@ -449,6 +542,7 @@ func TestMarshalInput_ListDataPipelineConfigurations(t *testing.T) {
 	assert.Equal(t, input.Parameters["maxResults"], "100")
 	assert.Equal(t, input.Parameters["nextToken"], "next-token")
 	assert.Equal(t, input.Parameters["prefix"], "prefix")
+	assert.Equal(t, input.Parameters["inputBucket"], "source-bucket")
 }
 
 func TestUnmarshalOutput_ListDataPipelineConfigurations(t *testing.T) {

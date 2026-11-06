@@ -25,6 +25,9 @@ type DataPipelineConfiguration struct {
 	Status                             *string                             `xml:"Status,omitempty"`
 	Phase                              *string                             `xml:"Phase,omitempty"`
 	CreateTime                         *string                             `xml:"CreateTime,omitempty"`
+
+	ModelTier                            *string                               `xml:"ModelTier"`
+	DataPipelineDataProcessConfiguration *DataPipelineDataProcessConfiguration `xml:"DataPipelineDataProcessConfiguration"`
 }
 
 type DataPipelineSource struct {
@@ -41,12 +44,57 @@ type DataPipelineEmbeddingConfiguration struct {
 	FPS               *float64 `xml:"FPS"`
 }
 
+type DataPipelineDataProcessConfiguration struct {
+	SearchMode *string               `xml:"SearchMode"`
+	Insights   *DataPipelineInsights `xml:"Insights"`
+}
+
+type DataPipelineInsights struct {
+	Image *DataPipelineInsightsImage `xml:"Image"`
+	Video *DataPipelineInsightsVideo `xml:"Video"`
+}
+
+type DataPipelineInsightsImage struct {
+	Caption *DataPipelineInsightsCaption `xml:"Caption"`
+}
+
+type DataPipelineInsightsVideo struct {
+	Caption        *DataPipelineInsightsCaption        `xml:"Caption"`
+	FrameEmbedding *DataPipelineInsightsFrameEmbedding `xml:"FrameEmbedding"`
+}
+
+type DataPipelineInsightsCaption struct {
+	Prompt *string `xml:"Prompt"`
+}
+
+type DataPipelineInsightsFrameEmbedding struct {
+	Snapshot *DataPipelineInsightsSnapshot `xml:"Snapshot"`
+}
+
+type DataPipelineInsightsSnapshot struct {
+	Mode     *string  `xml:"Mode"`
+	Interval *float64 `xml:"Interval"`
+	Number   *int64   `xml:"Number"`
+}
+
 type DataPipelineDestination struct {
 	VectorBucketName    *string  `xml:"VectorBucketName"`
 	VectorKeyPrefix     *string  `xml:"VectorKeyPrefix"`
 	VectorIndexNames    []string `xml:"VectorIndexNames"`
 	ObjectTagToMetadata []string `xml:"ObjectTagToMetadata"`
 	UsermetaToMetadata  []string `xml:"UsermetaToMetadata"`
+
+	ImageEmbedding         *VectorDestination `xml:"ImageEmbedding"`
+	ImageTextEmbedding     *VectorDestination `xml:"ImageTextEmbedding"`
+	VideoFrameEmbedding    *VectorDestination `xml:"VideoFrameEmbedding"`
+	VideoTextEmbedding     *VectorDestination `xml:"VideoTextEmbedding"`
+	DocumentChunkEmbedding *VectorDestination `xml:"DocumentChunkEmbedding"`
+}
+
+type VectorDestination struct {
+	Bucket    *string `xml:"Bucket"`
+	IndexName *string `xml:"IndexName"`
+	Prefix    *string `xml:"Prefix"`
 }
 
 type DataPipelineError struct {
@@ -196,6 +244,8 @@ type ListDataPipelineConfigurationsRequest struct {
 	MaxResults *int64  `input:"query,maxResults"`
 	Prefix     *string `input:"query,prefix"`
 	NextToken  *string `input:"query,nextToken"`
+
+	InputBucket *string `input:"query,inputBucket"`
 	oss.RequestCommon
 }
 
